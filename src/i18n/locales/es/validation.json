@@ -1,0 +1,64 @@
+{
+  "issues": {
+    "MISSING_SCHEMA_VERSION": "schemaVersion clínico es obligatorio.",
+    "EMPTY_FORM": "Añade al menos un campo antes de guardar.",
+    "MISSING_FIELD_ID": "El id del campo es obligatorio.",
+    "MISSING_FIELD_CODE": "El código del campo es obligatorio.",
+    "DUPLICATE_FIELD_ID": "Id de campo duplicado '{{id}}'.",
+    "DUPLICATE_FIELD_CODE": "Código de campo duplicado '{{code}}'.",
+    "MISSING_COMPONENT_CODE": "Selecciona un componente reutilizable.",
+    "INVALID_COMPONENT_VERSION": "La versión del componente no puede estar vacía si se define.",
+    "CHOICE_OPTIONS_REQUIRED": "Los campos de opción requieren al menos una opción.",
+    "CLINICAL_VERSION_MISMATCH": "La versión del esquema UI no coincide con la clínica."
+  },
+  "panel": {
+    "allPassed": "Todas las comprobaciones pasaron — la estructura del formulario es válida.",
+    "issuesToFix_one": "{{count}} problema por corregir",
+    "issuesToFix_other": "{{count}} problemas por corregir"
+  },
+  "save": {
+    "fixBeforeSave": "Corrige los problemas de validación antes de guardar.",
+    "failed": "Error al guardar."
+  },
+  "fieldErrors": {
+    "REQUIRED": "Obligatorio",
+    "MIN_LENGTH": "La longitud mínima es {{count}}",
+    "MAX_LENGTH": "La longitud máxima es {{count}}",
+    "PATTERN_MISMATCH": "El valor no coincide con el patrón requerido",
+    "INVALID_PATTERN": "Patrón configurado no válido",
+    "INVALID_NUMBER": "Introduce un número válido",
+    "WHOLE_NUMBER_REQUIRED": "Introduce un número entero",
+    "MIN_VALUE": "El valor mínimo es {{value}}",
+    "MAX_VALUE": "El valor máximo es {{value}}",
+    "MULTIPLE_OF": "El valor debe ser múltiplo de {{value}}",
+    "INVALID_OPTION": "Opción no válida seleccionada",
+    "MIN_ROWS": "Se requieren al menos {{count}} filas",
+    "MAX_ROWS": "Se permiten como máximo {{count}} filas"
+  },
+  "renderer": {
+    "UNSUPPORTED_FIELD_TYPE": "El tipo de campo \"{{type}}\" no es compatible con el renderizador.",
+    "UNRESOLVED_COMPONENT": "Falta el código del componente en la referencia al bloque clínico.",
+    "COMPONENT_NOT_COMPILED": "El bloque clínico \"{{componentCode}}\" se resolverá al publicar — la vista previa muestra un marcador de posición.",
+    "UNPINNED_COMPONENT": "El bloque clínico \"{{componentCode}}\" necesita una versión fijada para la vista previa.",
+    "UNKNOWN_WIDGET": "El widget \"{{widget}}\" no se reconoce para {{fieldType}}.",
+    "HIDDEN_BY_UI": "El campo está oculto por defecto en el esquema UI."
+  },
+  "warningCodes": {
+    "MISSING_SCHEMA_VERSION": "Versión de schema",
+    "EMPTY_FORM": "Formulario vacío",
+    "MISSING_FIELD_ID": "Sin id de campo",
+    "MISSING_FIELD_CODE": "Sin código de campo",
+    "DUPLICATE_FIELD_ID": "Id duplicado",
+    "DUPLICATE_FIELD_CODE": "Código duplicado",
+    "MISSING_COMPONENT_CODE": "Sin componente",
+    "INVALID_COMPONENT_VERSION": "Versión inválida",
+    "CHOICE_OPTIONS_REQUIRED": "Sin opciones",
+    "CLINICAL_VERSION_MISMATCH": "Versión incompatible",
+    "UNSUPPORTED_FIELD_TYPE": "Tipo no soportado",
+    "UNRESOLVED_COMPONENT": "Componente sin resolver",
+    "COMPONENT_NOT_COMPILED": "Bloque sin compilar",
+    "UNPINNED_COMPONENT": "Versión no fijada",
+    "UNKNOWN_WIDGET": "Widget desconocido",
+    "HIDDEN_BY_UI": "Oculto en UI"
+  }
+}

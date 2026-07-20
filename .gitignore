@@ -11,7 +11,16 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
 package-lock.json
+
+# TanStack Start / Router (generated)
+.tanstack
+.nitro
+.output
+.vinxi
+__unconfig*
+src/routeTree.gen.ts
 
 # Editor directories and files
 .vscode/*

@@ -1,104 +1,20 @@
+import tailwindcss from '@tailwindcss/vite';
+import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite-plus';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: react(),
-  lint: {
-    ignorePatterns: ['dist/**'],
-    plugins: [
-      'unicorn',
-      'typescript',
-      'oxc',
-      'import',
-      'react',
-      'jsx-a11y',
-      'react-perf',
-      'promise',
-    ],
-    env: {
-      browser: true,
-      es2022: true,
-    },
-    categories: {
-      correctness: 'error',
-      suspicious: 'error',
-      pedantic: 'error',
-      perf: 'error',
-      style: 'error',
-      restriction: 'error',
-      nursery: 'error',
-    },
-    options: {
-      typeAware: true,
-      typeCheck: true,
-      denyWarnings: false,
-      reportUnusedDisableDirectives: 'error',
-    },
-    rules: {
-      'no-console': 'error',
-      'eqeqeq': 'error',
-      'curly': 'error',
-      'typescript/no-explicit-any': 'error',
-      'typescript/explicit-function-return-type': 'error',
-      'typescript/explicit-module-boundary-types': 'error',
-      'typescript/explicit-member-accessibility': 'error',
-      'typescript/consistent-type-imports': 'error',
-      'unicorn/prefer-node-protocol': 'error',
-      'import/no-cycle': 'error',
-      'promise/catch-or-return': 'error',
-      'react/rules-of-hooks': 'error',
-      'react/only-export-components': 'error',
-      'react/jsx-no-useless-fragment': 'error',
-      'react/self-closing-comp': 'error',
-      'jsx-a11y/alt-text': 'error',
-      'jsx-a11y/anchor-is-valid': 'error',
-      'max-lines': ['warn', { max: 400 }],
-    },
-    overrides: [
-      {
-        files: ['vite.config.ts'],
-        rules: {
-          'import/no-default-export': 'off',
-          'sort-keys': 'off',
-          'sort-imports': 'off',
-        },
-      },
-      {
-        files: ['src/**/*.{ts,tsx}'],
-        rules: {
-          'react/react-in-jsx-scope': 'off',
-          'react/jsx-filename-extension': 'off',
-          'unicorn/filename-case': 'off',
-          'import/no-unassigned-import': 'off',
-          'import/no-default-export': 'off',
-          'func-style': 'off',
-          'react/jsx-no-literals': 'off',
-          'sort-imports': 'off',
-          'typescript/no-non-null-assertion': 'off',
-          'unicorn/prefer-query-selector': 'off',
-        },
-      },
-    ],
+  plugins: [tailwindcss(), tanstackStart(), react()],
+  resolve: {
+    tsconfigPaths: true,
   },
-  fmt: {
-    ignorePatterns: ['dist/**'],
-    printWidth: 80,
-    tabWidth: 2,
-    useTabs: false,
-    singleQuote: true,
-    jsxSingleQuote: true,
-    semi: true,
-    trailingComma: 'all',
-    quoteProps: 'consistent',
-    arrowParens: 'always',
-    bracketSpacing: true,
-    bracketSameLine: false,
-    singleAttributePerLine: true,
-    endOfLine: 'lf',
-    insertFinalNewline: true,
-    proseWrap: 'always',
-    sortImports: true,
-    sortPackageJson: true,
-    sortTailwindcss: true,
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        changeOrigin: true,
+        target: 'http://localhost:5080',
+      },
+    },
   },
 });

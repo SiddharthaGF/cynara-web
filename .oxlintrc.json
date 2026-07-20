@@ -1,0 +1,145 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["unicorn", "typescript", "oxc", "import"],
+  "env": {
+    "browser": true,
+    "es2022": true
+  },
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "pedantic": "error",
+    "perf": "error",
+    "style": "error",
+    "restriction": "error",
+    "nursery": "error"
+  },
+  "options": {
+    "typeAware": true,
+    "typeCheck": true,
+    "denyWarnings": false,
+    "reportUnusedDisableDirectives": "error"
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "coverage/**",
+    "node_modules/**",
+    ".tanstack/**",
+    "src/routeTree.gen.ts",
+    "**/tsconfig*.json",
+    "**/*.json"
+  ],
+  "rules": {
+    "no-console": "error",
+    "eqeqeq": "error",
+    "curly": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/explicit-function-return-type": "error",
+    "typescript/explicit-module-boundary-types": "error",
+    "typescript/explicit-member-accessibility": "error",
+    "typescript/consistent-type-imports": "error",
+    "unicorn/prefer-node-protocol": "error",
+    "import/no-cycle": "error",
+    "max-lines": ["warn", { "max": 400 }]
+  },
+  "overrides": [
+    {
+      "files": ["src/**/*.{ts,tsx}"],
+      "rules": {
+        "new-cap": "off",
+        "import/no-named-export": "off",
+        "import/prefer-default-export": "off",
+        "import/group-exports": "off",
+        "import/exports-last": "off",
+        "import/no-relative-parent-imports": "off",
+        "import/max-dependencies": "off",
+        "import/no-namespace": "off",
+        "import/consistent-type-specifier-style": "off",
+        "func-style": "off",
+        "sort-imports": "off",
+        "sort-keys": "off",
+        "no-magic-numbers": "off",
+        "no-ternary": "off",
+        "no-void": "off",
+        "no-duplicate-imports": "off",
+        "no-use-before-define": "off",
+        "no-undefined": "off",
+        "id-length": "off",
+        "max-lines-per-function": "off",
+        "max-statements": "off",
+        "max-params": "off",
+        "complexity": "off",
+        "require-unicode-regexp": "off",
+        "typescript/consistent-type-imports": "off",
+        "typescript/explicit-function-return-type": "off",
+        "typescript/explicit-module-boundary-types": "off",
+        "typescript/prefer-readonly-parameter-types": "off",
+        "typescript/strict-boolean-expressions": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-type-assertion": "off",
+        "typescript/no-unnecessary-condition": "off",
+        "typescript/prefer-nullish-coalescing": "off",
+        "typescript/use-unknown-in-catch-callback-variable": "off",
+        "typescript/no-confusing-void-expression": "off",
+        "unicorn/catch-error-name": "off",
+        "unicorn/prefer-top-level-await": "off",
+        "unicorn/filename-case": "off",
+        "unicorn/no-null": "off",
+        "unicorn/prefer-global-this": "off",
+        "unicorn/prefer-ternary": "off",
+        "unicorn/prefer-number-coercion": "off",
+        "unicorn/no-array-callback-reference": "off",
+        "unicorn/max-nested-calls": "off",
+        "unicorn/no-useless-undefined": "off",
+        "typescript/no-deprecated": "off",
+        "oxc/no-async-await": "off",
+        "oxc/no-optional-chaining": "off",
+        "oxc/no-rest-spread-properties": "off",
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["vite.config.ts", "src/vite-env.d.ts"],
+      "rules": {
+        "import/no-default-export": "off",
+        "sort-imports": "off",
+        "import/unambiguous": "off"
+      }
+    },
+    {
+      "files": ["src/components/ui/sidebar.tsx"],
+      "rules": {
+        "max-lines": "off"
+      }
+    },
+    {
+      "files": ["**/*.{spec,test}.{ts,tsx}"],
+      "plugins": ["vitest"],
+      "env": {
+        "vitest": true
+      },
+      "rules": {
+        "typescript/explicit-function-return-type": "off",
+        "typescript/explicit-module-boundary-types": "off",
+        "sort-imports": "off",
+        "sort-keys": "off",
+        "typescript/consistent-type-imports": "off",
+        "typescript/use-unknown-in-catch-callback-variable": "off",
+        "typescript/no-confusing-void-expression": "off",
+        "vitest/prefer-lowercase-title": "off",
+        "vitest/prefer-describe-function-title": "off",
+        "vitest/prefer-strict-boolean-matchers": "off",
+        "vitest/no-hooks": "off",
+        "oxc/no-async-await": "off",
+        "oxc/no-optional-chaining": "off",
+        "vitest/prefer-expect-assertions": "off",
+        "vitest/consistent-test-filename": "off",
+        "vitest/require-test-timeout": "off",
+        "vitest/prefer-importing-vitest-globals": "off",
+        "typescript/no-unsafe-type-assertion": "off"
+      }
+    }
+  ]
+}

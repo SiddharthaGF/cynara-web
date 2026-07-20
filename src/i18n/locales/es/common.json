@@ -1,0 +1,43 @@
+{
+  "appName": "Cynara",
+  "clinicalForms": "Formularios clínicos",
+  "meta": {
+    "title": "Cynara — Formularios clínicos",
+    "description": "Diseña formularios clínicos de ingreso y evaluación para hospitales — visualmente, con autoguardado y validación."
+  },
+  "theme": {
+    "switchToLight": "Cambiar a modo claro",
+    "switchToDark": "Cambiar a modo oscuro"
+  },
+  "locale": {
+    "switch": "Cambiar idioma",
+    "en": "English",
+    "es": "Español"
+  },
+  "actions": {
+    "save": "Guardar",
+    "back": "Volver",
+    "close": "Cerrar",
+    "forms": "Formularios"
+  },
+  "yes": "Sí",
+  "no": "No",
+  "placeholders": {
+    "selectDate": "Seleccionar fecha…",
+    "selectDateTime": "Seleccionar fecha y hora…"
+  },
+  "numberInput": {
+    "increase": "Aumentar valor",
+    "decrease": "Disminuir valor"
+  },
+  "timeInput": {
+    "openPicker": "Abrir selector de hora",
+    "selectTime": "Seleccionar hora",
+    "hours": "Horas",
+    "minutes": "Minutos",
+    "seconds": "Segundos",
+    "presets": {
+      "now": "Ahora"
+    }
+  }
+}

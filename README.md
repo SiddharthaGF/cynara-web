@@ -3,9 +3,9 @@
 Primary frontend for [Cynara](https://github.com/ailuracode/cynara): a
 configurable clinical platform for hospitals.
 
-Built with **React**, **TypeScript**, and **[Vite+](https://viteplus.dev/)**
-(Vite, Oxlint, Oxfmt). Renders forms defined by the technology-neutral
-[clinical form schema contract](https://github.com/ailuracode/cynara/blob/main/docs/clinical-form-schema.md).
+Built with **React 19**, **TypeScript**, and
+**[TanStack Start](https://tanstack.com/start)** (file-based routing,
+SSR-ready). The form designer lives here and talks to `cynara-api` over `/api`.
 
 ## Related repositories
 
@@ -14,44 +14,59 @@ Built with **React**, **TypeScript**, and **[Vite+](https://viteplus.dev/)**
 | [cynara](https://github.com/ailuracode/cynara)         | Schema contract, docs, fixtures |
 | [cynara-api](https://github.com/ailuracode/cynara-api) | ASP.NET backend (primary)       |
 
-## Contract conformance
+## Routes
 
-Client-side validation should use a JSON Schema Draft 2020-12 validator (e.g.
-[Ajv](https://ajv.js.org/)) against the meta-schemas in `cynara/schemas/v1/`.
-
-Semantic rules are documented in
-[`semantic-rules.md`](https://github.com/ailuracode/cynara/blob/main/docs/semantic-rules.md).
+| Path                    | Purpose                       |
+| ----------------------- | ----------------------------- |
+| `/forms`                | Form catalog and create draft |
+| `/forms/:code/designer` | Visual form designer (CYN-11) |
 
 ## Getting started
 
-Prerequisites: [Node.js](https://nodejs.org/) 20+, [pnpm](https://pnpm.io/) 9+
+Prerequisites: [Node.js](https://nodejs.org/) 22+, [pnpm](https://pnpm.io/) 9+
+
+Start the API (`cynara-api` on port 5080), then:
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-The dev server listens on `http://localhost:5173` by default.
-
-### Schema submodule
-
-```bash
-git submodule add https://github.com/ailuracode/cynara.git schemas
-git submodule update --init --recursive
-```
+The dev server proxies `/api` to `http://localhost:5080`.
 
 ## Scripts
 
-| Command           | Description                   |
-| ----------------- | ----------------------------- |
-| `pnpm dev`        | Start Vite+ dev server        |
-| `pnpm build`      | Production build              |
-| `pnpm preview`    | Preview production build      |
-| `pnpm lint:check` | Oxlint via Vite+              |
-| `pnpm lint:fix`   | Oxlint with autofix           |
-| `pnpm fmt`        | Oxfmt                         |
-| `pnpm fmt:check`  | Check formatting              |
-| `pnpm check`      | Format, lint, and type checks |
+| Command          | Description                   |
+| ---------------- | ----------------------------- |
+| `pnpm dev`       | TanStack Start dev server     |
+| `pnpm build`     | Client + SSR production build |
+| `pnpm preview`   | Preview production build      |
+| `pnpm typecheck` | TypeScript check              |
+
+## Project structure
+
+```
+src/
+├── routes/              # TanStack Start file routes
+│   ├── __root.tsx
+│   ├── index.tsx        # → /forms redirect
+│   └── forms/
+│       ├── index.tsx    # form list
+│       └── $code/designer.tsx
+├── features/forms/      # designer UI + draft model
+├── api/                 # cynara-api client
+└── router.tsx
+```
+
+## Contract conformance
+
+Client-side validation uses draft-model checks before autosave. Full JSON
+Schema + semantic validation runs on the API when saving drafts.
+
+See the
+[clinical form schema contract](https://github.com/ailuracode/cynara/blob/main/docs/clinical-form-schema.md)
+and
+[rules schema](https://github.com/ailuracode/cynara/blob/main/docs/rules-schema.md).
 
 ## License
 

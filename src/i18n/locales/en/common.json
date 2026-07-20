@@ -1,0 +1,43 @@
+{
+  "appName": "Cynara",
+  "clinicalForms": "Clinical Forms",
+  "meta": {
+    "title": "Cynara — Clinical Forms",
+    "description": "Design clinical intake and assessment forms for hospitals — visually, with autosave and validation."
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "locale": {
+    "switch": "Change language",
+    "en": "English",
+    "es": "Español"
+  },
+  "actions": {
+    "save": "Save",
+    "back": "Back",
+    "close": "Close",
+    "forms": "Forms"
+  },
+  "yes": "Yes",
+  "no": "No",
+  "placeholders": {
+    "selectDate": "Select date…",
+    "selectDateTime": "Select date & time…"
+  },
+  "numberInput": {
+    "increase": "Increase value",
+    "decrease": "Decrease value"
+  },
+  "timeInput": {
+    "openPicker": "Open time picker",
+    "selectTime": "Select time",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "seconds": "Seconds",
+    "presets": {
+      "now": "Now"
+    }
+  }
+}
