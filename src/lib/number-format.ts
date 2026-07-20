@@ -175,32 +175,7 @@ function trimTrailingZeros(value: string): string {
   }
 
   return value
-    .replace(/(\.\d*?[1-9])0+$/u, '$1')
+    .replace(/(?<kept>\.\d*?[1-9])0+$/u, '$<kept>')
     .replace(/\.0+$/u, '')
     .replace(/\.$/u, '');
-}
-
-/** Default step for calculated number fields without explicit precision. */
-export const DEFAULT_CALCULATED_NUMBER_STEP = 0.01;
-
-export function normalizeCalculatedNumber(
-  value: unknown,
-  field: { type?: string; multipleOf?: number; decimalPlaces?: number },
-): unknown {
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
-    return value;
-  }
-
-  if (field.type === 'integer') {
-    return Math.round(value);
-  }
-
-  if (field.type !== 'number') {
-    return value;
-  }
-
-  return normalizeNumericValue(value, {
-    step: field.multipleOf,
-    decimalPlaces: field.decimalPlaces,
-  });
 }

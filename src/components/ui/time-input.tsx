@@ -76,7 +76,7 @@ interface TimeInputProps
   onValueChange?: (value: string) => void;
 }
 
-const TimeInput = forwardRef<HTMLInputElement, TimeInputProps>(function TimeInput(
+const TimeInput = forwardRef<HTMLInputElement, TimeInputProps>((
   {
     className,
     value,
@@ -100,7 +100,7 @@ const TimeInput = forwardRef<HTMLInputElement, TimeInputProps>(function TimeInpu
     ...props
   },
   ref,
-): JSX.Element {
+): JSX.Element => {
   const { t } = useTranslation('common');
   const generatedId = useId();
   const inputId = id ?? generatedId;
@@ -116,7 +116,13 @@ const TimeInput = forwardRef<HTMLInputElement, TimeInputProps>(function TimeInpu
   const emptyPlaceholder = placeholder ?? (showSeconds ? '--:--:--' : '--:--');
   const pickerWidth = timePickerWidth(showSeconds);
 
-  useImperativeHandle(ref, () => hiddenRef.current as HTMLInputElement);
+  useImperativeHandle(ref, () => {
+    const input = hiddenRef.current;
+    if (input === null) {
+      throw new Error('TimeInput is not mounted');
+    }
+    return input;
+  });
 
   const parsedValue = useMemo(
     () => parseTimeString(currentValue) ?? { hours: 0, minutes: 0, seconds: 0 },
@@ -176,7 +182,7 @@ const TimeInput = forwardRef<HTMLInputElement, TimeInputProps>(function TimeInpu
       const base = parseTimeString(currentValue) ?? { hours: 0, minutes: 0, seconds: 0 };
       const direction = event.key === 'ArrowUp' ? 1 : -1;
       const nextMs = snapTimeMs(
-        timePartsToMs(base) + direction * stepSeconds * 1_000,
+        timePartsToMs(base) + direction * stepSeconds * 1000,
         minMs,
         maxMs,
         stepSeconds,
@@ -403,7 +409,7 @@ function TimePickerPanel({
             open={open}
             onSelect={onMinuteSelect}
           />
-          {seconds !== undefined ? (
+          {seconds === undefined ? null : (
             <>
               <TimeSeparator />
               <TimeColumn
@@ -413,7 +419,7 @@ function TimePickerPanel({
                 onSelect={onSecondSelect}
               />
             </>
-          ) : null}
+          )}
         </div>
       </div>
     </div>

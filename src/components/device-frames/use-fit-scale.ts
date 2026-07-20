@@ -17,7 +17,7 @@ export function useFitScale(
   useEffect(() => {
     const container = containerRef.current;
     if (!container) {
-      return;
+      return undefined;
     }
 
     const updateScale = (): void => {

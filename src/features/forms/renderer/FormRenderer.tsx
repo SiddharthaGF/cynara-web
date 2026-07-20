@@ -3,7 +3,7 @@ import type { JSX } from 'react';
 import { buildLayout } from '@/features/forms/model/formDraft.ts';
 import { cn } from '@/lib/utils.ts';
 
-import { buildRendererContext } from './FormFieldControl.tsx';
+import { buildRendererContext } from './buildRendererContext.ts';
 import { FormLayoutRenderer } from './FormLayoutRenderer.tsx';
 import type { FormSnapshot } from './types.ts';
 import type { UseFormRendererReturn } from './useFormRenderer.ts';
@@ -25,8 +25,7 @@ export function FormRendererView({
   return (
     <form
       className={cn('grid gap-6', className)}
-      onSubmit={(event) => {
-        event.preventDefault();
+      action={() => {
         renderer.triggerValidation();
       }}
       noValidate
@@ -50,4 +49,3 @@ export function FormRendererView({
 
 export { useFormRenderer } from './useFormRenderer.ts';
 export type { FormSnapshot, FormValues, ConfigWarning } from './types.ts';
-export { parseFormSnapshot, parsePublishedSnapshot } from './types.ts';

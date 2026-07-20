@@ -10,7 +10,6 @@ import {
 import type {
   ClinicalField,
   FieldPresentation,
-  FormDraftModel,
 } from '@/features/forms/types.ts';
 import { cn } from '@/lib/utils.ts';
 
@@ -18,7 +17,6 @@ import { renderFieldInput } from './FormFieldInputs.tsx';
 import { getRepeaterChildValue, getScalarValue } from './formValues.ts';
 import { fieldShellClass, widthClass } from './layoutUtils.ts';
 import type { FormRendererContext } from './types.ts';
-import type { UseFormRendererReturn } from './useFormRenderer.ts';
 
 interface FormFieldControlProps {
   field: ClinicalField;
@@ -143,22 +141,4 @@ function UnsupportedField({
       <p className='text-sm text-muted-foreground'>{message}</p>
     </div>
   );
-}
-
-export function buildRendererContext(
-  model: FormDraftModel,
-  renderer: UseFormRendererReturn,
-): FormRendererContext {
-  return {
-    model,
-    values: renderer.values,
-    readOnly: renderer.readOnly,
-    showValidation: renderer.showValidation,
-    evaluation: renderer.evaluation,
-    fieldErrors: renderer.fieldErrors,
-    onValueChange: renderer.onValueChange,
-    onRepeaterRowChange: renderer.onRepeaterRowChange,
-    onAddRepeaterRow: renderer.onAddRepeaterRow,
-    onRemoveRepeaterRow: renderer.onRemoveRepeaterRow,
-  };
 }

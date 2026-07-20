@@ -1,7 +1,7 @@
 import { format, isValid, parse } from 'date-fns';
 import { enUS, es } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
-import { useEffect, useState, type JSX } from 'react';
+import { useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
@@ -45,15 +45,9 @@ export function DatePickerInput({
   const locale = i18n.language.startsWith('es') ? es : enUS;
   const storedDate = parseStoredDate(value, fieldType);
   const storedTime = fieldType === 'datetime' ? extractTimeValue(value) : '';
-  const displayDate = storedDate ?? pendingDate;
-  const displayTime = storedTime || pendingTime;
-
-  useEffect(() => {
-    if (value === '' || value === undefined || value === null) {
-      setPendingDate(undefined);
-      setPendingTime('');
-    }
-  }, [value]);
+  const isValueEmpty = value === '' || value === undefined || value === null;
+  const displayDate = isValueEmpty ? undefined : (storedDate ?? pendingDate);
+  const displayTime = isValueEmpty ? '' : (storedTime || pendingTime);
 
   const label = displayDate
     ? format(displayDate, 'PPP', { locale })

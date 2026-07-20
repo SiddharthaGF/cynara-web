@@ -12,7 +12,7 @@ export interface TimeStepConfig {
   showSeconds: boolean;
 }
 
-const MS_PER_SECOND = 1_000;
+const MS_PER_SECOND = 1000;
 const MS_PER_MINUTE = 60 * MS_PER_SECOND;
 const MS_PER_HOUR = 60 * MS_PER_MINUTE;
 const MS_PER_DAY = 24 * MS_PER_HOUR;
@@ -22,12 +22,12 @@ export function resolveTimeStep(step?: number | string): TimeStepConfig {
     return { stepSeconds: 1, allowAny: true, showSeconds: false };
   }
 
-  const parsed =
-    typeof step === 'number'
-      ? step
-      : step === undefined || step === ''
-        ? 60
-        : Number(step);
+  let parsed = 60;
+  if (typeof step === 'number') {
+    parsed = step;
+  } else if (step !== undefined && step !== '') {
+    parsed = Number(step);
+  }
 
   const stepSeconds = Number.isFinite(parsed) && parsed > 0 ? parsed : 60;
 
@@ -39,14 +39,16 @@ export function resolveTimeStep(step?: number | string): TimeStepConfig {
 }
 
 export function parseTimeString(value: string): ParsedTime | null {
-  const match = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(value.trim());
-  if (!match) {
+  const match = /^(?<hours>\d{2}):(?<minutes>\d{2})(?::(?<seconds>\d{2}))?$/u.exec(
+    value.trim(),
+  );
+  if (!match?.groups) {
     return null;
   }
 
-  const hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  const seconds = Number(match[3] ?? 0);
+  const hours = Number(match.groups.hours);
+  const minutes = Number(match.groups.minutes);
+  const seconds = Number(match.groups.seconds ?? 0);
 
   if (!isValidTimeParts(hours, minutes, seconds)) {
     return null;
@@ -194,7 +196,7 @@ export function normalizeTimeValue(
 }
 
 export function normalizeTypedTime(raw: string, includeSeconds: boolean): string | null {
-  const digits = raw.replace(/\D/g, '');
+  const digits = raw.replaceAll(/\D/g, '');
 
   if (digits.length === 0) {
     return '';
@@ -308,5 +310,5 @@ export function createSyntheticInputEvent(
     type: 'input',
     data: '',
     nativeEvent: new InputEvent('input'),
-  } as InputEvent<HTMLInputElement>;
+  };
 }

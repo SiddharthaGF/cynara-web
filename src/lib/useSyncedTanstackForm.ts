@@ -40,7 +40,7 @@ export function useSyncedTanstackForm<TFormData>(
     defaultValues,
     listeners: {
       onChange: ({ formApi }) => {
-        const values = formApi.state.values;
+        const {values} = formApi.state;
         if (valuesEqual(values, defaultValuesRef.current)) {
           return;
         }

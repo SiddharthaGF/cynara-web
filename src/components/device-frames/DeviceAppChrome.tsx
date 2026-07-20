@@ -108,13 +108,13 @@ function DesktopShell({
         </div>
 
         <div className='px-3 pb-3'>
-          <label className='flex h-8 items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2.5 text-muted-foreground'>
+          <div className='flex h-8 items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2.5 text-muted-foreground'>
             <Search className='size-3.5' strokeWidth={2} />
             <span className='text-[12px]'>{t('formPreview.chrome.searchPlaceholder')}</span>
             <span className='ml-auto rounded border border-border/60 px-1 font-mono text-[10px] tracking-tight text-muted-foreground/80'>
               ⌘K
             </span>
-          </label>
+          </div>
         </div>
 
         {contextLabel ? (

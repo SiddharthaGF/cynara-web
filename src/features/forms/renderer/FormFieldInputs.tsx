@@ -277,6 +277,7 @@ function renderChoiceInput(
                 value={option.value}
                 checked={checked}
                 disabled={!enabled}
+                aria-label={option.label}
                 className='size-4 shrink-0 accent-primary'
                 onChange={() => {
                   onChange(option.value);

@@ -143,37 +143,24 @@ export function removeFieldFromLayout(
       if (node.fieldId !== fieldId) {
         next.push(node);
       }
-      continue;
-    }
-
-    if (node.type === 'section') {
+    } else if (node.type === 'section') {
       next.push({
         ...node,
         children: removeFieldFromLayout(node.children, fieldId),
       });
-      continue;
-    }
-
-    if (node.type === 'group') {
-      if (node.fieldId === fieldId) {
-        continue;
+    } else if (node.type === 'group') {
+      if (node.fieldId !== fieldId) {
+        next.push({
+          ...node,
+          children: removeFieldFromLayout(node.children, fieldId),
+        });
       }
-
+    } else if (node.fieldId !== fieldId) {
       next.push({
         ...node,
-        children: removeFieldFromLayout(node.children, fieldId),
+        itemTemplate: removeFieldFromLayout(node.itemTemplate, fieldId),
       });
-      continue;
     }
-
-    if (node.fieldId === fieldId) {
-      continue;
-    }
-
-    next.push({
-      ...node,
-      itemTemplate: removeFieldFromLayout(node.itemTemplate, fieldId),
-    });
   }
 
   return next;

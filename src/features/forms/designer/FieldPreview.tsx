@@ -78,74 +78,88 @@ function ValidationRulesList({
   );
 }
 
+function previewPlaceholder(
+  field: ClinicalField,
+  placeholder: string | undefined,
+  t: ReturnType<typeof useTranslation<'designer'>>['t'],
+): string | undefined {
+  if (placeholder !== undefined) {
+    return placeholder;
+  }
+
+  if (field.type === 'text') {
+    return t('preview.shortAnswer');
+  }
+
+  if (field.type === 'textarea') {
+    return t('preview.longAnswer');
+  }
+
+  return undefined;
+}
+
 function renderPreviewControl(
   field: ClinicalField,
   presentation: FieldPresentation | undefined,
   placeholder: string | undefined,
   t: ReturnType<typeof useTranslation<'designer'>>['t'],
 ): JSX.Element {
-  switch (field.type) {
-    case 'group': {
-      return (
-        <div className='max-w-full rounded-lg border border-dashed bg-muted/20 px-4 py-3 text-sm text-muted-foreground'>
-          {t('preview.sectionFields', { count: field.items?.length ?? 0 })}
-        </div>
-      );
-    }
-    case 'repeater': {
-      return (
-        <div className='max-w-full rounded-lg border border-dashed bg-muted/20 px-4 py-3 text-sm text-muted-foreground'>
-          {t('preview.repeaterFields', { count: field.items?.length ?? 0 })}
-        </div>
-      );
-    }
-    case 'component-ref': {
-      return (
-        <div className='max-w-full rounded-lg border bg-muted/30 px-4 py-3 text-sm'>
-          <span className='font-medium'>
-            {field.componentCode || t('preview.selectClinicalBlock')}
-          </span>
-          {field.componentVersion ? (
-            <span className='ml-2 text-muted-foreground'>
-              v{field.componentVersion}
-            </span>
-          ) : null}
-        </div>
-      );
-    }
-    default: {
-      return (
-        <div className='@container/preview grid w-full min-w-0 max-w-full grid-cols-12 gap-4'>
-          <div
-            className={cn(
-              'pointer-events-none min-w-0 max-w-full',
-              widthClass(presentation?.width),
-              TIME_FIELD_LAYOUT_CLASS,
-              field.type === 'time' && '[&_[data-slot=time-input]]:w-full',
-              field.type === 'datetime' && '[&_[data-slot=time-input]]:shrink-0',
-              '[&_[data-slot=time-input-trigger]]:w-full',
-              '[&_[data-slot=time-input-trigger]]:bg-muted/40',
-              '[&_button]:bg-muted/40',
-              '[&_input:not([type=hidden])]:bg-muted/40',
-              '[&_textarea]:bg-muted/40',
-            )}
-          >
-            {renderFieldInput(
-              field,
-              presentation,
-              '',
-              false,
-              placeholder ??
-                (field.type === 'text'
-                  ? t('preview.shortAnswer')
-                  : field.type === 'textarea'
-                    ? t('preview.longAnswer')
-                    : undefined),
-              () => undefined,
-            )}
-          </div>
-        </div>
-      );
-    }
+  if (field.type === 'group') {
+    return (
+      <div className='max-w-full rounded-lg border border-dashed bg-muted/20 px-4 py-3 text-sm text-muted-foreground'>
+        {t('preview.sectionFields', { count: field.items?.length ?? 0 })}
+      </div>
+    );
   }
+
+  if (field.type === 'repeater') {
+    return (
+      <div className='max-w-full rounded-lg border border-dashed bg-muted/20 px-4 py-3 text-sm text-muted-foreground'>
+        {t('preview.repeaterFields', { count: field.items?.length ?? 0 })}
+      </div>
+    );
+  }
+
+  if (field.type === 'component-ref') {
+    return (
+      <div className='max-w-full rounded-lg border bg-muted/30 px-4 py-3 text-sm'>
+        <span className='font-medium'>
+          {field.componentCode || t('preview.selectClinicalBlock')}
+        </span>
+        {field.componentVersion ? (
+          <span className='ml-2 text-muted-foreground'>
+            v{field.componentVersion}
+          </span>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className='@container/preview grid w-full min-w-0 max-w-full grid-cols-12 gap-4'>
+      <div
+        className={cn(
+          'pointer-events-none min-w-0 max-w-full',
+          widthClass(presentation?.width),
+          TIME_FIELD_LAYOUT_CLASS,
+          field.type === 'time' && '[&_[data-slot=time-input]]:w-full',
+          field.type === 'datetime' && '[&_[data-slot=time-input]]:shrink-0',
+          '[&_[data-slot=time-input-trigger]]:w-full',
+          '[&_[data-slot=time-input-trigger]]:bg-muted/40',
+          '[&_button]:bg-muted/40',
+          '[&_input:not([type=hidden])]:bg-muted/40',
+          '[&_textarea]:bg-muted/40',
+        )}
+      >
+        {renderFieldInput(
+          field,
+          presentation,
+          '',
+          false,
+          previewPlaceholder(field, placeholder, t),
+          () => undefined,
+        )}
+      </div>
+    </div>
+  );
 }
