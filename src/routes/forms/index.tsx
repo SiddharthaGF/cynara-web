@@ -1,7 +1,15 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 
-import { FormListPage } from '@/features/forms/list/FormListPage';
+import { resolvePreferredLocale } from '@/lib/locale.ts';
 
 export const Route = createFileRoute('/forms/')({
-  component: FormListPage,
+  beforeLoad: () => {
+    const locale = resolvePreferredLocale();
+    // oxlint-disable-next-line typescript/only-throw-error -- TanStack Router redirect
+    throw redirect({
+      to: '/$locale/forms',
+      params: { locale },
+      replace: true,
+    });
+  },
 });

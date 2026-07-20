@@ -25,14 +25,14 @@ SSR-ready). The form designer lives here and talks to `cynara-api` over `/api`.
 
 Prerequisites: [Node.js](https://nodejs.org/) 22+, [pnpm](https://pnpm.io/) 9+
 
-Start the API (`cynara-api` on port 5080), then:
+Start the API (`cynara-api` on port 3000), then:
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-The dev server proxies `/api` to `http://localhost:5080`.
+The dev server proxies `/api` to `http://localhost:3000`.
 
 ## Scripts
 

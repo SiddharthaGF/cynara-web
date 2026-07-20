@@ -17,12 +17,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select.tsx';
-import { WIDTH_OPTIONS } from '@/features/forms/designer/fieldInspectorMeta.ts';
+import {
+  getWidthIcon,
+  WIDTH_OPTIONS,
+  type FieldWidth,
+} from '@/features/forms/designer/fieldInspectorMeta.ts';
 import type {
   ClinicalField,
   FieldPresentation,
 } from '@/features/forms/types.ts';
 import { useSyncedTanstackForm } from '@/lib/useSyncedTanstackForm.ts';
+import { cn } from '@/lib/utils.ts';
 
 import {
   presentationFormValuesToPatch,
@@ -93,7 +98,11 @@ export function FieldInspectorPresentationSection({
                   }}
                 >
                   <SelectTrigger className='w-full'>
-                    <SelectValue />
+                    <SelectValue>
+                      {t(`inspector.widgets.${fieldApi.state.value}`, {
+                        defaultValue: fieldApi.state.value,
+                      })}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {widgetOptions.map((widget) => (
@@ -126,7 +135,9 @@ export function FieldInspectorPresentationSection({
                 }}
               >
                 <SelectTrigger className='w-full'>
-                  <SelectValue />
+                  <SelectValue>
+                    <WidthOptionLabel width={fieldApi.state.value} />
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {WIDTH_OPTIONS.map((width) => (
@@ -134,7 +145,7 @@ export function FieldInspectorPresentationSection({
                       key={width}
                       value={width}
                     >
-                      {t(`inspector.widths.${width}`)}
+                      <WidthOptionLabel width={width} />
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -182,3 +193,25 @@ export function FieldInspectorPresentationSection({
     </FieldSet>
   );
 }
+
+function WidthOptionLabel({
+  width,
+  className,
+}: {
+  width: FieldWidth;
+  className?: string;
+}): JSX.Element {
+  const { t } = useTranslation('designer');
+  const Icon = getWidthIcon(width);
+
+  return (
+    <span className={cn('inline-flex min-w-0 items-center gap-2', className)}>
+      <Icon
+        className='size-4 shrink-0 text-muted-foreground'
+        aria-hidden='true'
+      />
+      <span className='truncate'>{t(`inspector.widths.${width}`)}</span>
+    </span>
+  );
+}
+

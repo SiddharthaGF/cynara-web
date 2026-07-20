@@ -1,6 +1,6 @@
 import { Moon, Sun } from 'lucide-react';
 import type { JSX } from 'react';
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
@@ -35,11 +35,11 @@ export function ThemeToggle({ className }: ThemeToggleProps): JSX.Element {
   );
 }
 
-/** Syncs document title and meta with current locale */
+/** Syncs document title and meta when the active language changes. */
 export function DocumentMeta(): null {
   const { t, i18n } = useTranslation('common');
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.title = t('meta.title');
     const description = document.querySelector('meta[name="description"]');
     if (description) {

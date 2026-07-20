@@ -1,3 +1,6 @@
+import { createIsomorphicFn } from '@tanstack/react-start';
+import { getRequestUrl } from '@tanstack/react-start/server';
+
 export class ApiError extends Error {
   public readonly status: number;
   public readonly title: string;
@@ -15,6 +18,41 @@ interface ProblemDetails {
   detail?: string;
 }
 
+const DEFAULT_SSR_API_ORIGIN = 'http://localhost:3000';
+
+/**
+ * Browsers fetch relative `/api/...` (Vite proxies to Nest).
+ * Node SSR needs an absolute URL. In Vite dev, call Nest directly — do not use
+ * VITE_API_BASE_URL (often a remote demo host) or self-fetch the Vite origin.
+ */
+const resolveApiUrl = createIsomorphicFn()
+  .client((path: string) => path)
+  .server((path: string) => {
+    if (/^https?:\/\//i.test(path)) {
+      return path;
+    }
+    if (import.meta.env.DEV) {
+      return new URL(path, `${DEFAULT_SSR_API_ORIGIN}/`).href;
+    }
+    try {
+      return new URL(path, getRequestUrl().origin).href;
+    } catch {
+      return new URL(path, `${DEFAULT_SSR_API_ORIGIN}/`).href;
+    }
+  });
+
+function summarizeErrorBody(status: number, bodyText: string): string {
+  const trimmed = bodyText.trimStart();
+  if (
+    trimmed.startsWith('<!DOCTYPE') ||
+    trimmed.startsWith('<html') ||
+    trimmed.startsWith('<HTML')
+  ) {
+    return `Request failed with status ${status}`;
+  }
+  return bodyText;
+}
+
 export async function apiRequest<T>(
   path: string,
   init?: RequestInit,
@@ -23,7 +61,7 @@ export async function apiRequest<T>(
   headers.set('Content-Type', 'application/json');
   headers.set('X-Actor-Id', 'designer-user');
 
-  const response = await fetch(path, {
+  const response = await fetch(resolveApiUrl(path), {
     ...init,
     headers,
   });
@@ -45,7 +83,7 @@ export async function apiRequest<T>(
       title = problem.title ?? title;
       detail = problem.detail ?? detail;
     } catch {
-      detail = bodyText;
+      detail = summarizeErrorBody(response.status, bodyText);
     }
   }
 

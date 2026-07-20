@@ -5,23 +5,23 @@ import { ApiError } from '@/api/client.ts';
 import { getFormDraft, updateFormDraft } from '@/api/forms.ts';
 import { queryKeys } from '@/api/query-keys.ts';
 import {
-  createEmptyDraft,
   parseDraft,
-  serializeDraft,
   syncRulesSchema,
   syncUiSchema,
 } from '@/features/forms/model/formDraft.ts';
-import type { FormDraftModel } from '@/features/forms/types.ts';
+import type { FormDraftModel, FormVersion } from '@/features/forms/types.ts';
 import { validateDraft } from '@/features/forms/validation/validateDraft.ts';
 
-export type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'conflict';
+type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'conflict';
 
-export interface UseFormDraftResult {
+interface UseFormDraftResult {
   model: FormDraftModel;
   rowVersion: number;
   saveState: SaveState;
   saveError: string | null;
   validationIssues: ReturnType<typeof validateDraft>;
+  isLoading: boolean;
+  loadError: string | null;
   isReadOnly: boolean;
   setModel: (updater: (current: FormDraftModel) => FormDraftModel) => void;
   reloadDraft: () => Promise<void>;
@@ -31,44 +31,83 @@ export interface UseFormDraftResult {
 
 const AUTOSAVE_MS = 1500;
 
-export function useFormDraft(formCode: string): UseFormDraftResult {
+function draftSnapshot(version: FormVersion): {
+  model: FormDraftModel;
+  rowVersion: number;
+  isReadOnly: boolean;
+} {
+  return {
+    model: parseDraft(version),
+    rowVersion: version.rowVersion,
+    isReadOnly: version.status === 'review',
+  };
+}
+
+export function useFormDraft(
+  formCode: string,
+  initialDraft: FormVersion,
+): UseFormDraftResult {
   const queryClient = useQueryClient();
-  const [model, setModelState] = useState<FormDraftModel>(() =>
-    createEmptyDraft(),
-  );
-  const [rowVersion, setRowVersion] = useState(0);
+  const initial = draftSnapshot(initialDraft);
+  const [model, setModelState] = useState<FormDraftModel>(initial.model);
+  const [rowVersion, setRowVersion] = useState(initial.rowVersion);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [isReadOnly, setIsReadOnly] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(initial.isReadOnly);
   const [isDirty, setIsDirty] = useState(false);
-  const [conflictDismissed, setConflictDismissed] = useState(false);
+  // Track which server draft has been applied into local editor state.
+  const [appliedDraft, setAppliedDraft] = useState<FormVersion>(initialDraft);
   const modelRef = useRef(model);
   const rowVersionRef = useRef(rowVersion);
   const timerRef = useRef<number | null>(null);
+  const [trackedFormCode, setTrackedFormCode] = useState(formCode);
 
   const draftQuery = useQuery({
     queryKey: queryKeys.forms.draft(formCode),
     queryFn: async () => {
-      const version = await getFormDraft(formCode);
-      return version;
+      const draft = await getFormDraft(formCode);
+      return draft;
     },
+    initialData: initialDraft,
+    // Designer owns local edits; only reloadDraft / save should refresh cache.
+    staleTime: Number.POSITIVE_INFINITY,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
+
+  if (trackedFormCode !== formCode) {
+    const next = draftSnapshot(initialDraft);
+    setTrackedFormCode(formCode);
+    setModelState(next.model);
+    modelRef.current = next.model;
+    setRowVersion(next.rowVersion);
+    rowVersionRef.current = next.rowVersion;
+    setSaveState('idle');
+    setSaveError(null);
+    setIsReadOnly(next.isReadOnly);
+    setIsDirty(false);
+    setAppliedDraft(initialDraft);
+  }
 
   useEffect(() => {
     modelRef.current = model;
     rowVersionRef.current = rowVersion;
   }, [model, rowVersion]);
 
-  const [prevDraftData, setPrevDraftData] = useState(draftQuery.data);
-  if (draftQuery.data !== prevDraftData) {
-    setPrevDraftData(draftQuery.data);
-    if (draftQuery.data) {
-      setModelState(parseDraft(draftQuery.data));
-      setRowVersion(draftQuery.data.rowVersion);
-      setIsReadOnly(draftQuery.data.status === 'review');
-      setIsDirty(false);
-      setConflictDismissed(false);
-    }
+  // Adopt server draft only when we are not mid-edit. Otherwise a refetch /
+  // setQueryData race can wipe an AI apply or show a loading flash.
+  if (
+    !isDirty &&
+    draftQuery.data !== undefined &&
+    draftQuery.data !== appliedDraft
+  ) {
+    const next = draftSnapshot(draftQuery.data);
+    setAppliedDraft(draftQuery.data);
+    setModelState(next.model);
+    modelRef.current = next.model;
+    setRowVersion(next.rowVersion);
+    rowVersionRef.current = next.rowVersion;
+    setIsReadOnly(next.isReadOnly);
   }
 
   const saveMutation = useMutation({
@@ -83,11 +122,14 @@ export function useFormDraft(formCode: string): UseFormDraftResult {
     },
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.forms.draft(formCode), saved);
-      setModelState(parseDraft(saved));
+      // Keep the local editor model — re-parsing a large AI draft here freezes
+      // the canvas right after it already painted the applied schemas.
+      setAppliedDraft(saved);
       setRowVersion(saved.rowVersion);
+      rowVersionRef.current = saved.rowVersion;
+      setIsReadOnly(saved.status === 'review');
       setSaveState('saved');
       setIsDirty(false);
-      setConflictDismissed(false);
       setSaveError(null);
     },
     onError: (error) => {
@@ -114,13 +156,17 @@ export function useFormDraft(formCode: string): UseFormDraftResult {
     setSaveState('idle');
     setSaveError(null);
     setIsDirty(false);
-    setConflictDismissed(false);
     await queryClient.invalidateQueries({
       queryKey: queryKeys.forms.draft(formCode),
     });
   }, [formCode, queryClient]);
 
   const saveNow = useCallback(async (): Promise<void> => {
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
     const { current } = modelRef;
     const issues = validateDraft(current);
     if (issues.length > 0) {
@@ -138,7 +184,11 @@ export function useFormDraft(formCode: string): UseFormDraftResult {
     setSaveState('saving');
     setSaveError(null);
 
-    const payload = serializeDraft(synced);
+    const payload = {
+      clinicalSchemaJson: JSON.stringify(synced.clinical),
+      uiSchemaJson: JSON.stringify(synced.ui),
+      rulesSchemaJson: JSON.stringify(synced.rules),
+    };
     await saveMutation.mutateAsync({
       ...payload,
       rowVersion: rowVersionRef.current,
@@ -150,7 +200,11 @@ export function useFormDraft(formCode: string): UseFormDraftResult {
       if (isReadOnly) {
         return;
       }
-      setModelState((current) => updater(current));
+      setModelState((current) => {
+        const next = updater(current);
+        modelRef.current = next;
+        return next;
+      });
       setIsDirty(true);
       setSaveState('idle');
     },
@@ -176,9 +230,19 @@ export function useFormDraft(formCode: string): UseFormDraftResult {
   }, [isDirty, isReadOnly, model, saveNow, saveState]);
 
   const dismissConflict = useCallback((): void => {
-    setConflictDismissed(true);
     setSaveState('idle');
   }, []);
+
+  const isSynced =
+    draftQuery.data !== undefined && appliedDraft === draftQuery.data;
+
+  let loadError: string | null = null;
+  if (draftQuery.isError && !draftQuery.data) {
+    loadError =
+      draftQuery.error instanceof Error
+        ? draftQuery.error.message
+        : 'Failed to load draft.';
+  }
 
   return {
     model,
@@ -186,13 +250,15 @@ export function useFormDraft(formCode: string): UseFormDraftResult {
     saveState: saveMutation.isPending ? 'saving' : saveState,
     saveError,
     validationIssues,
+    // Never flash the loader over dirty local edits (e.g. AI apply + refetch).
+    isLoading:
+      draftQuery.isPending ||
+      (draftQuery.isFetching && !isSynced && !isDirty),
+    loadError,
     isReadOnly,
     setModel,
     reloadDraft,
     saveNow,
-    dismissConflict:
-      conflictDismissed && saveState !== 'conflict'
-        ? dismissConflict
-        : dismissConflict,
+    dismissConflict,
   };
 }

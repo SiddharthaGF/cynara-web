@@ -1,11 +1,7 @@
 import { createInstance } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-import {
-  DEFAULT_LOCALE,
-  getStoredLocale,
-  resolveLocale,
-} from '@/lib/locale.ts';
+import { resolveBootLocale } from '@/lib/locale.ts';
 import type { AppLocale } from '@/lib/locale.ts';
 
 import commonEn from './locales/en/common.json';
@@ -32,19 +28,14 @@ const resources = {
   },
 } as const;
 
-export function createI18n(initialLocale?: AppLocale) {
-  const locale =
-    initialLocale ??
-    (typeof window === 'undefined'
-      ? DEFAULT_LOCALE
-      : resolveLocale(getStoredLocale()));
-
+function createI18n(initialLocale?: AppLocale) {
+  const locale = initialLocale ?? resolveBootLocale();
   const instance = createInstance();
 
   void instance.use(initReactI18next).init({
     resources,
     lng: locale,
-    fallbackLng: DEFAULT_LOCALE,
+    fallbackLng: 'en',
     defaultNS: 'common',
     ns: ['common', 'forms', 'designer', 'validation'],
     interpolation: { escapeValue: false },
@@ -53,6 +44,8 @@ export function createI18n(initialLocale?: AppLocale) {
   return instance;
 }
 
+/**
+ * Boot language comes from the URL on the client (`/es/...` → es) so hydration
+ * matches SSR. Route `beforeLoad` still syncs on navigation / server render.
+ */
 export const i18nInstance = createI18n();
-
-export type I18nNamespace = keyof (typeof resources)['en'];

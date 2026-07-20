@@ -5,6 +5,14 @@
     "editingDraft": "Editando borrador",
     "readOnlyReview": "Revisión de solo lectura"
   },
+  "loading": {
+    "title": "Cargando editor…",
+    "description": "Preparando el borrador del formulario."
+  },
+  "loadError": {
+    "title": "No se pudo cargar el formulario",
+    "retry": "Reintentar"
+  },
   "saveState": {
     "saving": "Guardando…",
     "saved": "Todos los cambios guardados",
@@ -53,7 +61,7 @@
   },
   "canvas": {
     "emptyTitle": "Empieza a construir tu formulario",
-    "emptyDescription": "Abre el panel lateral para añadir una pregunta en móvil, o usa el panel izquierdo en escritorio.",
+    "emptyDescription": "Pulsa + debajo para añadir la primera pregunta.",
     "untitledQuestion": "Pregunta sin título",
     "question": "Pregunta",
     "type": "Tipo",
@@ -68,12 +76,28 @@
     "duplicateSoon": "Duplicar próximamente",
     "moreOptions": "Más opciones",
     "actionsMenu": "Acciones de la pregunta",
-    "deleteQuestion": "Eliminar pregunta"
+    "deleteQuestion": "Eliminar pregunta",
+    "insertQuestion": "Insertar pregunta aquí",
+    "insertQuestionShort": "Añadir",
+    "insertQuestionTitle": "Añadir pregunta",
+    "insertQuestionHint": "Elige el tipo para insertarla en este punto."
   },
   "preview": {
     "shortAnswer": "Texto de respuesta corta",
     "longAnswer": "Texto de respuesta larga",
     "validationRules": "Reglas de validación",
+    "validationRange": "Rango",
+    "validationGlanceLabel": "Restricciones: {{summary}}",
+    "glance": {
+      "range": "{{min}}–{{max}}",
+      "minOnly": "≥ {{value}}",
+      "maxOnly": "≤ {{value}}",
+      "lengthRange": "{{min}}–{{max}} car.",
+      "step": "paso {{value}}",
+      "decimals": "{{count}} dec",
+      "conditionals_one": "{{count}} condicional",
+      "conditionals_other": "{{count}} condicionales"
+    },
     "sectionFields_one": "Sección con {{count}} campo anidado",
     "sectionFields_other": "Sección con {{count}} campos anidados",
     "repeaterFields": "Bloque repetible · {{count}} campos por fila",
@@ -100,7 +124,12 @@
   },
   "inspector": {
     "moreOptions": "Más opciones",
+    "caseFile": "Ajustes del campo",
+    "questionNumber": "Pregunta {{number}}",
+    "codeLabel": "Código",
     "presentation": "Presentación (UI schema)",
+    "tabNavLabel": "Secciones del campo",
+    "scopeNote": "Los cambios aquí se autoguardan en el borrador. Solo serán visibles para el personal clínico tras publicar este formulario.",
     "placeholder": "Marcador de posición",
     "widget": "Widget",
     "width": "Ancho",
@@ -223,10 +252,25 @@
     "configWarnings_one": "{{count}} advertencia de configuración",
     "configWarnings_other": "{{count}} advertencias de configuración",
     "fieldStates": "Estados de campos",
+    "fieldStatesSummary": "{{visible}} visibles · {{required}} requeridos · {{withRules}} con reglas (de {{total}})",
+    "fieldColumn": "Campo",
+    "stateGroupLabel": "Estados de {{field}}",
     "visible": "Visible",
     "enabled": "Habilitado",
     "required": "Requerido",
+    "visibleShort": "V",
+    "enabledShort": "H",
+    "requiredShort": "R",
+    "stateOn": "sí",
+    "stateOff": "no",
     "calculatedValue": "Calculado: {{value}}",
+    "rulesLabel": "Reglas",
+    "ruleKind": {
+      "visible": "Visibilidad",
+      "enabled": "Habilitación",
+      "required": "Obligatoriedad",
+      "calculate": "Cálculo"
+    },
     "hasConditionalRules": "Tiene reglas condicionales",
     "crossFieldValidation": "Validación entre campos",
     "addRow": "Añadir fila",
@@ -281,5 +325,55 @@
       "tabActivity": "Actividad",
       "tabSettings": "Ajustes"
     }
+  },
+  "ai": {
+    "open": "Chat IA",
+    "eyebrow": "Asistente de formularios",
+    "title": "Cynara",
+    "description": "Describe qué deben capturar los clínicos. Pide correcciones aquí — el lienzo sigue editable a mano.",
+    "emptyTitle": "¿En qué puedo ayudarte?",
+    "empty": "Describe el formulario o un cambio. Puedes citar preguntas con @ y tipos con #.",
+    "tryThese": "Sugerencias",
+    "prompts": {
+      "vitals": "Signos vitales con presión arterial, frecuencia cardíaca y temperatura",
+      "intake": "Ingreso del paciente con demografía, alergias y motivo de consulta",
+      "meds": "Lista de medicamentos con nombre, dosis y frecuencia en un repetidor"
+    },
+    "placeholder": "Pregunta lo que sea… @ pregunta · # tipo",
+    "composerHint": "Se aplica al borrador abierto",
+    "mention": {
+      "label": "Citar pregunta del formulario",
+      "empty": "No hay preguntas que coincidan",
+      "hint": "↑↓ para elegir · Enter para insertar · Esc para cerrar",
+      "composerHint": "Citando una pregunta…",
+      "typeLabel": "Elegir tipo de pregunta",
+      "typeEmpty": "No hay tipos que coincidan",
+      "typeHint": "↑↓ para elegir · Enter para insertar · Esc para cerrar",
+      "typeComposerHint": "Eligiendo un tipo…",
+      "contextField": "Pregunta del formulario",
+      "contextType": "Tipo de pregunta"
+    },
+    "send": "Enviar",
+    "queue": "Poner en cola",
+    "queueHint": "Enter pone el mensaje en cola",
+    "queued": "En cola",
+    "removeQueued": "Quitar de la cola",
+    "stop": "Detener",
+    "stopped": "Generación detenida. Puedes reintentar o escribir otra instrucción.",
+    "retry": "Reintentar",
+    "scrollToLatest": "Ir al final",
+    "showMore": "Mostrar más",
+    "showLess": "Mostrar menos",
+    "thinking": "Respondiendo…",
+    "applying": "Terminando el esquema y aplicándolo al borrador…",
+    "applied": "Aplicado al borrador",
+    "thinkingLabel": "Pensó",
+    "you": "Tú",
+    "assistant": "Cynara",
+    "model": "Modelo: {{model}}",
+    "errorLabel": "No se pudo aplicar",
+    "close": "Cerrar chat",
+    "notConfigured": "El chat IA no está configurado. Define OPENAI_API_KEY en la API (opcional OPENAI_BASE_URL y OPENAI_MODEL).",
+    "errorGeneric": "No se pudo generar el formulario. Inténtalo de nuevo."
   }
 }

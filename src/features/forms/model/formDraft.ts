@@ -9,20 +9,7 @@ import type {
   UiSchema,
 } from '../types.ts';
 
-export function createEmptyDraft(): FormDraftModel {
-  const clinical: ClinicalSchema = {
-    schemaVersion: '1.0.0',
-    fields: [],
-  };
-
-  return {
-    clinical,
-    ui: createUiSchema(clinical),
-    rules: createRulesSchema(clinical),
-  };
-}
-
-export function createUiSchema(clinical: ClinicalSchema): UiSchema {
+function createUiSchema(clinical: ClinicalSchema): UiSchema {
   return {
     schemaVersion: '1.0.0',
     clinicalSchemaVersion: clinical.schemaVersion,
@@ -31,7 +18,7 @@ export function createUiSchema(clinical: ClinicalSchema): UiSchema {
   };
 }
 
-export function createRulesSchema(clinical: ClinicalSchema): RulesSchema {
+function createRulesSchema(clinical: ClinicalSchema): RulesSchema {
   return {
     schemaVersion: '1.0.0',
     clinicalSchemaVersion: clinical.schemaVersion,
@@ -130,6 +117,18 @@ export function appendFieldToLayout(
   }
 
   return [...layout, fieldNode];
+}
+
+/** Insert a top-level field node at `index` (canvas order). */
+export function insertFieldInLayout(
+  layout: LayoutNode[],
+  field: ClinicalField,
+  index: number,
+): LayoutNode[] {
+  const next = [...layout];
+  const at = Math.max(0, Math.min(index, next.length));
+  next.splice(at, 0, layoutForField(field));
+  return next;
 }
 
 export function removeFieldFromLayout(
@@ -296,7 +295,7 @@ export function createField(type: FieldType, index: number): ClinicalField {
   return base;
 }
 
-export function humanize(value: string): string {
+function humanize(value: string): string {
   return value
     .split('-')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))

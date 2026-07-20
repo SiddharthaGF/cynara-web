@@ -1,7 +1,8 @@
+'use client';
+
 import { mergeProps } from '@base-ui/react/merge-props';
 import { useRender } from '@base-ui/react/use-render';
-import { cva } from 'class-variance-authority';
-import type { VariantProps } from 'class-variance-authority';
+import { cva, type VariantProps } from 'class-variance-authority';
 import { PanelLeftIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -31,7 +32,7 @@ const SIDEBAR_WIDTH_MOBILE = '18rem';
 const SIDEBAR_WIDTH_ICON = '3rem';
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
 
-interface SidebarContextProps {
+type SidebarContextProps = {
   state: 'expanded' | 'collapsed';
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -39,7 +40,7 @@ interface SidebarContextProps {
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
   toggleSidebar: () => void;
-}
+};
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 
@@ -82,20 +83,15 @@ function SidebarProvider({
       }
 
       // This sets the cookie to keep the sidebar state.
-      // oxlint-disable-next-line unicorn/no-document-cookie -- shadcn sidebar persistence
       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
     },
     [setOpenProp, open],
   );
 
   // Helper to toggle the sidebar.
-  const toggleSidebar = React.useCallback(
-    () =>
-      isMobile
-        ? setOpenMobile((isOpen) => !isOpen)
-        : setOpen((isOpen) => !isOpen),
-    [isMobile, setOpen, setOpenMobile],
-  );
+  const toggleSidebar = React.useCallback(() => {
+    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
+  }, [isMobile, setOpen, setOpenMobile]);
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
@@ -526,7 +522,7 @@ function SidebarMenuButton({
       },
       props,
     ),
-    render: tooltip ? <TooltipTrigger render={render} /> : render,
+    render: !tooltip ? render : <TooltipTrigger render={render} />,
     state: {
       slot: 'sidebar-menu-button',
       sidebar: 'menu-button',
@@ -539,8 +535,11 @@ function SidebarMenuButton({
     return comp;
   }
 
-  const tooltipContent =
-    typeof tooltip === 'string' ? { children: tooltip } : tooltip;
+  if (typeof tooltip === 'string') {
+    tooltip = {
+      children: tooltip,
+    };
+  }
 
   return (
     <Tooltip>
@@ -549,7 +548,7 @@ function SidebarMenuButton({
         side='right'
         align='center'
         hidden={state !== 'collapsed' || isMobile}
-        {...tooltipContent}
+        {...tooltip}
       />
     </Tooltip>
   );
@@ -610,9 +609,9 @@ function SidebarMenuSkeleton({
   showIcon?: boolean;
 }) {
   // Random width between 50 to 90%.
-  const [width] = React.useState(
-    () => `${Math.floor(Math.random() * 40) + 50}%`,
-  );
+  const [width] = React.useState(() => {
+    return `${Math.floor(Math.random() * 40) + 50}%`;
+  });
 
   return (
     <div

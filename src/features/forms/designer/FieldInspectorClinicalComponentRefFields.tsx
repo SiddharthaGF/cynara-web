@@ -1,9 +1,6 @@
 import type { JSX } from 'react';
 
-import {
-  Field,
-  FieldLabel,
-} from '@/components/ui/field.tsx';
+import { Field, FieldLabel } from '@/components/ui/field.tsx';
 import {
   Select,
   SelectContent,
@@ -12,8 +9,8 @@ import {
   SelectValue,
 } from '@/components/ui/select.tsx';
 
-import { ComponentDependencyHint } from './FieldInspectorFieldEditors.tsx';
 import type { ClinicalComponentRefFieldsProps } from './fieldInspectorClinicalTypes.ts';
+import { ComponentDependencyHint } from './FieldInspectorFieldEditors.tsx';
 
 export function ClinicalComponentRefFields({
   field,
@@ -38,7 +35,11 @@ export function ClinicalComponentRefFields({
               }}
             >
               <SelectTrigger className='w-full'>
-                <SelectValue placeholder={t('inspector.selectBlock')} />
+                <SelectValue placeholder={t('inspector.selectBlock')}>
+                  {components.find(
+                    (component) => component.code === fieldApi.state.value,
+                  )?.name ?? ''}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {components.map((component) => (
@@ -65,7 +66,11 @@ export function ClinicalComponentRefFields({
               }}
             >
               <SelectTrigger className='w-full'>
-                <SelectValue placeholder={t('inspector.latestDraft')} />
+                <SelectValue placeholder={t('inspector.latestDraft')}>
+                  {fieldApi.state.value === ''
+                    ? t('inspector.latestDraft')
+                    : fieldApi.state.value}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value=''>{t('inspector.latestDraft')}</SelectItem>

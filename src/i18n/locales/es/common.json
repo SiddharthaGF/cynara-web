@@ -7,12 +7,19 @@
   },
   "theme": {
     "switchToLight": "Cambiar a modo claro",
-    "switchToDark": "Cambiar a modo oscuro"
+    "switchToDark": "Cambiar a modo oscuro",
+    "light": "Claro",
+    "dark": "Oscuro"
   },
   "locale": {
     "switch": "Cambiar idioma",
-    "en": "English",
+    "en": "Inglés",
     "es": "Español"
+  },
+  "settings": {
+    "open": "Ajustes",
+    "language": "Idioma",
+    "theme": "Tema"
   },
   "actions": {
     "save": "Guardar",

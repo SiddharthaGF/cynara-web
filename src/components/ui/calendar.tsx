@@ -1,17 +1,18 @@
-'use client';
-
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+} from 'lucide-react';
+import * as React from 'react';
 import {
   DayPicker,
   getDefaultClassNames,
   type DayButton,
   type Locale,
 } from 'react-day-picker';
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
-import { useEffect, useRef, type JSX } from 'react';
 
-import { Button } from '@/components/ui/button.tsx';
-import { buttonVariants } from '@/components/ui/button-variants.ts';
-import { cn } from '@/lib/utils.ts';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 function Calendar({
   className,
@@ -25,7 +26,7 @@ function Calendar({
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>['variant'];
-}): JSX.Element {
+}) {
   const defaultClassNames = getDefaultClassNames();
 
   return (
@@ -135,20 +136,22 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        Root: ({ className: rootClassName, rootRef, ...rootProps }) => (
-          <div
-            data-slot='calendar'
-            ref={rootRef}
-            className={cn(rootClassName)}
-            {...rootProps}
-          />
-        ),
-        Chevron: ({ className: chevronClassName, orientation, ...chevronProps }) => {
+        Root: ({ className, rootRef, ...props }) => {
+          return (
+            <div
+              data-slot='calendar'
+              ref={rootRef}
+              className={cn(className)}
+              {...props}
+            />
+          );
+        },
+        Chevron: ({ className, orientation, ...props }) => {
           if (orientation === 'left') {
             return (
               <ChevronLeftIcon
-                className={cn('size-4', chevronClassName)}
-                {...chevronProps}
+                className={cn('size-4', className)}
+                {...props}
               />
             );
           }
@@ -156,32 +159,34 @@ function Calendar({
           if (orientation === 'right') {
             return (
               <ChevronRightIcon
-                className={cn('size-4', chevronClassName)}
-                {...chevronProps}
+                className={cn('size-4', className)}
+                {...props}
               />
             );
           }
 
           return (
             <ChevronDownIcon
-              className={cn('size-4', chevronClassName)}
-              {...chevronProps}
+              className={cn('size-4', className)}
+              {...props}
             />
           );
         },
-        DayButton: ({ ...dayButtonProps }) => (
+        DayButton: ({ ...props }) => (
           <CalendarDayButton
             locale={locale}
-            {...dayButtonProps}
+            {...props}
           />
         ),
-        WeekNumber: ({ children, ...weekProps }) => (
-          <td {...weekProps}>
-            <div className='flex size-(--cell-size) items-center justify-center text-center'>
-              {children}
-            </div>
-          </td>
-        ),
+        WeekNumber: ({ children, ...props }) => {
+          return (
+            <td {...props}>
+              <div className='flex size-(--cell-size) items-center justify-center text-center'>
+                {children}
+              </div>
+            </td>
+          );
+        },
         ...components,
       }}
       {...props}
@@ -195,19 +200,16 @@ function CalendarDayButton({
   modifiers,
   locale,
   ...props
-}: React.ComponentProps<typeof DayButton> & { locale?: Partial<Locale> }): JSX.Element {
+}: React.ComponentProps<typeof DayButton> & { locale?: Partial<Locale> }) {
   const defaultClassNames = getDefaultClassNames();
-  const ref = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    if (modifiers.focused) {
-      ref.current?.focus();
-    }
+  const ref = React.useRef<HTMLButtonElement>(null);
+  React.useEffect(() => {
+    if (modifiers.focused) ref.current?.focus();
   }, [modifiers.focused]);
 
   return (
     <Button
-      ref={ref}
       variant='ghost'
       size='icon'
       data-day={day.date.toLocaleDateString(locale?.code)}

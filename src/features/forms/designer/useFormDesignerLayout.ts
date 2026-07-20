@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   appendFieldToLayout,
+  buildLayout,
   createField,
+  insertFieldInLayout,
   iterateFields,
   moveField,
   removeField,
@@ -15,18 +17,48 @@ import type {
   FieldPresentation,
   FieldRules,
   FieldType,
+  FormVersion,
 } from '../types.ts';
 import { useComponentCatalog } from './useComponentCatalog.ts';
 import { useFormDraft } from './useFormDraft.ts';
 
 export function useFormDesignerLayout(
   code: string,
-  setOpenMobile: (open: boolean) => void,
+  initialDraft: FormVersion,
 ) {
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const components = useComponentCatalog();
-  const draft = useFormDraft(code);
+  const draft = useFormDraft(code, initialDraft);
+
+  useEffect(() => {
+    if (!selectedFieldId) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent): void {
+      if (event.key !== 'Escape') {
+        return;
+      }
+
+      // Let nested overlays (select, menu, popover) consume Escape first.
+      if (
+        document.querySelector(
+          '[data-slot="select-content"][data-open], [data-slot="dropdown-menu-content"][data-open], [data-slot="popover-content"][data-open]',
+        )
+      ) {
+        return;
+      }
+
+      setSelectedFieldId(null);
+      setShowAdvanced(false);
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedFieldId]);
 
   const selectedField = useMemo(
     () =>
@@ -36,6 +68,16 @@ export function useFormDesignerLayout(
     [draft.model.clinical.fields, selectedFieldId],
   );
 
+  const selectedFieldIndex = useMemo(
+    () =>
+      selectedField
+        ? draft.model.clinical.fields.findIndex(
+            (field) => field.id === selectedField.id,
+          )
+        : -1,
+    [draft.model.clinical.fields, selectedField],
+  );
+
   const selectedPresentation = selectedField
     ? (draft.model.ui.fields[selectedField.id] ?? null)
     : null;
@@ -43,28 +85,43 @@ export function useFormDesignerLayout(
     ? (draft.model.rules.fields[selectedField.id] ?? null)
     : null;
 
-  const fieldCodes = useMemo(
+  const ruleFieldOptions = useMemo(
     () =>
-      [...iterateFields(draft.model.clinical.fields)].map((item) => item.code),
-    [draft.model.clinical.fields],
+      [...iterateFields(draft.model.clinical.fields)].map((item) => {
+        const label = draft.model.ui.fields[item.id]?.label?.trim();
+        return {
+          code: item.code,
+          label: label && label.length > 0 ? label : item.code,
+        };
+      }),
+    [draft.model.clinical.fields, draft.model.ui.fields],
   );
 
-  function handleAddField(type: FieldType): void {
+  function handleAddField(type: FieldType, atIndex?: number): void {
     draft.setModel((current) => {
-      const nextField = createField(type, current.clinical.fields.length);
+      const index = atIndex ?? current.clinical.fields.length;
+      const nextField = createField(type, index);
+      const fields = [...current.clinical.fields];
+      fields.splice(index, 0, nextField);
       const clinical = {
         ...current.clinical,
-        fields: [...current.clinical.fields, nextField],
+        fields,
       };
       const ui = syncUiSchema(clinical, current.ui);
-      ui.layout = appendFieldToLayout(ui.layout ?? [], nextField.id);
+      const priorLayout = current.ui.layout ?? [];
+      if (atIndex === undefined) {
+        ui.layout = appendFieldToLayout(priorLayout, nextField.id);
+      } else if (priorLayout.length > 0) {
+        ui.layout = insertFieldInLayout(priorLayout, nextField, index);
+      } else {
+        ui.layout = buildLayout(fields);
+      }
       ui.fields[nextField.id] = {
         label: ui.fields[nextField.id]?.label,
         widget: ui.fields[nextField.id]?.widget,
       };
       setSelectedFieldId(nextField.id);
       setShowAdvanced(false);
-      setOpenMobile(false);
       return { ...current, clinical, ui };
     });
   }
@@ -205,16 +262,14 @@ export function useFormDesignerLayout(
       ...current,
       clinical: {
         ...current.clinical,
-        fields: updateField(
-          current.clinical.fields,
-          selectedField.id,
-          patch,
-        ),
+        fields: updateField(current.clinical.fields, selectedField.id, patch),
       },
     }));
   }
 
-  function handleInspectorChangePresentation(patch: Partial<FieldPresentation>) {
+  function handleInspectorChangePresentation(
+    patch: Partial<FieldPresentation>,
+  ) {
     if (!selectedField) {
       return;
     }
@@ -248,9 +303,10 @@ export function useFormDesignerLayout(
     showAdvanced,
     setShowAdvanced,
     selectedField,
+    selectedFieldIndex,
     selectedPresentation,
     selectedRules,
-    fieldCodes,
+    ruleFieldOptions,
     handleAddField,
     handleOpenAdvanced,
     handleChangeFieldType,

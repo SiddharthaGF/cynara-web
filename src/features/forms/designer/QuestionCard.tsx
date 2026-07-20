@@ -18,11 +18,14 @@ import { Input } from '@/components/ui/input.tsx';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select.tsx';
 import { Textarea } from '@/components/ui/textarea.tsx';
+import { CalculatedFieldLabelSuffix } from '@/features/forms/CalculatedFieldLabel.tsx';
+import { stripLegacyCalculatedLabelSuffix } from '@/features/forms/stripLegacyCalculatedLabelSuffix.ts';
 import type {
   ClinicalField,
   FieldPresentation,
@@ -35,13 +38,13 @@ import { useSyncedTanstackForm } from '@/lib/useSyncedTanstackForm.ts';
 import { cn } from '@/lib/utils.ts';
 
 import { FieldPreview } from './FieldPreview.tsx';
+import { FieldTypeBadge, FieldTypeLabel } from './FieldTypeIcon.tsx';
 import { FIELD_TYPES } from './fieldTypeMeta.ts';
 import {
   questionEditToFormValues,
   type QuestionEditFormValues,
 } from './fieldInspectorFormUtils.ts';
 import { QuestionCardActions } from './QuestionCardActions.tsx';
-import { useFieldTypeMeta } from './useFieldTypeMeta.ts';
 
 export interface QuestionCardProps {
   field: ClinicalField;
@@ -79,7 +82,6 @@ function QuestionCardEditForm({
   onChangeFieldType: QuestionCardProps['onChangeFieldType'];
 }): JSX.Element {
   const { t } = useTranslation('designer');
-  const meta = useFieldTypeMeta(field.type);
 
   const form = useSyncedTanstackForm<QuestionEditFormValues>({
     defaultValues: questionEditToFormValues(presentation, field.type),
@@ -123,40 +125,50 @@ function QuestionCardEditForm({
         </form.Field>
 
         <form.Field name='type'>
-          {(fieldApi) => (
-            <Field className='gap-1.5 self-start'>
-              <FieldLabel htmlFor={`${field.id}-type`}>
-                {t('canvas.type')}
-              </FieldLabel>
-              <Select
-                value={fieldApi.state.value}
-                onValueChange={(value) => {
-                  if (value) {
-                    fieldApi.handleChange(value);
-                  }
-                }}
-              >
-                <SelectTrigger
-                  id={`${field.id}-type`}
-                  className='w-full sm:w-44'
+          {(fieldApi) => {
+            const items = FIELD_TYPES.map((item) => ({
+              value: item.type,
+              label: item.type,
+            }));
+
+            return (
+              <Field className='gap-1.5 self-start'>
+                <FieldLabel htmlFor={`${field.id}-type`}>
+                  {t('canvas.type')}
+                </FieldLabel>
+                <Select
+                  items={items}
+                  value={fieldApi.state.value}
+                  onValueChange={(value) => {
+                    if (value) {
+                      fieldApi.handleChange(value);
+                    }
+                  }}
                 >
-                  <SelectValue>{meta.label}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {FIELD_TYPES.map((item) => (
-                    <SelectItem
-                      key={item.type}
-                      value={item.type}
-                    >
-                      {t(`fieldTypes.${item.type}.label`, {
-                        defaultValue: item.label,
-                      })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          )}
+                  <SelectTrigger
+                    id={`${field.id}-type`}
+                    className='w-full sm:w-52'
+                  >
+                    <SelectValue>
+                      <FieldTypeLabel type={fieldApi.state.value} />
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {FIELD_TYPES.map((item) => (
+                        <SelectItem
+                          key={item.type}
+                          value={item.type}
+                        >
+                          <FieldTypeLabel type={item.type} />
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+            );
+          }}
         </form.Field>
       </div>
 
@@ -215,16 +227,20 @@ export function QuestionCard({
 }: QuestionCardProps): JSX.Element {
   const { t } = useTranslation('designer');
   const { t: tv } = useTranslation('validation');
-  const meta = useFieldTypeMeta(field.type);
-  const label = presentation?.label ?? t('canvas.untitledQuestion');
+  const isCalculated = Boolean(rules?.calculate);
+  const label = stripLegacyCalculatedLabelSuffix(
+    presentation?.label ?? t('canvas.untitledQuestion'),
+  );
   const helpText = presentation?.helpText ?? '';
 
   return (
     <li className='min-w-0'>
       <Card
         className={cn(
-          'min-w-0 cursor-pointer transition-shadow',
-          isSelected && 'ring-2 ring-primary/15',
+          'min-w-0 cursor-pointer transition-[box-shadow,background-color]',
+          isSelected
+            ? 'bg-primary/[0.07] ring-2 ring-primary/25 dark:bg-primary/10'
+            : 'bg-card',
         )}
         onClick={() => {
           onSelect(field.id);
@@ -241,7 +257,7 @@ export function QuestionCard({
           )}
         >
           <div className='flex flex-wrap items-center gap-2'>
-            <Badge variant='secondary'>{meta.label}</Badge>
+            <FieldTypeBadge type={field.type} />
             {field.required ? (
               <Badge variant='outline'>{t('canvas.required')}</Badge>
             ) : null}
@@ -264,13 +280,11 @@ export function QuestionCard({
               <div>
                 <CardTitle className='font-heading text-lg font-medium'>
                   {label}
+                  {isCalculated ? <CalculatedFieldLabelSuffix /> : null}
                   {field.required ? (
                     <span className='ml-1 text-destructive'>*</span>
                   ) : null}
                 </CardTitle>
-                {helpText ? (
-                  <CardDescription className='mt-1'>{helpText}</CardDescription>
-                ) : null}
               </div>
               <FieldPreview
                 field={field}
@@ -278,6 +292,11 @@ export function QuestionCard({
                 rules={rules}
                 placeholder={presentation?.placeholder}
               />
+              {helpText ? (
+                <CardDescription className='text-xs text-muted-foreground/80'>
+                  {helpText}
+                </CardDescription>
+              ) : null}
             </div>
           )}
 
@@ -290,7 +309,7 @@ export function QuestionCard({
 
         {isSelected && !readOnly ? (
           <CardFooter
-            className='flex-row items-center justify-between gap-3'
+            className='flex-row items-center justify-between gap-2 px-3 py-1.5'
             onClick={(event) => {
               event.stopPropagation();
             }}

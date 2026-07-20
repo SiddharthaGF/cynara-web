@@ -1,6 +1,7 @@
-import { Braces, Check, Copy, Download } from 'lucide-react';
-import { useMemo, useState, type JSX } from 'react';
+import { Braces, Copy, Download } from 'lucide-react';
+import { useMemo, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -22,15 +23,15 @@ export function FormJsonExportMenu({
   model,
 }: FormJsonExportMenuProps): JSX.Element {
   const { t } = useTranslation('designer');
-  const [copied, setCopied] = useState(false);
   const json = useMemo(() => formatFormExportJson(model), [model]);
 
   async function handleCopy(): Promise<void> {
-    await navigator.clipboard.writeText(json);
-    setCopied(true);
-    window.setTimeout(() => {
-      setCopied(false);
-    }, 2000);
+    try {
+      await navigator.clipboard.writeText(json);
+      toast.success(t('formPreview.jsonCopied'));
+    } catch {
+      toast.error(t('formPreview.copyJson'));
+    }
   }
 
   function handleDownload(): void {
@@ -64,8 +65,8 @@ export function FormJsonExportMenu({
             void handleCopy();
           }}
         >
-          {copied ? <Check className='size-4' /> : <Copy className='size-4' />}
-          {copied ? t('formPreview.jsonCopied') : t('formPreview.copyJson')}
+          <Copy className='size-4' />
+          {t('formPreview.copyJson')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleDownload}>
           <Download className='size-4' />

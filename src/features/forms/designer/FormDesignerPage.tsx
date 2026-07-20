@@ -1,17 +1,22 @@
 import type { JSX } from 'react';
 
-import { SidebarProvider } from '@/components/ui/sidebar.tsx';
+import type { FormVersion } from '@/features/forms/types.ts';
 
 import { FormDesignerLayout } from './FormDesignerLayout.tsx';
 
 interface FormDesignerPageProps {
   code: string;
+  initialDraft: FormVersion;
 }
 
-export function FormDesignerPage({ code }: FormDesignerPageProps): JSX.Element {
+export function FormDesignerPage({
+  code,
+  initialDraft,
+}: FormDesignerPageProps): JSX.Element {
   return (
-    <SidebarProvider defaultOpen>
-      <FormDesignerLayout code={code} />
-    </SidebarProvider>
+    <FormDesignerLayout
+      code={code}
+      initialDraft={initialDraft}
+    />
   );
 }

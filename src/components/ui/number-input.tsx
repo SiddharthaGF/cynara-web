@@ -14,8 +14,10 @@ import {
 } from '@/lib/number-format.ts';
 import { cn } from '@/lib/utils.ts';
 
-interface NumberInputProps
-  extends Omit<ComponentProps<'input'>, 'type' | 'onChange' | 'value'> {
+interface NumberInputProps extends Omit<
+  ComponentProps<'input'>,
+  'type' | 'onChange' | 'value'
+> {
   value?: string | number | null;
   integer?: boolean;
   decimalPlaces?: number;
@@ -216,7 +218,12 @@ function NumberInput({
         onBlur={(event) => {
           setIsFocused(false);
 
-          if (draft === '' || draft === '-' || draft === '.' || draft === '-.') {
+          if (
+            draft === '' ||
+            draft === '-' ||
+            draft === '.' ||
+            draft === '-.'
+          ) {
             setDraft('');
             onValueChange?.(null);
             onBlur?.(event);

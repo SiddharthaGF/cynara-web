@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import { Fragment, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -18,6 +18,7 @@ import type {
 import { issuesForField } from '@/features/forms/validation/validateDraft.ts';
 
 import { QuestionCard } from './QuestionCard.tsx';
+import { QuestionInsertGap } from './QuestionInsertGap.tsx';
 
 interface FieldCanvasProps {
   formCode: string;
@@ -37,6 +38,7 @@ interface FieldCanvasProps {
   onChangeFieldType: (fieldId: string, type: FieldType) => void;
   onToggleRequired: (fieldId: string, required: boolean) => void;
   onOpenAdvanced: (fieldId: string) => void;
+  onAddField: (type: FieldType, atIndex: number) => void;
   readOnly?: boolean;
 }
 
@@ -55,6 +57,7 @@ export function FieldCanvas({
   onChangeFieldType,
   onToggleRequired,
   onOpenAdvanced,
+  onAddField,
   readOnly = false,
 }: FieldCanvasProps): JSX.Element {
   const { t } = useTranslation('designer');
@@ -75,38 +78,69 @@ export function FieldCanvas({
       </Card>
 
       {fields.length === 0 ? (
-        <Card>
-          <CardContent className='py-14 text-center'>
-            <CardTitle className='font-heading text-lg font-medium'>
-              {t('canvas.emptyTitle')}
-            </CardTitle>
-            <CardDescription className='mt-2'>
-              {t('canvas.emptyDescription')}
-            </CardDescription>
-          </CardContent>
-        </Card>
+        <div className='grid gap-2'>
+          <Card>
+            <CardContent className='py-14 text-center'>
+              <CardTitle className='font-heading text-lg font-medium'>
+                {t('canvas.emptyTitle')}
+              </CardTitle>
+              <CardDescription className='mt-2'>
+                {t('canvas.emptyDescription')}
+              </CardDescription>
+            </CardContent>
+          </Card>
+          {readOnly ? null : (
+            <ul className='grid min-w-0 gap-0'>
+              <QuestionInsertGap
+                insertAt={0}
+                onAdd={onAddField}
+                alwaysVisible
+              />
+            </ul>
+          )}
+        </div>
       ) : (
-        <ul className='grid min-w-0 gap-4'>
-          {fields.map((field, index) => (
-            <QuestionCard
-              key={field.id}
-              field={field}
-              index={index}
-              total={fields.length}
-              presentation={presentations[field.id]}
-              rules={fieldRules[field.id]}
-              isSelected={selectedFieldId === field.id}
-              fieldIssues={issuesForField(validationIssues, field.id)}
-              readOnly={readOnly}
-              onSelect={onSelect}
-              onMoveUp={onMoveUp}
-              onMoveDown={onMoveDown}
-              onRemove={onRemove}
-              onChangePresentation={onChangePresentation}
-              onChangeFieldType={onChangeFieldType}
-              onToggleRequired={onToggleRequired}
-              onOpenAdvanced={onOpenAdvanced}
+        <ul className='grid min-w-0 gap-0'>
+          {readOnly ? null : (
+            <QuestionInsertGap
+              insertAt={0}
+              onAdd={onAddField}
             />
+          )}
+          {fields.map((field, index) => (
+            <Fragment key={field.id}>
+              <QuestionCard
+                field={field}
+                index={index}
+                total={fields.length}
+                presentation={presentations[field.id]}
+                rules={fieldRules[field.id]}
+                isSelected={selectedFieldId === field.id}
+                fieldIssues={issuesForField(validationIssues, field.id)}
+                readOnly={readOnly}
+                onSelect={onSelect}
+                onMoveUp={onMoveUp}
+                onMoveDown={onMoveDown}
+                onRemove={onRemove}
+                onChangePresentation={onChangePresentation}
+                onChangeFieldType={onChangeFieldType}
+                onToggleRequired={onToggleRequired}
+                onOpenAdvanced={onOpenAdvanced}
+              />
+              {readOnly ? (
+                index < fields.length - 1 ? (
+                  <li
+                    aria-hidden
+                    className='h-4 list-none'
+                  />
+                ) : null
+              ) : (
+                <QuestionInsertGap
+                  insertAt={index + 1}
+                  onAdd={onAddField}
+                />
+              )}
+            </Fragment>
           ))}
         </ul>
       )}

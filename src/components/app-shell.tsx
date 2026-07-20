@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useParams } from '@tanstack/react-router';
 import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -19,13 +19,15 @@ export function AppShell({
   className,
 }: AppShellProps): JSX.Element {
   const { t } = useTranslation('common');
+  const { locale } = useParams({ from: '/$locale' });
 
   return (
     <div className={cn('grain ambient-bg relative min-h-svh', className)}>
       <DocumentMeta />
       <header className='relative z-10 flex items-center justify-between border-b border-border/60 bg-background/70 px-6 py-4 backdrop-blur-md'>
         <Link
-          to='/forms'
+          to='/$locale/forms'
+          params={{ locale }}
           className='transition-opacity hover:opacity-80'
         >
           <CynaraMark showWordmark />

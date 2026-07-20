@@ -26,6 +26,7 @@ interface DatePickerInputProps {
   placeholder: string | undefined;
   inputId?: string;
   timePresets?: TimePreset[];
+  ariaInvalid?: boolean;
   onChange: (value: unknown) => void;
 }
 
@@ -36,6 +37,7 @@ export function DatePickerInput({
   placeholder,
   inputId,
   timePresets,
+  ariaInvalid = false,
   onChange,
 }: DatePickerInputProps): JSX.Element {
   const { i18n, t } = useTranslation('common');
@@ -141,6 +143,7 @@ export function DatePickerInput({
                 <Button
                   type='button'
                   variant='outline'
+                  aria-invalid={ariaInvalid || undefined}
                   className={cn(
                     'w-full min-w-0 justify-start text-left font-normal',
                     !displayDate && 'text-muted-foreground',
@@ -200,6 +203,7 @@ export function DatePickerInput({
           <Button
             type='button'
             variant='outline'
+            aria-invalid={ariaInvalid || undefined}
             className={cn(
               'w-full justify-start text-left font-normal',
               !displayDate && 'text-muted-foreground',

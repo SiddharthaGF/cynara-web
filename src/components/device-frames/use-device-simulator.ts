@@ -77,7 +77,7 @@ function writePersisted(value: PersistedSimulator): void {
   }
 }
 
-export interface UseDeviceSimulatorReturn {
+interface UseDeviceSimulatorReturn {
   resolution: DesktopResolution;
   orientation: MobileOrientation;
   setResolution: (resolution: DesktopResolution) => void;

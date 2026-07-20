@@ -1,11 +1,11 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useParams } from '@tanstack/react-router';
 import { FileText } from 'lucide-react';
 import { m } from 'motion/react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge.tsx';
-import { Button } from '@/components/ui/button.tsx';
+import { buttonVariants } from '@/components/ui/button.tsx';
 import {
   Card,
   CardContent,
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/card.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import type { FormSummary } from '@/features/forms/types.ts';
+import { cn } from '@/lib/utils.ts';
 
 interface FormsCatalogCardProps {
   forms: FormSummary[];
@@ -26,6 +27,7 @@ export function FormsCatalogCard({
   reduceMotion,
 }: FormsCatalogCardProps): JSX.Element {
   const { t } = useTranslation('forms');
+  const { locale } = useParams({ from: '/$locale' });
 
   return (
     <m.div
@@ -87,21 +89,24 @@ export function FormsCatalogCard({
                             {form.code}
                           </code>
                         </div>
-                        {form.editableStatus !== null &&
+                        {form.editableVersionId !== null &&
+                        form.editableVersionId !== '' &&
+                        form.editableStatus !== null &&
                         form.editableStatus !== '' ? (
-                          <Button
-                            render={
-                              <Link
-                                to='/forms/$code/designer'
-                                params={{ code: form.code }}
-                              />
-                            }
-                            nativeButton={false}
-                            size='sm'
-                            className='opacity-90 transition-opacity group-hover:opacity-100'
+                          <Link
+                            to='/$locale/forms/$code/designer/$draftId'
+                            params={{
+                              locale,
+                              code: form.code,
+                              draftId: form.editableVersionId,
+                            }}
+                            className={cn(
+                              buttonVariants({ size: 'sm' }),
+                              'opacity-90 transition-opacity group-hover:opacity-100',
+                            )}
                           >
                             {t('list.openDesigner')}
-                          </Button>
+                          </Link>
                         ) : null}
                       </div>
                       <div className='mt-3 flex flex-wrap items-center gap-2'>

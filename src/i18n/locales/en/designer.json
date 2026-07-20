@@ -5,6 +5,14 @@
     "editingDraft": "Editing draft",
     "readOnlyReview": "Read-only review"
   },
+  "loading": {
+    "title": "Loading editor…",
+    "description": "Preparing the form draft."
+  },
+  "loadError": {
+    "title": "Could not load the form",
+    "retry": "Try again"
+  },
   "saveState": {
     "saving": "Saving…",
     "saved": "All changes saved",
@@ -53,7 +61,7 @@
   },
   "canvas": {
     "emptyTitle": "Start building your form",
-    "emptyDescription": "Open the sidebar to add a question on mobile, or use the left panel on desktop.",
+    "emptyDescription": "Press + below to add the first question.",
     "untitledQuestion": "Untitled question",
     "question": "Question",
     "type": "Type",
@@ -68,12 +76,28 @@
     "duplicateSoon": "Duplicate coming soon",
     "moreOptions": "More options",
     "actionsMenu": "Question actions",
-    "deleteQuestion": "Delete question"
+    "deleteQuestion": "Delete question",
+    "insertQuestion": "Insert question here",
+    "insertQuestionShort": "Add",
+    "insertQuestionTitle": "Add question",
+    "insertQuestionHint": "Pick a type to insert it at this point."
   },
   "preview": {
     "shortAnswer": "Short answer text",
     "longAnswer": "Long answer text",
     "validationRules": "Validation rules",
+    "validationRange": "Range",
+    "validationGlanceLabel": "Constraints: {{summary}}",
+    "glance": {
+      "range": "{{min}}–{{max}}",
+      "minOnly": "≥ {{value}}",
+      "maxOnly": "≤ {{value}}",
+      "lengthRange": "{{min}}–{{max}} chars",
+      "step": "step {{value}}",
+      "decimals": "{{count}} dp",
+      "conditionals_one": "{{count}} conditional",
+      "conditionals_other": "{{count}} conditionals"
+    },
     "sectionFields_one": "Section with {{count}} nested field",
     "sectionFields_other": "Section with {{count}} nested fields",
     "repeaterFields": "Repeatable block · {{count}} fields per row",
@@ -100,7 +124,12 @@
   },
   "inspector": {
     "moreOptions": "More options",
+    "caseFile": "Field settings",
+    "questionNumber": "Question {{number}}",
+    "codeLabel": "Code",
     "presentation": "Presentation (UI schema)",
+    "tabNavLabel": "Field sections",
+    "scopeNote": "Changes here autosave to the draft. They become visible to clinicians only after this form is published.",
     "placeholder": "Placeholder",
     "widget": "Widget",
     "width": "Width",
@@ -223,10 +252,25 @@
     "configWarnings_one": "{{count}} configuration warning",
     "configWarnings_other": "{{count}} configuration warnings",
     "fieldStates": "Field states",
+    "fieldStatesSummary": "{{visible}} visible · {{required}} required · {{withRules}} with rules (of {{total}})",
+    "fieldColumn": "Field",
+    "stateGroupLabel": "States for {{field}}",
     "visible": "Visible",
     "enabled": "Enabled",
     "required": "Required",
+    "visibleShort": "V",
+    "enabledShort": "E",
+    "requiredShort": "R",
+    "stateOn": "on",
+    "stateOff": "off",
     "calculatedValue": "Calculated: {{value}}",
+    "rulesLabel": "Rules",
+    "ruleKind": {
+      "visible": "Visibility",
+      "enabled": "Enabled",
+      "required": "Required",
+      "calculate": "Calculate"
+    },
     "hasConditionalRules": "Has conditional rules",
     "crossFieldValidation": "Cross-field validation",
     "addRow": "Add row",
@@ -281,5 +325,55 @@
       "tabActivity": "Activity",
       "tabSettings": "Settings"
     }
+  },
+  "ai": {
+    "open": "AI chat",
+    "eyebrow": "Form assistant",
+    "title": "Cynara",
+    "description": "Describe what clinicians need to capture. Ask for corrections in this thread — the canvas stays editable.",
+    "emptyTitle": "How can I help?",
+    "empty": "Describe the form or a change. Cite questions with @ and field types with #.",
+    "tryThese": "Suggestions",
+    "prompts": {
+      "vitals": "Vital signs with blood pressure, heart rate, and temperature",
+      "intake": "Patient intake with demographics, allergies, and chief complaint",
+      "meds": "Medication list with name, dose, and frequency as a repeater"
+    },
+    "placeholder": "Ask anything… @ question · # type",
+    "composerHint": "Applies to the open draft",
+    "mention": {
+      "label": "Cite a form question",
+      "empty": "No matching questions",
+      "hint": "↑↓ to choose · Enter to insert · Esc to close",
+      "composerHint": "Citing a question…",
+      "typeLabel": "Pick a question type",
+      "typeEmpty": "No matching types",
+      "typeHint": "↑↓ to choose · Enter to insert · Esc to close",
+      "typeComposerHint": "Picking a type…",
+      "contextField": "Form question",
+      "contextType": "Question type"
+    },
+    "send": "Send",
+    "queue": "Queue message",
+    "queueHint": "Enter queues the message",
+    "queued": "Queued",
+    "removeQueued": "Remove from queue",
+    "stop": "Stop",
+    "stopped": "Generation stopped. Retry or write another instruction.",
+    "retry": "Retry",
+    "scrollToLatest": "Scroll to latest",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "thinking": "Replying…",
+    "applying": "Finishing schema and applying to the draft…",
+    "applied": "Applied to draft",
+    "thinkingLabel": "Thought",
+    "you": "You",
+    "assistant": "Cynara",
+    "model": "Model: {{model}}",
+    "errorLabel": "Could not apply",
+    "close": "Close chat",
+    "notConfigured": "AI chat is not configured. Set OPENAI_API_KEY on the API (optional OPENAI_BASE_URL and OPENAI_MODEL).",
+    "errorGeneric": "Could not generate the form. Try again."
   }
 }

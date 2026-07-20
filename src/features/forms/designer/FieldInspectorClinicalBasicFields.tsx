@@ -7,6 +7,7 @@ import {
   FieldLabel,
 } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
+import { NumberInput } from '@/components/ui/number-input.tsx';
 import {
   Select,
   SelectContent,
@@ -120,6 +121,30 @@ export function ClinicalDefaultValueFields({
     return null;
   }
 
+  if (field.type === 'number' || field.type === 'integer') {
+    return (
+      <form.Field name='defaultText'>
+        {(fieldApi) => (
+          <Field>
+            <FieldLabel htmlFor={`${field.id}-default`}>
+              {t('inspector.defaultValue')}
+            </FieldLabel>
+            <NumberInput
+              id={`${field.id}-default`}
+              name={fieldApi.name}
+              integer={field.type === 'integer'}
+              value={fieldApi.state.value}
+              onBlur={fieldApi.handleBlur}
+              onValueChange={(next) => {
+                fieldApi.handleChange(next === null ? '' : String(next));
+              }}
+            />
+          </Field>
+        )}
+      </form.Field>
+    );
+  }
+
   return (
     <form.Field name='defaultText'>
       {(fieldApi) => (
@@ -130,11 +155,6 @@ export function ClinicalDefaultValueFields({
           <Input
             id={`${field.id}-default`}
             name={fieldApi.name}
-            type={
-              field.type === 'number' || field.type === 'integer'
-                ? 'number'
-                : 'text'
-            }
             value={fieldApi.state.value}
             onBlur={fieldApi.handleBlur}
             onChange={(event) => {

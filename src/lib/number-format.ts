@@ -1,6 +1,6 @@
 export const MAX_DECIMAL_PLACES = 10;
 
-export function clampDecimalPlaces(decimals: number): number {
+function clampDecimalPlaces(decimals: number): number {
   if (!Number.isFinite(decimals)) {
     return 0;
   }
@@ -8,7 +8,7 @@ export function clampDecimalPlaces(decimals: number): number {
   return Math.min(MAX_DECIMAL_PLACES, Math.max(0, Math.trunc(decimals)));
 }
 
-export function decimalPlacesFromStep(step: number): number {
+function decimalPlacesFromStep(step: number): number {
   if (!Number.isFinite(step) || step <= 0) {
     return 0;
   }
@@ -27,7 +27,7 @@ export function decimalPlacesFromStep(step: number): number {
   return decimals;
 }
 
-export function resolveDecimalPlaces(options?: {
+function resolveDecimalPlaces(options?: {
   decimalPlaces?: number;
   step?: number;
   fallback?: number;
@@ -43,7 +43,7 @@ export function resolveDecimalPlaces(options?: {
   return clampDecimalPlaces(options?.fallback ?? 2);
 }
 
-export function roundToDecimals(value: number, decimals: number): number {
+function roundToDecimals(value: number, decimals: number): number {
   const places = clampDecimalPlaces(decimals);
 
   if (!Number.isFinite(value) || places <= 0) {
@@ -54,7 +54,7 @@ export function roundToDecimals(value: number, decimals: number): number {
   return Math.round(value * factor) / factor;
 }
 
-export function snapToStep(
+function snapToStep(
   value: number,
   step: number,
   min?: number,
@@ -90,7 +90,7 @@ export function snapToStep(
   return snapped / factor;
 }
 
-export function clampNumber(
+function clampNumber(
   value: number,
   min?: number,
   max?: number,

@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils.ts';
 
 export type DeviceChromeKind = 'desktop' | 'mobile';
 
-export interface DeviceAppChromeProps {
+interface DeviceAppChromeProps {
   /** Which simulated app shell to render around `children`. */
   kind: DeviceChromeKind;
   /** Visual hint shown at the top of the sidebar (form code) — desktop only. */

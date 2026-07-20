@@ -8,6 +8,13 @@ import {
   FieldLegend,
   FieldSet,
 } from '@/components/ui/field.tsx';
+import { Button } from '@/components/ui/button.tsx';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card.tsx';
 import { findFieldById } from '@/features/forms/model/formDraft.ts';
 import type { ClinicalField, FormDraftModel, LayoutNode } from '@/features/forms/types.ts';
 import { cn } from '@/lib/utils.ts';
@@ -34,7 +41,7 @@ export function FormLayoutRenderer({
   repeaterPath,
 }: FormLayoutRendererProps): JSX.Element {
   return (
-    <div className='grid grid-cols-12 gap-4'>
+    <FieldGroup className='@container/field-group grid grid-cols-12 gap-4'>
       {layout.map((node) => (
         <LayoutNodeRenderer
           key={layoutNodeKey(node)}
@@ -44,7 +51,7 @@ export function FormLayoutRenderer({
           repeaterPath={repeaterPath}
         />
       ))}
-    </div>
+    </FieldGroup>
   );
 }
 
@@ -64,15 +71,15 @@ function LayoutNodeRenderer({
 }): JSX.Element | null {
   if (node.type === 'section') {
     return (
-      <section className='col-span-full grid gap-4'>
-        <h3 className='font-heading text-base font-medium'>{node.title}</h3>
+      <FieldSet className='col-span-full'>
+        <FieldLegend>{node.title}</FieldLegend>
         <FormLayoutRenderer
           model={model}
           layout={node.children}
           context={context}
           repeaterPath={repeaterPath}
         />
-      </section>
+      </FieldSet>
     );
   }
 
@@ -148,13 +155,11 @@ function GroupLayoutControl({
       {presentation?.helpText ? (
         <FieldDescription>{presentation.helpText}</FieldDescription>
       ) : null}
-      <FieldGroup>
-        <FormLayoutRenderer
-          model={model}
-          layout={layout}
-          context={context}
-        />
-      </FieldGroup>
+      <FormLayoutRenderer
+        model={model}
+        layout={layout}
+        context={context}
+      />
     </FieldSet>
   );
 }
@@ -188,15 +193,17 @@ function RepeaterLayoutControl({
       <div className='flex items-center justify-between gap-3'>
         <FieldLegend>{presentation?.label ?? field.id}</FieldLegend>
         {canAdd ? (
-          <button
+          <Button
             type='button'
-            className='text-sm text-primary hover:underline'
+            variant='link'
+            size='sm'
+            className='h-auto px-0'
             onClick={() => {
               context.onAddRepeaterRow(field.code);
             }}
           >
             {t('formPreview.addRow')}
-          </button>
+          </Button>
         ) : null}
       </div>
       {presentation?.helpText ? (
@@ -207,28 +214,27 @@ function RepeaterLayoutControl({
           <p className='text-sm text-muted-foreground'>{t('formPreview.noRows')}</p>
         ) : null}
         {rows.map((_, rowIndex) => (
-          <div
-            key={`${field.id}-${rowIndex}`}
-            className='rounded-lg border bg-card p-4'
-          >
-            <div className='mb-3 flex items-center justify-between gap-2'>
-              <p className='text-sm font-medium'>
+          <Card key={`${field.id}-${rowIndex}`}>
+            <CardHeader className='flex-row items-center justify-between gap-2 space-y-0 pb-3'>
+              <CardTitle className='text-sm font-medium'>
                 {t('formPreview.rowLabel', { index: rowIndex + 1 })}
-              </p>
+              </CardTitle>
               {!context.readOnly &&
               (field.minItems === undefined || rows.length > field.minItems) ? (
-                <button
+                <Button
                   type='button'
-                  className='text-sm text-destructive hover:underline'
+                  variant='link'
+                  size='sm'
+                  className='h-auto px-0 text-destructive'
                   onClick={() => {
                     context.onRemoveRepeaterRow(field.code, rowIndex);
                   }}
                 >
                   {t('formPreview.removeRow')}
-                </button>
+                </Button>
               ) : null}
-            </div>
-            <FieldGroup>
+            </CardHeader>
+            <CardContent>
               <FormLayoutRenderer
                 model={model}
                 layout={itemTemplate}
@@ -238,8 +244,8 @@ function RepeaterLayoutControl({
                   rowIndex,
                 }}
               />
-            </FieldGroup>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
       {context.showValidation && errors.length > 0 ? (

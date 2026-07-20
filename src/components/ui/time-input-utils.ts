@@ -39,9 +39,10 @@ export function resolveTimeStep(step?: number | string): TimeStepConfig {
 }
 
 export function parseTimeString(value: string): ParsedTime | null {
-  const match = /^(?<hours>\d{2}):(?<minutes>\d{2})(?::(?<seconds>\d{2}))?$/u.exec(
-    value.trim(),
-  );
+  const match =
+    /^(?<hours>\d{2}):(?<minutes>\d{2})(?::(?<seconds>\d{2}))?$/u.exec(
+      value.trim(),
+    );
   if (!match?.groups) {
     return null;
   }
@@ -57,7 +58,11 @@ export function parseTimeString(value: string): ParsedTime | null {
   return { hours, minutes, seconds };
 }
 
-export function isValidTimeParts(hours: number, minutes: number, seconds: number): boolean {
+export function isValidTimeParts(
+  hours: number,
+  minutes: number,
+  seconds: number,
+): boolean {
   return (
     Number.isInteger(hours) &&
     Number.isInteger(minutes) &&
@@ -72,7 +77,9 @@ export function isValidTimeParts(hours: number, minutes: number, seconds: number
 }
 
 export function timePartsToMs({ hours, minutes, seconds }: ParsedTime): number {
-  return hours * MS_PER_HOUR + minutes * MS_PER_MINUTE + seconds * MS_PER_SECOND;
+  return (
+    hours * MS_PER_HOUR + minutes * MS_PER_MINUTE + seconds * MS_PER_SECOND
+  );
 }
 
 export function msToTimeParts(ms: number): ParsedTime {
@@ -195,7 +202,10 @@ export function normalizeTimeValue(
   return formatTimeParts(msToTimeParts(snapped), showSeconds);
 }
 
-export function normalizeTypedTime(raw: string, includeSeconds: boolean): string | null {
+export function normalizeTypedTime(
+  raw: string,
+  includeSeconds: boolean,
+): string | null {
   const digits = raw.replaceAll(/\D/g, '');
 
   if (digits.length === 0) {
@@ -230,12 +240,19 @@ export function normalizeTypedTime(raw: string, includeSeconds: boolean): string
 }
 
 export function buildHourOptions(): string[] {
-  return Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'));
+  return Array.from({ length: 24 }, (_, index) =>
+    String(index).padStart(2, '0'),
+  );
 }
 
-export function buildMinuteOptions(stepSeconds: number, allowAny: boolean): string[] {
+export function buildMinuteOptions(
+  stepSeconds: number,
+  allowAny: boolean,
+): string[] {
   if (allowAny || stepSeconds <= 60) {
-    return Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
+    return Array.from({ length: 60 }, (_, index) =>
+      String(index).padStart(2, '0'),
+    );
   }
 
   if (stepSeconds % 60 === 0) {
@@ -247,12 +264,19 @@ export function buildMinuteOptions(stepSeconds: number, allowAny: boolean): stri
     return values;
   }
 
-  return Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
+  return Array.from({ length: 60 }, (_, index) =>
+    String(index).padStart(2, '0'),
+  );
 }
 
-export function buildSecondOptions(stepSeconds: number, allowAny: boolean): string[] {
+export function buildSecondOptions(
+  stepSeconds: number,
+  allowAny: boolean,
+): string[] {
   if (allowAny || stepSeconds === 1) {
-    return Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
+    return Array.from({ length: 60 }, (_, index) =>
+      String(index).padStart(2, '0'),
+    );
   }
 
   const values: string[] = [];

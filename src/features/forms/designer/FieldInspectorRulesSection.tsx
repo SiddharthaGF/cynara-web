@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input.tsx';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -26,9 +27,14 @@ import {
   type RulesFormValues,
 } from './fieldInspectorFormUtils.ts';
 
+export interface RuleFieldOption {
+  code: string;
+  label: string;
+}
+
 interface FieldInspectorRulesSectionProps {
   field: ClinicalField;
-  fieldCodes: string[];
+  fieldOptions: RuleFieldOption[];
   rules: FieldRules | null;
   readOnly: boolean;
   onChangeRules: (patch: Partial<FieldRules>) => void;
@@ -36,13 +42,15 @@ interface FieldInspectorRulesSectionProps {
 
 export function FieldInspectorRulesSection({
   field,
-  fieldCodes,
+  fieldOptions,
   rules,
   readOnly,
   onChangeRules,
 }: FieldInspectorRulesSectionProps): JSX.Element {
   const { t } = useTranslation('designer');
-  const otherCodes = fieldCodes.filter((code) => code !== field.code);
+  const otherFields = fieldOptions.filter(
+    (option) => option.code !== field.code,
+  );
 
   const form = useSyncedTanstackForm<RulesFormValues>({
     defaultValues: rulesToFormValues(rules),
@@ -57,62 +65,92 @@ export function FieldInspectorRulesSection({
       <FieldGroup>
         <Field>
           <FieldLabel>{t('inspector.showWhen')}</FieldLabel>
-          <FieldDescription>{t('inspector.showWhenHelp')}</FieldDescription>
           <RulePairFields
             form={form}
             refFieldName='visibleWhenRef'
             litFieldName='visibleWhenLit'
-            fieldCodes={otherCodes}
+            fieldOptions={otherFields}
           />
+          <FieldDescription className='text-xs'>
+            {t('inspector.showWhenHelp')}
+          </FieldDescription>
         </Field>
         <Field>
           <FieldLabel>{t('inspector.enableWhen')}</FieldLabel>
-          <FieldDescription>{t('inspector.enableWhenHelp')}</FieldDescription>
           <RulePairFields
             form={form}
             refFieldName='enabledWhenRef'
             litFieldName='enabledWhenLit'
-            fieldCodes={otherCodes}
+            fieldOptions={otherFields}
           />
+          <FieldDescription className='text-xs'>
+            {t('inspector.enableWhenHelp')}
+          </FieldDescription>
         </Field>
         <Field>
           <FieldLabel>{t('inspector.requireWhen')}</FieldLabel>
-          <FieldDescription>{t('inspector.requireWhenHelp')}</FieldDescription>
           <RulePairFields
             form={form}
             refFieldName='requiredWhenRef'
             litFieldName='requiredWhenLit'
-            fieldCodes={otherCodes}
+            fieldOptions={otherFields}
           />
+          <FieldDescription className='text-xs'>
+            {t('inspector.requireWhenHelp')}
+          </FieldDescription>
         </Field>
         <Field>
           <FieldLabel>{t('inspector.calculate')}</FieldLabel>
-          <FieldDescription>{t('inspector.calculateHelp')}</FieldDescription>
           <form.Field name='calculateRef'>
-            {(fieldApi) => (
-              <Select
-                value={fieldApi.state.value}
-                onValueChange={(value) => {
-                  fieldApi.handleChange(value ?? '');
-                }}
-              >
-                <SelectTrigger className='w-full'>
-                  <SelectValue placeholder={t('inspector.selectSourceField')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value=''>{t('inspector.noCalculation')}</SelectItem>
-                  {otherCodes.map((code) => (
-                    <SelectItem
-                      key={code}
-                      value={code}
+            {(fieldApi) => {
+              const noneLabel = t('inspector.noCalculation');
+              const items = [
+                { label: noneLabel, value: null },
+                ...otherFields.map((option) => ({
+                  label: fieldOptionSelectLabel(option),
+                  value: option.code,
+                })),
+              ];
+
+              return (
+                <Select
+                  items={items}
+                  value={toSelectValue(fieldApi.state.value)}
+                  onValueChange={(value) => {
+                    fieldApi.handleChange(fromSelectValue(value));
+                  }}
+                >
+                  <SelectTrigger className='w-full'>
+                    <SelectValue
+                      placeholder={t('inspector.selectSourceField')}
                     >
-                      {code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+                      {renderSelectedFieldOption(
+                        toSelectValue(fieldApi.state.value),
+                        otherFields,
+                        noneLabel,
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value={null}>{noneLabel}</SelectItem>
+                      {otherFields.map((option) => (
+                        <SelectItem
+                          key={option.code}
+                          value={option.code}
+                        >
+                          <RuleFieldOptionLabel option={option} />
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              );
+            }}
           </form.Field>
+          <FieldDescription className='text-xs'>
+            {t('inspector.calculateHelp')}
+          </FieldDescription>
         </Field>
       </FieldGroup>
     </FieldSet>
@@ -123,44 +161,66 @@ function RulePairFields({
   form,
   refFieldName,
   litFieldName,
-  fieldCodes,
+  fieldOptions,
 }: {
   form: ReturnType<typeof useSyncedTanstackForm<RulesFormValues>>;
   refFieldName: keyof RulesFormValues;
   litFieldName: keyof RulesFormValues;
-  fieldCodes: string[];
+  fieldOptions: RuleFieldOption[];
 }): JSX.Element {
   const { t } = useTranslation('designer');
+  const noneLabel = t('inspector.noCondition');
 
   return (
     <form.Subscribe selector={(state) => state.values[refFieldName]}>
       {(refValue) => (
         <div className='grid gap-2'>
-          {fieldCodes.length > 0 ? (
+          {fieldOptions.length > 0 ? (
             <form.Field name={refFieldName}>
-              {(fieldApi) => (
-                <Select
-                  value={fieldApi.state.value}
-                  onValueChange={(selected) => {
-                    fieldApi.handleChange(selected ?? '');
-                  }}
-                >
-                  <SelectTrigger className='w-full'>
-                    <SelectValue placeholder={t('inspector.selectFieldCode')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value=''>{t('inspector.noCondition')}</SelectItem>
-                    {fieldCodes.map((code) => (
-                      <SelectItem
-                        key={code}
-                        value={code}
+              {(fieldApi) => {
+                const items = [
+                  { label: noneLabel, value: null },
+                  ...fieldOptions.map((option) => ({
+                    label: fieldOptionSelectLabel(option),
+                    value: option.code,
+                  })),
+                ];
+
+                return (
+                  <Select
+                    items={items}
+                    value={toSelectValue(fieldApi.state.value)}
+                    onValueChange={(value) => {
+                      fieldApi.handleChange(fromSelectValue(value));
+                    }}
+                  >
+                    <SelectTrigger className='w-full'>
+                      <SelectValue
+                        placeholder={t('inspector.selectFieldCode')}
                       >
-                        {code}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+                        {renderSelectedFieldOption(
+                          toSelectValue(fieldApi.state.value),
+                          fieldOptions,
+                          noneLabel,
+                        )}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value={null}>{noneLabel}</SelectItem>
+                        {fieldOptions.map((option) => (
+                          <SelectItem
+                            key={option.code}
+                            value={option.code}
+                          >
+                            <RuleFieldOptionLabel option={option} />
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                );
+              }}
             </form.Field>
           ) : (
             <form.Field name={refFieldName}>
@@ -195,4 +255,51 @@ function RulePairFields({
       )}
     </form.Subscribe>
   );
+}
+
+function RuleFieldOptionLabel({
+  option,
+}: {
+  option: RuleFieldOption;
+}): JSX.Element {
+  const showCodeApart = option.label !== option.code;
+
+  return (
+    <span className='flex min-w-0 items-baseline gap-1.5'>
+      <span className='truncate'>{option.label}</span>
+      {showCodeApart ? (
+        <span className='shrink-0 text-muted-foreground'>- {option.code}</span>
+      ) : null}
+    </span>
+  );
+}
+
+function fieldOptionSelectLabel(option: RuleFieldOption): string {
+  return option.label === option.code
+    ? option.code
+    : `${option.label} - ${option.code}`;
+}
+
+function renderSelectedFieldOption(
+  value: string | null,
+  fieldOptions: RuleFieldOption[],
+  noneLabel: string,
+): JSX.Element | string {
+  if (value == null || value === '') {
+    return noneLabel;
+  }
+  const option = fieldOptions.find((item) => item.code === value);
+  if (!option) {
+    return value;
+  }
+  return <RuleFieldOptionLabel option={option} />;
+}
+
+/** Base UI Select uses `null` for the placeholder / “none” item. */
+function toSelectValue(value: string): string | null {
+  return value === '' ? null : value;
+}
+
+function fromSelectValue(value: string | null | undefined): string {
+  return value ?? '';
 }

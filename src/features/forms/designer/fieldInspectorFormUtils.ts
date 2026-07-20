@@ -7,7 +7,7 @@ import type {
   RuleExpression,
 } from '@/features/forms/types.ts';
 
-export function parseOptionalInt(value: string): number | undefined {
+function parseOptionalInt(value: string): number | undefined {
   if (value === '') {
     return undefined;
   }
@@ -15,7 +15,7 @@ export function parseOptionalInt(value: string): number | undefined {
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
-export function parseOptionalNumber(value: string): number | undefined {
+function parseOptionalNumber(value: string): number | undefined {
   if (value === '') {
     return undefined;
   }
@@ -215,7 +215,7 @@ export function rulesFormValuesToPatch(
   };
 }
 
-export function parseEqRef(expression: RuleExpression | undefined): string {
+function parseEqRef(expression: RuleExpression | undefined): string {
   if (!expression) {
     return '';
   }
@@ -229,7 +229,7 @@ export function parseEqRef(expression: RuleExpression | undefined): string {
   return '';
 }
 
-export function parseEqLit(expression: RuleExpression | undefined): string {
+function parseEqLit(expression: RuleExpression | undefined): string {
   if (!expression || !('op' in expression) || expression.op !== 'eq') {
     return '';
   }
@@ -243,7 +243,7 @@ export function parseEqLit(expression: RuleExpression | undefined): string {
   return String(right.lit);
 }
 
-export function buildEqExpression(
+function buildEqExpression(
   ref: string,
   lit: string,
 ): RuleExpression | undefined {

@@ -1,8 +1,14 @@
+import type { TFunction } from 'i18next';
+import { CircleHelp } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge.tsx';
-import { FieldDescription } from '@/components/ui/field.tsx';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card.tsx';
 import { TIME_FIELD_LAYOUT_CLASS } from '@/components/ui/time-input.tsx';
 import { renderFieldInput } from '@/features/forms/renderer/FormFieldInputs.tsx';
 import { widthClass } from '@/features/forms/renderer/layoutUtils.ts';
@@ -13,7 +19,10 @@ import type {
 } from '@/features/forms/types.ts';
 import { cn } from '@/lib/utils.ts';
 
-import { collectFieldValidationRules } from './fieldValidationSummary.ts';
+import {
+  collectFieldValidationRules,
+  type FieldValidationRule,
+} from './fieldValidationSummary.ts';
 
 interface FieldPreviewProps {
   field: ClinicalField;
@@ -38,44 +47,198 @@ export function FieldPreview({
     <div className={cn('grid w-full min-w-0 max-w-full gap-3', className)}>
       {renderPreviewControl(field, presentation, resolvedPlaceholder, t)}
       {validationRules.length > 0 ? (
-        <ValidationRulesList
+        <ValidationRuleBadges
           rules={validationRules}
-          label={t('preview.validationRules')}
+          t={t}
         />
       ) : null}
     </div>
   );
 }
 
-function ValidationRulesList({
+interface GlanceChip {
+  id: string;
+  text: string;
+  detail: string;
+  withTooltip?: boolean;
+}
+
+function ValidationRuleBadges({
   rules,
-  label,
+  t,
 }: {
-  rules: ReturnType<typeof collectFieldValidationRules>;
-  label: string;
+  rules: FieldValidationRule[];
+  t: TFunction<'designer'>;
 }): JSX.Element {
+  const chips = buildGlanceChips(rules, t);
+
   return (
-    <div className='grid max-w-full gap-2 rounded-lg border bg-muted/30 p-3'>
-      <FieldDescription className='text-xs font-medium tracking-wide uppercase'>
-        {label}
-      </FieldDescription>
-      <ul className='flex flex-wrap gap-2'>
-        {rules.map((rule) => (
-          <li key={rule.id}>
+    <ul
+      className='flex max-w-full flex-wrap gap-1.5'
+      onClick={(event) => {
+        event.stopPropagation();
+      }}
+      onPointerDown={(event) => {
+        event.stopPropagation();
+      }}
+    >
+      {chips.map((chip) => (
+        <li key={chip.id}>
+          {chip.withTooltip ? (
+            <HoverCard>
+              <HoverCardTrigger
+                aria-label={chip.detail}
+                className='rounded-4xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50'
+                render={<button type='button' />}
+                onClick={(event) => {
+                  event.stopPropagation();
+                }}
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                }}
+              >
+                <Badge
+                  variant='outline'
+                  className='pointer-events-none gap-1 font-normal'
+                >
+                  {chip.text}
+                  <CircleHelp
+                    className='size-3 text-muted-foreground'
+                    aria-hidden='true'
+                  />
+                </Badge>
+              </HoverCardTrigger>
+              <HoverCardContent
+                side='top'
+                className='w-auto max-w-xs text-xs leading-relaxed'
+              >
+                {chip.detail}
+              </HoverCardContent>
+            </HoverCard>
+          ) : (
             <Badge
               variant='outline'
-              className='gap-1 font-normal'
+              className='font-normal'
             >
-              {rule.label}
-              {rule.detail ? (
-                <span className='text-muted-foreground'>{rule.detail}</span>
-              ) : null}
+              {chip.text}
             </Badge>
-          </li>
-        ))}
-      </ul>
-    </div>
+          )}
+        </li>
+      ))}
+    </ul>
   );
+}
+
+const CONDITIONAL_IDS = new Set([
+  'visible-when',
+  'enabled-when',
+  'required-when',
+  'calculate',
+]);
+
+function buildGlanceChips(
+  rules: FieldValidationRule[],
+  t: TFunction<'designer'>,
+): GlanceChip[] {
+  const byId = new Map(rules.map((rule) => [rule.id, rule]));
+  const chips: GlanceChip[] = [];
+  const consumed = new Set<string>();
+
+  const pushFlag = (id: string) => {
+    const rule = byId.get(id);
+    if (!rule) return;
+    consumed.add(id);
+    chips.push({ id, text: rule.label, detail: rule.label });
+  };
+
+  pushFlag('required');
+  pushFlag('read-only');
+
+  const minimum = byId.get('minimum');
+  const maximum = byId.get('maximum');
+  if (minimum?.detail !== undefined) {
+    consumed.add('minimum');
+    chips.push({
+      id: 'minimum',
+      text: `${minimum.label} ${minimum.detail}`,
+      detail: `${minimum.label}: ${minimum.detail}`,
+    });
+  }
+  if (maximum?.detail !== undefined) {
+    consumed.add('maximum');
+    chips.push({
+      id: 'maximum',
+      text: `${maximum.label} ${maximum.detail}`,
+      detail: `${maximum.label}: ${maximum.detail}`,
+    });
+  }
+
+  const minLength = byId.get('min-length');
+  const maxLength = byId.get('max-length');
+  if (minLength?.detail !== undefined) {
+    consumed.add('min-length');
+    chips.push({
+      id: 'min-length',
+      text: `${minLength.label} ${minLength.detail}`,
+      detail: `${minLength.label}: ${minLength.detail}`,
+    });
+  }
+  if (maxLength?.detail !== undefined) {
+    consumed.add('max-length');
+    chips.push({
+      id: 'max-length',
+      text: `${maxLength.label} ${maxLength.detail}`,
+      detail: `${maxLength.label}: ${maxLength.detail}`,
+    });
+  }
+
+  const multipleOf = byId.get('multiple-of');
+  if (multipleOf?.detail !== undefined) {
+    consumed.add('multiple-of');
+    chips.push({
+      id: 'multiple-of',
+      text: t('preview.glance.step', { value: multipleOf.detail }),
+      detail: `${multipleOf.label}: ${multipleOf.detail}`,
+    });
+  }
+
+  const decimalPlaces = byId.get('decimal-places');
+  if (decimalPlaces?.detail !== undefined) {
+    consumed.add('decimal-places');
+    chips.push({
+      id: 'decimal-places',
+      text: t('preview.glance.decimals', { count: decimalPlaces.detail }),
+      detail: `${decimalPlaces.label}: ${decimalPlaces.detail}`,
+    });
+  }
+
+  const conditionals = rules.filter((rule) => CONDITIONAL_IDS.has(rule.id));
+  if (conditionals.length > 0) {
+    for (const rule of conditionals) {
+      consumed.add(rule.id);
+    }
+    chips.push({
+      id: 'conditionals',
+      text: t('preview.glance.conditionals', { count: conditionals.length }),
+      detail: conditionals
+        .map((rule) =>
+          rule.detail ? `${rule.label}: ${rule.detail}` : rule.label,
+        )
+        .join(' · '),
+      withTooltip: true,
+    });
+  }
+
+  for (const rule of rules) {
+    if (consumed.has(rule.id)) continue;
+    chips.push({
+      id: rule.id,
+      text: rule.detail ? `${rule.label} ${rule.detail}` : rule.label,
+      detail: rule.detail ? `${rule.label}: ${rule.detail}` : rule.label,
+    });
+  }
+
+  return chips;
 }
 
 function previewPlaceholder(

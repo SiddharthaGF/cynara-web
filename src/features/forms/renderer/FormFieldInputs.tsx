@@ -1,5 +1,4 @@
 import type { JSX } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { Checkbox } from '@/components/ui/checkbox.tsx';
 import { Field, FieldLabel } from '@/components/ui/field.tsx';
@@ -12,13 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select.tsx';
+import { Switch } from '@/components/ui/switch.tsx';
 import { Textarea } from '@/components/ui/textarea.tsx';
 import {
   TIME_FIELD_LAYOUT_CLASS,
   TimeInput,
 } from '@/components/ui/time-input.tsx';
 import type { ClinicalField, FieldPresentation } from '@/features/forms/types.ts';
-import { cn } from '@/lib/utils.ts';
 
 import { DatePickerInput } from './DatePickerInput.tsx';
 
@@ -30,8 +29,10 @@ export function renderFieldInput(
   placeholder: string | undefined,
   onChange: (value: unknown) => void,
   inputId?: string,
+  invalid = false,
 ): JSX.Element {
   const widget = presentation?.widget;
+  const ariaInvalid = invalid || undefined;
 
   switch (field.type) {
     case 'text': {
@@ -42,6 +43,7 @@ export function renderFieldInput(
           placeholder={placeholder}
           disabled={!enabled}
           readOnly={!enabled}
+          aria-invalid={ariaInvalid}
           onChange={(event) => {
             onChange(event.target.value);
           }}
@@ -56,6 +58,7 @@ export function renderFieldInput(
           placeholder={placeholder}
           disabled={!enabled}
           readOnly={!enabled}
+          aria-invalid={ariaInvalid}
           onChange={(event) => {
             onChange(event.target.value);
           }}
@@ -76,6 +79,7 @@ export function renderFieldInput(
           placeholder={placeholder}
           disabled={!enabled}
           readOnly={!enabled}
+          aria-invalid={ariaInvalid}
           onValueChange={(next) => {
             onChange(next);
           }}
@@ -83,15 +87,30 @@ export function renderFieldInput(
       );
     }
     case 'boolean': {
+      const checked = Boolean(value);
       if (widget === 'toggle') {
-        return renderToggleInput(inputId, value, enabled, onChange);
+        return (
+          <Switch
+            id={inputId}
+            checked={checked}
+            disabled={!enabled}
+            aria-invalid={ariaInvalid}
+            className='w-auto'
+            onCheckedChange={(next) => {
+              onChange(next);
+            }}
+          />
+        );
       }
       return (
-        <YesNoRadioInput
-          inputId={inputId}
-          value={value}
-          enabled={enabled}
-          onChange={onChange}
+        <Checkbox
+          id={inputId}
+          checked={checked}
+          disabled={!enabled}
+          aria-invalid={ariaInvalid}
+          onCheckedChange={(next) => {
+            onChange(next === true);
+          }}
         />
       );
     }
@@ -105,6 +124,7 @@ export function renderFieldInput(
           placeholder={placeholder}
           inputId={inputId}
           timePresets={presentation?.timePresets}
+          ariaInvalid={invalid}
           onChange={onChange}
         />
       );
@@ -117,6 +137,7 @@ export function renderFieldInput(
             value={formatInputValue(value)}
             disabled={!enabled}
             readOnly={!enabled}
+            aria-invalid={ariaInvalid}
             presets={presentation?.timePresets}
             onValueChange={(next) => {
               onChange(next);
@@ -134,6 +155,7 @@ export function renderFieldInput(
         placeholder,
         onChange,
         inputId,
+        invalid,
       );
     }
     case 'group':
@@ -147,101 +169,6 @@ export function renderFieldInput(
   }
 }
 
-function YesNoRadioInput({
-  inputId,
-  value,
-  enabled,
-  onChange,
-}: {
-  inputId: string | undefined;
-  value: unknown;
-  enabled: boolean;
-  onChange: (value: unknown) => void;
-}): JSX.Element {
-  const { t } = useTranslation('common');
-  const groupName = inputId ?? 'yes-no';
-  const yesId = `${groupName}-yes`;
-  const noId = `${groupName}-no`;
-
-  return (
-    <div
-      role='radiogroup'
-      data-slot='radio-group'
-      className='flex flex-row flex-wrap items-center gap-x-6 gap-y-2'
-    >
-      <label
-        htmlFor={yesId}
-        className='inline-flex cursor-pointer items-center gap-2 text-sm font-normal'
-      >
-        <input
-          id={yesId}
-          type='radio'
-          name={groupName}
-          checked={value === true}
-          disabled={!enabled}
-          className='size-4 shrink-0 accent-primary disabled:cursor-not-allowed disabled:opacity-50'
-          onChange={() => {
-            onChange(true);
-          }}
-        />
-        {t('yes')}
-      </label>
-      <label
-        htmlFor={noId}
-        className='inline-flex cursor-pointer items-center gap-2 text-sm font-normal'
-      >
-        <input
-          id={noId}
-          type='radio'
-          name={groupName}
-          checked={value === false}
-          disabled={!enabled}
-          className='size-4 shrink-0 accent-primary disabled:cursor-not-allowed disabled:opacity-50'
-          onChange={() => {
-            onChange(false);
-          }}
-        />
-        {t('no')}
-      </label>
-    </div>
-  );
-}
-
-function renderToggleInput(
-  inputId: string | undefined,
-  value: unknown,
-  enabled: boolean,
-  onChange: (value: unknown) => void,
-): JSX.Element {
-  const checked = Boolean(value);
-  return (
-    <button
-      id={inputId}
-      type='button'
-      role='switch'
-      aria-checked={checked}
-      disabled={!enabled}
-      className={cn(
-        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors',
-        checked ? 'border-primary bg-primary' : 'border-input bg-muted',
-        !enabled && 'cursor-not-allowed opacity-50',
-      )}
-      onClick={() => {
-        onChange(!checked);
-      }}
-    >
-      <span
-        aria-hidden
-        className={cn(
-          'pointer-events-none block size-4 rounded-full bg-background shadow-sm transition-transform',
-          checked ? 'translate-x-5' : 'translate-x-0.5',
-        )}
-      />
-      <span className='sr-only'>{checked ? 'On' : 'Off'}</span>
-    </button>
-  );
-}
-
 function renderChoiceInput(
   field: ClinicalField,
   widget: string | undefined,
@@ -249,9 +176,11 @@ function renderChoiceInput(
   enabled: boolean,
   placeholder: string | undefined,
   onChange: (value: unknown) => void,
-  inputId?: string,
+  inputId: string | undefined,
+  invalid: boolean,
 ): JSX.Element {
   const options = field.options ?? [];
+  const ariaInvalid = invalid || undefined;
 
   if (widget === 'radio-group') {
     const groupName = inputId ?? field.id;
@@ -259,8 +188,9 @@ function renderChoiceInput(
       <div
         role='radiogroup'
         aria-labelledby={inputId ? `${inputId}-legend` : undefined}
+        aria-invalid={ariaInvalid}
         data-slot='radio-group'
-        className='grid gap-2'
+        className='grid gap-3'
       >
         {options.map((option) => {
           const optionId = `${groupName}-${option.value}`;
@@ -298,7 +228,7 @@ function renderChoiceInput(
       <div
         role='group'
         data-slot='checkbox-group'
-        className='grid gap-2'
+        className='grid gap-3'
       >
         {options.map((option) => {
           const optionId = `${groupId}-${option.value}`;
@@ -311,6 +241,7 @@ function renderChoiceInput(
                 id={optionId}
                 checked={selected.has(option.value)}
                 disabled={!enabled}
+                aria-invalid={ariaInvalid}
                 onCheckedChange={(next) => {
                   const nextSelected = new Set(selected);
                   if (next) {
@@ -332,6 +263,7 @@ function renderChoiceInput(
   return (
     <Select
       value={formatSelectValue(value)}
+      items={options}
       disabled={!enabled}
       onValueChange={(next) => {
         onChange(next);
@@ -340,6 +272,7 @@ function renderChoiceInput(
       <SelectTrigger
         id={inputId}
         className='w-full'
+        aria-invalid={ariaInvalid}
       >
         <SelectValue placeholder={placeholder ?? 'Select…'} />
       </SelectTrigger>
@@ -361,7 +294,11 @@ function formatSelectValue(value: unknown): string | null {
   if (value === undefined || value === null) {
     return null;
   }
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+  if (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
     return String(value);
   }
   return null;
@@ -379,4 +316,3 @@ function formatInputValue(value: unknown): string {
   }
   return '';
 }
-

@@ -83,7 +83,7 @@ export interface FieldRules {
   calculate?: RuleExpression;
 }
 
-export interface CrossFieldValidation {
+interface CrossFieldValidation {
   code: string;
   message: string;
   when?: RuleExpression;

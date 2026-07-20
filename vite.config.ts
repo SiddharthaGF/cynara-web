@@ -13,7 +13,20 @@ export default defineConfig({
     proxy: {
       '/api': {
         changeOrigin: true,
-        target: 'http://localhost:5080',
+        target: 'http://localhost:3000',
+        // Keep SSE (AI chat stream) from buffering in the Vite proxy.
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes) => {
+            const contentType = proxyRes.headers['content-type'];
+            if (
+              typeof contentType === 'string' &&
+              contentType.includes('text/event-stream')
+            ) {
+              proxyRes.headers['cache-control'] = 'no-cache, no-transform';
+              proxyRes.headers['x-accel-buffering'] = 'no';
+            }
+          });
+        },
       },
     },
   },

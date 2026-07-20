@@ -1,5 +1,4 @@
 import type { FieldPresentation } from '@/features/forms/types.ts';
-import { cn } from '@/lib/utils.ts';
 
 const WIDTH_CLASSES: Record<NonNullable<FieldPresentation['width']>, string> = {
   full: 'col-span-full',
@@ -10,8 +9,4 @@ const WIDTH_CLASSES: Record<NonNullable<FieldPresentation['width']>, string> = {
 
 export function widthClass(width: FieldPresentation['width'] | undefined): string {
   return WIDTH_CLASSES[width ?? 'full'];
-}
-
-export function fieldShellClass(className?: string): string {
-  return cn('grid gap-2', className);
 }

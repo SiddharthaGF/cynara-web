@@ -1,23 +1,25 @@
 import type { JSX } from 'react';
 
 import { Checkbox } from '@/components/ui/checkbox.tsx';
-import {
-  Field,
-  FieldDescription,
-  FieldLabel,
-} from '@/components/ui/field.tsx';
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
+import { NumberInput } from '@/components/ui/number-input.tsx';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select.tsx';
 import { MAX_DECIMAL_PLACES } from '@/lib/number-format.ts';
 
-import { ChoiceOptionsEditor } from './FieldInspectorFieldEditors.tsx';
 import type { ClinicalFieldSectionProps } from './fieldInspectorClinicalTypes.ts';
+import { ChoiceOptionsEditor } from './FieldInspectorFieldEditors.tsx';
+
+function optionalNumberToForm(value: number | null): string {
+  return value === null ? '' : String(value);
+}
 
 export function ClinicalTextConstraintFields({
   field,
@@ -36,15 +38,15 @@ export function ClinicalTextConstraintFields({
             <FieldLabel htmlFor={`${field.id}-min-length`}>
               {t('inspector.minLength')}
             </FieldLabel>
-            <Input
+            <NumberInput
               id={`${field.id}-min-length`}
               name={fieldApi.name}
-              type='number'
+              integer
               min={0}
               value={fieldApi.state.value}
               onBlur={fieldApi.handleBlur}
-              onChange={(event) => {
-                fieldApi.handleChange(event.target.value);
+              onValueChange={(next) => {
+                fieldApi.handleChange(optionalNumberToForm(next));
               }}
             />
           </Field>
@@ -56,15 +58,15 @@ export function ClinicalTextConstraintFields({
             <FieldLabel htmlFor={`${field.id}-max-length`}>
               {t('inspector.maxLength')}
             </FieldLabel>
-            <Input
+            <NumberInput
               id={`${field.id}-max-length`}
               name={fieldApi.name}
-              type='number'
+              integer
               min={1}
               value={fieldApi.state.value}
               onBlur={fieldApi.handleBlur}
-              onChange={(event) => {
-                fieldApi.handleChange(event.target.value);
+              onValueChange={(next) => {
+                fieldApi.handleChange(optionalNumberToForm(next));
               }}
             />
           </Field>
@@ -87,7 +89,9 @@ export function ClinicalTextConstraintFields({
                   fieldApi.handleChange(event.target.value);
                 }}
               />
-              <FieldDescription>{t('inspector.patternHelp')}</FieldDescription>
+              <FieldDescription className='text-xs'>
+                {t('inspector.patternHelp')}
+              </FieldDescription>
             </Field>
           )}
         </form.Field>
@@ -105,6 +109,8 @@ export function ClinicalNumberConstraintFields({
     return null;
   }
 
+  const asInteger = field.type === 'integer';
+
   return (
     <>
       <form.Field name='minimum'>
@@ -113,14 +119,14 @@ export function ClinicalNumberConstraintFields({
             <FieldLabel htmlFor={`${field.id}-minimum`}>
               {t('inspector.min')}
             </FieldLabel>
-            <Input
+            <NumberInput
               id={`${field.id}-minimum`}
               name={fieldApi.name}
-              type='number'
+              integer={asInteger}
               value={fieldApi.state.value}
               onBlur={fieldApi.handleBlur}
-              onChange={(event) => {
-                fieldApi.handleChange(event.target.value);
+              onValueChange={(next) => {
+                fieldApi.handleChange(optionalNumberToForm(next));
               }}
             />
           </Field>
@@ -132,14 +138,14 @@ export function ClinicalNumberConstraintFields({
             <FieldLabel htmlFor={`${field.id}-maximum`}>
               {t('inspector.max')}
             </FieldLabel>
-            <Input
+            <NumberInput
               id={`${field.id}-maximum`}
               name={fieldApi.name}
-              type='number'
+              integer={asInteger}
               value={fieldApi.state.value}
               onBlur={fieldApi.handleBlur}
-              onChange={(event) => {
-                fieldApi.handleChange(event.target.value);
+              onValueChange={(next) => {
+                fieldApi.handleChange(optionalNumberToForm(next));
               }}
             />
           </Field>
@@ -153,58 +159,69 @@ export function ClinicalNumberConstraintFields({
                 <FieldLabel htmlFor={`${field.id}-multiple-of`}>
                   {t('inspector.multipleOf')}
                 </FieldLabel>
-                <Input
+                <NumberInput
                   id={`${field.id}-multiple-of`}
                   name={fieldApi.name}
-                  type='number'
                   min={0}
-                  step='any'
                   value={fieldApi.state.value}
                   onBlur={fieldApi.handleBlur}
-                  onChange={(event) => {
-                    fieldApi.handleChange(event.target.value);
+                  onValueChange={(next) => {
+                    fieldApi.handleChange(optionalNumberToForm(next));
                   }}
                 />
               </Field>
             )}
           </form.Field>
           <form.Field name='decimalPlaces'>
-            {(fieldApi) => (
-              <Field>
-                <FieldLabel>{t('inspector.decimalPlaces')}</FieldLabel>
-                <Select
-                  value={
-                    fieldApi.state.value === '' ? 'auto' : fieldApi.state.value
-                  }
-                  onValueChange={(value) => {
-                    if (!value) {
-                      return;
+            {(fieldApi) => {
+              const items = [
+                { label: t('inspector.decimalPlacesAuto'), value: 'auto' },
+                ...Array.from(
+                  { length: MAX_DECIMAL_PLACES + 1 },
+                  (_, decimalPlace) => ({
+                    label: String(decimalPlace),
+                    value: String(decimalPlace),
+                  }),
+                ),
+              ];
+
+              return (
+                <Field>
+                  <FieldLabel>{t('inspector.decimalPlaces')}</FieldLabel>
+                  <Select
+                    items={items}
+                    value={
+                      fieldApi.state.value === '' ? 'auto' : fieldApi.state.value
                     }
-                    fieldApi.handleChange(value === 'auto' ? '' : value);
-                  }}
-                >
-                  <SelectTrigger className='w-full'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='auto'>
-                      {t('inspector.decimalPlacesAuto')}
-                    </SelectItem>
-                    {Array.from({ length: MAX_DECIMAL_PLACES + 1 }, (_, decimalPlace) => (
-                      <SelectItem
-                        key={String(decimalPlace)}
-                        value={String(decimalPlace)}
-                      >
-                        {decimalPlace}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FieldDescription>
-                  {t('inspector.decimalPlacesHelp')}
-                </FieldDescription>
-              </Field>
-            )}
+                    onValueChange={(value) => {
+                      if (!value) {
+                        return;
+                      }
+                      fieldApi.handleChange(value === 'auto' ? '' : value);
+                    }}
+                  >
+                    <SelectTrigger className='w-full'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {items.map((item) => (
+                          <SelectItem
+                            key={item.value}
+                            value={item.value}
+                          >
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <FieldDescription className='text-xs'>
+                    {t('inspector.decimalPlacesHelp')}
+                  </FieldDescription>
+                </Field>
+              );
+            }}
           </form.Field>
         </>
       ) : null}
@@ -268,15 +285,15 @@ export function ClinicalRepeaterConstraintFields({
             <FieldLabel htmlFor={`${field.id}-min-items`}>
               {t('inspector.minItems')}
             </FieldLabel>
-            <Input
+            <NumberInput
               id={`${field.id}-min-items`}
               name={fieldApi.name}
-              type='number'
+              integer
               min={0}
               value={fieldApi.state.value}
               onBlur={fieldApi.handleBlur}
-              onChange={(event) => {
-                fieldApi.handleChange(event.target.value);
+              onValueChange={(next) => {
+                fieldApi.handleChange(optionalNumberToForm(next));
               }}
             />
           </Field>
@@ -288,15 +305,15 @@ export function ClinicalRepeaterConstraintFields({
             <FieldLabel htmlFor={`${field.id}-max-items`}>
               {t('inspector.maxItems')}
             </FieldLabel>
-            <Input
+            <NumberInput
               id={`${field.id}-max-items`}
               name={fieldApi.name}
-              type='number'
+              integer
               min={1}
               value={fieldApi.state.value}
               onBlur={fieldApi.handleBlur}
-              onChange={(event) => {
-                fieldApi.handleChange(event.target.value);
+              onValueChange={(next) => {
+                fieldApi.handleChange(optionalNumberToForm(next));
               }}
             />
           </Field>

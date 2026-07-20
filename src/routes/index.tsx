@@ -1,14 +1,15 @@
-import { Navigate, createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, redirect } from '@tanstack/react-router';
+
+import { resolvePreferredLocale } from '@/lib/locale.ts';
 
 export const Route = createFileRoute('/')({
-  component: IndexRedirect,
+  beforeLoad: () => {
+    const locale = resolvePreferredLocale();
+    // oxlint-disable-next-line typescript/only-throw-error -- TanStack Router redirect
+    throw redirect({
+      to: '/$locale/forms',
+      params: { locale },
+      replace: true,
+    });
+  },
 });
-
-function IndexRedirect() {
-  return (
-    <Navigate
-      to='/forms'
-      replace
-    />
-  );
-}

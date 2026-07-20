@@ -115,6 +115,18 @@
       }
     },
     {
+      "files": [
+        "src/components/ui/message-scroller.tsx",
+        "src/components/ui/message.tsx",
+        "src/components/ui/bubble.tsx",
+        "src/components/ui/marker.tsx"
+      ],
+      "rules": {
+        "unicorn/prefer-export-from": "off",
+        "max-lines": "off"
+      }
+    },
+    {
       "files": ["**/*.{spec,test}.{ts,tsx}"],
       "plugins": ["vitest"],
       "env": {

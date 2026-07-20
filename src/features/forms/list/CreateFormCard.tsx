@@ -20,6 +20,7 @@ import {
   FieldLabel,
 } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
+import { Spinner } from '@/components/ui/spinner.tsx';
 import { fieldErrorText } from '@/lib/useSyncedTanstackForm.ts';
 
 const FORM_CODE_PATTERN = /^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/;
@@ -172,6 +173,7 @@ export function CreateFormCard({
                     disabled={isCreating || !canSubmit}
                     className='w-full'
                   >
+                    {isCreating ? <Spinner data-icon='inline-start' /> : null}
                     {isCreating ? t('list.creating') : t('list.createForm')}
                   </Button>
                 )}

@@ -6,14 +6,14 @@ import { queryKeys } from '@/api/query-keys.ts';
 import { createForm, listForms } from '@/api/forms.ts';
 import type { FormSummary } from '@/features/forms/types.ts';
 
-export function useFormsQuery() {
+function useFormsQuery() {
   return useQuery({
     queryKey: queryKeys.forms.list(),
     queryFn: listForms,
   });
 }
 
-export function useCreateFormMutation() {
+function useCreateFormMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
