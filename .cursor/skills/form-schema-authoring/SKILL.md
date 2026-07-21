@@ -26,5 +26,5 @@ triggers. Do **not** author or edit schema rules from a local copy here.
 3. Follow that skill’s hard rules, output contract, and unsupported-features
    list as the single source of truth.
 
-If the sibling repo is missing, stop and tell the user the canonical skill
-could not be loaded instead of inventing schema rules.
+If the sibling repo is missing, stop and tell the user the canonical skill could
+not be loaded instead of inventing schema rules.
