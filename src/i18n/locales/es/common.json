@@ -19,7 +19,26 @@
   "settings": {
     "open": "Ajustes",
     "language": "Idioma",
-    "theme": "Tema"
+    "theme": "Tema",
+    "ai": {
+      "menu": "Proveedor de IA",
+      "title": "Proveedor de IA",
+      "description": "Usa cualquier endpoint compatible con OpenAI. Define la base URL, la API key y el modelo — igual que el override de OpenAI en Cursor.",
+      "suggestions": "Relleno rápido",
+      "suggestionsHint": "Presets opcionales que solo rellenan los campos. Puedes editarlo todo después.",
+      "baseUrl": "Base URL",
+      "apiKey": "API key",
+      "apiKeyPlaceholder": "Pega tu API key",
+      "apiKeyKeep": "Déjalo vacío para mantener {{masked}}",
+      "model": "Modelo",
+      "jsonObject": "Modo JSON object",
+      "jsonObjectHint": "Desactívalo en proveedores que rechazan response_format (p. ej. MiniMax).",
+      "baseUrlRequired": "La base URL es obligatoria.",
+      "modelRequired": "El modelo es obligatorio.",
+      "apiKeyRequired": "La API key es obligatoria.",
+      "saveError": "No se pudieron guardar los ajustes de IA.",
+      "saving": "Guardando…"
+    }
   },
   "actions": {
     "save": "Guardar",

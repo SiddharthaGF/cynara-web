@@ -16,5 +16,10 @@
   "insertFinalNewline": true,
   "proseWrap": "always",
   "sortImports": true,
-  "sortPackageJson": true
+  "sortPackageJson": true,
+  "ignorePatterns": [
+    "src/components/ui/**",
+    "src/lib/utils.ts",
+    "src/hooks/use-mobile.ts"
+  ]
 }

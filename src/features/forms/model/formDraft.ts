@@ -332,19 +332,3 @@ export function updateField(
     field.id === fieldId ? { ...field, ...patch } : field,
   );
 }
-
-export function duplicateFieldIdExists(
-  fields: ClinicalField[],
-  fieldId: string,
-): boolean {
-  const ids = [...iterateFields(fields)].map((field) => field.id);
-  return ids.filter((id) => id === fieldId).length > 1;
-}
-
-export function duplicateFieldCodeExists(
-  fields: ClinicalField[],
-  code: string,
-): boolean {
-  const codes = [...iterateFields(fields)].map((field) => field.code);
-  return codes.filter((item) => item === code).length > 1;
-}

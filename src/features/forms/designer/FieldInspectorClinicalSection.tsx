@@ -1,11 +1,7 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  FieldGroup,
-  FieldLegend,
-  FieldSet,
-} from '@/components/ui/field.tsx';
+import { FieldGroup, FieldLegend, FieldSet } from '@/components/ui/field.tsx';
 import type {
   ClinicalField,
   ComponentSummary,

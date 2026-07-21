@@ -1,11 +1,7 @@
 import type { JSX } from 'react';
 
 import { Checkbox } from '@/components/ui/checkbox.tsx';
-import {
-  Field,
-  FieldDescription,
-  FieldLabel,
-} from '@/components/ui/field.tsx';
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { NumberInput } from '@/components/ui/number-input.tsx';
 import {

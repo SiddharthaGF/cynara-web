@@ -1,11 +1,5 @@
 import { ArrowDownIcon, RotateCwIcon } from 'lucide-react';
-import {
-  type JSX,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { type JSX, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
@@ -13,7 +7,8 @@ import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import { cn } from '@/lib/utils.ts';
 
 import { ChatEmptyState } from './ChatComposer.tsx';
-import { type ChatTurn, ChatTurnMessage } from './ChatTurnMessage.tsx';
+import { ChatTurnMessage } from './ChatTurnMessage.tsx';
+import type { ChatTurn } from './chatTurns.ts';
 import type { MentionableField } from './fieldMentions.ts';
 import type { MentionableFieldType } from './fieldTypeMentions.ts';
 
@@ -25,7 +20,7 @@ export function ChatTranscript({
   error,
   stopped,
   canRetry,
-  idPrefix,
+  idPrefix: _idPrefix,
   onRetry,
   onPickPrompt,
   onRemoveQueued,
@@ -52,9 +47,7 @@ export function ChatTranscript({
     if (viewportRef.current?.isConnected) {
       return viewportRef.current;
     }
-    const root = bottomRef.current?.closest(
-      '[data-slot="scroll-area"]',
-    );
+    const root = bottomRef.current?.closest('[data-slot="scroll-area"]');
     const viewport = root?.querySelector<HTMLElement>(
       '[data-slot="scroll-area-viewport"]',
     );
@@ -70,7 +63,6 @@ export function ChatTranscript({
     }
     viewport.scrollTo({ top: viewport.scrollHeight, behavior });
     stickToBottomRef.current = true;
-    setShowJumpToLatest(false);
   }
 
   useLayoutEffect(() => {
@@ -79,11 +71,11 @@ export function ChatTranscript({
 
   useEffect(() => {
     if (turns.length === 0 && !isBusy) {
-      return;
+      return undefined;
     }
     const viewport = resolveViewport();
     if (!viewport) {
-      return;
+      return undefined;
     }
 
     function onScroll(): void {
@@ -138,9 +130,7 @@ export function ChatTranscript({
                 fieldsById={fieldsById}
                 typesBySlug={typesBySlug}
                 onRetry={turn.failed && canRetry ? onRetry : undefined}
-                onRemoveQueued={
-                  turn.queued ? onRemoveQueued : undefined
-                }
+                onRemoveQueued={turn.queued ? onRemoveQueued : undefined}
               />
             </div>
           ))}
@@ -209,6 +199,7 @@ export function ChatTranscript({
         )}
         onClick={() => {
           scrollToBottom('smooth');
+          setShowJumpToLatest(false);
         }}
       >
         <ArrowDownIcon className='size-3.5' />

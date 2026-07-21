@@ -4,11 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
-import {
-  Field,
-  FieldDescription,
-  FieldLabel,
-} from '@/components/ui/field.tsx';
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import type {
   ChoiceOption,
@@ -81,9 +77,7 @@ export function ChoiceOptionsEditor({
               aria-label={t('inspector.removeOption')}
               disabled={options.length <= 1}
               onClick={() => {
-                onChange(
-                  options.filter((_, itemIndex) => itemIndex !== index),
-                );
+                onChange(options.filter((_, itemIndex) => itemIndex !== index));
                 setRowKeys((previous) =>
                   previous.filter((_, itemIndex) => itemIndex !== index),
                 );

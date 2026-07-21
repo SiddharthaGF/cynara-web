@@ -1,13 +1,6 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLegend,
-  FieldSet,
-} from '@/components/ui/field.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
   Card,
@@ -15,8 +8,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card.tsx';
+import {
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLegend,
+  FieldSet,
+} from '@/components/ui/field.tsx';
 import { findFieldById } from '@/features/forms/model/formDraft.ts';
-import type { ClinicalField, FormDraftModel, LayoutNode } from '@/features/forms/types.ts';
+import type {
+  ClinicalField,
+  FormDraftModel,
+  LayoutNode,
+} from '@/features/forms/types.ts';
 import { cn } from '@/lib/utils.ts';
 
 import { FormFieldControl } from './FormFieldControl.tsx';
@@ -211,7 +215,9 @@ function RepeaterLayoutControl({
       ) : null}
       <div className='grid gap-4'>
         {rows.length === 0 ? (
-          <p className='text-sm text-muted-foreground'>{t('formPreview.noRows')}</p>
+          <p className='text-sm text-muted-foreground'>
+            {t('formPreview.noRows')}
+          </p>
         ) : null}
         {rows.map((_, rowIndex) => (
           <Card key={`${field.id}-${rowIndex}`}>

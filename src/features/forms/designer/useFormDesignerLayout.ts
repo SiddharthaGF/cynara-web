@@ -22,10 +22,7 @@ import type {
 import { useComponentCatalog } from './useComponentCatalog.ts';
 import { useFormDraft } from './useFormDraft.ts';
 
-export function useFormDesignerLayout(
-  code: string,
-  initialDraft: FormVersion,
-) {
+export function useFormDesignerLayout(code: string, initialDraft: FormVersion) {
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const components = useComponentCatalog();
@@ -33,7 +30,7 @@ export function useFormDesignerLayout(
 
   useEffect(() => {
     if (!selectedFieldId) {
-      return;
+      return undefined;
     }
 
     function handleKeyDown(event: KeyboardEvent): void {

@@ -365,7 +365,9 @@
     "showMore": "Show more",
     "showLess": "Show less",
     "thinking": "Replying…",
-    "applying": "Finishing schema and applying to the draft…",
+    "streamingReply": "Writing reply…",
+    "generatingSchema": "Generating schema changes…",
+    "applying": "Generating schema changes…",
     "applied": "Applied to draft",
     "thinkingLabel": "Thought",
     "you": "You",
@@ -373,7 +375,8 @@
     "model": "Model: {{model}}",
     "errorLabel": "Could not apply",
     "close": "Close chat",
-    "notConfigured": "AI chat is not configured. Set OPENAI_API_KEY on the API (optional OPENAI_BASE_URL and OPENAI_MODEL).",
+    "notConfigured": "AI chat is not configured. Open Settings → AI provider and set the base URL, API key, and model.",
+    "configure": "Configure AI",
     "errorGeneric": "Could not generate the form. Try again."
   }
 }

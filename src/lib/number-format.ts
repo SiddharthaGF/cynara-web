@@ -76,8 +76,7 @@ function snapToStep(
     min !== undefined && Number.isFinite(min) ? Math.round(min * factor) : 0;
 
   let snapped =
-    scaledMin +
-    Math.round((scaledValue - scaledMin) / scaledStep) * scaledStep;
+    scaledMin + Math.round((scaledValue - scaledMin) / scaledStep) * scaledStep;
 
   if (min !== undefined && Number.isFinite(min)) {
     snapped = Math.max(Math.round(min * factor), snapped);
@@ -90,11 +89,7 @@ function snapToStep(
   return snapped / factor;
 }
 
-function clampNumber(
-  value: number,
-  min?: number,
-  max?: number,
-): number {
+function clampNumber(value: number, min?: number, max?: number): number {
   let result = value;
 
   if (min !== undefined && Number.isFinite(min)) {

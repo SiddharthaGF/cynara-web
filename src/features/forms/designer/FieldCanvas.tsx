@@ -65,7 +65,7 @@ export function FieldCanvas({
   return (
     <div className='mx-auto w-full min-w-0 max-w-2xl'>
       <Card className='mb-4 overflow-hidden'>
-        <div className='h-1.5 bg-gradient-to-r from-primary via-accent to-primary/60' />
+        <div className='h-1.5 bg-linear-to-r from-primary via-accent to-primary/60' />
         <CardHeader>
           <p className='text-xs font-medium tracking-wide text-accent uppercase'>
             {t('header.clinicalDraft')}
@@ -128,12 +128,12 @@ export function FieldCanvas({
                 onOpenAdvanced={onOpenAdvanced}
               />
               {readOnly ? (
-                index < fields.length - 1 ? (
+                index < fields.length - 1 && (
                   <li
                     aria-hidden
                     className='h-4 list-none'
                   />
-                ) : null
+                )
               ) : (
                 <QuestionInsertGap
                   insertAt={index + 1}

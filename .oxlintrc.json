@@ -27,7 +27,10 @@
     ".tanstack/**",
     "src/routeTree.gen.ts",
     "**/tsconfig*.json",
-    "**/*.json"
+    "**/*.json",
+    "src/components/ui/**",
+    "src/lib/utils.ts",
+    "src/hooks/use-mobile.ts"
   ],
   "rules": {
     "no-console": "error",
@@ -105,25 +108,8 @@
       "rules": {
         "import/no-default-export": "off",
         "sort-imports": "off",
-        "import/unambiguous": "off"
-      }
-    },
-    {
-      "files": ["src/components/ui/sidebar.tsx"],
-      "rules": {
-        "max-lines": "off"
-      }
-    },
-    {
-      "files": [
-        "src/components/ui/message-scroller.tsx",
-        "src/components/ui/message.tsx",
-        "src/components/ui/bubble.tsx",
-        "src/components/ui/marker.tsx"
-      ],
-      "rules": {
-        "unicorn/prefer-export-from": "off",
-        "max-lines": "off"
+        "import/unambiguous": "off",
+        "typescript/prefer-readonly-parameter-types": "off"
       }
     },
     {

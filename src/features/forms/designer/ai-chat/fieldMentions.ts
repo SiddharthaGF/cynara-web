@@ -91,9 +91,3 @@ export function extractMentionedFieldIds(
   }
   return found;
 }
-
-export function buildFieldLabelMap(
-  fields: MentionableField[],
-): Map<string, string> {
-  return new Map(fields.map((field) => [field.id, field.label]));
-}

@@ -7,6 +7,8 @@ const WIDTH_CLASSES: Record<NonNullable<FieldPresentation['width']>, string> = {
   quarter: 'col-span-full @min-[38rem]/preview:col-span-3',
 };
 
-export function widthClass(width: FieldPresentation['width'] | undefined): string {
+export function widthClass(
+  width: FieldPresentation['width'] | undefined,
+): string {
   return WIDTH_CLASSES[width ?? 'full'];
 }

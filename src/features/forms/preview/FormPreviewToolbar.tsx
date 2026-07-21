@@ -107,7 +107,9 @@ export function PreviewFrame({
     <div
       className={cn(
         'flex h-full min-h-0 flex-col overflow-hidden',
-        isStage ? 'px-6 py-4 md:px-10 md:py-6' : 'px-2 pt-1 pb-2 md:px-4 md:pb-3',
+        isStage
+          ? 'px-6 py-4 md:px-10 md:py-6'
+          : 'px-2 pt-1 pb-2 md:px-4 md:pb-3',
       )}
     >
       {viewport === 'mobile' ? (
@@ -117,7 +119,9 @@ export function PreviewFrame({
             isStage && 'preview-device-specimen-mobile',
           )}
           contextLabel={formCode}
-          orientation={orientation ? getMobileOrientation(orientation) : undefined}
+          orientation={
+            orientation ? getMobileOrientation(orientation) : undefined
+          }
         >
           {children}
         </IPhoneFrame>
@@ -133,7 +137,9 @@ export function PreviewFrame({
         </SafariBrowserFrame>
       ) : null}
 
-      {viewport === 'plain' ? <PlainPreviewFrame>{children}</PlainPreviewFrame> : null}
+      {viewport === 'plain' ? (
+        <PlainPreviewFrame>{children}</PlainPreviewFrame>
+      ) : null}
     </div>
   );
 }

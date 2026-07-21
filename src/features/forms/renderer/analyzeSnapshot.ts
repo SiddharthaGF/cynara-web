@@ -1,10 +1,10 @@
 import type { TFunction } from 'i18next';
 
-import { iterateFields } from '@/features/forms/model/formDraft.ts';
 import { WIDGETS_BY_FIELD_TYPE } from '@/features/forms/designer/fieldInspectorMeta.ts';
+import { iterateFields } from '@/features/forms/model/formDraft.ts';
+import type { FormDraftModel } from '@/features/forms/types.ts';
 import { translateValidationIssue } from '@/features/forms/validation/translateValidationIssue.ts';
 import { validateDraft } from '@/features/forms/validation/validateDraft.ts';
-import type { FormDraftModel } from '@/features/forms/types.ts';
 
 import type { ConfigWarning } from './types.ts';
 
@@ -39,7 +39,10 @@ export function analyzeSnapshot(
   for (const field of iterateFields(model.clinical.fields)) {
     const presentation = model.ui.fields[field.id];
 
-    if (!SUPPORTED_RENDER_TYPES.has(field.type) && field.type !== 'component-ref') {
+    if (
+      !SUPPORTED_RENDER_TYPES.has(field.type) &&
+      field.type !== 'component-ref'
+    ) {
       warnings.push({
         code: 'UNSUPPORTED_FIELD_TYPE',
         message: t('renderer.UNSUPPORTED_FIELD_TYPE', { type: field.type }),

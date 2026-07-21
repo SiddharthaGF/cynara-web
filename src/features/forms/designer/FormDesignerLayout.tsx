@@ -1,7 +1,7 @@
 import { Link, useParams } from '@tanstack/react-router';
 import { ArrowLeft, Cloud, CloudOff } from 'lucide-react';
 import type { JSX } from 'react';
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsMenu } from '@/components/settings-menu.tsx';
@@ -11,20 +11,24 @@ import { Button } from '@/components/ui/button.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
 
-import {
-  FormPreviewDialog,
-  FormPreviewTrigger,
-} from '../preview/FormPreviewDialog.tsx';
+import { FormPreviewTrigger } from '../preview/FormPreviewTrigger.tsx';
 import type { FormVersion } from '../types.ts';
+import { ChatAiTrigger as FormAiChatTrigger } from './ai-chat/ChatMentionLists.tsx';
 import { ConcurrencyBanner } from './ConcurrencyBanner.tsx';
 import { FieldCanvas } from './FieldCanvas.tsx';
 import { FieldInspector } from './FieldInspector.tsx';
-import {
-  FormAiChatSheet,
-  FormAiChatTrigger,
-} from './ai-chat/FormAiChatSheet.tsx';
 import { useFormDesignerLayout } from './useFormDesignerLayout.ts';
 import { ValidationPanel } from './ValidationPanel.tsx';
+
+const LazyFormAiChatSheet = lazy(async () => {
+  const module = await import('./ai-chat/FormAiChatSheet.tsx');
+  return { default: module.FormAiChatSheet };
+});
+
+const LazyFormPreviewDialog = lazy(async () => {
+  const module = await import('../preview/FormPreviewDialog.tsx');
+  return { default: module.FormPreviewDialog };
+});
 
 interface FormDesignerLayoutProps {
   code: string;
@@ -123,30 +127,32 @@ export function FormDesignerLayout({
         </ScrollArea>
 
         {aiChatOpen ? (
-          <FormAiChatSheet
-            open={aiChatOpen}
-            onOpenChange={(open) => {
-              setAiChatOpen(open);
-              if (open) {
+          <Suspense fallback={null}>
+            <LazyFormAiChatSheet
+              open={aiChatOpen}
+              onOpenChange={(open) => {
+                setAiChatOpen(open);
+                if (open) {
+                  layout.setShowAdvanced(false);
+                }
+              }}
+              formCode={code}
+              locale={locale}
+              model={layout.draft.model}
+              readOnly={layout.draft.isReadOnly}
+              onApplyDraft={(next) => {
+                layout.setSelectedFieldId(null);
                 layout.setShowAdvanced(false);
-              }
-            }}
-            formCode={code}
-            locale={locale}
-            model={layout.draft.model}
-            readOnly={layout.draft.isReadOnly}
-            onApplyDraft={(next) => {
-              layout.setSelectedFieldId(null);
-              layout.setShowAdvanced(false);
-              layout.draft.setModel(() => next);
-              // Let the canvas paint first; sync work + PUT must not block apply.
-              requestAnimationFrame(() => {
-                window.setTimeout(() => {
-                  void layout.draft.saveNow();
-                }, 0);
-              });
-            }}
-          />
+                layout.draft.setModel(() => next);
+                // Let the canvas paint first; sync work + PUT must not block apply.
+                requestAnimationFrame(() => {
+                  window.setTimeout(() => {
+                    void layout.draft.saveNow();
+                  }, 0);
+                });
+              }}
+            />
+          </Suspense>
         ) : null}
 
         {layout.selectedField ? (
@@ -272,12 +278,14 @@ export function FormDesignerLayout({
       </div>
 
       {previewOpen && !isBootstrapping ? (
-        <FormPreviewDialog
-          open={previewOpen}
-          onOpenChange={setPreviewOpen}
-          formCode={code}
-          model={layout.draft.model}
-        />
+        <Suspense fallback={null}>
+          <LazyFormPreviewDialog
+            open={previewOpen}
+            onOpenChange={setPreviewOpen}
+            formCode={code}
+            model={layout.draft.model}
+          />
+        </Suspense>
       ) : null}
     </>
   );

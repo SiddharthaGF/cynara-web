@@ -17,7 +17,10 @@ import {
   TIME_FIELD_LAYOUT_CLASS,
   TimeInput,
 } from '@/components/ui/time-input.tsx';
-import type { ClinicalField, FieldPresentation } from '@/features/forms/types.ts';
+import type {
+  ClinicalField,
+  FieldPresentation,
+} from '@/features/forms/types.ts';
 
 import { DatePickerInput } from './DatePickerInput.tsx';
 
@@ -109,7 +112,7 @@ export function renderFieldInput(
           disabled={!enabled}
           aria-invalid={ariaInvalid}
           onCheckedChange={(next) => {
-            onChange(next === true);
+            onChange(next);
           }}
         />
       );

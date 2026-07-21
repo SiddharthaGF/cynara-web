@@ -1,6 +1,9 @@
 import type { FormRuleEvaluationResult } from '@cynara/rule-engine';
 
-import { collectRepeaterChildIds, iterateFields } from '@/features/forms/model/formDraft.ts';
+import {
+  collectRepeaterChildIds,
+  iterateFields,
+} from '@/features/forms/model/formDraft.ts';
 import type { ClinicalField } from '@/features/forms/types.ts';
 
 import { getRepeaterRows } from './formValues.ts';

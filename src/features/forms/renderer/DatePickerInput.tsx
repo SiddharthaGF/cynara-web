@@ -6,16 +6,16 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
 import { Calendar } from '@/components/ui/calendar.tsx';
-import { formatNowTime } from '@/components/ui/time-input-utils.ts';
-import {
-  TIME_FIELD_LAYOUT_CLASS,
-  TimeInput,
-} from '@/components/ui/time-input.tsx';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover.tsx';
+import { formatNowTime } from '@/components/ui/time-input-utils.ts';
+import {
+  TIME_FIELD_LAYOUT_CLASS,
+  TimeInput,
+} from '@/components/ui/time-input.tsx';
 import type { ClinicalField, TimePreset } from '@/features/forms/types.ts';
 import { cn } from '@/lib/utils.ts';
 
@@ -49,7 +49,7 @@ export function DatePickerInput({
   const storedTime = fieldType === 'datetime' ? extractTimeValue(value) : '';
   const isValueEmpty = value === '' || value === undefined || value === null;
   const displayDate = isValueEmpty ? undefined : (storedDate ?? pendingDate);
-  const displayTime = isValueEmpty ? '' : (storedTime || pendingTime);
+  const displayTime = isValueEmpty ? '' : storedTime || pendingTime;
 
   const label = displayDate
     ? format(displayDate, 'PPP', { locale })

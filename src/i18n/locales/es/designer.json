@@ -365,7 +365,9 @@
     "showMore": "Mostrar más",
     "showLess": "Mostrar menos",
     "thinking": "Respondiendo…",
-    "applying": "Terminando el esquema y aplicándolo al borrador…",
+    "streamingReply": "Escribiendo respuesta…",
+    "generatingSchema": "Generando cambios del esquema…",
+    "applying": "Generando cambios del esquema…",
     "applied": "Aplicado al borrador",
     "thinkingLabel": "Pensó",
     "you": "Tú",
@@ -373,7 +375,8 @@
     "model": "Modelo: {{model}}",
     "errorLabel": "No se pudo aplicar",
     "close": "Cerrar chat",
-    "notConfigured": "El chat IA no está configurado. Define OPENAI_API_KEY en la API (opcional OPENAI_BASE_URL y OPENAI_MODEL).",
+    "notConfigured": "El chat IA no está configurado. Abre Ajustes → Proveedor de IA y define la base URL, la API key y el modelo.",
+    "configure": "Configurar IA",
     "errorGeneric": "No se pudo generar el formulario. Inténtalo de nuevo."
   }
 }

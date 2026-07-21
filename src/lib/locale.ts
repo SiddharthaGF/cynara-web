@@ -9,8 +9,14 @@ const LOCALE_STORAGE_KEY = 'cynara-locale';
 export const DEFAULT_LOCALE: AppLocale = 'en';
 const SUPPORTED_LOCALES = new Set<AppLocale>(['en', 'es']);
 
-export function isAppLocale(value: string | null | undefined): value is AppLocale {
-  return value !== null && value !== undefined && SUPPORTED_LOCALES.has(value as AppLocale);
+export function isAppLocale(
+  value: string | null | undefined,
+): value is AppLocale {
+  return (
+    value !== null &&
+    value !== undefined &&
+    SUPPORTED_LOCALES.has(value as AppLocale)
+  );
 }
 
 function getStoredLocale(): AppLocale | null {

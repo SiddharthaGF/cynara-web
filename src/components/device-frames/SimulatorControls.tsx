@@ -35,7 +35,10 @@ export function DesktopResolutionControl({
       className='device-simulator-control inline-flex items-center gap-1 rounded-full border border-border/55 bg-card/55 p-1 backdrop-blur-sm'
     >
       <span className='flex items-center gap-1 px-1.5 text-muted-foreground'>
-        <Monitor className='size-3' strokeWidth={2} />
+        <Monitor
+          className='size-3'
+          strokeWidth={2}
+        />
         <span className='hidden font-mono text-[9.5px] tracking-[0.14em] uppercase sm:inline'>
           {t('formPreview.resolution.shortLabel')}
         </span>
@@ -80,7 +83,10 @@ export function MobileOrientationControl({
       className='device-simulator-control inline-flex items-center gap-1 rounded-full border border-border/55 bg-card/55 p-1 backdrop-blur-sm'
     >
       <span className='flex items-center gap-1 px-1.5 text-muted-foreground'>
-        <Smartphone className='size-3' strokeWidth={2} />
+        <Smartphone
+          className='size-3'
+          strokeWidth={2}
+        />
         <span className='hidden font-mono text-[9.5px] tracking-[0.14em] uppercase sm:inline'>
           {t('formPreview.rotation.shortLabel')}
         </span>
@@ -100,9 +106,7 @@ export function MobileOrientationControl({
           strokeWidth={2.25}
         />
       </button>
-      <div
-        className='inline-flex items-center rounded-full bg-background/60 p-0.5 shadow-[inset_0_0_0_1px_oklch(0.62_0.09_148/14%)]'
-      >
+      <div className='inline-flex items-center rounded-full bg-background/60 p-0.5 shadow-[inset_0_0_0_1px_oklch(0.62_0.09_148/14%)]'>
         {MOBILE_ORIENTATIONS.map((option) => {
           const isActive = option.id === value;
           return (

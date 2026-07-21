@@ -95,7 +95,9 @@ export interface ClinicalFormValues {
   componentVersion: string;
 }
 
-export function clinicalFieldToFormValues(field: ClinicalField): ClinicalFormValues {
+export function clinicalFieldToFormValues(
+  field: ClinicalField,
+): ClinicalFormValues {
   return {
     description: field.description ?? '',
     readOnly: field.readOnly ?? false,
@@ -168,7 +170,9 @@ export function clinicalFormValuesToPatch(
     maximum: parseOptionalNumber(values.maximum),
     multipleOf: parseOptionalNumber(values.multipleOf),
     decimalPlaces:
-      field.type === 'number' ? parseOptionalInt(values.decimalPlaces) : undefined,
+      field.type === 'number'
+        ? parseOptionalInt(values.decimalPlaces)
+        : undefined,
     options: field.type === 'choice' ? values.options : undefined,
     allowMultiple: field.type === 'choice' ? values.allowMultiple : undefined,
     minItems: parseOptionalInt(values.minItems),
@@ -205,8 +209,14 @@ export function rulesFormValuesToPatch(
   values: RulesFormValues,
 ): Partial<FieldRules> {
   return {
-    visibleWhen: buildEqExpression(values.visibleWhenRef, values.visibleWhenLit),
-    enabledWhen: buildEqExpression(values.enabledWhenRef, values.enabledWhenLit),
+    visibleWhen: buildEqExpression(
+      values.visibleWhenRef,
+      values.visibleWhenLit,
+    ),
+    enabledWhen: buildEqExpression(
+      values.enabledWhenRef,
+      values.enabledWhenLit,
+    ),
     requiredWhen: buildEqExpression(
       values.requiredWhenRef,
       values.requiredWhenLit,

@@ -32,3 +32,6 @@ src/routeTree.gen.ts
 *.njsproj
 *.sln
 *.sw?
+
+# IA tools
+.atl/

@@ -845,7 +845,9 @@
     font-size: 0.875rem;
     line-height: 1.4;
     color: var(--foreground);
-    transition: background-color 140ms ease, border-color 140ms ease;
+    transition:
+      background-color 140ms ease,
+      border-color 140ms ease;
   }
 
   .ai-chat-prompt:hover {
@@ -969,11 +971,7 @@
   }
 
   .ai-chat-composer-wrap {
-    background: linear-gradient(
-      to top,
-      var(--background) 70%,
-      transparent
-    );
+    background: linear-gradient(to top, var(--background) 70%, transparent);
   }
 
   .ai-chat-composer {
@@ -984,7 +982,9 @@
     box-shadow:
       0 0 0 1px color-mix(in oklch, var(--foreground) 3%, transparent),
       0 8px 24px color-mix(in oklch, var(--foreground) 4%, transparent);
-    transition: border-color 140ms ease, box-shadow 140ms ease;
+    transition:
+      border-color 140ms ease,
+      box-shadow 140ms ease;
   }
 
   .ai-chat-composer:focus-within {
@@ -1034,12 +1034,17 @@
    * Keep padding + line-height locked so caret, glyphs, and [data-tag]
    * share one baseline. Textarea grows; ScrollArea scrolls past max height.
    */
-  .ai-chat-composer [data-slot='mention'] div:has(> [data-slot='mention-input']) {
+  .ai-chat-composer
+    [data-slot='mention']
+    div:has(> [data-slot='mention-input']) {
     position: relative;
     isolation: isolate;
   }
 
-  .ai-chat-composer [data-slot='mention'] div:has(> [data-slot='mention-input']) > div:first-child {
+  .ai-chat-composer
+    [data-slot='mention']
+    div:has(> [data-slot='mention-input'])
+    > div:first-child {
     color: var(--foreground) !important;
     white-space: pre-wrap !important;
     overflow: hidden !important;

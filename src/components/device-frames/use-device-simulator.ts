@@ -11,9 +11,27 @@ export interface DesktopResolutionSpec {
 }
 
 export const DESKTOP_RESOLUTIONS: readonly DesktopResolutionSpec[] = [
-  { id: 'laptop', width: 1440, height: 900, labelKey: 'formPreview.resolution.laptop', shortKey: 'formPreview.resolution.laptopShort' },
-  { id: 'desktop', width: 1920, height: 1080, labelKey: 'formPreview.resolution.desktop', shortKey: 'formPreview.resolution.desktopShort' },
-  { id: 'tablet', width: 1024, height: 768, labelKey: 'formPreview.resolution.tablet', shortKey: 'formPreview.resolution.tabletShort' },
+  {
+    id: 'laptop',
+    width: 1440,
+    height: 900,
+    labelKey: 'formPreview.resolution.laptop',
+    shortKey: 'formPreview.resolution.laptopShort',
+  },
+  {
+    id: 'desktop',
+    width: 1920,
+    height: 1080,
+    labelKey: 'formPreview.resolution.desktop',
+    shortKey: 'formPreview.resolution.desktopShort',
+  },
+  {
+    id: 'tablet',
+    width: 1024,
+    height: 768,
+    labelKey: 'formPreview.resolution.tablet',
+    shortKey: 'formPreview.resolution.tabletShort',
+  },
 ];
 
 export type MobileOrientation = 'portrait' | 'landscape';
@@ -28,8 +46,20 @@ export interface MobileOrientationSpec {
 }
 
 export const MOBILE_ORIENTATIONS: readonly MobileOrientationSpec[] = [
-  { id: 'portrait', width: 390, height: 844, labelKey: 'formPreview.rotation.portrait', shortKey: 'formPreview.rotation.portraitShort' },
-  { id: 'landscape', width: 844, height: 390, labelKey: 'formPreview.rotation.landscape', shortKey: 'formPreview.rotation.landscapeShort' },
+  {
+    id: 'portrait',
+    width: 390,
+    height: 844,
+    labelKey: 'formPreview.rotation.portrait',
+    shortKey: 'formPreview.rotation.portraitShort',
+  },
+  {
+    id: 'landscape',
+    width: 844,
+    height: 390,
+    labelKey: 'formPreview.rotation.landscape',
+    shortKey: 'formPreview.rotation.landscapeShort',
+  },
 ];
 
 interface PersistedSimulator {
@@ -93,11 +123,15 @@ export function useDeviceSimulator(): UseDeviceSimulatorReturn {
   }, [state]);
 
   const setResolution = useCallback((resolution: DesktopResolution) => {
-    setState((prev) => (prev.resolution === resolution ? prev : { ...prev, resolution }));
+    setState((prev) =>
+      prev.resolution === resolution ? prev : { ...prev, resolution },
+    );
   }, []);
 
   const setOrientation = useCallback((orientation: MobileOrientation) => {
-    setState((prev) => (prev.orientation === orientation ? prev : { ...prev, orientation }));
+    setState((prev) =>
+      prev.orientation === orientation ? prev : { ...prev, orientation },
+    );
   }, []);
 
   const toggleOrientation = useCallback(() => {
@@ -116,10 +150,18 @@ export function useDeviceSimulator(): UseDeviceSimulatorReturn {
   };
 }
 
-export function getDesktopResolution(id: DesktopResolution): DesktopResolutionSpec {
-  return DESKTOP_RESOLUTIONS.find((spec) => spec.id === id) ?? DESKTOP_RESOLUTIONS[0];
+export function getDesktopResolution(
+  id: DesktopResolution,
+): DesktopResolutionSpec {
+  return (
+    DESKTOP_RESOLUTIONS.find((spec) => spec.id === id) ?? DESKTOP_RESOLUTIONS[0]
+  );
 }
 
-export function getMobileOrientation(id: MobileOrientation): MobileOrientationSpec {
-  return MOBILE_ORIENTATIONS.find((spec) => spec.id === id) ?? MOBILE_ORIENTATIONS[0];
+export function getMobileOrientation(
+  id: MobileOrientation,
+): MobileOrientationSpec {
+  return (
+    MOBILE_ORIENTATIONS.find((spec) => spec.id === id) ?? MOBILE_ORIENTATIONS[0]
+  );
 }

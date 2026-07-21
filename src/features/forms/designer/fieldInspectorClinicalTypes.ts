@@ -1,6 +1,9 @@
 import type { TFunction } from 'i18next';
 
-import type { ClinicalField, ComponentSummary } from '@/features/forms/types.ts';
+import type {
+  ClinicalField,
+  ComponentSummary,
+} from '@/features/forms/types.ts';
 import type { SyncedTanstackForm } from '@/lib/useSyncedTanstackForm.ts';
 
 import type { ClinicalFormValues } from './fieldInspectorFormUtils.ts';

@@ -48,17 +48,13 @@ export function FormFieldControl({
   const required = context.evaluation.required[field.id] ?? false;
   const errors =
     context.fieldErrors[
-      repeaterPath
-        ? `${field.id}::${repeaterPath.rowIndex}`
-        : field.id
+      repeaterPath ? `${field.id}::${repeaterPath.rowIndex}` : field.id
     ] ?? [];
   const invalid = context.showValidation && errors.length > 0;
   const label = stripLegacyCalculatedLabelSuffix(
     presentation?.label ?? field.id,
   );
-  const isCalculated = Boolean(
-    context.model.rules.fields[field.id]?.calculate,
-  );
+  const isCalculated = Boolean(context.model.rules.fields[field.id]?.calculate);
   const helpText = presentation?.helpText;
   const placeholder = presentation?.placeholder;
   const calculatedValue = context.evaluation.calculatedValues[field.code];
@@ -153,7 +149,7 @@ export function FormFieldControl({
             disabled={!enabled}
             aria-invalid={invalid || undefined}
             onCheckedChange={(next) => {
-              handleChange(next === true);
+              handleChange(next);
             }}
           />
         )}

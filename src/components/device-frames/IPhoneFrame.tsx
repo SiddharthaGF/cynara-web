@@ -3,8 +3,8 @@ import { useRef, type JSX, type ReactNode } from 'react';
 import { cn } from '@/lib/utils.ts';
 
 import { DeviceAppChrome } from './DeviceAppChrome.tsx';
-import { useFitScale } from './use-fit-scale.ts';
 import type { MobileOrientationSpec } from './use-device-simulator.ts';
+import { useFitScale } from './use-fit-scale.ts';
 
 interface IPhoneFrameProps {
   children: ReactNode;
@@ -228,7 +228,9 @@ export function IPhoneFrame({
             contextLabel={contextLabel}
             className='flex min-h-0 flex-1 flex-col overflow-hidden'
           >
-            <div className='@container/preview px-3.5 pb-6 pt-1'>{children}</div>
+            <div className='@container/preview px-3.5 pb-6 pt-1'>
+              {children}
+            </div>
           </DeviceAppChrome>
 
           {isLandscape ? null : (

@@ -121,9 +121,7 @@ export function FieldInspectorRulesSection({
                   }}
                 >
                   <SelectTrigger className='w-full'>
-                    <SelectValue
-                      placeholder={t('inspector.selectSourceField')}
-                    >
+                    <SelectValue placeholder={t('inspector.selectSourceField')}>
                       {renderSelectedFieldOption(
                         toSelectValue(fieldApi.state.value),
                         otherFields,
@@ -195,9 +193,7 @@ function RulePairFields({
                     }}
                   >
                     <SelectTrigger className='w-full'>
-                      <SelectValue
-                        placeholder={t('inspector.selectFieldCode')}
-                      >
+                      <SelectValue placeholder={t('inspector.selectFieldCode')}>
                         {renderSelectedFieldOption(
                           toSelectValue(fieldApi.state.value),
                           fieldOptions,
@@ -285,7 +281,7 @@ function renderSelectedFieldOption(
   fieldOptions: RuleFieldOption[],
   noneLabel: string,
 ): JSX.Element | string {
-  if (value == null || value === '') {
+  if (value === null || value === '') {
     return noneLabel;
   }
   const option = fieldOptions.find((item) => item.code === value);

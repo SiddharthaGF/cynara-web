@@ -18,26 +18,28 @@ interface ProblemDetails {
   detail?: string;
 }
 
-const DEFAULT_SSR_API_ORIGIN = 'http://localhost:3000';
+function resolveSsrApiOrigin(): string {
+  const origin = import.meta.env.VITE_API_ORIGIN;
+  if (typeof origin === 'string' && origin.trim() !== '') {
+    return origin.trim().replace(/\/$/, '');
+  }
+  throw new Error('Server unavailable');
+}
 
-/**
- * Browsers fetch relative `/api/...` (Vite proxies to Nest).
- * Node SSR needs an absolute URL. In Vite dev, call Nest directly — do not use
- * VITE_API_BASE_URL (often a remote demo host) or self-fetch the Vite origin.
- */
 const resolveApiUrl = createIsomorphicFn()
   .client((path: string) => path)
   .server((path: string) => {
     if (/^https?:\/\//i.test(path)) {
       return path;
     }
+    const ssrApiOrigin = resolveSsrApiOrigin();
     if (import.meta.env.DEV) {
-      return new URL(path, `${DEFAULT_SSR_API_ORIGIN}/`).href;
+      return new URL(path, `${ssrApiOrigin}/`).href;
     }
     try {
       return new URL(path, getRequestUrl().origin).href;
     } catch {
-      return new URL(path, `${DEFAULT_SSR_API_ORIGIN}/`).href;
+      return new URL(path, `${ssrApiOrigin}/`).href;
     }
   });
 
@@ -66,26 +68,26 @@ export async function apiRequest<T>(
     headers,
   });
 
-  if (response.ok) {
-    if (response.status === 204) {
-      return undefined as T;
+  if (!response.ok) {
+    let title = response.statusText;
+    let detail = `Request failed with status ${response.status}`;
+    const bodyText = await response.text();
+
+    if (bodyText) {
+      try {
+        const problem = JSON.parse(bodyText) as ProblemDetails;
+        title = problem.title ?? title;
+        detail = problem.detail ?? detail;
+      } catch {
+        detail = summarizeErrorBody(response.status, bodyText);
+      }
     }
-    return (await response.json()) as T;
+
+    throw new ApiError(response.status, title, detail);
   }
 
-  let title = response.statusText;
-  let detail = `Request failed with status ${response.status}`;
-  const bodyText = await response.text();
-
-  if (bodyText) {
-    try {
-      const problem = JSON.parse(bodyText) as ProblemDetails;
-      title = problem.title ?? title;
-      detail = problem.detail ?? detail;
-    } catch {
-      detail = summarizeErrorBody(response.status, bodyText);
-    }
+  if (response.status === 204) {
+    return undefined as T;
   }
-
-  throw new ApiError(response.status, title, detail);
+  return (await response.json()) as T;
 }

@@ -9,11 +9,7 @@ import {
   CardFooter,
   CardTitle,
 } from '@/components/ui/card.tsx';
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field.tsx';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import {
   Select,
@@ -37,13 +33,13 @@ import { translateValidationIssue } from '@/features/forms/validation/translateV
 import { useSyncedTanstackForm } from '@/lib/useSyncedTanstackForm.ts';
 import { cn } from '@/lib/utils.ts';
 
-import { FieldPreview } from './FieldPreview.tsx';
-import { FieldTypeBadge, FieldTypeLabel } from './FieldTypeIcon.tsx';
-import { FIELD_TYPES } from './fieldTypeMeta.ts';
 import {
   questionEditToFormValues,
   type QuestionEditFormValues,
 } from './fieldInspectorFormUtils.ts';
+import { FieldPreview } from './FieldPreview.tsx';
+import { FieldTypeBadge, FieldTypeLabel } from './FieldTypeIcon.tsx';
+import { FIELD_TYPES } from './fieldTypeMeta.ts';
 import { QuestionCardActions } from './QuestionCardActions.tsx';
 
 export interface QuestionCardProps {
@@ -247,7 +243,7 @@ export function QuestionCard({
         }}
       >
         {isSelected ? (
-          <div className='h-1 bg-gradient-to-r from-primary to-accent' />
+          <div className='h-1 bg-linear-to-r from-primary to-accent' />
         ) : null}
 
         <CardContent

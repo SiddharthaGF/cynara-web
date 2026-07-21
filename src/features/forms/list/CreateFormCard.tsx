@@ -115,7 +115,9 @@ export function CreateFormCard({
               >
                 {(field) => (
                   <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name}>{t('list.code')}</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>
+                      {t('list.code')}
+                    </FieldLabel>
                     <Input
                       id={field.name}
                       name={field.name}
@@ -145,7 +147,9 @@ export function CreateFormCard({
               >
                 {(field) => (
                   <Field data-invalid={!field.state.meta.isValid}>
-                    <FieldLabel htmlFor={field.name}>{t('list.name')}</FieldLabel>
+                    <FieldLabel htmlFor={field.name}>
+                      {t('list.name')}
+                    </FieldLabel>
                     <Input
                       id={field.name}
                       name={field.name}

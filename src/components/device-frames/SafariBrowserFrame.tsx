@@ -12,17 +12,14 @@ import { useRef, type JSX, type ReactNode } from 'react';
 import { cn } from '@/lib/utils.ts';
 
 import { DeviceAppChrome } from './DeviceAppChrome.tsx';
-import { useFitScale } from './use-fit-scale.ts';
 import type { DesktopResolutionSpec } from './use-device-simulator.ts';
+import { useFitScale } from './use-fit-scale.ts';
 
 interface SafariBrowserFrameProps {
   children: ReactNode;
   className?: string;
-  /** Decorative URL shown in the address bar. */
   address?: string;
-  /** Form code displayed in the simulated app sidebar. */
   contextLabel?: string;
-  /** Logical viewport for the simulated browser. Defaults to a 13" laptop. */
   resolution?: DesktopResolutionSpec;
 }
 

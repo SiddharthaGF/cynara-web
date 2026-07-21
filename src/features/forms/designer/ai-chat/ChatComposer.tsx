@@ -1,9 +1,7 @@
-import { ArrowUpIcon, RotateCwIcon, SquareIcon } from 'lucide-react';
 import {
   type FormEvent,
   type JSX,
   type KeyboardEvent,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -11,7 +9,6 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/components/ui/button.tsx';
 import {
   Mention,
   MentionContent,
@@ -21,10 +18,8 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import type { FieldType, FormDraftModel } from '@/features/forms/types.ts';
 
-import {
-  FieldMentionList,
-  TypeMentionList,
-} from './ChatMentionLists.tsx';
+import { ChatComposerActions } from './ChatComposerActions.tsx';
+import { FieldMentionList, TypeMentionList } from './ChatMentionLists.tsx';
 import {
   filterMentionableFields,
   listMentionableFields,
@@ -86,9 +81,6 @@ export function ChatComposer({
   const [mentionedValues, setMentionedValues] = useState<string[]>([]);
   const [mentionOpen, setMentionOpen] = useState(false);
   const [activeTrigger, setActiveTrigger] = useState<'@' | '#'>('@');
-  /** DiceUI Mention keeps an uncontrolled DOM input; remount when parent clears. */
-  const [editorKey, setEditorKey] = useState(0);
-  const hadValueRef = useRef(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   /**
    * DiceUI stores `trigger` in useState and does not sync prop changes, so we
@@ -129,20 +121,6 @@ export function ChatComposer({
     [mentionableTypes],
   );
 
-  useEffect(() => {
-    if (value.length > 0) {
-      hadValueRef.current = true;
-      return;
-    }
-    setMentionedValues([]);
-    setMentionOpen(false);
-    if (hadValueRef.current) {
-      hadValueRef.current = false;
-      // Remount so the native input + highlighter drop the previous text.
-      setEditorKey((key) => key + 1);
-    }
-  }, [value]);
-
   // Autofocus on open (mount) and restore text/caret after remount (clear / trigger switch).
   useLayoutEffect(() => {
     const input = wrapRef.current?.querySelector<
@@ -165,14 +143,14 @@ export function ChatComposer({
       // Re-open the mention menu for the new trigger (DiceUI listens on select).
       input.dispatchEvent(new Event('select', { bubbles: true }));
       // Force highlighter re-read of DOM value after restore.
-      setMentionedValues((prev) => prev.slice());
+      setMentionedValues((prev) => [...prev]);
       return;
     }
 
     if (!disabled) {
       input.focus({ preventScroll: true });
     }
-  }, [disabled, editorKey, activeTrigger]);
+  }, [disabled, activeTrigger]);
 
   function syncTriggerFromCaret(nextValue: string, caret: number): void {
     const detected = detectMentionTrigger(nextValue, caret);
@@ -236,9 +214,7 @@ export function ChatComposer({
   const emptyLabel = isTypeMode
     ? t('ai.mention.typeEmpty')
     : t('ai.mention.empty');
-  const menuHint = isTypeMode
-    ? t('ai.mention.typeHint')
-    : t('ai.mention.hint');
+  const menuHint = isTypeMode ? t('ai.mention.typeHint') : t('ai.mention.hint');
   let composerHint = modelLabel;
   if (mentionOpen) {
     composerHint = isTypeMode
@@ -256,7 +232,7 @@ export function ChatComposer({
         className='ai-chat-composer'
       >
         <Mention
-          key={`${activeTrigger}-${editorKey}`}
+          key={activeTrigger}
           trigger={activeTrigger}
           loop
           disabled={disabled}
@@ -268,6 +244,10 @@ export function ChatComposer({
               return;
             }
             onChange(next);
+            if (next.length === 0) {
+              setMentionedValues([]);
+              setMentionOpen(false);
+            }
             requestAnimationFrame(() => {
               const el = document.activeElement;
               if (
@@ -330,62 +310,14 @@ export function ChatComposer({
           </MentionContent>
         </Mention>
 
-        <div className='mt-1 flex items-center justify-between gap-2 px-0.5 pt-1'>
-          <p className='truncate text-[10px] tracking-wide text-muted-foreground uppercase'>
-            {composerHint}
-          </p>
-          <div className='flex items-center gap-1.5'>
-            {canRetry ? (
-              <Button
-                type='button'
-                size='sm'
-                variant='ghost'
-                className='h-8 gap-1.5 rounded-full px-2.5 text-xs'
-                onClick={onRetry}
-              >
-                <RotateCwIcon className='size-3.5' />
-                {t('ai.retry')}
-              </Button>
-            ) : null}
-            {isBusy ? (
-              <>
-                {canSubmit ? (
-                  <Button
-                    type='submit'
-                    size='icon-sm'
-                    variant='secondary'
-                    className='rounded-full'
-                    aria-label={t('ai.queue')}
-                    title={t('ai.queue')}
-                  >
-                    <ArrowUpIcon className='size-3.5' />
-                  </Button>
-                ) : null}
-                <Button
-                  type='button'
-                  size='icon-sm'
-                  variant='default'
-                  className='rounded-full'
-                  aria-label={t('ai.stop')}
-                  onClick={onStop}
-                >
-                  <SquareIcon className='size-3 fill-current' />
-                </Button>
-              </>
-            ) : (
-              <Button
-                type='submit'
-                size='icon-sm'
-                variant='default'
-                disabled={!canSubmit}
-                className='rounded-full'
-                aria-label={t('ai.send')}
-              >
-                <ArrowUpIcon className='size-3.5' />
-              </Button>
-            )}
-          </div>
-        </div>
+        <ChatComposerActions
+          canRetry={canRetry}
+          canSubmit={canSubmit}
+          isBusy={isBusy}
+          composerHint={composerHint}
+          onRetry={onRetry}
+          onStop={onStop}
+        />
       </div>
     </form>
   );

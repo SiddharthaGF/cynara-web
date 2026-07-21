@@ -4,15 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
     "build": "vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc -b --noEmit",
-    "lint:check": "oxlint",
-    "lint:fix": "oxlint --fix",
+    "dev": "vite dev",
+    "doctor": "npx react-doctor@latest",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
-    "doctor": "npx react-doctor@latest"
+    "lint:check": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "precommit": "pnpm lint:check && pnpm typecheck",
+    "prepare": "husky",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -36,7 +38,6 @@
     "react-day-picker": "^10.0.1",
     "react-dom": "^19.2.7",
     "react-i18next": "^17.0.10",
-    "shadcn": "^4.13.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3",
@@ -47,9 +48,11 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "husky": "^9.1.7",
     "oxfmt": "^0.59.0",
     "oxlint": "^1.74.0",
     "oxlint-tsgolint": "^0.25.0",
+    "shadcn": "^4.13.1",
     "typescript": "^7.0.2",
     "vite": "^8.1.5"
   },

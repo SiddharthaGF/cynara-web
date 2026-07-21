@@ -101,12 +101,6 @@ export async function updateFormDraft(
   return mapVersion(version);
 }
 
-export interface FormAiStatus {
-  configured: boolean;
-  model: string | null;
-  baseUrlConfigured: boolean;
-}
-
 export interface FormAiChatMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -121,46 +115,34 @@ export interface FormAiChatResult {
   rulesSchemaJson: string;
 }
 
-export async function getFormAiStatus(): Promise<FormAiStatus> {
-  const status = await apiRequest<FormAiStatus>('/api/ai/status');
-  return status;
-}
-
 export interface FormAiChatInput {
   messages: FormAiChatMessage[];
   locale: string;
-  /** Field ids cited with @ in the latest user message. */
   focusedFieldIds?: string[];
-  /** Field types cited with # (e.g. text, textarea). */
   focusedFieldTypes?: string[];
   clinicalSchemaJson: string;
   uiSchemaJson: string | null;
   rulesSchemaJson: string | null;
 }
 
+function parseFormAiStreamEvent(data: string): FormAiStreamEvent | null {
+  if (!data || data === '[DONE]') {
+    return null;
+  }
+  try {
+    return JSON.parse(data) as FormAiStreamEvent;
+  } catch {
+    return null;
+  }
+}
+
 export type FormAiStreamEvent =
+  | { type: 'phase'; phase: 'message' | 'schema' }
   | { type: 'thinking'; delta: string }
   | { type: 'message'; delta: string }
   | { type: 'done'; result: FormAiChatResult }
   | { type: 'error'; message: string };
 
-export async function chatFormDraftAi(
-  code: string,
-  input: FormAiChatInput,
-  options?: { signal?: AbortSignal },
-): Promise<FormAiChatResult> {
-  const result = await apiRequest<FormAiChatResult>(
-    `/api/forms/${code}/draft/ai-chat`,
-    {
-      method: 'POST',
-      body: JSON.stringify(input),
-      signal: options?.signal,
-    },
-  );
-  return result;
-}
-
-/** ChatGPT-style SSE: thinking/message deltas, then done with schemas. */
 export async function* streamFormDraftAi(
   code: string,
   input: FormAiChatInput,
@@ -207,6 +189,8 @@ export async function* streamFormDraftAi(
 
   try {
     while (true) {
+      // Stream chunks must be read sequentially.
+      // eslint-disable-next-line no-await-in-loop
       const { done, value } = await reader.read();
       if (done) {
         break;
@@ -217,21 +201,13 @@ export async function* streamFormDraftAi(
 
       for (const line of lines) {
         const trimmed = line.trim();
-        if (!trimmed.startsWith('data:')) {
-          continue;
+        const event = parseFormAiStreamEvent(
+          trimmed.startsWith('data:') ? trimmed.slice(5).trim() : '',
+        );
+        if (event) {
+          yield event;
         }
-        const data = trimmed.slice(5).trim();
-        if (!data || data === '[DONE]') {
-          continue;
-        }
-        let event: FormAiStreamEvent;
-        try {
-          event = JSON.parse(data) as FormAiStreamEvent;
-        } catch {
-          continue;
-        }
-        yield event;
-        if (event.type === 'done' || event.type === 'error') {
+        if (event?.type === 'done' || event?.type === 'error') {
           return;
         }
       }

@@ -6,7 +6,6 @@ import { iterateFields } from '@/features/forms/model/formDraft.ts';
 
 import { analyzeSnapshot } from './analyzeSnapshot.ts';
 import { collectFieldErrors } from './collectFieldErrors.ts';
-import { translateFieldValidationIssue } from './translateFieldValidationIssue.ts';
 import {
   addRepeaterRow,
   createInitialValues,
@@ -16,6 +15,7 @@ import {
   setRepeaterRowValue,
   setScalarValue,
 } from './formValues.ts';
+import { translateFieldValidationIssue } from './translateFieldValidationIssue.ts';
 import type { FormSnapshot, FormValues } from './types.ts';
 
 interface UseFormRendererOptions {
@@ -71,7 +71,12 @@ export function useFormRenderer({
   }, []);
 
   const onRepeaterRowChange = useCallback(
-    (repeaterCode: string, rowIndex: number, childCode: string, value: unknown) => {
+    (
+      repeaterCode: string,
+      rowIndex: number,
+      childCode: string,
+      value: unknown,
+    ) => {
       setValues((current) =>
         setRepeaterRowValue(current, repeaterCode, rowIndex, childCode, value),
       );
@@ -88,7 +93,10 @@ export function useFormRenderer({
         return;
       }
       const currentRows = getRepeaterRows(values, repeaterCode);
-      if (field.maxItems !== undefined && currentRows.length >= field.maxItems) {
+      if (
+        field.maxItems !== undefined &&
+        currentRows.length >= field.maxItems
+      ) {
         return;
       }
       setValues((current) => addRepeaterRow(current, field));
@@ -105,16 +113,22 @@ export function useFormRenderer({
         return;
       }
       const currentRows = getRepeaterRows(values, repeaterCode);
-      if (field.minItems !== undefined && currentRows.length <= field.minItems) {
+      if (
+        field.minItems !== undefined &&
+        currentRows.length <= field.minItems
+      ) {
         return;
       }
-      setValues((current) => removeRepeaterRow(current, repeaterCode, rowIndex));
+      setValues((current) =>
+        removeRepeaterRow(current, repeaterCode, rowIndex),
+      );
     },
     [model.clinical.fields, values],
   );
 
   const hasValidationErrors =
-    Object.keys(fieldErrors).length > 0 || evaluation.validationErrors.length > 0;
+    Object.keys(fieldErrors).length > 0 ||
+    evaluation.validationErrors.length > 0;
 
   return {
     values,

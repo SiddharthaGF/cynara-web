@@ -48,7 +48,7 @@ export function useFormDraft(
   initialDraft: FormVersion,
 ): UseFormDraftResult {
   const queryClient = useQueryClient();
-  const initial = draftSnapshot(initialDraft);
+  const [initial] = useState(() => draftSnapshot(initialDraft));
   const [model, setModelState] = useState<FormDraftModel>(initial.model);
   const [rowVersion, setRowVersion] = useState(initial.rowVersion);
   const [saveState, setSaveState] = useState<SaveState>('idle');
@@ -60,7 +60,6 @@ export function useFormDraft(
   const modelRef = useRef(model);
   const rowVersionRef = useRef(rowVersion);
   const timerRef = useRef<number | null>(null);
-  const [trackedFormCode, setTrackedFormCode] = useState(formCode);
 
   const draftQuery = useQuery({
     queryKey: queryKeys.forms.draft(formCode),
@@ -75,40 +74,28 @@ export function useFormDraft(
     refetchOnReconnect: false,
   });
 
-  if (trackedFormCode !== formCode) {
-    const next = draftSnapshot(initialDraft);
-    setTrackedFormCode(formCode);
-    setModelState(next.model);
-    modelRef.current = next.model;
-    setRowVersion(next.rowVersion);
-    rowVersionRef.current = next.rowVersion;
-    setSaveState('idle');
-    setSaveError(null);
-    setIsReadOnly(next.isReadOnly);
-    setIsDirty(false);
-    setAppliedDraft(initialDraft);
-  }
-
   useEffect(() => {
     modelRef.current = model;
     rowVersionRef.current = rowVersion;
   }, [model, rowVersion]);
 
-  // Adopt server draft only when we are not mid-edit. Otherwise a refetch /
-  // setQueryData race can wipe an AI apply or show a loading flash.
-  if (
-    !isDirty &&
-    draftQuery.data !== undefined &&
-    draftQuery.data !== appliedDraft
-  ) {
+  // Adopt the server draft only when we are not mid-edit.
+  // Otherwise, a setQueryData race can wipe an AI apply or show a loading flash.
+  useEffect(() => {
+    if (
+      isDirty ||
+      draftQuery.data === undefined ||
+      draftQuery.data === appliedDraft
+    ) {
+      return;
+    }
+
     const next = draftSnapshot(draftQuery.data);
     setAppliedDraft(draftQuery.data);
     setModelState(next.model);
-    modelRef.current = next.model;
     setRowVersion(next.rowVersion);
-    rowVersionRef.current = next.rowVersion;
     setIsReadOnly(next.isReadOnly);
-  }
+  }, [appliedDraft, draftQuery.data, isDirty]);
 
   const saveMutation = useMutation({
     mutationFn: async (input: {
@@ -122,8 +109,8 @@ export function useFormDraft(
     },
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.forms.draft(formCode), saved);
-      // Keep the local editor model — re-parsing a large AI draft here freezes
-      // the canvas right after it already painted the applied schemas.
+      // Keep the local editor model instead of re-parsing it after the canvas
+      // Paints the applied schemas.
       setAppliedDraft(saved);
       setRowVersion(saved.rowVersion);
       rowVersionRef.current = saved.rowVersion;
@@ -189,10 +176,14 @@ export function useFormDraft(
       uiSchemaJson: JSON.stringify(synced.ui),
       rulesSchemaJson: JSON.stringify(synced.rules),
     };
-    await saveMutation.mutateAsync({
-      ...payload,
-      rowVersion: rowVersionRef.current,
-    });
+    try {
+      await saveMutation.mutateAsync({
+        ...payload,
+        rowVersion: rowVersionRef.current,
+      });
+    } catch {
+      // The mutation error handler exposes the failure in the editor state.
+    }
   }, [saveMutation]);
 
   const setModel = useCallback(
@@ -200,11 +191,9 @@ export function useFormDraft(
       if (isReadOnly) {
         return;
       }
-      setModelState((current) => {
-        const next = updater(current);
-        modelRef.current = next;
-        return next;
-      });
+      const next = updater(modelRef.current);
+      modelRef.current = next;
+      setModelState(next);
       setIsDirty(true);
       setSaveState('idle');
     },
@@ -233,9 +222,6 @@ export function useFormDraft(
     setSaveState('idle');
   }, []);
 
-  const isSynced =
-    draftQuery.data !== undefined && appliedDraft === draftQuery.data;
-
   let loadError: string | null = null;
   if (draftQuery.isError && !draftQuery.data) {
     loadError =
@@ -253,7 +239,7 @@ export function useFormDraft(
     // Never flash the loader over dirty local edits (e.g. AI apply + refetch).
     isLoading:
       draftQuery.isPending ||
-      (draftQuery.isFetching && !isSynced && !isDirty),
+      (draftQuery.isFetching && !isDirty && draftQuery.data === undefined),
     loadError,
     isReadOnly,
     setModel,

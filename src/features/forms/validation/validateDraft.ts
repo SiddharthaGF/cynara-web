@@ -1,12 +1,15 @@
-import {
-  duplicateFieldCodeExists,
-  duplicateFieldIdExists,
-  iterateFields,
-} from '../model/formDraft.ts';
+import { iterateFields } from '../model/formDraft.ts';
 import type { FormDraftModel, ValidationIssue } from '../types.ts';
 
 export function validateDraft(model: FormDraftModel): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
+  const fieldIdCounts = new Map<string, number>();
+  const fieldCodeCounts = new Map<string, number>();
+
+  for (const field of iterateFields(model.clinical.fields)) {
+    fieldIdCounts.set(field.id, (fieldIdCounts.get(field.id) ?? 0) + 1);
+    fieldCodeCounts.set(field.code, (fieldCodeCounts.get(field.code) ?? 0) + 1);
+  }
 
   if (!model.clinical.schemaVersion) {
     issues.push({
@@ -43,7 +46,7 @@ export function validateDraft(model: FormDraftModel): ValidationIssue[] {
       });
     }
 
-    if (duplicateFieldIdExists(model.clinical.fields, field.id)) {
+    if ((fieldIdCounts.get(field.id) ?? 0) > 1) {
       issues.push({
         code: 'DUPLICATE_FIELD_ID',
         path: `${path}/id`,
@@ -51,7 +54,7 @@ export function validateDraft(model: FormDraftModel): ValidationIssue[] {
       });
     }
 
-    if (duplicateFieldCodeExists(model.clinical.fields, field.code)) {
+    if ((fieldCodeCounts.get(field.code) ?? 0) > 1) {
       issues.push({
         code: 'DUPLICATE_FIELD_CODE',
         path: `${path}/code`,

@@ -9,14 +9,11 @@ import {
 } from '@/components/device-frames/index.ts';
 import { Badge } from '@/components/ui/badge.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import {
-  Dialog,
-  DialogContent,
-} from '@/components/ui/dialog.tsx';
-import { cn } from '@/lib/utils.ts';
+import { Dialog, DialogContent } from '@/components/ui/dialog.tsx';
 import { FormRendererView } from '@/features/forms/renderer/FormRenderer.tsx';
 import type { UseFormRendererReturn } from '@/features/forms/renderer/useFormRenderer.ts';
 import type { FormDraftModel } from '@/features/forms/types.ts';
+import { cn } from '@/lib/utils.ts';
 
 import {
   FormPreviewActions,
@@ -149,32 +146,38 @@ function DeviceSwitcher({
       aria-label={t('formPreview.deviceSwitcherLabel')}
       className='device-viewport-bar inline-flex items-center gap-0.5 rounded-full p-1'
     >
-      {deviceSwitcherOptions.map(({ value: optionValue, icon: Icon, labelKey }) => {
-        const isActive = value === optionValue;
-        return (
-          <Button
-            key={optionValue}
-            type='button'
-            size='sm'
-            variant='ghost'
-            className={cn(
-              'h-8 gap-1.5 rounded-full px-3.5 text-xs font-medium',
-              isActive
-                ? 'bg-background text-foreground shadow-sm ring-1 ring-border/50'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-            aria-label={t(labelKey)}
-            aria-pressed={isActive}
-            title={t(labelKey)}
-            onClick={() => {
-              onChange(optionValue);
-            }}
-          >
-            <Icon className='size-3.5 shrink-0' />
-            <span>{t(`formPreview.viewport${optionValue === 'desktop' ? 'Desktop' : 'Mobile'}Short`)}</span>
-          </Button>
-        );
-      })}
+      {deviceSwitcherOptions.map(
+        ({ value: optionValue, icon: Icon, labelKey }) => {
+          const isActive = value === optionValue;
+          return (
+            <Button
+              key={optionValue}
+              type='button'
+              size='sm'
+              variant='ghost'
+              className={cn(
+                'h-8 gap-1.5 rounded-full px-3.5 text-xs font-medium',
+                isActive
+                  ? 'bg-background text-foreground shadow-sm ring-1 ring-border/50'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+              aria-label={t(labelKey)}
+              aria-pressed={isActive}
+              title={t(labelKey)}
+              onClick={() => {
+                onChange(optionValue);
+              }}
+            >
+              <Icon className='size-3.5 shrink-0' />
+              <span>
+                {t(
+                  `formPreview.viewport${optionValue === 'desktop' ? 'Desktop' : 'Mobile'}Short`,
+                )}
+              </span>
+            </Button>
+          );
+        },
+      )}
     </div>
   );
 }

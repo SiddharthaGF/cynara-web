@@ -15,9 +15,9 @@ import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import type { FieldType } from '@/features/forms/types.ts';
 import { cn } from '@/lib/utils.ts';
 
+import { FieldTypeIcon } from './FieldTypeIcon.tsx';
 import { FIELD_TYPE_GROUPS, FIELD_TYPES } from './fieldTypeMeta.ts';
 import type { FieldTypeMeta } from './fieldTypeMeta.ts';
-import { FieldTypeIcon } from './FieldTypeIcon.tsx';
 import { useFieldGroupLabel, useFieldTypeMeta } from './useFieldTypeMeta.ts';
 
 interface QuestionInsertGapProps {

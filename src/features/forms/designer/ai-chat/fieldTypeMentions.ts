@@ -28,10 +28,7 @@ export interface MentionableFieldType {
   description: string;
 }
 
-export function fieldTypeSlug(
-  type: FieldType,
-  locale: string,
-): string {
+export function fieldTypeSlug(type: FieldType, locale: string): string {
   const entry = FIELD_TYPE_SLUGS[type];
   if (!entry) {
     return type;
@@ -105,26 +102,13 @@ export function extractMentionedFieldTypes(text: string): FieldType[] {
   return found;
 }
 
-export function buildFieldTypeLabelMap(
-  types: MentionableFieldType[],
-): Map<string, string> {
-  const map = new Map<string, string>();
-  for (const item of types) {
-    map.set(item.slug, item.label);
-    map.set(item.type, item.label);
-  }
-  return map;
-}
-
 /** Detect which mention trigger is active at the caret, if any. */
 export function detectMentionTrigger(
   value: string,
   caret: number,
 ): '@' | '#' | null {
   const before = value.slice(0, Math.max(0, caret));
-  const match = /(?:^|[\s([{])(?<trigger>[@#])(?<query>[^\s@#]*)$/.exec(
-    before,
-  );
+  const match = /(?:^|[\s([{])(?<trigger>[@#])(?<query>[^\s@#]*)$/.exec(before);
   const trigger = match?.groups?.trigger;
   if (trigger === '@' || trigger === '#') {
     return trigger;

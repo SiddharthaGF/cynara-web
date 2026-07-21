@@ -24,9 +24,7 @@ import { cn } from '@/lib/utils.ts';
 export type DeviceChromeKind = 'desktop' | 'mobile';
 
 interface DeviceAppChromeProps {
-  /** Which simulated app shell to render around `children`. */
   kind: DeviceChromeKind;
-  /** Visual hint shown at the top of the sidebar (form code) — desktop only. */
   contextLabel?: string;
   children: ReactNode;
   className?: string;
@@ -93,14 +91,22 @@ function DesktopShell({
   const { t } = useTranslation('designer');
 
   return (
-    <div className={cn('device-chrome device-chrome-desktop h-full w-full', className)}>
+    <div
+      className={cn(
+        'device-chrome device-chrome-desktop h-full w-full',
+        className,
+      )}
+    >
       <aside
         aria-hidden
         className='device-chrome-sidebar device-chrome-sidebar--grid flex h-full w-60 shrink-0 flex-col overflow-hidden text-[13px]'
       >
         <div className='flex items-center gap-2 px-4 pt-5 pb-4'>
           <span className='flex size-7 items-center justify-center rounded-lg bg-primary/12 text-primary'>
-            <Leaf className='size-3.5' strokeWidth={2.25} />
+            <Leaf
+              className='size-3.5'
+              strokeWidth={2.25}
+            />
           </span>
           <span className='font-display text-[15px] font-semibold tracking-tight text-foreground'>
             {t('formPreview.chrome.brand')}
@@ -109,8 +115,13 @@ function DesktopShell({
 
         <div className='px-3 pb-3'>
           <div className='flex h-8 items-center gap-2 rounded-md border border-border/60 bg-background/70 px-2.5 text-muted-foreground'>
-            <Search className='size-3.5' strokeWidth={2} />
-            <span className='text-[12px]'>{t('formPreview.chrome.searchPlaceholder')}</span>
+            <Search
+              className='size-3.5'
+              strokeWidth={2}
+            />
+            <span className='text-[12px]'>
+              {t('formPreview.chrome.searchPlaceholder')}
+            </span>
             <span className='ml-auto rounded border border-border/60 px-1 font-mono text-[10px] tracking-tight text-muted-foreground/80'>
               ⌘K
             </span>
@@ -140,7 +151,7 @@ function DesktopShell({
         </nav>
 
         <div className='mt-auto flex shrink-0 items-center gap-2.5 border-t border-border/60 px-3 py-3'>
-          <span className='flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-accent/30 font-mono text-[10px] font-semibold text-foreground/80'>
+          <span className='flex size-7 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary/30 to-accent/30 font-mono text-[10px] font-semibold text-foreground/80'>
             DR
           </span>
           <div className='min-w-0 leading-tight'>
@@ -201,7 +212,10 @@ function NavLink({ item }: { item: NavItem }): JSX.Element {
       )}
     >
       <Icon
-        className={cn('size-3.5 shrink-0', item.active ? 'text-primary' : 'text-muted-foreground')}
+        className={cn(
+          'size-3.5 shrink-0',
+          item.active ? 'text-primary' : 'text-muted-foreground',
+        )}
         strokeWidth={item.active ? 2.25 : 1.85}
       />
       <span className='truncate'>{t(item.labelKey)}</span>
@@ -258,7 +272,12 @@ function MobileShell({
   const { t } = useTranslation('designer');
 
   return (
-    <div className={cn('device-chrome device-chrome-mobile flex h-full w-full flex-col bg-background', className)}>
+    <div
+      className={cn(
+        'device-chrome device-chrome-mobile flex h-full w-full flex-col bg-background',
+        className,
+      )}
+    >
       <header className='device-chrome-mobileheader flex shrink-0 items-center justify-between gap-2 px-3 pt-1.5 pb-2'>
         <button
           type='button'
@@ -266,7 +285,10 @@ function MobileShell({
           aria-hidden
           className='flex size-7 items-center justify-center rounded-full text-foreground/80 active:bg-foreground/5'
         >
-          <ChevronLeft className='size-4' strokeWidth={2.25} />
+          <ChevronLeft
+            className='size-4'
+            strokeWidth={2.25}
+          />
         </button>
         <div className='flex min-w-0 flex-1 flex-col items-center text-center'>
           <p className='truncate font-mono text-[9px] tracking-[0.14em] text-muted-foreground uppercase'>
@@ -282,7 +304,10 @@ function MobileShell({
           aria-hidden
           className='flex size-7 items-center justify-center rounded-full text-foreground/80 active:bg-foreground/5'
         >
-          <MoreHorizontal className='size-4' strokeWidth={2.25} />
+          <MoreHorizontal
+            className='size-4'
+            strokeWidth={2.25}
+          />
         </button>
       </header>
 
@@ -338,7 +363,9 @@ function MobileTab({
         className='size-4'
         strokeWidth={active ? 2.25 : 1.85}
       />
-      <span className='truncate text-[9.5px] leading-none font-medium tracking-tight'>{label}</span>
+      <span className='truncate text-[9.5px] leading-none font-medium tracking-tight'>
+        {label}
+      </span>
     </span>
   );
 }

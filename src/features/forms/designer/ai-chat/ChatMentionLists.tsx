@@ -1,6 +1,6 @@
+import { Sparkles } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sparkles } from 'lucide-react';
 
 import { Button } from '@/components/ui/button.tsx';
 import { MentionItem } from '@/components/ui/mention.tsx';

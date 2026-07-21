@@ -191,7 +191,9 @@ export function ClinicalNumberConstraintFields({
                   <Select
                     items={items}
                     value={
-                      fieldApi.state.value === '' ? 'auto' : fieldApi.state.value
+                      fieldApi.state.value === ''
+                        ? 'auto'
+                        : fieldApi.state.value
                     }
                     onValueChange={(value) => {
                       if (!value) {

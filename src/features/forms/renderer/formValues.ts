@@ -34,7 +34,9 @@ function createRepeaterRowDefaults(field: ClinicalField): RepeaterRowValues {
   return row;
 }
 
-export function flattenValuesForRules(values: FormValues): Record<string, unknown> {
+export function flattenValuesForRules(
+  values: FormValues,
+): Record<string, unknown> {
   const flat: Record<string, unknown> = {};
 
   for (const [code, value] of Object.entries(values)) {
@@ -54,7 +56,10 @@ export function flattenValuesForRules(values: FormValues): Record<string, unknow
   return flat;
 }
 
-export function getRepeaterRows(values: FormValues, repeaterCode: string): RepeaterRowValues[] {
+export function getRepeaterRows(
+  values: FormValues,
+  repeaterCode: string,
+): RepeaterRowValues[] {
   const raw = values[repeaterCode];
   return Array.isArray(raw) ? (raw as RepeaterRowValues[]) : [];
 }
@@ -86,7 +91,10 @@ export function addRepeaterRow(
   values: FormValues,
   field: ClinicalField,
 ): FormValues {
-  const rows = [...getRepeaterRows(values, field.code), createRepeaterRowDefaults(field)];
+  const rows = [
+    ...getRepeaterRows(values, field.code),
+    createRepeaterRowDefaults(field),
+  ];
   return { ...values, [field.code]: rows };
 }
 

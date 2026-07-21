@@ -146,7 +146,9 @@ function buildGlanceChips(
 
   const pushFlag = (id: string) => {
     const rule = byId.get(id);
-    if (!rule) return;
+    if (!rule) {
+      return;
+    }
     consumed.add(id);
     chips.push({ id, text: rule.label, detail: rule.label });
   };
@@ -230,12 +232,13 @@ function buildGlanceChips(
   }
 
   for (const rule of rules) {
-    if (consumed.has(rule.id)) continue;
-    chips.push({
-      id: rule.id,
-      text: rule.detail ? `${rule.label} ${rule.detail}` : rule.label,
-      detail: rule.detail ? `${rule.label}: ${rule.detail}` : rule.label,
-    });
+    if (!consumed.has(rule.id)) {
+      chips.push({
+        id: rule.id,
+        text: rule.detail ? `${rule.label} ${rule.detail}` : rule.label,
+        detail: rule.detail ? `${rule.label}: ${rule.detail}` : rule.label,
+      });
+    }
   }
 
   return chips;

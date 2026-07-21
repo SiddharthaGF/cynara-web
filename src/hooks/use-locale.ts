@@ -1,11 +1,7 @@
 import { useNavigate, useParams, useRouterState } from '@tanstack/react-router';
 import { useCallback } from 'react';
 
-import {
-  applyLocale,
-  isAppLocale,
-  persistLocale,
-} from '@/lib/locale.ts';
+import { applyLocale, isAppLocale, persistLocale } from '@/lib/locale.ts';
 import type { AppLocale } from '@/lib/locale.ts';
 
 export function useLocale(): {

@@ -11,19 +11,17 @@ export function fieldErrorText(errors: unknown[]): string | undefined {
     return first;
   }
   if (first && typeof first === 'object' && 'message' in first) {
-    const {message} = (first);
+    const { message } = first;
     return typeof message === 'string' ? message : undefined;
   }
   return undefined;
 }
 
 /** Keeps TanStack Form in sync with props-driven defaults (designer panels). */
-export function useSyncedTanstackForm<TFormData>(
-  options: {
-    defaultValues: TFormData;
-    onValuesChange: (values: TFormData) => void;
-  },
-) {
+export function useSyncedTanstackForm<TFormData>(options: {
+  defaultValues: TFormData;
+  onValuesChange: (values: TFormData) => void;
+}) {
   const { defaultValues, onValuesChange } = options;
   const onValuesChangeRef = useRef(onValuesChange);
   const defaultValuesRef = useRef(defaultValues);
@@ -40,7 +38,7 @@ export function useSyncedTanstackForm<TFormData>(
     defaultValues,
     listeners: {
       onChange: ({ formApi }) => {
-        const {values} = formApi.state;
+        const { values } = formApi.state;
         if (valuesEqual(values, defaultValuesRef.current)) {
           return;
         }

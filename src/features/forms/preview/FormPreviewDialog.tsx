@@ -12,7 +12,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.tsx';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs.tsx';
 import {
   FormRendererView,
   useFormRenderer,
@@ -20,9 +25,9 @@ import {
 import type { UseFormRendererReturn } from '@/features/forms/renderer/useFormRenderer.ts';
 import type { FormDraftModel } from '@/features/forms/types.ts';
 
-import { FormPreviewActions } from './FormPreviewToolbar.tsx';
 import { DevicePreviewDialog } from './DevicePreviewDialog.tsx';
 import { FormJsonExportMenu } from './FormJsonExportMenu.tsx';
+import { FormPreviewActions } from './FormPreviewToolbar.tsx';
 import { RuleInspectionPanel } from './RuleInspectionPanel.tsx';
 
 interface FormPreviewDialogProps {
@@ -131,7 +136,6 @@ function FormPreviewBody({
         <div className='relative h-0 min-h-0 flex-1 overflow-hidden'>
           <TabsContent
             value='preview'
-            keepMounted
             className='absolute inset-0 mt-0 flex min-h-0 flex-col overflow-hidden outline-none'
           >
             <div className='flex h-full min-h-0 flex-col overflow-hidden px-2 pt-1 pb-2 md:px-4 md:pb-3'>
@@ -146,7 +150,6 @@ function FormPreviewBody({
 
           <TabsContent
             value='rules'
-            keepMounted
             className='absolute inset-0 mt-0 overflow-hidden outline-none'
           >
             <ScrollArea className='h-full'>
@@ -210,31 +213,5 @@ function DevicePreviewLauncher({
         renderer={renderer}
       />
     </>
-  );
-}
-
-interface FormPreviewTriggerProps {
-  onOpen: () => void;
-  disabled?: boolean;
-}
-
-export function FormPreviewTrigger({
-  onOpen,
-  disabled,
-}: FormPreviewTriggerProps): JSX.Element {
-  const { t } = useTranslation('designer');
-
-  return (
-    <Button
-      type='button'
-      variant='outline'
-      size='sm'
-      className='gap-1.5'
-      disabled={disabled}
-      onClick={onOpen}
-    >
-      <FlaskConical className='size-3.5' />
-      <span className='hidden sm:inline'>{t('formPreview.open')}</span>
-    </Button>
   );
 }

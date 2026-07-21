@@ -1,21 +1,11 @@
 import type { LucideIcon } from 'lucide-react';
-import {
-  Columns2,
-  Columns3,
-  Columns4,
-  Square,
-} from 'lucide-react';
+import { Columns2, Columns3, Columns4, Square } from 'lucide-react';
 
 import type { FieldPresentation, FieldType } from '@/features/forms/types.ts';
 
 export type FieldWidth = NonNullable<FieldPresentation['width']>;
 
-export const WIDTH_OPTIONS: FieldWidth[] = [
-  'full',
-  'half',
-  'third',
-  'quarter',
-];
+export const WIDTH_OPTIONS: FieldWidth[] = ['full', 'half', 'third', 'quarter'];
 
 /** Shared icons for width options in the inspector select. */
 const WIDTH_ICONS: Record<FieldWidth, LucideIcon> = {

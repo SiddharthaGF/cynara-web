@@ -4,6 +4,8 @@ import { getFormDraft } from '@/api/forms.ts';
 import { FormDesignerPage } from '@/features/forms/designer/FormDesignerPage';
 
 export const Route = createFileRoute('/$locale/forms/$code/designer/$draftId')({
+  // The designer is an authenticated editor; send loader data but render the canvas on the client.
+  ssr: 'data-only',
   loader: async ({ params }) => {
     const draft = await getFormDraft(params.code);
     if (draft.id !== params.draftId) {
@@ -28,6 +30,7 @@ function FormDesignerRoute() {
   const draft = Route.useLoaderData();
   return (
     <FormDesignerPage
+      key={`${code}:${draft.id}`}
       code={code}
       initialDraft={draft}
     />

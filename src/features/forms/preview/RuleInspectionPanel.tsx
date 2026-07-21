@@ -17,12 +17,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip.tsx';
 import { iterateFields } from '@/features/forms/model/formDraft.ts';
+import type { ConfigWarning } from '@/features/forms/renderer/types.ts';
 import type {
   ClinicalField,
   FieldRules,
   FormDraftModel,
 } from '@/features/forms/types.ts';
-import type { ConfigWarning } from '@/features/forms/renderer/types.ts';
 import { formatNumericDisplay } from '@/lib/number-format.ts';
 import { cn } from '@/lib/utils.ts';
 
@@ -271,10 +271,18 @@ function listActiveRuleKinds(rules: FieldRules | undefined): RuleKind[] {
   }
 
   const kinds: RuleKind[] = [];
-  if (rules.visibleWhen) kinds.push('visible');
-  if (rules.enabledWhen) kinds.push('enabled');
-  if (rules.requiredWhen) kinds.push('required');
-  if (rules.calculate) kinds.push('calculate');
+  if (rules.visibleWhen) {
+    kinds.push('visible');
+  }
+  if (rules.enabledWhen) {
+    kinds.push('enabled');
+  }
+  if (rules.requiredWhen) {
+    kinds.push('required');
+  }
+  if (rules.calculate) {
+    kinds.push('calculate');
+  }
   return kinds;
 }
 

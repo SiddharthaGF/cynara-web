@@ -79,7 +79,7 @@ export function FormsCatalogCard({
                           }
                     }
                   >
-                    <article className='group rounded-xl border border-border/80 bg-card p-4 transition-all hover:border-primary/25 hover:shadow-md'>
+                    <article className='group rounded-xl border border-border/80 bg-card p-4 transition-[border-color,box-shadow] hover:border-primary/25 hover:shadow-md'>
                       <div className='flex flex-wrap items-start justify-between gap-3'>
                         <div className='grid gap-1'>
                           <strong className='font-display text-base font-medium'>
