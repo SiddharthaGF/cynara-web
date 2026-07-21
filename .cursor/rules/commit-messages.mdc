@@ -1,0 +1,69 @@
+---
+description: Conventional Commit message style for cynara-web
+alwaysApply: true
+---
+
+# Commit Messages
+
+Only create a commit when the user explicitly asks. Follow Conventional Commits
+in English (match existing history).
+
+## Format
+
+```
+type(scope): imperative summary
+
+Optional body explaining why, not a file list.
+```
+
+- Subject: ≤72 chars, imperative mood, no trailing period
+- Body: wrap ~72 chars; focus on **why**, not what changed file-by-file
+- Pass the message via HEREDOC (`git commit -m "$(cat <<'EOF' ... EOF)"`)
+
+## Types
+
+| type | use when |
+|------|----------|
+| `feat` | new user-facing capability |
+| `fix` | bug fix |
+| `refactor` | internal change, same behavior |
+| `perf` | performance improvement |
+| `style` | formatting / visual-only (no logic) |
+| `chore` | tooling, config, deps, ignore files |
+| `docs` | documentation only |
+| `build` | build / bundler / CI scripts |
+
+## Scopes (prefer these)
+
+`web` · `forms` · `api` · `ui` · `i18n` · `config` · `deps`
+
+Omit scope only when the change is truly cross-cutting.
+
+## Ticket references
+
+If a Linear/issue id is known (e.g. `CYN-11`), append it in the subject or body:
+`feat(forms): add device preview lab (CYN-11)`.
+
+## Examples
+
+```
+feat(forms): add calculated-field empty state until sources exist
+
+fix(api): surface structured errors from AI chat stream
+
+refactor(ui): colocate device frame chrome with preview lab
+
+chore(config): tighten ignore patterns for generated route tree
+```
+
+## Anti-patterns
+
+```
+# ❌ vague / file dump
+update stuff
+fix bugs
+feat: update FormDesignerLayout.tsx and i18n files
+
+# ❌ past tense / trailing period
+Fixed the autosave race.
+```

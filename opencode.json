@@ -1,10 +1,25 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md"
+  ],
+  "plugin": [
+    "opencode-rules@latest"
+  ],
   "mcp": {
     "shadcn": {
       "type": "local",
-      "command": ["node", "./node_modules/shadcn/dist/index.js", "mcp"],
+      "command": [
+        "node",
+        "./node_modules/shadcn/dist/index.js",
+        "mcp"
+      ],
       "enabled": true
     }
+  },
+  "skills": {
+    "paths": [
+      ".cursor/skills"
+    ]
   }
 }
