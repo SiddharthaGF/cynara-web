@@ -13,7 +13,7 @@ main = "@tanstack/react-start/server-entry"
 # (see src/api/client.ts) so SSR fetches reach cynara-api. Set it here to the
 # same origin the client uses.
 [vars]
-API_ORIGIN = "http://cynara-demo.runasp.net"
+VITE_API_ORIGIN = "http://cynara-demo.runasp.net"
 
 [observability]
 enabled = true
