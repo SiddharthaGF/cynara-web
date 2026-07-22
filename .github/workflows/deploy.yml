@@ -1,26 +1,3 @@
-# Cloudflare Workers deploy via Wrangler.
-#
-# Replaces the Cloudflare GitHub App auto-deploy path, which currently marks
-# builds as failed without surfacing the log in this repo's checks API.
-# With this workflow the full Wrangler output is visible in the Actions run,
-# and the wrangler-action step picks up the @cloudflare/vite-plugin-generated
-# `dist/server/wrangler.json` directly (the plugin auto-detects Vite builds).
-#
-# Secrets required (set under Settings -> Secrets and variables -> Actions):
-#   CLOUDFLARE_API_TOKEN   — https://dash.cloudflare.com/profile/api-tokens
-#                            with the "Edit Cloudflare Workers" template scope.
-#   CLOUDFLARE_ACCOUNT_ID  — shown on the Workers project overview page.
-#
-# Variables (Settings -> Secrets and variables -> Actions -> Variables):
-#   VITE_API_ORIGIN        — public build-time constant, compiled into the
-#                            client bundle (and read by the SSR worker).
-#                            Same value used for production and PRs; use a
-#                            staging api value if your team provisions one.
-#   CLOUDFLARE_PROJECT_NAME — defaults to `cynara-web` if unset.
-#
-# After this workflow merges and is enabled, disconnect the Cloudflare GitHub
-# App on `ailuracode/cynara-web` so the two deploy pipelines don't both run.
-
 name: Deploy to Cloudflare
 
 on:
