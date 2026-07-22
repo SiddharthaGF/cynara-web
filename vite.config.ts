@@ -11,7 +11,12 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   const apiOrigin = env.VITE_API_ORIGIN || '';
   if (!apiOrigin) {
-    throw new Error('Server unavailable');
+    throw new Error(
+      'VITE_API_ORIGIN is not set. Configure the cynara-api origin before running vite build.\n' +
+        '  - Local dev: add it to `.env` (see `.env.example`).\n' +
+        '  - CI: set it as a repository variable in Settings -> Secrets and variables -> Actions.\n' +
+        '  - Manual deploy: export it in the shell that runs `pnpm build`.',
+    );
   }
 
   const cleanCloudflareArtifacts = (): Plugin => ({

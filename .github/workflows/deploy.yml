@@ -31,6 +31,16 @@ jobs:
         with:
           cache: pnpm
 
+      - name: Verify required build-time variables
+        env:
+          VITE_API_ORIGIN: ${{ vars.VITE_API_ORIGIN }}
+        run: |
+          if [ -z "${VITE_API_ORIGIN:-}" ]; then
+            echo "::error::VITE_API_ORIGIN is not configured." >&2
+            echo "Add it under Settings -> Secrets and variables -> Actions -> Variables on this repo so Vite can compile the API origin into the client bundle at build time." >&2
+            exit 1
+          fi
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
