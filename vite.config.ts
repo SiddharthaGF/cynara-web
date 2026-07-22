@@ -8,6 +8,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 
 const CI_API_ORIGIN_PLACEHOLDER = '__UNSET__';
+const EMPTY_STRING_LENGTH = 0;
 
 const LOCAL_MISSING_API_ORIGIN_ERROR =
   'VITE_API_ORIGIN is not set. Configure the cynara-api origin before running vite build.\n' +
@@ -16,9 +17,19 @@ const LOCAL_MISSING_API_ORIGIN_ERROR =
   '  - Manual deploy: export it in the shell that runs `pnpm build`.';
 
 const resolveApiOrigin = (loaded: Record<string, string>): string => {
-  const fromEnv = loaded.VITE_API_ORIGIN || '';
-  if (fromEnv) {
-    return fromEnv;
+  const fromProcessEnv = process.env.VITE_API_ORIGIN;
+  if (
+    typeof fromProcessEnv === 'string' &&
+    fromProcessEnv.length > EMPTY_STRING_LENGTH
+  ) {
+    return fromProcessEnv;
+  }
+  const fromEnvFile = loaded.VITE_API_ORIGIN;
+  if (
+    typeof fromEnvFile === 'string' &&
+    fromEnvFile.length > EMPTY_STRING_LENGTH
+  ) {
+    return fromEnvFile;
   }
   const isCi = process.env.CI === 'true' || process.env.CI === '1';
   if (isCi) {
@@ -48,11 +59,21 @@ const cleanCloudflareArtifacts = (mode: string): Plugin => ({
 });
 
 export default defineConfig(({ mode }) => {
-  const apiOrigin = resolveApiOrigin(loadEnv(mode, '.', ''));
+  const env = loadEnv(mode, '.', '');
+  const apiOrigin = resolveApiOrigin(env);
+  const workerVars: Record<string, string> = {};
+  if (apiOrigin) {
+    workerVars.API_ORIGIN = apiOrigin;
+  }
 
   return {
     plugins: [
-      cloudflare({ viteEnvironment: { name: 'ssr' } }),
+      cloudflare({
+        viteEnvironment: { name: 'ssr' },
+        config: {
+          vars: workerVars,
+        },
+      }),
       cleanCloudflareArtifacts(mode),
       tailwindcss(),
       tanstackStart(),

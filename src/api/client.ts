@@ -19,15 +19,18 @@ interface ProblemDetails {
 
 function resolveApiOrigin(): string {
   const candidates = [
-    import.meta.env.VITE_API_ORIGIN,
-    import.meta.env.API_ORIGIN,
+    { name: 'VITE_API_ORIGIN', value: import.meta.env.VITE_API_ORIGIN },
+    { name: 'API_ORIGIN', value: import.meta.env.API_ORIGIN },
   ];
-  for (const candidate of candidates) {
-    if (typeof candidate === 'string' && candidate.trim() !== '') {
-      return candidate.trim().replace(/\/$/u, '');
+  for (const { value } of candidates) {
+    if (typeof value === 'string' && value.trim() !== '') {
+      return value.trim().replace(/\/$/u, '');
     }
   }
-  throw new Error(`Server unavailable ${  candidates.join(', ')}`);
+  const seen = candidates
+    .map(({ name, value }) => `${name}=${JSON.stringify(value)}`)
+    .join(', ');
+  throw new Error(`Server unavailable (env: ${seen})`);
 }
 
 export const resolveApiUrl = createIsomorphicFn()
