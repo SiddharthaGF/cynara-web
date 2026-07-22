@@ -23,7 +23,7 @@ function parseEnvironment(value: string | undefined): Environment {
   ) {
     return value as Environment;
   }
-  return 'development';
+  return import.meta.env.DEV ? 'development' : 'production';
 }
 
 export const environment: Environment = parseEnvironment(readAppEnv());
