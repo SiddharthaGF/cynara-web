@@ -144,7 +144,7 @@ function buildGlanceChips(
   const chips: GlanceChip[] = [];
   const consumed = new Set<string>();
 
-  const pushFlag = (id: string) => {
+  const pushFlag = (id: string): void => {
     const rule = byId.get(id);
     if (!rule) {
       return;

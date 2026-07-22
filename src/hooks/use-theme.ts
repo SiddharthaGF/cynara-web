@@ -37,7 +37,7 @@ export function useTheme(): {
       return undefined;
     }
     media.addEventListener('change', sync);
-    return () => {
+    return (): void => {
       media.removeEventListener('change', sync);
     };
   }, [preference]);

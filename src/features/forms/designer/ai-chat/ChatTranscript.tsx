@@ -119,7 +119,7 @@ export function ChatTranscript({
 
     viewport.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
-    return () => {
+    return (): void => {
       viewport.removeEventListener('scroll', onScroll);
     };
   }, [turns.length, isBusy]);
@@ -146,7 +146,7 @@ export function ChatTranscript({
       viewport.scrollTop = viewport.scrollHeight;
     });
     observer.observe(viewport);
-    return () => {
+    return (): void => {
       observer.disconnect();
     };
   }, []);

@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 
 import {
   appendFieldToLayout,
@@ -22,7 +28,38 @@ import type {
 import { useComponentCatalog } from './useComponentCatalog.ts';
 import { useFormDraft } from './useFormDraft.ts';
 
-export function useFormDesignerLayout(code: string, initialDraft: FormVersion) {
+export function useFormDesignerLayout(
+  code: string,
+  initialDraft: FormVersion,
+): {
+  draft: ReturnType<typeof useFormDraft>;
+  components: ReturnType<typeof useComponentCatalog>;
+  selectedFieldId: string | null;
+  setSelectedFieldId: Dispatch<SetStateAction<string | null>>;
+  showAdvanced: boolean;
+  setShowAdvanced: Dispatch<SetStateAction<boolean>>;
+  selectedField: ClinicalField | null;
+  selectedFieldIndex: number;
+  selectedPresentation: FieldPresentation | null;
+  selectedRules: FieldRules | null;
+  ruleFieldOptions: { code: string; label: string }[];
+  handleAddField: (type: FieldType, atIndex?: number) => void;
+  handleOpenAdvanced: (fieldId: string) => void;
+  handleChangeFieldType: (fieldId: string, type: FieldType) => void;
+  handleMoveUp: (index: number) => void;
+  handleMoveDown: (index: number) => void;
+  handleRemove: (fieldId: string) => void;
+  handleChangePresentation: (
+    fieldId: string,
+    patch: Partial<FieldPresentation>,
+  ) => void;
+  handleToggleRequired: (fieldId: string, required: boolean) => void;
+  handleInspectorChangeField: (patch: Partial<ClinicalField>) => void;
+  handleInspectorChangePresentation: (
+    patch: Partial<FieldPresentation>,
+  ) => void;
+  handleInspectorChangeRules: (patch: Partial<FieldRules>) => void;
+} {
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const components = useComponentCatalog();
@@ -52,7 +89,7 @@ export function useFormDesignerLayout(code: string, initialDraft: FormVersion) {
     }
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => {
+    return (): void => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [selectedFieldId]);
@@ -251,7 +288,7 @@ export function useFormDesignerLayout(code: string, initialDraft: FormVersion) {
     }));
   }
 
-  function handleInspectorChangeField(patch: Partial<ClinicalField>) {
+  function handleInspectorChangeField(patch: Partial<ClinicalField>): void {
     if (!selectedField) {
       return;
     }
@@ -266,14 +303,14 @@ export function useFormDesignerLayout(code: string, initialDraft: FormVersion) {
 
   function handleInspectorChangePresentation(
     patch: Partial<FieldPresentation>,
-  ) {
+  ): void {
     if (!selectedField) {
       return;
     }
     handleChangePresentation(selectedField.id, patch);
   }
 
-  function handleInspectorChangeRules(patch: Partial<FieldRules>) {
+  function handleInspectorChangeRules(patch: Partial<FieldRules>): void {
     if (!selectedField) {
       return;
     }

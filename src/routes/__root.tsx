@@ -26,7 +26,7 @@ export const Route = createRootRoute({
   component: RootComponent,
 });
 
-function RootComponent() {
+function RootComponent(): ReactNode {
   return (
     <RootDocument>
       <Outlet />
@@ -34,7 +34,9 @@ function RootComponent() {
   );
 }
 
-function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
+function RootDocument({
+  children,
+}: Readonly<{ children: ReactNode }>): ReactNode {
   return (
     <html
       lang='en'

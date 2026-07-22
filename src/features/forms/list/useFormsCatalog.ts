@@ -1,4 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationResult,
+  type UseQueryResult,
+} from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -6,14 +12,18 @@ import { createForm, listForms } from '@/api/forms.ts';
 import { queryKeys } from '@/api/query-keys.ts';
 import type { FormSummary } from '@/features/forms/types.ts';
 
-function useFormsQuery() {
+function useFormsQuery(): UseQueryResult<FormSummary[]> {
   return useQuery({
     queryKey: queryKeys.forms.list(),
     queryFn: listForms,
   });
 }
 
-function useCreateFormMutation() {
+function useCreateFormMutation(): UseMutationResult<
+  FormSummary,
+  unknown,
+  Parameters<typeof createForm>[0]
+> {
   const queryClient = useQueryClient();
 
   return useMutation({

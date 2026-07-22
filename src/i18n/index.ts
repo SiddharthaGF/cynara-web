@@ -28,7 +28,9 @@ const resources = {
   },
 } as const;
 
-function createI18n(initialLocale?: AppLocale) {
+export function createI18n(
+  initialLocale?: AppLocale,
+): ReturnType<typeof createInstance> {
   const locale = initialLocale ?? resolveBootLocale();
   const instance = createInstance();
 

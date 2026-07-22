@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
+import type { ReactNode } from 'react';
 
 import { getFormDraft } from '@/api/forms.ts';
 import { FormDesignerPage } from '@/features/forms/designer/FormDesignerPage';
@@ -25,7 +26,7 @@ export const Route = createFileRoute('/$locale/forms/$code/designer/$draftId')({
   component: FormDesignerRoute,
 });
 
-function FormDesignerRoute() {
+function FormDesignerRoute(): ReactNode {
   const { code } = Route.useParams();
   const draft = Route.useLoaderData();
   return (

@@ -41,7 +41,7 @@ export function useFitScale(
     const observer = new ResizeObserver(updateScale);
     observer.observe(container);
 
-    return () => {
+    return (): void => {
       observer.disconnect();
     };
   }, [boost, containerRef, height, padding, width]);

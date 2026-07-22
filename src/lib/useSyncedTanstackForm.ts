@@ -1,4 +1,9 @@
-import { useForm } from '@tanstack/react-form';
+import {
+  useForm,
+  type FormAsyncValidateOrFn,
+  type FormValidateOrFn,
+  type ReactFormExtendedApi,
+} from '@tanstack/react-form';
 import { useEffect, useRef } from 'react';
 
 function valuesEqual<T>(left: T, right: T): boolean {
@@ -21,7 +26,20 @@ export function fieldErrorText(errors: unknown[]): string | undefined {
 export function useSyncedTanstackForm<TFormData>(options: {
   defaultValues: TFormData;
   onValuesChange: (values: TFormData) => void;
-}) {
+}): ReactFormExtendedApi<
+  TFormData,
+  FormValidateOrFn<TFormData> | undefined,
+  FormValidateOrFn<TFormData> | undefined,
+  FormAsyncValidateOrFn<TFormData> | undefined,
+  FormValidateOrFn<TFormData> | undefined,
+  FormAsyncValidateOrFn<TFormData> | undefined,
+  FormValidateOrFn<TFormData> | undefined,
+  FormAsyncValidateOrFn<TFormData> | undefined,
+  FormValidateOrFn<TFormData> | undefined,
+  FormAsyncValidateOrFn<TFormData> | undefined,
+  FormAsyncValidateOrFn<TFormData> | undefined,
+  unknown
+> {
   const { defaultValues, onValuesChange } = options;
   const onValuesChangeRef = useRef(onValuesChange);
   const defaultValuesRef = useRef(defaultValues);

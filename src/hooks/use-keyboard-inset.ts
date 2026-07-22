@@ -38,7 +38,7 @@ export function useKeyboardInset(): number {
     update();
     visualViewport.addEventListener('resize', update);
     window.addEventListener('resize', update);
-    return () => {
+    return (): void => {
       visualViewport.removeEventListener('resize', update);
       window.removeEventListener('resize', update);
     };

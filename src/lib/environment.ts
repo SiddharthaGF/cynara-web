@@ -33,13 +33,3 @@ export function isDevelopment(
 ): boolean {
   return environmentName === 'development';
 }
-
-export function isProduction(
-  environmentName: Environment = environment,
-): boolean {
-  return environmentName === 'production';
-}
-
-export function isTest(environmentName: Environment = environment): boolean {
-  return environmentName === 'testing';
-}

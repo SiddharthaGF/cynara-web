@@ -154,11 +154,20 @@ export async function runFormAiChatStream({
         } else if (event.type === 'error') {
           throw new Error(event.message);
         } else if (event.type === 'done') {
+          const {
+            clinicalSchemaJson,
+            uiSchemaJson,
+            rulesSchemaJson,
+            assistantMessage,
+            summary,
+          } = event.result;
           const before = serializeDraft(modelRef.current);
+          const normalizedUiSchemaJson = uiSchemaJson ?? null;
+          const normalizedRulesSchemaJson = rulesSchemaJson ?? null;
           const draftChanged =
-            before.clinicalSchemaJson !== event.result.clinicalSchemaJson ||
-            before.uiSchemaJson !== (event.result.uiSchemaJson ?? null) ||
-            before.rulesSchemaJson !== (event.result.rulesSchemaJson ?? null);
+            before.clinicalSchemaJson !== clinicalSchemaJson ||
+            before.uiSchemaJson !== normalizedUiSchemaJson ||
+            before.rulesSchemaJson !== normalizedRulesSchemaJson;
           // Defensive: `streamFormDraftAi` may synthesize a `done` when the
           // Upstream SSE closes early (no `done`, no `error`). That
           // Synthetic payload carries empty schema strings; matching it
@@ -167,21 +176,20 @@ export async function runFormAiChatStream({
           // Empty schema as "nothing usable arrived" so the outer retry
           // Layer can take over.
           const resultEmpty =
-            event.result.clinicalSchemaJson.length === 0 &&
-            (event.result.uiSchemaJson ?? '').length === 0 &&
-            (event.result.rulesSchemaJson ?? '').length === 0;
+            clinicalSchemaJson.length === 0 &&
+            (uiSchemaJson ?? '').length === 0 &&
+            (rulesSchemaJson ?? '').length === 0;
           if (resultEmpty) {
             throw new Error(EMPTY_AI_SCHEMA_MESSAGE);
           }
-          const finalContent =
-            event.result.assistantMessage || turnContentSnapshot || '';
+          const finalContent = assistantMessage || turnContentSnapshot || '';
           patchAssistant(setTurns, assistantId, (turn) => ({
             ...turn,
             content: finalContent,
             streaming: false,
             draftApplied: draftChanged,
             appliedSummary: draftChanged
-              ? event.result.summary.trim() || undefined
+              ? summary.trim() || undefined
               : undefined,
           }));
           // Re-apply `streaming: false` on the next frame in case React
@@ -196,9 +204,9 @@ export async function runFormAiChatStream({
           if (draftChanged) {
             onApplyDraft(
               parseDraft({
-                clinicalSchemaJson: event.result.clinicalSchemaJson,
-                uiSchemaJson: event.result.uiSchemaJson,
-                rulesSchemaJson: event.result.rulesSchemaJson,
+                clinicalSchemaJson,
+                uiSchemaJson,
+                rulesSchemaJson,
               }),
             );
           }

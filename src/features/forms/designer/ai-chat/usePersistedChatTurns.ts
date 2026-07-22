@@ -46,7 +46,7 @@ export function usePersistedChatTurns(
     const handle = window.setTimeout(() => {
       savePersistedChatTurns(formCode, locale, turns);
     }, 250);
-    return () => {
+    return (): void => {
       window.clearTimeout(handle);
     };
   }, [turns, formCode, locale, persistEnabled]);
@@ -60,7 +60,7 @@ export function usePersistedChatTurns(
     };
     window.addEventListener('pagehide', flush);
     window.addEventListener('beforeunload', flush);
-    return () => {
+    return (): void => {
       window.removeEventListener('pagehide', flush);
       window.removeEventListener('beforeunload', flush);
     };

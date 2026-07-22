@@ -24,11 +24,12 @@ import {
 import { extractMentionedFieldTypes } from './fieldTypeMentions.ts';
 import type { FormAiChatPanelProps } from './FormAiChatPanel.tsx';
 import { FormAiChatSheetView } from './FormAiChatSheetView.tsx';
-import {
-  type PendingChatPayload,
-  type QueuedMessage,
-  runFormAiChatStream,
+import type {
+  PendingChatPayload,
+  QueuedMessage,
 } from './runFormAiChatStream.ts';
+import { useAiChatStreamCommand } from './useAiChatStreamCommand.ts';
+import { useAiChatStreamLifecycle } from './useAiChatStreamLifecycle.ts';
 import { usePersistedChatTurns } from './usePersistedChatTurns.ts';
 
 export { ChatAiTrigger as FormAiChatTrigger } from './ChatComposer.tsx';
@@ -79,49 +80,12 @@ export function FormAiChatSheet({
     isBusyRef.current = isBusy;
   }, [isBusy]);
 
-  // Watchdog: if an assistant turn is still marked `streaming: true` while
-  // Its content has been rendered (i.e. the `done` handler ran) but the
-  // Spinner stays visible, force `streaming: false` on the next animation
-  // Frame. This is a defensive backstop for the rare cases where React
-  // Batches reorders state updates and the UI lags behind the model.
-  useEffect(() => {
-    const stuck = turns.some(
-      (turn) =>
-        turn.role === 'assistant' && turn.streaming && turn.content.length > 0,
-    );
-    if (!stuck) {
-      return undefined;
-    }
-    const handle = requestAnimationFrame(() => {
-      setTurns((current) =>
-        current.map((turn) =>
-          turn.role === 'assistant' && turn.streaming && turn.content.length > 0
-            ? { ...turn, streaming: false }
-            : turn,
-        ),
-      );
-    });
-    return () => {
-      cancelAnimationFrame(handle);
-    };
-  }, [turns]);
-
-  // Cancel any in-flight stream if the chat sheet is torn down (route change,
-  // StrictMode double-mount, etc.) so background requests don't keep arriving.
-  // The persisted transcript is dropped only when we leave the designer route;
-  // Toggling the panel keeps the conversation alive across reloads.
-  const clearStorageRef = useRef(clearStorage);
-  useEffect(() => {
-    clearStorageRef.current = clearStorage;
-  }, [clearStorage]);
-  // oxlint-disable-next-line eslint/arrow-body-style
-  useEffect(() => {
-    return () => {
-      abortRef.current?.abort();
-      abortRef.current = null;
-      clearStorageRef.current();
-    };
-  }, []);
+  useAiChatStreamLifecycle({
+    turns,
+    setTurns,
+    abortRef,
+    clearStorage,
+  });
 
   const mentionable = useMemo(() => listMentionableFields(model), [model]);
   const fieldsById = useMemo(
@@ -177,6 +141,26 @@ export function FormAiChatSheet({
     [turns],
   );
 
+  const { runStream, handleStop, clearQueuedTurns, handleRemoveQueued } =
+    useAiChatStreamCommand({
+      formCode,
+      locale,
+      idPrefix,
+      isBusyRef,
+      modelRef,
+      userInitiatedStopRef,
+      onApplyDraft,
+      abortRef,
+      queueRef,
+      setTurns,
+      setError,
+      setIsBusy,
+      setStopped,
+      setPendingPayload,
+      buildPayloadForUserTurn,
+      errorGeneric: t('ai.errorGeneric'),
+    });
+
   const configured = statusQuery.data?.configured === true;
   const canSubmit = !readOnly && configured && composer.value.trim().length > 0;
   const canRetry =
@@ -191,68 +175,6 @@ export function FormAiChatSheet({
     if (isBusy && canSubmit) {
       modelLabel = t('ai.queueHint');
     }
-  }
-
-  async function runStream(payload: PendingChatPayload): Promise<void> {
-    await runFormAiChatStream({
-      abortRef,
-      clearQueuedTurns,
-      clearStoppedFlag: () => {
-        userInitiatedStopRef.current = false;
-      },
-      drainQueue,
-      errorGeneric: t('ai.errorGeneric'),
-      formCode,
-      idPrefix,
-      isBusyRef,
-      locale,
-      modelRef,
-      onApplyDraft,
-      payload,
-      queueRef,
-      wasUserStopped: userInitiatedStopRef.current,
-      setError,
-      setIsBusy,
-      setPendingPayload,
-      setStopped,
-      setTurns,
-    });
-  }
-
-  function handleStop(): void {
-    userInitiatedStopRef.current = true;
-    abortRef.current?.abort();
-  }
-
-  function clearQueuedTurns(): void {
-    queueRef.current = [];
-    setTurns((current) => current.filter((turn) => !turn.queued));
-  }
-
-  async function drainQueue(): Promise<void> {
-    const next = queueRef.current.shift();
-    if (!next) {
-      return;
-    }
-    setTurns((current) =>
-      current.map((turn) =>
-        turn.id === next.userTurnId ? { ...turn, queued: false } : turn,
-      ),
-    );
-    const payload = buildPayloadForUserTurn(
-      next.userTurnId,
-      next.content,
-      next.focusedFieldIds,
-      next.focusedFieldTypes,
-    );
-    await runStream(payload);
-  }
-
-  function handleRemoveQueued(turnId: string): void {
-    queueRef.current = queueRef.current.filter(
-      (item) => item.userTurnId !== turnId,
-    );
-    setTurns((current) => current.filter((turn) => turn.id !== turnId));
   }
 
   function submitText(content: string): void {
@@ -347,7 +269,14 @@ export function FormAiChatSheet({
     if (persistEnabled) {
       clearStorage();
     }
-  }, [isBusy, handleStop, clearQueuedTurns, persistEnabled, clearStorage]);
+  }, [
+    isBusy,
+    handleStop,
+    clearQueuedTurns,
+    persistEnabled,
+    clearStorage,
+    setTurns,
+  ]);
 
   if (!open) {
     return null;

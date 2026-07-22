@@ -1,0 +1,52 @@
+import { useEffect, useRef, type Dispatch, type SetStateAction } from 'react';
+
+import type { ChatTurn } from './chatTurns.ts';
+
+interface UseAiChatStreamLifecycleOptions {
+  turns: ChatTurn[];
+  setTurns: Dispatch<SetStateAction<ChatTurn[]>>;
+  abortRef: React.MutableRefObject<AbortController | null>;
+  clearStorage: () => void;
+}
+
+export function useAiChatStreamLifecycle({
+  turns,
+  setTurns,
+  abortRef,
+  clearStorage,
+}: UseAiChatStreamLifecycleOptions): void {
+  useEffect(() => {
+    const stuck = turns.some(
+      (turn) =>
+        turn.role === 'assistant' && turn.streaming && turn.content.length > 0,
+    );
+    if (!stuck) {
+      return undefined;
+    }
+    const handle = requestAnimationFrame(() => {
+      setTurns((current) =>
+        current.map((turn) =>
+          turn.role === 'assistant' && turn.streaming && turn.content.length > 0
+            ? { ...turn, streaming: false }
+            : turn,
+        ),
+      );
+    });
+    return (): void => {
+      cancelAnimationFrame(handle);
+    };
+  }, [turns, setTurns]);
+
+  const clearStorageRef = useRef(clearStorage);
+  useEffect(() => {
+    clearStorageRef.current = clearStorage;
+  }, [clearStorage]);
+  // oxlint-disable-next-line eslint/arrow-body-style
+  useEffect(() => {
+    return (): void => {
+      abortRef.current?.abort();
+      abortRef.current = null;
+      clearStorageRef.current();
+    };
+  }, [abortRef]);
+}

@@ -49,7 +49,10 @@ export const Route = createFileRoute('/$locale')({
 });
 
 function LocaleLayout(): JSX.Element {
-  const { locale } = Route.useRouteContext();
+  const { locale: routeLocale } = Route.useRouteContext();
+  const locale: AppLocale = isAppLocale(routeLocale)
+    ? routeLocale
+    : DEFAULT_LOCALE;
 
   // BeforeLoad may be skipped on hydration; keep i18n aligned with the URL.
   useLayoutEffect(() => {

@@ -28,7 +28,26 @@ export function useFormRenderer({
   model,
   readOnly = false,
   initialValues,
-}: UseFormRendererOptions) {
+}: UseFormRendererOptions): {
+  values: FormValues;
+  readOnly: boolean;
+  showValidation: boolean;
+  evaluation: ReturnType<typeof evaluateRules>;
+  fieldErrors: Record<string, string[]>;
+  configWarnings: ReturnType<typeof analyzeSnapshot>;
+  hasValidationErrors: boolean;
+  resetValues: () => void;
+  triggerValidation: () => void;
+  onValueChange: (code: string, value: unknown) => void;
+  onRepeaterRowChange: (
+    repeaterCode: string,
+    rowIndex: number,
+    childCode: string,
+    value: unknown,
+  ) => void;
+  onAddRepeaterRow: (repeaterCode: string) => void;
+  onRemoveRepeaterRow: (repeaterCode: string, rowIndex: number) => void;
+} {
   const { t } = useTranslation('validation');
   const [values, setValues] = useState<FormValues>(
     () => initialValues ?? createInitialValues(model),
