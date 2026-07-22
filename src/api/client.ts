@@ -1,5 +1,8 @@
 import { createIsomorphicFn } from '@tanstack/react-start';
 
+import { buildApiUrl } from '@/lib/api-origin.ts';
+import { isDevelopment } from '@/lib/environment.ts';
+
 export class ApiError extends Error {
   public readonly status: number;
   public readonly title: string;
@@ -17,38 +20,14 @@ interface ProblemDetails {
   detail?: string;
 }
 
-function resolveApiOrigin(): string {
-  const candidates = [
-    { name: 'VITE_API_ORIGIN', value: import.meta.env.VITE_API_ORIGIN },
-    { name: 'API_ORIGIN', value: import.meta.env.API_ORIGIN },
-  ];
-  for (const { value } of candidates) {
-    if (typeof value === 'string' && value.trim() !== '') {
-      return value.trim().replace(/\/$/u, '');
-    }
-  }
-  const seen = candidates
-    .map(({ name, value }) => `${name}=${JSON.stringify(value)}`)
-    .join(', ');
-  throw new Error(`Server unavailable (env: ${seen})`);
-}
-
 export const resolveApiUrl = createIsomorphicFn()
   .client((path: string) => {
-    if (/^https?:\/\//i.test(path)) {
-      return path;
-    }
-    if (import.meta.env.DEV) {
+    if (isDevelopment()) {
       return path.startsWith('/') ? path : `/${path}`;
     }
-    return new URL(path, `${resolveApiOrigin()}/`).href;
+    return buildApiUrl(path);
   })
-  .server((path: string) => {
-    if (/^https?:\/\//i.test(path)) {
-      return path;
-    }
-    return new URL(path, `${resolveApiOrigin()}/`).href;
-  });
+  .server((path: string) => buildApiUrl(path));
 
 function summarizeErrorBody(status: number, bodyText: string): string {
   const trimmed = bodyText.trimStart();

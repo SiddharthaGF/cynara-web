@@ -61,9 +61,13 @@ const cleanCloudflareArtifacts = (mode: string): Plugin => ({
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   const apiOrigin = resolveApiOrigin(env);
+  const appEnv = process.env.APP_ENV ?? env.APP_ENV;
   const workerVars: Record<string, string> = {};
   if (apiOrigin) {
     workerVars.API_ORIGIN = apiOrigin;
+  }
+  if (typeof appEnv === 'string' && appEnv.length > EMPTY_STRING_LENGTH) {
+    workerVars.APP_ENV = appEnv;
   }
 
   return {
