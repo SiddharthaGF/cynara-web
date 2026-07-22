@@ -33,12 +33,19 @@ jobs:
 
       - name: Verify required build-time variables
         env:
-          VITE_API_ORIGIN: ${{ vars.VITE_API_ORIGIN }}
+          VITE_API_ORIGIN: ${{ vars.VITE_API_ORIGIN || '__UNSET__' }}
+          PRODUCTION_BUILD:
+            ${{ github.event_name == 'push' && github.ref == 'refs/heads/main'
+            }}
         run: |
-          if [ -z "${VITE_API_ORIGIN:-}" ]; then
-            echo "::error::VITE_API_ORIGIN is not configured." >&2
-            echo "Add it under Settings -> Secrets and variables -> Actions -> Variables on this repo so Vite can compile the API origin into the client bundle at build time." >&2
-            exit 1
+          if [ "${VITE_API_ORIGIN}" = "__UNSET__" ]; then
+            if [ "${PRODUCTION_BUILD}" = "true" ]; then
+              echo "::error::VITE_API_ORIGIN is not configured." >&2
+              echo "Production deploys require the cynara-api origin. Add it under Settings -> Secrets and variables -> Actions -> Variables on this repo so Vite can compile it into the client bundle." >&2
+              exit 1
+            fi
+            echo "::warning::VITE_API_ORIGIN is not configured. PR smoke check will build with a placeholder origin; configure it under Settings -> Secrets and variables -> Actions -> Variables to compile the real cynara-api origin into the client bundle." >&2
+            echo "VITE_API_ORIGIN=__UNSET__" >> "$GITHUB_ENV"
           fi
 
       - name: Install dependencies
