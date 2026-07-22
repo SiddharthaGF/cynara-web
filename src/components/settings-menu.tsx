@@ -51,6 +51,7 @@ export function SettingsMenu({ className }: SettingsMenuProps): JSX.Element {
               variant='ghost'
               size='icon-sm'
               aria-label={t('settings.open')}
+              title={t('settings.open')}
               className={cn('text-muted-foreground', className)}
             />
           }

@@ -1,5 +1,7 @@
 import type { CSSProperties, JSX } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { PanelHeader } from '@/components/panel/index.ts';
 import { Sheet, SheetContent } from '@/components/ui/sheet.tsx';
 import { useKeyboardInset } from '@/hooks/use-keyboard-inset.ts';
 
@@ -24,6 +26,7 @@ export function FormAiChatSheetView({
   onOpenChange,
   panelProps,
 }: FormAiChatSheetViewProps): JSX.Element | null {
+  const { t } = useTranslation('designer');
   const keyboardInset = useKeyboardInset();
 
   if (!open) {
@@ -53,8 +56,13 @@ export function FormAiChatSheetView({
           style={sheetStyle}
           className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
         >
+          <PanelHeader
+            surface='mobile'
+            title={t('mobile.ai.sheetTitle')}
+            subtitle={t('mobile.ai.sheetSubtitle')}
+          />
           <FormAiChatPanelBody
-            compactInBodyHeader
+            hideHeader
             {...panelProps}
           />
         </SheetContent>

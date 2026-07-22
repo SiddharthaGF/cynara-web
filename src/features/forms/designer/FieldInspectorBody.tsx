@@ -1,10 +1,12 @@
-import { X } from 'lucide-react';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import {
+  PanelHeader,
+  PanelHeaderCloseButton,
+} from '@/components/panel/index.ts';
 import { Badge } from '@/components/ui/badge.tsx';
-import { Button } from '@/components/ui/button.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs.tsx';
 import {
@@ -21,6 +23,7 @@ import type {
   FieldPresentation,
   FieldRules,
 } from '@/features/forms/types.ts';
+import { useIsMobile } from '@/hooks/use-mobile.ts';
 import { cn } from '@/lib/utils.ts';
 
 import { FieldInspectorClinicalSection } from './FieldInspectorClinicalSection.tsx';
@@ -66,6 +69,7 @@ export function FieldInspectorBody({
 }: FieldInspectorBodyProps): JSX.Element {
   const { t } = useTranslation('designer');
   const { t: tc } = useTranslation('common');
+  const isMobile = useIsMobile();
   const widgetOptions = WIDGETS_BY_FIELD_TYPE[field.type];
   const currentWidget = presentation?.widget ?? DEFAULT_WIDGETS[field.type];
   const [activeTab, setActiveTab] = useState<SectionId>('presentation');
@@ -83,84 +87,70 @@ export function FieldInspectorBody({
 
   return (
     <div className='flex h-full min-h-0 flex-col'>
-      <header className='inspector-header shrink-0'>
-        <div className='relative flex items-start gap-2 px-4 py-3 pr-12'>
-          <div className='min-w-0 flex-1'>
-            <p className='inspector-eyebrow'>
-              <span>{t('inspector.caseFile')}</span>
-              <span
-                aria-hidden='true'
-                className='text-muted-foreground/40'
+      <PanelHeader
+        surface={isMobile ? 'mobile' : 'desktop'}
+        eyebrow={
+          <>
+            {t('inspector.caseFile')}
+            <span aria-hidden='true'> · </span>
+            {t('inspector.questionNumber', { number: questionNumber })}
+          </>
+        }
+        title={
+          <span className={cn(showUntitled && 'text-muted-foreground/70')}>
+            {showUntitled ? t('canvas.untitledQuestion') : label}
+          </span>
+        }
+        badges={
+          <>
+            <FieldTypeBadge type={field.type} />
+            {field.required ? (
+              <Badge
+                variant='destructive'
+                className='font-normal'
               >
-                ·
-              </span>
-              <span>
-                {t('inspector.questionNumber', { number: questionNumber })}
-              </span>
-            </p>
-
-            <h2
-              className={cn(
-                'inspector-title mt-1.5',
-                showUntitled && 'inspector-title--untitled',
-              )}
-            >
-              {showUntitled ? t('canvas.untitledQuestion') : label}
-            </h2>
-
-            {codeText ? (
-              <p className='mt-2 flex items-center gap-2'>
-                <span className='inspector-eyebrow text-[9.5px]'>
-                  {t('inspector.codeLabel')}
-                </span>
-                <code className='inspector-code'>{codeText}</code>
-              </p>
+                {t('canvas.required')}
+              </Badge>
             ) : null}
-
-            <div className='mt-3 flex flex-wrap items-center gap-1.5'>
-              <FieldTypeBadge type={field.type} />
-              {field.required ? (
-                <Badge
-                  variant='destructive'
-                  className='font-normal'
-                >
-                  {t('canvas.required')}
-                </Badge>
-              ) : null}
-              {field.readOnly ? (
-                <Badge
-                  variant='outline'
-                  className='font-normal'
-                >
-                  {t('canvas.readOnly')}
-                </Badge>
-              ) : null}
-              {presentation?.hidden ? (
-                <Badge
-                  variant='outline'
-                  className='font-normal'
-                >
-                  {t('inspector.hidden')}
-                </Badge>
-              ) : null}
-            </div>
-          </div>
-
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon-sm'
-            aria-label={tc('actions.close')}
-            onClick={onClose}
-            className={cn(
-              'absolute top-2.5 right-2.5 hidden rounded-full md:flex',
-              hideCloseButton && 'md:hidden',
-            )}
-          >
-            <X className='size-4' />
-          </Button>
-        </div>
-      </header>
+            {field.readOnly ? (
+              <Badge
+                variant='outline'
+                className='font-normal'
+              >
+                {t('canvas.readOnly')}
+              </Badge>
+            ) : null}
+            {presentation?.hidden ? (
+              <Badge
+                variant='outline'
+                className='font-normal'
+              >
+                {t('inspector.hidden')}
+              </Badge>
+            ) : null}
+          </>
+        }
+        meta={
+          codeText ? (
+            <p className='flex items-center gap-2'>
+              <span className='text-[10px] font-medium tracking-wide text-muted-foreground uppercase'>
+                {t('inspector.codeLabel')}
+              </span>
+              <code className='rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-foreground/80'>
+                {codeText}
+              </code>
+            </p>
+          ) : null
+        }
+        overlay={
+          hideCloseButton ? null : (
+            <PanelHeaderCloseButton
+              onClick={onClose}
+              label={tc('actions.close')}
+            />
+          )
+        }
+      />
 
       <div className='shrink-0 px-4 pt-3 pb-2 sm:px-5'>
         <Tabs

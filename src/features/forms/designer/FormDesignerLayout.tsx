@@ -1,12 +1,11 @@
 import { Link, useParams } from '@tanstack/react-router';
-import { ArrowLeft, Cloud, CloudOff } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import type { JSX } from 'react';
 import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsMenu } from '@/components/settings-menu.tsx';
 import { DocumentMeta } from '@/components/theme-toggle.tsx';
-import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
@@ -15,10 +14,11 @@ import { useIsMobile } from '@/hooks/use-mobile.ts';
 import { FormPreviewTrigger } from '../preview/FormPreviewTrigger.tsx';
 import type { FormVersion } from '../types.ts';
 import { ChatAiTrigger as FormAiChatTrigger } from './ai-chat/ChatMentionLists.tsx';
-import { ConcurrencyBanner } from './ConcurrencyBanner.tsx';
 import { FieldCanvas } from './FieldCanvas.tsx';
 import { FieldInspector } from './FieldInspector.tsx';
 import { MobileDesignerFab } from './MobileDesignerFab.tsx';
+import { SaveButton } from './SaveButton.tsx';
+import { SaveStatusBanner } from './SaveStatusBanner.tsx';
 import { useFormDesignerLayout } from './useFormDesignerLayout.ts';
 import { ValidationPanel } from './ValidationPanel.tsx';
 
@@ -43,7 +43,6 @@ export function FormDesignerLayout({
 }: FormDesignerLayoutProps): JSX.Element {
   const { t } = useTranslation('designer');
   const { t: tc } = useTranslation('common');
-  const { t: tv } = useTranslation('validation');
   const { locale } = useParams({ from: '/$locale' });
   const layout = useFormDesignerLayout(code, initialDraft);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -209,6 +208,7 @@ export function FormDesignerLayout({
             variant='ghost'
             size='sm'
             className='shrink-0 gap-1.5 px-2'
+            title={tc('actions.forms')}
             render={
               <Link
                 to='/$locale/forms'
@@ -274,29 +274,20 @@ export function FormDesignerLayout({
           <SettingsMenu className='shrink-0' />
         </header>
 
-        {(layout.draft.saveState === 'conflict' ||
-          (layout.draft.saveState === 'error' && layout.draft.saveError)) && (
+        {layout.draft.saveState === 'conflict' ||
+        (layout.draft.saveState === 'error' && layout.draft.saveError) ? (
           <div className='shrink-0 border-b bg-card px-4 py-2'>
-            {layout.draft.saveState === 'conflict' ? (
-              <ConcurrencyBanner
-                message={
-                  layout.draft.saveError ?? t('concurrency.defaultMessage')
-                }
-                onReload={() => {
-                  void layout.draft.reloadDraft();
-                }}
-                onDismiss={layout.draft.dismissConflict}
-              />
-            ) : null}
-            {layout.draft.saveState === 'error' && layout.draft.saveError ? (
-              <Alert variant='destructive'>
-                <AlertDescription>
-                  {translateSaveError(layout.draft.saveError, tv)}
-                </AlertDescription>
-              </Alert>
-            ) : null}
+            <SaveStatusBanner
+              state={layout.draft.saveState}
+              error={layout.draft.saveError}
+              defaultConcurrencyMessage={t('concurrency.defaultMessage')}
+              onReload={() => {
+                void layout.draft.reloadDraft();
+              }}
+              onDismissConflict={layout.draft.dismissConflict}
+            />
           </div>
-        )}
+        ) : null}
 
         {renderMain()}
       </div>
@@ -313,86 +304,4 @@ export function FormDesignerLayout({
       ) : null}
     </>
   );
-}
-
-function SaveButton({
-  state,
-  disabled,
-  onClick,
-}: {
-  state: string;
-  disabled?: boolean;
-  onClick: () => void;
-}): JSX.Element {
-  const { t } = useTranslation('designer');
-  const label = saveStateLabel(state, t);
-  const icon = saveStateIcon(state);
-
-  let variant: 'default' | 'secondary' | 'destructive' | 'ghost' = 'default';
-  if (state === 'saved') {
-    variant = 'secondary';
-  } else if (state === 'error' || state === 'conflict') {
-    variant = 'destructive';
-  }
-
-  return (
-    <Button
-      type='button'
-      size='sm'
-      variant={variant}
-      disabled={disabled || state === 'saving'}
-      onClick={onClick}
-      className='shrink-0 gap-1.5 px-2.5 sm:px-3'
-    >
-      {icon}
-      <span className='hidden sm:inline'>{label}</span>
-    </Button>
-  );
-}
-
-function saveStateIcon(state: string): JSX.Element {
-  if (state === 'saving') {
-    return <Spinner className='size-3.5' />;
-  }
-  if (state === 'saved') {
-    return <Cloud className='size-3.5' />;
-  }
-  if (state === 'error' || state === 'conflict') {
-    return <CloudOff className='size-3.5' />;
-  }
-  return <Cloud className='size-3.5 opacity-60' />;
-}
-
-function saveStateLabel(
-  state: string,
-  t: ReturnType<typeof useTranslation<'designer'>>['t'],
-): string {
-  switch (state) {
-    case 'saving': {
-      return t('saveState.saving');
-    }
-    case 'saved': {
-      return t('saveState.saved');
-    }
-    case 'conflict': {
-      return t('saveState.conflict');
-    }
-    case 'error': {
-      return t('saveState.error');
-    }
-    default: {
-      return t('saveState.unsaved');
-    }
-  }
-}
-
-function translateSaveError(
-  error: string,
-  t: ReturnType<typeof useTranslation<'validation'>>['t'],
-): string {
-  const known: Record<string, string> = {
-    'Fix validation issues before saving.': t('save.fixBeforeSave'),
-    'Save failed.': t('save.failed'),
-  };
-  return known[error] ?? error;
 }

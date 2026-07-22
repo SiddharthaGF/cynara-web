@@ -169,6 +169,7 @@ export function ChatAiTrigger({
       variant='secondary'
       disabled={disabled}
       onClick={onOpen}
+      title={t('ai.open')}
       className='shrink-0 gap-1.5 rounded-full px-2.5 sm:px-3'
     >
       <Sparkles className='size-3.5' />

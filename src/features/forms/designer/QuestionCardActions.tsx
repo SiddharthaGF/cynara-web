@@ -55,6 +55,7 @@ export function QuestionCardActions({
           variant='ghost'
           size='icon-sm'
           aria-label={t('canvas.moveUp')}
+          title={t('canvas.moveUp')}
           disabled={index === 0}
           onClick={() => {
             onMoveUp(index);
@@ -67,6 +68,7 @@ export function QuestionCardActions({
           variant='ghost'
           size='icon-sm'
           aria-label={t('canvas.moveDown')}
+          title={t('canvas.moveDown')}
           disabled={index === total - 1}
           onClick={() => {
             onMoveDown(index);
@@ -100,6 +102,7 @@ export function QuestionCardActions({
           variant='ghost'
           size='icon-sm'
           aria-label={t('canvas.moreOptions')}
+          title={t('canvas.moreOptions')}
           onClick={() => {
             onOpenAdvanced(field.id);
           }}
@@ -112,6 +115,7 @@ export function QuestionCardActions({
           variant='ghost'
           size='icon-sm'
           aria-label={t('canvas.deleteQuestion')}
+          title={t('canvas.deleteQuestion')}
           onClick={() => {
             onRemove(field.id);
           }}
@@ -130,6 +134,7 @@ export function QuestionCardActions({
               size='icon-sm'
               className='sm:hidden'
               aria-label={t('canvas.actionsMenu')}
+              title={t('canvas.actionsMenu')}
             />
           }
         >

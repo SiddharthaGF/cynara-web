@@ -12,7 +12,7 @@ import {
 import type { FormDraftModel, FormVersion } from '@/features/forms/types.ts';
 import { validateDraft } from '@/features/forms/validation/validateDraft.ts';
 
-type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'conflict';
+export type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'conflict';
 
 interface UseFormDraftResult {
   model: FormDraftModel;

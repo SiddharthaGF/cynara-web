@@ -3,21 +3,15 @@ import { useState, type CSSProperties, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PlainPreviewFrame } from '@/components/device-frames/index.ts';
+import { PanelHeader } from '@/components/panel/index.ts';
 import { Button } from '@/components/ui/button.tsx';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet.tsx';
+import { Sheet, SheetContent } from '@/components/ui/sheet.tsx';
 import {
   Tabs,
   TabsContent,
@@ -99,17 +93,11 @@ export function FormPreviewDialog({
           style={sheetStyle}
           className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
         >
-          <SheetHeader
-            style={{ paddingRight: 'calc(var(--kb-safe) + 2.5rem)' }}
-            className='flex flex-row items-center justify-between gap-2 border-b px-4 py-2.5'
-          >
-            <div className='flex min-w-0 items-center gap-2'>
-              <FlaskConical className='size-4 text-primary' />
-              <SheetTitle className='text-sm font-semibold'>
-                {t('formPreview.title')}
-              </SheetTitle>
-            </div>
-          </SheetHeader>
+          <PanelHeader
+            surface='mobile'
+            icon={<FlaskConical className='size-4' />}
+            title={t('formPreview.title')}
+          />
           <FormPreviewBody
             formCode={formCode}
             model={model}
@@ -128,18 +116,20 @@ export function FormPreviewDialog({
         showCloseButton
         className='preview-modal flex h-[min(90dvh,52rem)] w-[min(96vw,52rem)] max-w-[min(96vw,52rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(96vw,52rem)]'
       >
-        <DialogHeader className='preview-modal-header shrink-0 border-b border-border/60 px-5 py-4'>
-          <p className='font-mono text-[10px] uppercase tracking-[0.14em] text-primary/80'>
-            {formCode}
-          </p>
-          <DialogTitle className='flex items-center gap-2'>
-            <FlaskConical className='size-4 text-primary' />
-            {t('formPreview.title')}
-          </DialogTitle>
-          <DialogDescription className='max-w-prose text-xs leading-relaxed'>
-            {t('formPreview.disclaimer')}
-          </DialogDescription>
-        </DialogHeader>
+        <DialogDescription className='sr-only'>
+          {t('formPreview.disclaimer')}
+        </DialogDescription>
+        <PanelHeader
+          surface='desktop'
+          eyebrow={formCode}
+          icon={<FlaskConical className='size-4' />}
+          title={t('formPreview.title')}
+          meta={
+            <p className='max-w-prose text-xs leading-relaxed text-muted-foreground'>
+              {t('formPreview.disclaimer')}
+            </p>
+          }
+        />
 
         <FormPreviewBody
           formCode={formCode}

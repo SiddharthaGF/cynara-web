@@ -1,15 +1,13 @@
-import {
-  SaveIcon,
-  SaveOffIcon,
-  Settings2Icon,
-  Trash2Icon,
-  XIcon,
-} from 'lucide-react';
+import { SaveIcon, SaveOffIcon, Settings2Icon, Trash2Icon } from 'lucide-react';
 import type { FormEvent, JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AiSettingsDialog } from '@/components/ai-settings-dialog.tsx';
+import {
+  PanelHeader,
+  PanelHeaderCloseButton,
+} from '@/components/panel/index.ts';
 import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -70,11 +68,10 @@ export interface FormAiChatPanelProps {
   typesBySlug: Map<string, MentionableFieldType>;
   readOnly: boolean;
   /**
-   * When true, render the header inline with the in-body controls (mobile
-   * surface) and skip the standalone close `X` since the parent Sheet
-   * already provides one.
+   * When true, the parent provides the chrome header (e.g. the mobile sheet
+   * renders its own `PanelHeader`) and this component renders only the body.
    */
-  compactInBodyHeader?: boolean;
+  hideHeader?: boolean;
 }
 
 export function FormAiChatPanel({
@@ -184,7 +181,7 @@ export function FormAiChatPanelBody({
   turns,
   typesBySlug,
   readOnly,
-  compactInBodyHeader = false,
+  hideHeader = false,
 }: FormAiChatPanelProps): JSX.Element {
   const { t } = useTranslation('designer');
   const { canRetry, canSubmit, busy, statusLoading } = interaction;
@@ -199,86 +196,70 @@ export function FormAiChatPanelBody({
 
   return (
     <>
-      <header
-        className={cn(
-          'ai-chat-header shrink-0',
-          compactInBodyHeader && 'border-b border-border/60',
-        )}
-      >
-        <div
-          className={cn(
-            'relative flex items-center gap-2 px-4 py-3 pr-12',
-            compactInBodyHeader && 'pr-12',
-          )}
-        >
-          <h2 className='ai-chat-title truncate'>{t('ai.title')}</h2>
-          {modelName ? (
-            <span className='ai-chat-model shrink-0'>{modelName}</span>
-          ) : null}
-          {configured ? (
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon-sm'
-              className={cn(
-                'shrink-0 rounded-full text-muted-foreground',
-                persistChat &&
-                  'text-foreground ring-1 ring-inset ring-border/70',
-              )}
-              aria-label={t(persistChat ? 'ai.persistOn' : 'ai.persistOff')}
-              aria-pressed={persistChat}
-              title={t(persistChat ? 'ai.persistOn' : 'ai.persistOff')}
-              onClick={onTogglePersist}
-            >
-              {persistChat ? (
-                <SaveIcon className='size-3.5' />
-              ) : (
-                <SaveOffIcon className='size-3.5' />
-              )}
-            </Button>
-          ) : null}
-          {configured ? (
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon-sm'
-              className='shrink-0 rounded-full text-muted-foreground'
-              aria-label={t('ai.clearHint')}
-              title={t('ai.clearHint')}
-              disabled={!hasConversation}
-              onClick={() => {
-                setClearOpen(true);
-              }}
-            >
-              <Trash2Icon className='size-3.5' />
-            </Button>
-          ) : null}
-          {configured ? (
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon-sm'
-              className='shrink-0 rounded-full text-muted-foreground'
-              aria-label={t('ai.configure')}
-              onClick={onOpenSettings}
-            >
-              <Settings2Icon className='size-3.5' />
-            </Button>
-          ) : null}
-          {compactInBodyHeader ? null : (
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon-sm'
-              className='absolute top-2.5 right-2.5 rounded-full md:flex'
-              aria-label={t('ai.close')}
+      {hideHeader ? null : (
+        <PanelHeader
+          surface='desktop'
+          eyebrow={modelName ?? undefined}
+          title={t('ai.title')}
+          actions={
+            configured ? (
+              <>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='icon-sm'
+                  className={cn(
+                    'shrink-0 rounded-full text-muted-foreground',
+                    persistChat &&
+                      'text-foreground ring-1 ring-inset ring-border/70',
+                  )}
+                  aria-label={t(persistChat ? 'ai.persistOn' : 'ai.persistOff')}
+                  aria-pressed={persistChat}
+                  title={t(persistChat ? 'ai.persistOn' : 'ai.persistOff')}
+                  onClick={onTogglePersist}
+                >
+                  {persistChat ? (
+                    <SaveIcon className='size-3.5' />
+                  ) : (
+                    <SaveOffIcon className='size-3.5' />
+                  )}
+                </Button>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='icon-sm'
+                  className='shrink-0 rounded-full text-muted-foreground'
+                  aria-label={t('ai.clearHint')}
+                  title={t('ai.clearHint')}
+                  disabled={!hasConversation}
+                  onClick={() => {
+                    setClearOpen(true);
+                  }}
+                >
+                  <Trash2Icon className='size-3.5' />
+                </Button>
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='icon-sm'
+                  className='shrink-0 rounded-full text-muted-foreground'
+                  aria-label={t('ai.configure')}
+                  title={t('ai.configure')}
+                  onClick={onOpenSettings}
+                >
+                  <Settings2Icon className='size-3.5' />
+                </Button>
+              </>
+            ) : null
+          }
+          overlay={
+            <PanelHeaderCloseButton
               onClick={onClose}
-            >
-              <XIcon className='size-4' />
-            </Button>
-          )}
-        </div>
-      </header>
+              label={t('ai.close')}
+            />
+          }
+        />
+      )}
 
       <div className='flex min-h-0 flex-1 flex-col'>
         {statusLoading ? (

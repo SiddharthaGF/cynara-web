@@ -1,13 +1,8 @@
 import type { CSSProperties, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet.tsx';
+import { PanelHeader } from '@/components/panel/index.ts';
+import { Sheet, SheetContent } from '@/components/ui/sheet.tsx';
 import type {
   ClinicalField,
   ComponentSummary,
@@ -106,19 +101,11 @@ export function FieldInspector({
           style={sheetStyle}
           className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
         >
-          <SheetHeader
-            style={{ paddingRight: 'calc(var(--kb-safe) + 2.5rem)' }}
-            className='flex flex-row items-center justify-between gap-2 border-b px-4 py-2.5'
-          >
-            <div className='flex min-w-0 flex-col'>
-              <SheetTitle className='text-sm font-semibold'>
-                {t('mobile.fieldSettings.sheetTitle')}
-              </SheetTitle>
-              <SheetDescription className='truncate text-xs text-muted-foreground'>
-                {t('mobile.fieldSettings.sheetSubtitle')}
-              </SheetDescription>
-            </div>
-          </SheetHeader>
+          <PanelHeader
+            surface='mobile'
+            title={t('mobile.fieldSettings.sheetTitle')}
+            subtitle={t('mobile.fieldSettings.sheetSubtitle')}
+          />
           {body}
         </SheetContent>
       </Sheet>

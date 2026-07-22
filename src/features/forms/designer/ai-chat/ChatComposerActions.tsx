@@ -36,6 +36,7 @@ export function ChatComposerActions({
             variant='ghost'
             className='h-8 gap-1.5 rounded-full px-2.5 text-xs'
             onClick={onRetry}
+            title={t('ai.retry')}
           >
             <RotateCwIcon className='size-3.5' />
             {t('ai.retry')}
@@ -61,6 +62,7 @@ export function ChatComposerActions({
               variant='default'
               className='rounded-full'
               aria-label={t('ai.stop')}
+              title={t('ai.stop')}
               onClick={onStop}
             >
               <SquareIcon className='size-3 fill-current' />
@@ -74,6 +76,7 @@ export function ChatComposerActions({
             disabled={!canSubmit}
             className='rounded-full'
             aria-label={t('ai.send')}
+            title={t('ai.send')}
           >
             <ArrowUpIcon className='size-3.5' />
           </Button>

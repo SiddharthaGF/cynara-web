@@ -22,6 +22,7 @@ export function FormPreviewTrigger({
       size='sm'
       className='gap-1.5'
       disabled={disabled}
+      title={t('formPreview.open')}
       onClick={onOpen}
     >
       <FlaskConical className='size-3.5' />
