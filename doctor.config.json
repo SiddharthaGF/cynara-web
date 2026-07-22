@@ -4,7 +4,8 @@
     "files": [
       "src/components/ui/**",
       "src/lib/utils.ts",
-      "src/hooks/use-mobile.ts"
+      "src/hooks/use-mobile.ts",
+      "packages/rule-engine/dist/**"
     ]
   }
 }

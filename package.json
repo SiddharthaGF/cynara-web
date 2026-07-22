@@ -7,6 +7,7 @@
     "build": "vite build",
     "cf-typegen": "wrangler types",
     "deploy": "pnpm build && wrangler deploy",
+    "deploy:keep-vars": "pnpm build && wrangler deploy --keep-vars",
     "dev": "vite dev",
     "doctor": "npx react-doctor@latest",
     "fmt": "oxfmt",

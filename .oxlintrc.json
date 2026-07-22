@@ -106,11 +106,22 @@
     },
     {
       "files": ["vite.config.ts", "src/vite-env.d.ts"],
+      "env": {
+        "node": true
+      },
       "rules": {
         "import/no-default-export": "off",
         "sort-imports": "off",
         "import/unambiguous": "off",
-        "typescript/prefer-readonly-parameter-types": "off"
+        "typescript/prefer-readonly-parameter-types": "off",
+        "import/no-nodejs-modules": "off",
+        "unicorn/import-style": "off",
+        "import/consistent-type-specifier-style": "off",
+        "max-lines-per-function": "off",
+        "sort-keys": "off",
+        "typescript/explicit-function-return-type": "off",
+        "typescript/explicit-module-boundary-types": "off",
+        "oxc/no-async-await": "off"
       }
     },
     {

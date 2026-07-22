@@ -105,19 +105,33 @@ Do **not** commit secrets. Any runtime-only secrets should be set under
 
 ### Deployment model
 
-- **Production branch:** `main`. Every push to `main` is deployed by Cloudflare
-  Pages to the production URL.
+The project is deployed as a **Cloudflare Worker** (not a Pages Function).
+`@cloudflare/vite-plugin` builds the SSR worker under `dist/server/` (entry
+`dist/server/index.js`) and the client assets under `dist/client/`. The
+plugin-generated `dist/server/wrangler.json` is what Cloudflare's deployment
+pipeline consumes; it pins `assets.directory` to the client output and sets
+`no_bundle = true` (Cloudflare uploads the prebuilt worker as-is).
+
+- **Production branch:** `main`. Every push to `main` is deployed to the
+  production worker URL.
 - **Preview branches:** every open pull request targeting `main` automatically
   receives its own preview URL — useful for design review and stakeholder
   feedback before a PR is merged.
-- This is configured once in the Cloudflare dashboard under **Workers → Pages →
-  Settings → Builds**:
-  1. Connect the repo to `ailuracode/cynara-web` via Git integration.
-  2. Set **Production branch** to `main`.
-  3. Leave **Preview branches** as the default (every non-production branch
-     receives a preview).
-  4. Set **Build command** to `pnpm build` and **Build output directory** to
-     `dist`.
+- This is configured once in the Cloudflare dashboard under **Workers → Settings
+  → Builds**:
+
+  | Setting               | Value                                           |
+  | --------------------- | ----------------------------------------------- |
+  | **Build command**     | `pnpm install --frozen-lockfile && pnpm build`  |
+  | **Deploy command**    | `pnpm deploy:keep-vars`                         |
+  | **Build output dir**  | (empty — the deploy command uploads the worker) |
+  | **Production branch** | `main`                                          |
+  | **Preview branches**  | default (all non-production branches)           |
+
+> The deploy command runs `wrangler deploy --keep-vars` so environment variables
+> set on the worker (for example `VITE_API_ORIGIN` if it were runtime-only) are
+> preserved across redeploys. Always use this variant from CI/Git integration;
+> `pnpm deploy` (no flag) will erase dashboard-configured vars on every push.
 
 ### One-time setup
 
@@ -133,8 +147,16 @@ pnpm build
 ```
 
 This invokes `vite build`, which now runs the Cloudflare Vite plugin. The
-artifact is a `dist/` directory containing the SSR worker bundle and the client
-assets.
+artifact is a `dist/` directory containing:
+
+- `dist/server/index.js` — the SSR worker bundle.
+- `dist/server/wrangler.json` — generated worker config (committed alongside the
+  source `wrangler.toml`; the plugin regenerates it on each build).
+- `dist/client/` — static client assets served by Workers Assets.
+
+A small `closeBundle` hook in `vite.config.ts` strips the `dist/server/.vite`
+cache and `dist/server/.dev.vars` secrets file from the output so local dev
+artifacts never leak into the deploy bundle.
 
 ### Local preview before opening a PR
 
@@ -149,14 +171,16 @@ preview URL.
 
 ### Manual production deploy (optional)
 
-Cloudflare Pages handles production deploys automatically on push to `main`. To
+Cloudflare handles production deploys automatically on push to `main`. To
 publish a manual production build bypassing the Git integration:
 
 ```bash
-pnpm deploy
+pnpm deploy            # mirrors the Git integration deploy
+pnpm deploy:keep-vars  # use this if you have vars set in the Cloudflare
+                       # dashboard — preserves them across redeploys
 ```
 
-This runs `pnpm build` followed by `wrangler deploy`. Use sparingly — the Git
+Both run `pnpm build` followed by `wrangler deploy`. Use sparingly — the Git
 integration is the default path.
 
 ### Generated types
