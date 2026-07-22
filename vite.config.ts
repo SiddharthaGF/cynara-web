@@ -1,3 +1,4 @@
+import { cloudflare } from '@cloudflare/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import react from '@vitejs/plugin-react';
@@ -5,16 +6,18 @@ import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
-  let apiOrigin = '';
-  if (env.VITE_API_ORIGIN) {
-    apiOrigin = env.VITE_API_ORIGIN.trim();
-  }
+  const apiOrigin = env.VITE_API_ORIGIN || '';
   if (!apiOrigin) {
     throw new Error('Server unavailable');
   }
 
   return {
-    plugins: [tailwindcss(), tanstackStart(), react()],
+    plugins: [
+      cloudflare({ viteEnvironment: { name: 'ssr' } }),
+      tailwindcss(),
+      tanstackStart(),
+      react(),
+    ],
     resolve: {
       tsconfigPaths: true,
     },

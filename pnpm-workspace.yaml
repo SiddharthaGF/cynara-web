@@ -1,10 +1,19 @@
+packages:
+  - 'packages/*'
+
 allowBuilds:
-  esbuild: set this to true or false
+  esbuild: true
+  sharp: true
+  workerd: true
 minimumReleaseAge: 10080
 trustPolicy: no-downgrade
 trustPolicyExclude:
   - semver@6.3.1
 minimumReleaseAgeExclude:
+  - '@cloudflare/*'
+  - 'wrangler'
+  - 'miniflare'
+  - 'workerd'
   - '@tanstack/*'
   - '@tailwindcss/*'
   - '@voidzero-dev/*'

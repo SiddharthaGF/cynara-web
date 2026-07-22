@@ -1,5 +1,4 @@
 import { createIsomorphicFn } from '@tanstack/react-start';
-import { getRequestUrl } from '@tanstack/react-start/server';
 
 export class ApiError extends Error {
   public readonly status: number;
@@ -18,29 +17,26 @@ interface ProblemDetails {
   detail?: string;
 }
 
-function resolveSsrApiOrigin(): string {
+function resolveApiOrigin(): string {
   const origin = import.meta.env.VITE_API_ORIGIN;
   if (typeof origin === 'string' && origin.trim() !== '') {
-    return origin.trim().replace(/\/$/, '');
+    return origin.trim().replace(/\/$/u, '');
   }
   throw new Error('Server unavailable');
 }
 
-const resolveApiUrl = createIsomorphicFn()
-  .client((path: string) => path)
+export const resolveApiUrl = createIsomorphicFn()
+  .client((path: string) => {
+    if (/^https?:\/\//i.test(path)) {
+      return path;
+    }
+    return new URL(path, `${resolveApiOrigin()}/`).href;
+  })
   .server((path: string) => {
     if (/^https?:\/\//i.test(path)) {
       return path;
     }
-    const ssrApiOrigin = resolveSsrApiOrigin();
-    if (import.meta.env.DEV) {
-      return new URL(path, `${ssrApiOrigin}/`).href;
-    }
-    try {
-      return new URL(path, getRequestUrl().origin).href;
-    } catch {
-      return new URL(path, `${ssrApiOrigin}/`).href;
-    }
+    return new URL(path, `${resolveApiOrigin()}/`).href;
   });
 
 function summarizeErrorBody(status: number, bodyText: string): string {

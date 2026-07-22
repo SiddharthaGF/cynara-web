@@ -10,8 +10,12 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+!/packages/rule-engine/dist/
 *.local
 .env
+.dev.vars
+.env.*
+!.env.example
 package-lock.json
 
 # TanStack Start / Router (generated)
@@ -21,6 +25,10 @@ package-lock.json
 .vinxi
 __unconfig*
 src/routeTree.gen.ts
+
+# Cloudflare / Wrangler (generated)
+.wrangler/
+worker-configuration.d.ts
 
 # Editor directories and files
 .vscode/*

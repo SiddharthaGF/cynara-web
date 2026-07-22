@@ -22,6 +22,7 @@
   },
   "ignorePatterns": [
     "dist/**",
+    "packages/**/dist/**",
     "coverage/**",
     "node_modules/**",
     ".tanstack/**",

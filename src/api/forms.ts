@@ -1,4 +1,4 @@
-import { ApiError, apiRequest } from '@/api/client.ts';
+import { ApiError, apiRequest, resolveApiUrl } from '@/api/client.ts';
 import type { FormSummary, FormVersion } from '@/features/forms/types.ts';
 
 interface ApiFormSummary {
@@ -232,12 +232,15 @@ export async function* streamFormDraftAi(
   headers.set('X-Actor-Id', 'designer-user');
   headers.set('Accept', 'text/event-stream');
 
-  const response = await fetch(`/api/forms/${code}/draft/ai-chat/stream`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(input),
-    signal: options?.signal,
-  });
+  const response = await fetch(
+    resolveApiUrl(`/api/forms/${code}/draft/ai-chat/stream`),
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(input),
+      signal: options?.signal,
+    },
+  );
 
   if (!response.ok) {
     let title = response.statusText;
