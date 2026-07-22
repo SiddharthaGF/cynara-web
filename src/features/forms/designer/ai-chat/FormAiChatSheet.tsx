@@ -111,6 +111,7 @@ export function FormAiChatSheet({
   useEffect(() => {
     clearStorageRef.current = clearStorage;
   }, [clearStorage]);
+  // oxlint-disable-next-line eslint/arrow-body-style
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
