@@ -1,12 +1,20 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet.tsx';
 import type {
   ClinicalField,
   ComponentSummary,
   FieldPresentation,
   FieldRules,
 } from '@/features/forms/types.ts';
+import { useIsMobile } from '@/hooks/use-mobile.ts';
 import { cn } from '@/lib/utils.ts';
 
 import { FieldInspectorBody } from './FieldInspectorBody.tsx';
@@ -27,7 +35,11 @@ interface FieldInspectorProps {
   readOnly?: boolean;
 }
 
-/** Advanced field settings — docked right rail (same shell as AI chat). */
+/**
+ * Field settings — docked right rail on desktop, floating bottom sheet on
+ * mobile. The body component is shared so the same chrome (hero header, tabs,
+ * autosave behavior) renders in either surface.
+ */
 export function FieldInspector({
   open,
   onOpenChange,
@@ -43,9 +55,53 @@ export function FieldInspector({
   readOnly = false,
 }: FieldInspectorProps): JSX.Element | null {
   const { t } = useTranslation('designer');
+  const isMobile = useIsMobile();
 
   if (!open) {
     return null;
+  }
+
+  const body = (
+    <FieldInspectorBody
+      key={field.id}
+      field={field}
+      presentation={presentation}
+      rules={rules}
+      fieldIndex={fieldIndex}
+      fieldOptions={fieldOptions}
+      components={components}
+      onChangeField={onChangeField}
+      onChangePresentation={onChangePresentation}
+      onChangeRules={onChangeRules}
+      onClose={() => {
+        onOpenChange(false);
+      }}
+      readOnly={readOnly}
+    />
+  );
+
+  if (isMobile) {
+    return (
+      <Sheet
+        open={open}
+        onOpenChange={onOpenChange}
+        modal
+      >
+        <SheetContent
+          side='bottom'
+          showCloseButton
+          className='inset-x-0 bottom-0 flex max-h-[90dvh] flex-col overflow-hidden rounded-t-2xl border-t p-0'
+        >
+          <SheetHeader className='sr-only'>
+            <SheetTitle>{t('inspector.caseFile')}</SheetTitle>
+            <SheetDescription>
+              {t('mobile.fieldSettings.description')}
+            </SheetDescription>
+          </SheetHeader>
+          {body}
+        </SheetContent>
+      </Sheet>
+    );
   }
 
   return (
@@ -55,22 +111,7 @@ export function FieldInspector({
       )}
       aria-label={t('inspector.caseFile')}
     >
-      <FieldInspectorBody
-        key={field.id}
-        field={field}
-        presentation={presentation}
-        rules={rules}
-        fieldIndex={fieldIndex}
-        fieldOptions={fieldOptions}
-        components={components}
-        onChangeField={onChangeField}
-        onChangePresentation={onChangePresentation}
-        onChangeRules={onChangeRules}
-        onClose={() => {
-          onOpenChange(false);
-        }}
-        readOnly={readOnly}
-      />
+      {body}
     </aside>
   );
 }

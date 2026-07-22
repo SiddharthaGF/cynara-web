@@ -326,6 +326,18 @@
       "tabSettings": "Settings"
     }
   },
+  "mobile": {
+    "fieldSettings": {
+      "fab": "Open field settings",
+      "fabHint": "Inspect the selected question",
+      "description": "Presentation, clinical mapping, and rules for the selected question."
+    },
+    "ai": {
+      "fab": "Open AI chat",
+      "fabHint": "Ask the form assistant",
+      "description": "Chat with the assistant while keeping the canvas editable."
+    }
+  },
   "ai": {
     "open": "AI chat",
     "eyebrow": "Form assistant",

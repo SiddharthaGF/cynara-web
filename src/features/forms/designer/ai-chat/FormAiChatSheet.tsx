@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 
 import { getFormAiStatus } from '@/api/ai.ts';
 import type { FormDraftModel } from '@/features/forms/types.ts';
+import { useIsMobile } from '@/hooks/use-mobile.ts';
 
 import { buildMentionableTypes } from './buildMentionableTypes.ts';
 import type { ChatTurn } from './chatTurns.ts';
@@ -21,7 +22,7 @@ import {
   listMentionableFields,
 } from './fieldMentions.ts';
 import { extractMentionedFieldTypes } from './fieldTypeMentions.ts';
-import { FormAiChatPanel } from './FormAiChatPanel.tsx';
+import { FormAiChatSheetView } from './FormAiChatSheetView.tsx';
 import {
   type PendingChatPayload,
   type QueuedMessage,
@@ -53,6 +54,7 @@ export function FormAiChatSheet({
 }: FormAiChatSheetProps): JSX.Element | null {
   const { t } = useTranslation('designer');
   const idPrefix = useId();
+  const isMobile = useIsMobile();
   const abortRef = useRef<AbortController | null>(null);
   const queueRef = useRef<QueuedMessage[]>([]);
   const isBusyRef = useRef(false);
@@ -333,44 +335,51 @@ export function FormAiChatSheet({
     return null;
   }
 
+  const panelProps = {
+    aiSettingsOpen,
+    configured,
+    draftModel: model,
+    error,
+    fieldsById,
+    idPrefix,
+    input: composer.value,
+    composerKey: composer.key,
+    interaction: {
+      canRetry,
+      canSubmit,
+      busy: isBusy,
+      statusLoading: statusQuery.isLoading,
+    },
+    locale,
+    modelLabel,
+    modelName: statusQuery.data?.model ?? null,
+    onAiSettingsOpenChange: setAiSettingsOpen,
+    onChange: (value: string) => {
+      setComposer((prev) => ({ ...prev, value }));
+    },
+    onClose: handleClose,
+    onOpenSettings: () => {
+      setAiSettingsOpen(true);
+    },
+    onPickPrompt: handlePickPrompt,
+    onRemoveQueued: handleRemoveQueued,
+    onRetry: handleRetry,
+    onStop: handleStop,
+    onSubmit: handleSubmit,
+    persistChat: persistEnabled,
+    onTogglePersist: togglePersist,
+    stopped,
+    turns,
+    typesBySlug,
+    readOnly,
+  } as const;
+
   return (
-    <FormAiChatPanel
-      aiSettingsOpen={aiSettingsOpen}
-      configured={configured}
-      draftModel={model}
-      error={error}
-      fieldsById={fieldsById}
-      idPrefix={idPrefix}
-      input={composer.value}
-      composerKey={composer.key}
-      interaction={{
-        canRetry,
-        canSubmit,
-        busy: isBusy,
-        statusLoading: statusQuery.isLoading,
-      }}
-      locale={locale}
-      modelLabel={modelLabel}
-      modelName={statusQuery.data?.model ?? null}
-      onAiSettingsOpenChange={setAiSettingsOpen}
-      onChange={(value) => {
-        setComposer((prev) => ({ ...prev, value }));
-      }}
-      onClose={handleClose}
-      onOpenSettings={() => {
-        setAiSettingsOpen(true);
-      }}
-      onPickPrompt={handlePickPrompt}
-      onRemoveQueued={handleRemoveQueued}
-      onRetry={handleRetry}
-      onStop={handleStop}
-      onSubmit={handleSubmit}
-      persistChat={persistEnabled}
-      onTogglePersist={togglePersist}
-      stopped={stopped}
-      turns={turns}
-      typesBySlug={typesBySlug}
-      readOnly={readOnly}
+    <FormAiChatSheetView
+      open={open}
+      isMobile={isMobile}
+      onOpenChange={onOpenChange}
+      panelProps={panelProps}
     />
   );
 }

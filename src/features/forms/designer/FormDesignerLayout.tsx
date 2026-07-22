@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
+import { useIsMobile } from '@/hooks/use-mobile.ts';
 
 import { FormPreviewTrigger } from '../preview/FormPreviewTrigger.tsx';
 import type { FormVersion } from '../types.ts';
@@ -17,6 +18,7 @@ import { ChatAiTrigger as FormAiChatTrigger } from './ai-chat/ChatMentionLists.t
 import { ConcurrencyBanner } from './ConcurrencyBanner.tsx';
 import { FieldCanvas } from './FieldCanvas.tsx';
 import { FieldInspector } from './FieldInspector.tsx';
+import { MobileDesignerFab } from './MobileDesignerFab.tsx';
 import { useFormDesignerLayout } from './useFormDesignerLayout.ts';
 import { ValidationPanel } from './ValidationPanel.tsx';
 
@@ -46,9 +48,15 @@ export function FormDesignerLayout({
   const layout = useFormDesignerLayout(code, initialDraft);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [aiChatOpen, setAiChatOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const isBootstrapping =
     layout.draft.isLoading || layout.draft.loadError !== null;
+
+  function openChat(): void {
+    layout.setShowAdvanced(false);
+    setAiChatOpen(true);
+  }
 
   function renderMain(): JSX.Element {
     if (layout.draft.isLoading) {
@@ -176,6 +184,18 @@ export function FormDesignerLayout({
             onChangeRules={layout.handleInspectorChangeRules}
           />
         ) : null}
+
+        {/* Mobile floating action buttons: chat (always visible) and field
+            settings (only when a question is selected). The desktop header
+            trigger is hidden below `md`, so the FAB is the sole entry point
+            on small viewports. */}
+        {isMobile && !isBootstrapping ? (
+          <MobileDesignerFab
+            layout={layout}
+            aiChatOpen={aiChatOpen}
+            onOpenChat={openChat}
+          />
+        ) : null}
       </div>
     );
   }
@@ -218,18 +238,22 @@ export function FormDesignerLayout({
 
           {isBootstrapping ? null : (
             <>
-              <FormAiChatTrigger
-                disabled={layout.draft.isReadOnly}
-                onOpen={() => {
-                  setAiChatOpen((open) => {
-                    const next = !open;
-                    if (next) {
-                      layout.setShowAdvanced(false);
-                    }
-                    return next;
-                  });
-                }}
-              />
+              {/* The header chat trigger is desktop-only. The mobile FAB at the
+                  bottom of the canvas replaces it on small viewports. */}
+              <div className='hidden md:block'>
+                <FormAiChatTrigger
+                  disabled={layout.draft.isReadOnly}
+                  onOpen={() => {
+                    setAiChatOpen((open) => {
+                      const next = !open;
+                      if (next) {
+                        layout.setShowAdvanced(false);
+                      }
+                      return next;
+                    });
+                  }}
+                />
+              </div>
 
               <FormPreviewTrigger
                 onOpen={() => {

@@ -146,7 +146,7 @@ export function FieldInspectorBody({
             size='icon-sm'
             aria-label={tc('actions.close')}
             onClick={onClose}
-            className='absolute top-2.5 right-2.5 rounded-full'
+            className='absolute top-2.5 right-2.5 hidden rounded-full md:flex'
           >
             <X className='size-4' />
           </Button>

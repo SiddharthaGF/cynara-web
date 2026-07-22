@@ -23,7 +23,7 @@ export interface FormAiChatInteraction {
   statusLoading: boolean;
 }
 
-interface FormAiChatPanelProps {
+export interface FormAiChatPanelProps {
   aiSettingsOpen: boolean;
   configured: boolean;
   draftModel: FormDraftModel;
@@ -84,7 +84,6 @@ export function FormAiChatPanel({
   readOnly,
 }: FormAiChatPanelProps): JSX.Element {
   const { t } = useTranslation('designer');
-  const { canRetry, canSubmit, busy, statusLoading } = interaction;
 
   return (
     <aside
@@ -93,6 +92,78 @@ export function FormAiChatPanel({
       )}
       aria-label={t('ai.title')}
     >
+      <FormAiChatPanelBody
+        aiSettingsOpen={aiSettingsOpen}
+        configured={configured}
+        draftModel={draftModel}
+        error={error}
+        fieldsById={fieldsById}
+        idPrefix={idPrefix}
+        input={input}
+        composerKey={composerKey}
+        interaction={interaction}
+        locale={locale}
+        modelLabel={modelLabel}
+        modelName={modelName}
+        onAiSettingsOpenChange={onAiSettingsOpenChange}
+        onChange={onChange}
+        onClose={onClose}
+        onOpenSettings={onOpenSettings}
+        onPickPrompt={onPickPrompt}
+        onRemoveQueued={onRemoveQueued}
+        onRetry={onRetry}
+        onStop={onStop}
+        onSubmit={onSubmit}
+        onTogglePersist={onTogglePersist}
+        persistChat={persistChat}
+        stopped={stopped}
+        turns={turns}
+        typesBySlug={typesBySlug}
+        readOnly={readOnly}
+      />
+    </aside>
+  );
+}
+
+/**
+ * Body-only variant of the chat panel. The desktop layout wraps this in an
+ * `<aside>` rail; the mobile floating panel mounts it directly inside a sheet
+ * so it stretches to the available width.
+ */
+export function FormAiChatPanelBody({
+  aiSettingsOpen,
+  configured,
+  draftModel,
+  error,
+  fieldsById,
+  idPrefix,
+  input,
+  composerKey,
+  interaction,
+  locale,
+  modelLabel,
+  modelName,
+  onAiSettingsOpenChange,
+  onChange,
+  onClose,
+  onOpenSettings,
+  onPickPrompt,
+  onRemoveQueued,
+  onRetry,
+  onStop,
+  onSubmit,
+  onTogglePersist,
+  persistChat,
+  stopped,
+  turns,
+  typesBySlug,
+  readOnly,
+}: FormAiChatPanelProps): JSX.Element {
+  const { t } = useTranslation('designer');
+  const { canRetry, canSubmit, busy, statusLoading } = interaction;
+
+  return (
+    <>
       <header className='ai-chat-header shrink-0'>
         <div className='relative flex items-center gap-2 px-4 py-3 pr-12'>
           <h2 className='ai-chat-title truncate'>{t('ai.title')}</h2>
@@ -137,7 +208,7 @@ export function FormAiChatPanel({
             type='button'
             variant='ghost'
             size='icon-sm'
-            className='absolute top-2.5 right-2.5 rounded-full'
+            className='absolute top-2.5 right-2.5 rounded-full md:flex'
             aria-label={t('ai.close')}
             onClick={onClose}
           >
@@ -211,6 +282,6 @@ export function FormAiChatPanel({
         open={aiSettingsOpen}
         onOpenChange={onAiSettingsOpenChange}
       />
-    </aside>
+    </>
   );
 }

@@ -326,6 +326,18 @@
       "tabSettings": "Ajustes"
     }
   },
+  "mobile": {
+    "fieldSettings": {
+      "fab": "Abrir ajustes del campo",
+      "fabHint": "Inspecciona la pregunta seleccionada",
+      "description": "Presentación, mapeado clínico y reglas de la pregunta seleccionada."
+    },
+    "ai": {
+      "fab": "Abrir chat IA",
+      "fabHint": "Habla con el asistente del formulario",
+      "description": "Conversa con el asistente mientras el lienzo sigue siendo editable."
+    }
+  },
   "ai": {
     "open": "Chat IA",
     "eyebrow": "Asistente de formularios",
