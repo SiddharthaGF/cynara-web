@@ -366,7 +366,6 @@
     "showLess": "Show less",
     "thinking": "Replying…",
     "streamingReply": "Writing reply…",
-    "generatingSchema": "Generating schema changes…",
     "applying": "Generating schema changes…",
     "applied": "Applied to draft",
     "thinkingLabel": "Thought",
@@ -377,6 +376,8 @@
     "close": "Close chat",
     "notConfigured": "AI chat is not configured. Open Settings → AI provider and set the base URL, API key, and model.",
     "configure": "Configure AI",
-    "errorGeneric": "Could not generate the form. Try again."
+    "errorGeneric": "Could not generate the form. Try again.",
+    "persistOn": "Keep chat visible after reload (on)",
+    "persistOff": "Keep chat visible after reload (off)"
   }
 }

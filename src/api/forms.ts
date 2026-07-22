@@ -130,10 +130,89 @@ function parseFormAiStreamEvent(data: string): FormAiStreamEvent | null {
     return null;
   }
   try {
-    return JSON.parse(data) as FormAiStreamEvent;
+    const parsed: unknown = JSON.parse(data);
+    if (!isRecord(parsed) || typeof parsed.type !== 'string') {
+      return null;
+    }
+
+    if (parsed.type === 'phase') {
+      if (parsed.phase === 'message' || parsed.phase === 'schema') {
+        return { type: 'phase', phase: parsed.phase };
+      }
+      return null;
+    }
+    if (parsed.type === 'thinking' || parsed.type === 'message') {
+      return typeof parsed.delta === 'string'
+        ? { type: parsed.type, delta: parsed.delta }
+        : null;
+    }
+    if (parsed.type === 'error') {
+      return typeof parsed.message === 'string'
+        ? { type: 'error', message: parsed.message }
+        : null;
+    }
+    if (parsed.type === 'done' && isRecord(parsed.result)) {
+      return {
+        type: 'done',
+        result: {
+          summary: readString(parsed.result, 'summary', 'Summary'),
+          assistantMessage: readString(
+            parsed.result,
+            'assistantMessage',
+            'AssistantMessage',
+          ),
+          thinking: readNullableString(parsed.result, 'thinking', 'Thinking'),
+          clinicalSchemaJson: readString(
+            parsed.result,
+            'clinicalSchemaJson',
+            'ClinicalSchemaJson',
+          ),
+          uiSchemaJson: readString(
+            parsed.result,
+            'uiSchemaJson',
+            'UiSchemaJson',
+          ),
+          rulesSchemaJson: readString(
+            parsed.result,
+            'rulesSchemaJson',
+            'RulesSchemaJson',
+          ),
+        },
+      };
+    }
   } catch {
     return null;
   }
+  return null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function readString(value: Record<string, unknown>, ...keys: string[]): string {
+  for (const key of keys) {
+    if (typeof value[key] === 'string') {
+      return value[key];
+    }
+  }
+  return '';
+}
+
+function readNullableString(
+  value: Record<string, unknown>,
+  ...keys: string[]
+): string | null {
+  for (const key of keys) {
+    const candidate = value[key];
+    if (typeof candidate === 'string') {
+      return candidate;
+    }
+    if (candidate === null) {
+      return null;
+    }
+  }
+  return null;
 }
 
 export type FormAiStreamEvent =
@@ -186,6 +265,39 @@ export async function* streamFormDraftAi(
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  let sawTerminal = false;
+  let lastAssistantDelta = '';
+
+  const processLine = (line: string): FormAiStreamEvent | null => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      return null;
+    }
+    const event = parseFormAiStreamEvent(
+      trimmed.startsWith('data:') ? trimmed.slice(5).trim() : '',
+    );
+    if (!event) {
+      return null;
+    }
+    if (event.type === 'message') {
+      lastAssistantDelta = event.delta;
+    }
+    if (event.type === 'done' || event.type === 'error') {
+      sawTerminal = true;
+    }
+    return event;
+  };
+
+  const processLines = (rawLines: string[]): FormAiStreamEvent[] => {
+    const out: FormAiStreamEvent[] = [];
+    for (const line of rawLines) {
+      const ev = processLine(line);
+      if (ev) {
+        out.push(ev);
+      }
+    }
+    return out;
+  };
 
   try {
     while (true) {
@@ -193,27 +305,48 @@ export async function* streamFormDraftAi(
       // eslint-disable-next-line no-await-in-loop
       const { done, value } = await reader.read();
       if (done) {
+        // Flush decoder bytes and drain any remaining SSE line so the
+        // Terminal `done` event is never silently dropped.
+        buffer += decoder.decode();
+        for (const ev of processLines(buffer.split('\n'))) {
+          yield ev;
+        }
         break;
       }
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
       buffer = lines.pop() ?? '';
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        const event = parseFormAiStreamEvent(
-          trimmed.startsWith('data:') ? trimmed.slice(5).trim() : '',
-        );
-        if (event) {
-          yield event;
+      let terminalSeen = false;
+      for (const ev of processLines(lines)) {
+        yield ev;
+        if (ev.type === 'done' || ev.type === 'error') {
+          terminalSeen = true;
         }
-        if (event?.type === 'done' || event?.type === 'error') {
-          return;
-        }
+      }
+      if (terminalSeen) {
+        return;
       }
     }
   } finally {
     reader.releaseLock();
+  }
+
+  // Defensive fallback: synthesize a `done` if the server closed the SSE
+  // Stream without sending one (some providers flush a partial `phase:
+  // Schema` then drop the socket). This keeps the UI from staying stuck on
+  // The "writing reply" spinner forever.
+  if (!sawTerminal) {
+    yield {
+      type: 'done',
+      result: {
+        summary: '',
+        assistantMessage: lastAssistantDelta,
+        thinking: null,
+        clinicalSchemaJson: '',
+        uiSchemaJson: '',
+        rulesSchemaJson: '',
+      },
+    };
   }
 }
 

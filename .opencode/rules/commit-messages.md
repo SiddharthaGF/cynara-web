@@ -42,11 +42,13 @@ All commits MUST follow Conventional Commits format:
 ## Rules
 
 1. Use **lowercase** for the description (except proper nouns).
-2. Use **imperative mood** in the description ("add feature", not "added feature").
+2. Use **imperative mood** in the description ("add feature", not "added
+   feature").
 3. Keep the description under **72 characters**.
 4. Do NOT end the description with a period.
 5. Scope is optional but recommended when the change is feature-localized.
-6. A body and footer are allowed but not required. Wrap the body at 72 characters.
+6. A body and footer are allowed but not required. Wrap the body at 72
+   characters.
 7. Reference issue IDs in the footer: `Closes CYN-123` or `Refs CYN-456`.
 
 ## Examples

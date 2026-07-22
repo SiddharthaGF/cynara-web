@@ -1,4 +1,4 @@
-import { Settings2Icon, XIcon } from 'lucide-react';
+import { SaveIcon, SaveOffIcon, Settings2Icon, XIcon } from 'lucide-react';
 import type { FormEvent, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -46,6 +46,8 @@ interface FormAiChatPanelProps {
   onRetry: () => void;
   onStop: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onTogglePersist: () => void;
+  persistChat: boolean;
   stopped: boolean;
   turns: ChatTurn[];
   typesBySlug: Map<string, MentionableFieldType>;
@@ -74,6 +76,8 @@ export function FormAiChatPanel({
   onRetry,
   onStop,
   onSubmit,
+  onTogglePersist,
+  persistChat,
   stopped,
   turns,
   typesBySlug,
@@ -94,6 +98,28 @@ export function FormAiChatPanel({
           <h2 className='ai-chat-title truncate'>{t('ai.title')}</h2>
           {modelName ? (
             <span className='ai-chat-model shrink-0'>{modelName}</span>
+          ) : null}
+          {configured ? (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon-sm'
+              className={cn(
+                'shrink-0 rounded-full text-muted-foreground',
+                persistChat &&
+                  'text-foreground ring-1 ring-inset ring-border/70',
+              )}
+              aria-label={t(persistChat ? 'ai.persistOn' : 'ai.persistOff')}
+              aria-pressed={persistChat}
+              title={t(persistChat ? 'ai.persistOn' : 'ai.persistOff')}
+              onClick={onTogglePersist}
+            >
+              {persistChat ? (
+                <SaveIcon className='size-3.5' />
+              ) : (
+                <SaveOffIcon className='size-3.5' />
+              )}
+            </Button>
           ) : null}
           {configured ? (
             <Button

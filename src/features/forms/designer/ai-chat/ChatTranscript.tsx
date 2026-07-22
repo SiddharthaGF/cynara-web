@@ -1,5 +1,12 @@
 import { ArrowDownIcon, RotateCwIcon } from 'lucide-react';
-import { type JSX, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  type JSX,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
@@ -65,6 +72,26 @@ export function ChatTranscript({
     stickToBottomRef.current = true;
   }
 
+  const scrollLatestUserTurnIntoView = useCallback(
+    (node: HTMLDivElement | null): void => {
+      if (!node) {
+        return;
+      }
+      const root = node.closest('[data-slot="scroll-area"]');
+      const viewport = root?.querySelector<HTMLElement>(
+        '[data-slot="scroll-area-viewport"]',
+      );
+      viewportRef.current = viewport ?? null;
+      stickToBottomRef.current = true;
+      if (viewport) {
+        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'auto' });
+      } else {
+        node.scrollIntoView({ behavior: 'auto', block: 'end' });
+      }
+    },
+    [],
+  );
+
   useLayoutEffect(() => {
     resolveViewport();
   });
@@ -103,6 +130,8 @@ export function ChatTranscript({
     scrollToBottom(isBusy ? 'auto' : 'smooth');
   }, [turns, isBusy, error, stopped]);
 
+  const latestUserTurnId = findLatestUserTurnId(turns);
+
   if (turns.length === 0 && !isBusy) {
     return (
       <div className='min-h-0 flex-1 overflow-hidden'>
@@ -123,6 +152,11 @@ export function ChatTranscript({
           {turns.map((turn) => (
             <div
               key={turn.id}
+              ref={
+                turn.id === latestUserTurnId
+                  ? scrollLatestUserTurnIntoView
+                  : undefined
+              }
               className='min-w-0 shrink-0'
             >
               <ChatTurnMessage
@@ -206,4 +240,14 @@ export function ChatTranscript({
       </Button>
     </div>
   );
+}
+
+function findLatestUserTurnId(turns: ChatTurn[]): string | null {
+  for (let index = turns.length - 1; index >= 0; index -= 1) {
+    const turn = turns[index];
+    if (turn?.role === 'user') {
+      return turn.id;
+    }
+  }
+  return null;
 }

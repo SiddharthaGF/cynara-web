@@ -151,9 +151,7 @@ export function ChatTurnMessage({
           >
             <BubbleContent className='ai-chat-bubble-content flex w-full min-w-[10rem] items-center justify-between gap-3 text-[14px] leading-relaxed'>
               <span className='text-muted-foreground'>
-                {turn.streamPhase === 'schema'
-                  ? t('ai.generatingSchema')
-                  : t('ai.streamingReply')}
+                {t('ai.streamingReply')}
               </span>
               <Spinner className='size-3.5 shrink-0 text-muted-foreground' />
             </BubbleContent>

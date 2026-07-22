@@ -13,7 +13,10 @@ import {
 import type { FormDraftModel } from '@/features/forms/types.ts';
 
 import type { ChatTurn } from './chatTurns.ts';
-import { playNotificationSound } from './playNotificationSound.ts';
+import {
+  playErrorNotificationSound,
+  playNotificationSound,
+} from './playNotificationSound.ts';
 
 export interface PendingChatPayload {
   messages: FormAiChatMessage[];
@@ -30,6 +33,10 @@ export interface QueuedMessage {
 
 interface RunFormAiChatStreamOptions {
   abortRef: MutableRefObject<AbortController | null>;
+  /** Set by the previous stream's stop/abort path so we can suppress the
+   *  "stopped" banner when a newer stream replaces an old one. Cleared on
+   *  every new stream call so only the latest intent matters. */
+  clearStoppedFlag: () => void;
   drainQueue: () => Promise<void>;
   errorGeneric: string;
   formCode: string;
@@ -40,6 +47,10 @@ interface RunFormAiChatStreamOptions {
   onApplyDraft: (next: FormDraftModel) => void;
   payload: PendingChatPayload;
   queueRef: MutableRefObject<QueuedMessage[]>;
+  /** True only when the previous stream was aborted by the user clicking
+   *  Stop. Internal cancels (replaced stream, 60s safety timeout) leave
+   *  this false so we don't show a misleading "generation stopped" banner. */
+  wasUserStopped: boolean;
   setError: Dispatch<SetStateAction<string | null>>;
   setIsBusy: Dispatch<SetStateAction<boolean>>;
   setPendingPayload: Dispatch<SetStateAction<PendingChatPayload | null>>;
@@ -51,6 +62,7 @@ interface RunFormAiChatStreamOptions {
 export async function runFormAiChatStream({
   abortRef,
   clearQueuedTurns,
+  clearStoppedFlag,
   drainQueue,
   errorGeneric,
   formCode,
@@ -61,6 +73,7 @@ export async function runFormAiChatStream({
   onApplyDraft,
   payload,
   queueRef,
+  wasUserStopped,
   setError,
   setIsBusy,
   setPendingPayload,
@@ -73,6 +86,7 @@ export async function runFormAiChatStream({
   setPendingPayload(payload);
   setError(null);
   setStopped(false);
+  clearStoppedFlag();
   setIsBusy(true);
   isBusyRef.current = true;
 
@@ -86,6 +100,17 @@ export async function runFormAiChatStream({
       streaming: true,
     },
   ]);
+  let turnContentSnapshot = '';
+
+  // Safety net: cap any single chat turn at 60s so the UI never gets stuck
+  // On the "writing reply" spinner if the upstream provider hangs without
+  // Sending a terminal event. The controller is aborted, the SSE parser
+  // Drains its buffer, and the synthetic `done` settles the turn.
+  const streamTimeout = setTimeout(() => {
+    if (abortRef.current === controller) {
+      controller.abort();
+    }
+  }, 60_000);
 
   try {
     const serialized = serializeDraft(modelRef.current);
@@ -105,15 +130,13 @@ export async function runFormAiChatStream({
       if (event.type === 'thinking') {
         // Thinking events only indicate that the server is still working.
       } else if (event.type === 'phase') {
-        patchAssistant(setTurns, assistantId, (turn) => ({
-          ...turn,
-          streamPhase: event.phase,
-        }));
+        // Phase hints are unreliable; rely on the assistant
+        // Message + done event for the real state.
       } else if (event.type === 'message') {
+        turnContentSnapshot = `${turnContentSnapshot}${event.delta}`;
         patchAssistant(setTurns, assistantId, (turn) => ({
           ...turn,
           content: `${turn.content}${event.delta}`,
-          streamPhase: turn.streamPhase ?? 'message',
         }));
       } else if (event.type === 'error') {
         throw new Error(event.message);
@@ -123,15 +146,26 @@ export async function runFormAiChatStream({
           before.clinicalSchemaJson !== event.result.clinicalSchemaJson ||
           before.uiSchemaJson !== (event.result.uiSchemaJson ?? null) ||
           before.rulesSchemaJson !== (event.result.rulesSchemaJson ?? null);
+        const finalContent =
+          event.result.assistantMessage || turnContentSnapshot || '';
         patchAssistant(setTurns, assistantId, (turn) => ({
           ...turn,
-          content: event.result.assistantMessage || turn.content,
+          content: finalContent,
           streaming: false,
           draftApplied: draftChanged,
           appliedSummary: draftChanged
             ? event.result.summary.trim() || undefined
             : undefined,
         }));
+        // Re-apply `streaming: false` on the next frame in case React
+        // Batched a competing `setTurns` (from a queued drain, etc.) after
+        // This patch. This guarantees the spinner stops even when concurrent
+        // Rendering reorders state updates around the `done` handler.
+        requestAnimationFrame(() => {
+          patchAssistant(setTurns, assistantId, (turn) =>
+            turn.streaming ? { ...turn, streaming: false } : turn,
+          );
+        });
         if (draftChanged) {
           onApplyDraft(
             parseDraft({
@@ -165,7 +199,14 @@ export async function runFormAiChatStream({
 
     if (isRequestAborted(err)) {
       setError(null);
-      setStopped(true);
+      // Only surface the "generation stopped" banner when the user
+      // Explicitly hit Stop. Replaced streams and the 60s safety timeout
+      // Should not leave a stale card on screen.
+      if (wasUserStopped) {
+        setStopped(true);
+      } else {
+        setStopped(false);
+      }
       // Keep queue for after stop settles — still drain next.
     } else {
       setStopped(false);
@@ -176,8 +217,20 @@ export async function runFormAiChatStream({
       }
       // On hard error, clear queue so we don't cascade failures.
       clearQueuedTurns();
+      playErrorNotificationSound();
     }
+    // Force `streaming: false` defensively so the UI spinner stops even
+    // When the assistant turn somehow survives the catch block above (for
+    // Example React batched a state update that re-added it via the queue).
+    setTurns((current) =>
+      current.map((turn) =>
+        turn.id === assistantId && turn.streaming
+          ? { ...turn, streaming: false }
+          : turn,
+      ),
+    );
   } finally {
+    clearTimeout(streamTimeout);
     if (abortRef.current === controller) {
       abortRef.current = null;
     }

@@ -126,7 +126,7 @@ export function FormDesignerLayout({
           </main>
         </ScrollArea>
 
-        {aiChatOpen ? (
+        {isBootstrapping ? null : (
           <Suspense fallback={null}>
             <LazyFormAiChatSheet
               open={aiChatOpen}
@@ -153,7 +153,7 @@ export function FormDesignerLayout({
               }}
             />
           </Suspense>
-        ) : null}
+        )}
 
         {layout.selectedField ? (
           <FieldInspector

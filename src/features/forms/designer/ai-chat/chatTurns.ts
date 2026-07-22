@@ -7,8 +7,6 @@ export interface ChatTurn {
   queued?: boolean;
   /** True while SSE tokens are still arriving. */
   streaming?: boolean;
-  /** Stream phase after early assistantMessage (schema generation). */
-  streamPhase?: 'message' | 'schema';
   /** True when this turn updated the open form draft. */
   draftApplied?: boolean;
   /** Short designer-facing note about what was applied. */
@@ -29,4 +27,15 @@ export function toApiMessages(
       },
     ];
   });
+}
+
+/**
+ * Same shape as `toApiMessages` but typed against the canonical
+ * `FormAiChatMessage`. Lets the rest of the chat pipeline talk to the API
+ * types directly without re-mapping in every call site.
+ */
+export function turnsToFormAiMessages(
+  nextTurns: ChatTurn[],
+): { role: 'user' | 'assistant'; content: string }[] {
+  return toApiMessages(nextTurns);
 }

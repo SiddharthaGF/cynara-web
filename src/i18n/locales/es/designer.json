@@ -366,7 +366,6 @@
     "showLess": "Mostrar menos",
     "thinking": "Respondiendo…",
     "streamingReply": "Escribiendo respuesta…",
-    "generatingSchema": "Generando cambios del esquema…",
     "applying": "Generando cambios del esquema…",
     "applied": "Aplicado al borrador",
     "thinkingLabel": "Pensó",
@@ -377,6 +376,8 @@
     "close": "Cerrar chat",
     "notConfigured": "El chat IA no está configurado. Abre Ajustes → Proveedor de IA y define la base URL, la API key y el modelo.",
     "configure": "Configurar IA",
-    "errorGeneric": "No se pudo generar el formulario. Inténtalo de nuevo."
+    "errorGeneric": "No se pudo generar el formulario. Inténtalo de nuevo.",
+    "persistOn": "Mantener el chat visible al recargar (activado)",
+    "persistOff": "Mantener el chat visible al recargar (desactivado)"
   }
 }

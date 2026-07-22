@@ -1,5 +1,3 @@
 {
-  "plugin": [
-    "opencode-rules@latest"
-  ]
+  "plugin": ["opencode-rules@latest"]
 }
