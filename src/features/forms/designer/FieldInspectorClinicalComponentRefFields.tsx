@@ -1,16 +1,15 @@
 import type { JSX } from 'react';
 
 import { Field, FieldLabel } from '@/components/ui/field.tsx';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select.tsx';
 
 import type { ClinicalComponentRefFieldsProps } from './fieldInspectorClinicalTypes.ts';
 import { ComponentDependencyHint } from './FieldInspectorFieldEditors.tsx';
+import {
+  InspectorSelect,
+  InspectorSelectContent,
+  InspectorSelectItem,
+  InspectorSelectTrigger,
+} from './InspectorSelect.tsx';
 
 export function ClinicalComponentRefFields({
   field,
@@ -28,30 +27,33 @@ export function ClinicalComponentRefFields({
         {(fieldApi) => (
           <Field>
             <FieldLabel>{t('inspector.clinicalBlock')}</FieldLabel>
-            <Select
+            <InspectorSelect
               value={fieldApi.state.value}
               onValueChange={(value) => {
                 fieldApi.handleChange(value ?? '');
               }}
             >
-              <SelectTrigger className='w-full'>
-                <SelectValue placeholder={t('inspector.selectBlock')}>
-                  {components.find(
-                    (component) => component.code === fieldApi.state.value,
-                  )?.name ?? ''}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
+              <InspectorSelectTrigger className='w-full'>
+                {components.find(
+                  (component) => component.code === fieldApi.state.value,
+                )?.name ?? ''}
+              </InspectorSelectTrigger>
+              <InspectorSelectContent>
                 {components.map((component) => (
-                  <SelectItem
+                  <InspectorSelectItem
                     key={component.code}
                     value={component.code}
                   >
-                    {component.name}
-                  </SelectItem>
+                    <span className='flex min-w-0 flex-col gap-0 break-words'>
+                      <span>{component.name}</span>
+                      <span className='font-mono text-[10px] text-muted-foreground'>
+                        {component.code}
+                      </span>
+                    </span>
+                  </InspectorSelectItem>
                 ))}
-              </SelectContent>
-            </Select>
+              </InspectorSelectContent>
+            </InspectorSelect>
           </Field>
         )}
       </form.Field>
@@ -59,33 +61,33 @@ export function ClinicalComponentRefFields({
         {(fieldApi) => (
           <Field>
             <FieldLabel>{t('inspector.version')}</FieldLabel>
-            <Select
+            <InspectorSelect
               value={fieldApi.state.value}
               onValueChange={(value) => {
                 fieldApi.handleChange(value ?? '');
               }}
             >
-              <SelectTrigger className='w-full'>
-                <SelectValue placeholder={t('inspector.latestDraft')}>
-                  {fieldApi.state.value === ''
-                    ? t('inspector.latestDraft')
-                    : fieldApi.state.value}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value=''>{t('inspector.latestDraft')}</SelectItem>
+              <InspectorSelectTrigger className='w-full'>
+                {fieldApi.state.value === ''
+                  ? t('inspector.latestDraft')
+                  : fieldApi.state.value}
+              </InspectorSelectTrigger>
+              <InspectorSelectContent>
+                <InspectorSelectItem value=''>
+                  {t('inspector.latestDraft')}
+                </InspectorSelectItem>
                 {components
                   .find((item) => item.code === field.componentCode)
                   ?.publishedVersions.map((version) => (
-                    <SelectItem
+                    <InspectorSelectItem
                       key={version}
                       value={version}
                     >
                       {version}
-                    </SelectItem>
+                    </InspectorSelectItem>
                   ))}
-              </SelectContent>
-            </Select>
+              </InspectorSelectContent>
+            </InspectorSelect>
           </Field>
         )}
       </form.Field>

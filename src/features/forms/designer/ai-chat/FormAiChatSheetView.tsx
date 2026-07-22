@@ -1,13 +1,7 @@
-import type { JSX } from 'react';
-import { useTranslation } from 'react-i18next';
+import type { CSSProperties, JSX } from 'react';
 
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet.tsx';
+import { Sheet, SheetContent } from '@/components/ui/sheet.tsx';
+import { useKeyboardInset } from '@/hooks/use-keyboard-inset.ts';
 
 import {
   FormAiChatPanel,
@@ -30,13 +24,22 @@ export function FormAiChatSheetView({
   onOpenChange,
   panelProps,
 }: FormAiChatSheetViewProps): JSX.Element | null {
-  const { t } = useTranslation('designer');
+  const keyboardInset = useKeyboardInset();
 
   if (!open) {
     return null;
   }
 
   if (isMobile) {
+    // Cap the sheet so it never exceeds the visual viewport minus the soft
+    // Keyboard inset. The body itself drops its in-body close X (the sheet
+    // Provides one) and keeps title + model + persist + settings inline.
+    const insetPx = `${Math.max(0, keyboardInset)}px`;
+    const sheetStyle: CSSProperties = {
+      height: `calc(100dvh - ${insetPx})`,
+      maxHeight: `calc(100dvh - ${insetPx})`,
+      paddingBottom: insetPx,
+    };
     return (
       <Sheet
         open={open}
@@ -46,13 +49,14 @@ export function FormAiChatSheetView({
         <SheetContent
           side='bottom'
           showCloseButton
-          className='inset-x-0 bottom-0 flex max-h-[85dvh] flex-col overflow-hidden rounded-t-2xl border-t p-0'
+          fullHeight
+          style={sheetStyle}
+          className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
         >
-          <SheetHeader className='sr-only'>
-            <SheetTitle>{t('ai.title')}</SheetTitle>
-            <SheetDescription>{t('mobile.ai.description')}</SheetDescription>
-          </SheetHeader>
-          <FormAiChatPanelBody {...panelProps} />
+          <FormAiChatPanelBody
+            compactInBodyHeader
+            {...panelProps}
+          />
         </SheetContent>
       </Sheet>
     );

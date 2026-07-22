@@ -1,10 +1,26 @@
-import { SaveIcon, SaveOffIcon, Settings2Icon, XIcon } from 'lucide-react';
+import {
+  SaveIcon,
+  SaveOffIcon,
+  Settings2Icon,
+  Trash2Icon,
+  XIcon,
+} from 'lucide-react';
 import type { FormEvent, JSX } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AiSettingsDialog } from '@/components/ai-settings-dialog.tsx';
 import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { Button } from '@/components/ui/button.tsx';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
 import type { FormDraftModel } from '@/features/forms/types.ts';
 import { cn } from '@/lib/utils.ts';
@@ -39,6 +55,7 @@ export interface FormAiChatPanelProps {
   modelName: string | null;
   onAiSettingsOpenChange: (open: boolean) => void;
   onChange: (value: string) => void;
+  onClear: () => void;
   onClose: () => void;
   onOpenSettings: () => void;
   onPickPrompt: (prompt: string) => void;
@@ -52,6 +69,12 @@ export interface FormAiChatPanelProps {
   turns: ChatTurn[];
   typesBySlug: Map<string, MentionableFieldType>;
   readOnly: boolean;
+  /**
+   * When true, render the header inline with the in-body controls (mobile
+   * surface) and skip the standalone close `X` since the parent Sheet
+   * already provides one.
+   */
+  compactInBodyHeader?: boolean;
 }
 
 export function FormAiChatPanel({
@@ -69,6 +92,7 @@ export function FormAiChatPanel({
   modelName,
   onAiSettingsOpenChange,
   onChange,
+  onClear,
   onClose,
   onOpenSettings,
   onPickPrompt,
@@ -107,6 +131,7 @@ export function FormAiChatPanel({
         modelName={modelName}
         onAiSettingsOpenChange={onAiSettingsOpenChange}
         onChange={onChange}
+        onClear={onClear}
         onClose={onClose}
         onOpenSettings={onOpenSettings}
         onPickPrompt={onPickPrompt}
@@ -145,6 +170,7 @@ export function FormAiChatPanelBody({
   modelName,
   onAiSettingsOpenChange,
   onChange,
+  onClear,
   onClose,
   onOpenSettings,
   onPickPrompt,
@@ -158,14 +184,33 @@ export function FormAiChatPanelBody({
   turns,
   typesBySlug,
   readOnly,
+  compactInBodyHeader = false,
 }: FormAiChatPanelProps): JSX.Element {
   const { t } = useTranslation('designer');
   const { canRetry, canSubmit, busy, statusLoading } = interaction;
+  const [clearOpen, setClearOpen] = useState(false);
+  const hasConversation =
+    turns.length > 0 || input.length > 0 || error !== null;
+
+  function handleClear(): void {
+    setClearOpen(false);
+    onClear();
+  }
 
   return (
     <>
-      <header className='ai-chat-header shrink-0'>
-        <div className='relative flex items-center gap-2 px-4 py-3 pr-12'>
+      <header
+        className={cn(
+          'ai-chat-header shrink-0',
+          compactInBodyHeader && 'border-b border-border/60',
+        )}
+      >
+        <div
+          className={cn(
+            'relative flex items-center gap-2 px-4 py-3 pr-12',
+            compactInBodyHeader && 'pr-12',
+          )}
+        >
           <h2 className='ai-chat-title truncate'>{t('ai.title')}</h2>
           {modelName ? (
             <span className='ai-chat-model shrink-0'>{modelName}</span>
@@ -198,22 +243,40 @@ export function FormAiChatPanelBody({
               variant='ghost'
               size='icon-sm'
               className='shrink-0 rounded-full text-muted-foreground'
+              aria-label={t('ai.clearHint')}
+              title={t('ai.clearHint')}
+              disabled={!hasConversation}
+              onClick={() => {
+                setClearOpen(true);
+              }}
+            >
+              <Trash2Icon className='size-3.5' />
+            </Button>
+          ) : null}
+          {configured ? (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon-sm'
+              className='shrink-0 rounded-full text-muted-foreground'
               aria-label={t('ai.configure')}
               onClick={onOpenSettings}
             >
               <Settings2Icon className='size-3.5' />
             </Button>
           ) : null}
-          <Button
-            type='button'
-            variant='ghost'
-            size='icon-sm'
-            className='absolute top-2.5 right-2.5 rounded-full md:flex'
-            aria-label={t('ai.close')}
-            onClick={onClose}
-          >
-            <XIcon className='size-4' />
-          </Button>
+          {compactInBodyHeader ? null : (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon-sm'
+              className='absolute top-2.5 right-2.5 rounded-full md:flex'
+              aria-label={t('ai.close')}
+              onClick={onClose}
+            >
+              <XIcon className='size-4' />
+            </Button>
+          )}
         </div>
       </header>
 
@@ -282,6 +345,31 @@ export function FormAiChatPanelBody({
         open={aiSettingsOpen}
         onOpenChange={onAiSettingsOpenChange}
       />
+
+      <Dialog
+        open={clearOpen}
+        onOpenChange={setClearOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('ai.clearConfirmTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('ai.clearConfirmDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button variant='outline' />}>
+              {t('ai.clearConfirmCancel')}
+            </DialogClose>
+            <Button
+              variant='destructive'
+              onClick={handleClear}
+            >
+              {t('ai.clearConfirmAction')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -130,6 +130,26 @@ export function ChatTranscript({
     scrollToBottom(isBusy ? 'auto' : 'smooth');
   }, [turns, isBusy, error, stopped]);
 
+  useEffect(() => {
+    const viewport = resolveViewport();
+    if (!viewport || typeof ResizeObserver === 'undefined') {
+      return undefined;
+    }
+    // Keep the latest message visible when the sheet height changes (e.g. when
+    // The soft keyboard opens/closes on mobile). Only re-snap if the user is
+    // Currently near the bottom — never yank them away from content above.
+    const observer = new ResizeObserver(() => {
+      if (!stickToBottomRef.current) {
+        return;
+      }
+      viewport.scrollTop = viewport.scrollHeight;
+    });
+    observer.observe(viewport);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   const latestUserTurnId = findLatestUserTurnId(turns);
 
   if (turns.length === 0 && !isBusy) {

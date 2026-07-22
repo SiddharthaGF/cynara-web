@@ -13,6 +13,13 @@ export interface FormRendererContext {
   showValidation: boolean;
   evaluation: FormRuleEvaluationResult;
   fieldErrors: Record<string, string[]>;
+  /**
+   * When true, fields whose visibility rule currently resolves to false are
+   * still rendered in the preview (with a "conditional" badge and a muted
+   * surface) so authors can see every authored field. Defaults to false so
+   * existing consumers behave as before.
+   */
+  showConditionalFields?: boolean;
   onValueChange: (code: string, value: unknown) => void;
   onRepeaterRowChange: (
     repeaterCode: string,

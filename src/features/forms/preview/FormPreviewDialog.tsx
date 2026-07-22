@@ -1,5 +1,5 @@
-import { ChevronsRight, FlaskConical } from 'lucide-react';
-import { useState, type JSX } from 'react';
+import { ChevronsRight, EyeIcon, FlaskConical } from 'lucide-react';
+import { useState, type CSSProperties, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PlainPreviewFrame } from '@/components/device-frames/index.ts';
@@ -13,6 +13,12 @@ import {
 } from '@/components/ui/dialog.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet.tsx';
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -24,6 +30,9 @@ import {
 } from '@/features/forms/renderer/FormRenderer.tsx';
 import type { UseFormRendererReturn } from '@/features/forms/renderer/useFormRenderer.ts';
 import type { FormDraftModel } from '@/features/forms/types.ts';
+import { useKeyboardInset } from '@/hooks/use-keyboard-inset.ts';
+import { useIsMobile } from '@/hooks/use-mobile.ts';
+import { cn } from '@/lib/utils.ts';
 
 import { DevicePreviewDialog } from './DevicePreviewDialog.tsx';
 import { FormJsonExportMenu } from './FormJsonExportMenu.tsx';
@@ -44,6 +53,71 @@ export function FormPreviewDialog({
   model,
 }: FormPreviewDialogProps): JSX.Element {
   const { t } = useTranslation('designer');
+  const isMobile = useIsMobile();
+  const keyboardInset = useKeyboardInset();
+
+  if (!open) {
+    return isMobile ? (
+      <Sheet
+        open={false}
+        onOpenChange={onOpenChange}
+      >
+        {null}
+      </Sheet>
+    ) : (
+      <Dialog
+        open={false}
+        onOpenChange={onOpenChange}
+      >
+        {null}
+      </Dialog>
+    );
+  }
+
+  if (isMobile) {
+    // Subtract the soft-keyboard height from the bottom padding so the
+    // Content (preview body) stays above the keyboard. The sheet itself
+    // Stretches to the visual viewport; max-height uses an un-mixed `calc`
+    // To avoid the browser serialising it as `0px + ...` and producing
+    // Unexpected sizing on some engines.
+    const insetPx = `${Math.max(0, keyboardInset)}px`;
+    const sheetStyle: CSSProperties = {
+      maxHeight: `calc(100dvh - ${insetPx})`,
+      height: `calc(100dvh - ${insetPx})`,
+      paddingBottom: insetPx,
+    };
+    return (
+      <Sheet
+        open={open}
+        onOpenChange={onOpenChange}
+        modal
+      >
+        <SheetContent
+          side='bottom'
+          showCloseButton
+          fullHeight
+          style={sheetStyle}
+          className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
+        >
+          <SheetHeader
+            style={{ paddingRight: 'calc(var(--kb-safe) + 2.5rem)' }}
+            className='flex flex-row items-center justify-between gap-2 border-b px-4 py-2.5'
+          >
+            <div className='flex min-w-0 items-center gap-2'>
+              <FlaskConical className='size-4 text-primary' />
+              <SheetTitle className='text-sm font-semibold'>
+                {t('formPreview.title')}
+              </SheetTitle>
+            </div>
+          </SheetHeader>
+          <FormPreviewBody
+            formCode={formCode}
+            model={model}
+          />
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
     <Dialog
@@ -67,12 +141,10 @@ export function FormPreviewDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {open ? (
-          <FormPreviewBody
-            formCode={formCode}
-            model={model}
-          />
-        ) : null}
+        <FormPreviewBody
+          formCode={formCode}
+          model={model}
+        />
       </DialogContent>
     </Dialog>
   );
@@ -87,6 +159,7 @@ function FormPreviewBody({
 }): JSX.Element {
   const { t } = useTranslation('designer');
   const [activeTab, setActiveTab] = useState('preview');
+  const [showConditional, setShowConditional] = useState(false);
   const renderer = useFormRenderer({ model, readOnly: false });
 
   return (
@@ -100,10 +173,10 @@ function FormPreviewBody({
       className='flex min-h-0 flex-1 flex-col gap-0 overflow-hidden'
     >
       <div className='canvas-grid preview-stage relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-b-xl'>
-        <div className='flex shrink-0 items-center justify-between gap-3 border-b border-border/30 px-4 pt-3 pb-2 sm:px-5'>
+        <div className='flex shrink-0 flex-col gap-2 border-b border-border/30 px-3 pt-2.5 pb-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-5 sm:pt-3 sm:pb-2'>
           <TabsList
             variant='line'
-            className='h-9 rounded-none bg-transparent px-1'
+            className='h-9 shrink-0 rounded-none bg-transparent px-1'
           >
             <TabsTrigger
               value='preview'
@@ -119,18 +192,38 @@ function FormPreviewBody({
             </TabsTrigger>
           </TabsList>
 
-          {activeTab === 'preview' ? (
-            <DevicePreviewLauncher
-              formCode={formCode}
-              model={model}
-              renderer={renderer}
-            />
-          ) : (
-            <FormJsonExportMenu
-              formCode={formCode}
-              model={model}
-            />
-          )}
+          <div className='flex min-w-0 flex-wrap items-center gap-2 sm:flex-nowrap sm:justify-end'>
+            <Button
+              type='button'
+              variant={showConditional ? 'default' : 'outline'}
+              size='sm'
+              className={cn(
+                'h-8 shrink-0 gap-1.5 whitespace-nowrap px-2.5 text-xs shadow-none',
+                showConditional && 'shadow-primary/15',
+              )}
+              aria-pressed={showConditional}
+              title={t('formPreview.showAllHint')}
+              onClick={() => {
+                setShowConditional((current) => !current);
+              }}
+            >
+              <EyeIcon className='size-3.5' />
+              <span>{t('formPreview.showAll')}</span>
+            </Button>
+
+            {activeTab === 'preview' ? (
+              <DevicePreviewLauncher
+                formCode={formCode}
+                model={model}
+                renderer={renderer}
+              />
+            ) : (
+              <FormJsonExportMenu
+                formCode={formCode}
+                model={model}
+              />
+            )}
+          </div>
         </div>
 
         <div className='relative h-0 min-h-0 flex-1 overflow-hidden'>
@@ -143,6 +236,7 @@ function FormPreviewBody({
                 <FormRendererView
                   model={model}
                   renderer={renderer}
+                  showConditionalFields={showConditional}
                 />
               </PlainPreviewFrame>
             </div>

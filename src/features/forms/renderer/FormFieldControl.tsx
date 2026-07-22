@@ -1,5 +1,8 @@
+import { EyeOffIcon } from 'lucide-react';
 import type { JSX } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { Badge } from '@/components/ui/badge.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
 import {
   Field,
@@ -38,13 +41,19 @@ export function FormFieldControl({
   context,
   repeaterPath,
 }: FormFieldControlProps): JSX.Element | null {
+  const { t } = useTranslation('designer');
   const visible = context.evaluation.visibility[field.id] ?? true;
-  if (!visible) {
+  const isConditional = !visible;
+  // When the preview asks to surface every authored field, render the field
+  // Even when its visibility rule currently hides it. The field is rendered
+  // Muted with a "conditional" badge so authors can still see and tweak it.
+  if (!visible && !context.showConditionalFields) {
     return null;
   }
 
-  const enabled =
-    !context.readOnly && (context.evaluation.enabled[field.id] ?? true);
+  const enabled = isConditional
+    ? false
+    : !context.readOnly && (context.evaluation.enabled[field.id] ?? true);
   const required = context.evaluation.required[field.id] ?? false;
   const errors =
     context.fieldErrors[
@@ -90,9 +99,13 @@ export function FormFieldControl({
         className={cn(
           '@container/field min-w-0',
           widthClass(presentation?.width),
+          isConditional && 'opacity-60',
         )}
       >
-        <FieldLabel>{label}</FieldLabel>
+        <div className='flex flex-wrap items-center gap-2'>
+          <FieldLabel className='flex-1'>{label}</FieldLabel>
+          {isConditional ? <ConditionalBadge label={t} /> : null}
+        </div>
         <FieldDescription>
           {field.componentCode || 'Clinical block'}
         </FieldDescription>
@@ -111,12 +124,14 @@ export function FormFieldControl({
   const fieldClassName = cn(
     '@container/field min-w-0',
     widthClass(presentation?.width),
+    isConditional && 'opacity-60',
   );
   const labelNode = (
     <>
       {label}
       {isCalculated ? <CalculatedFieldLabelSuffix /> : null}
       {required ? <span className='text-destructive'> *</span> : null}
+      {isConditional ? <ConditionalBadge label={t} /> : null}
     </>
   );
 
@@ -201,5 +216,21 @@ export function FormFieldControl({
         <FieldError errors={errors.map((message) => ({ message }))} />
       ) : null}
     </Field>
+  );
+}
+
+function ConditionalBadge({
+  label,
+}: {
+  label: (key: string) => string;
+}): JSX.Element {
+  return (
+    <Badge
+      variant='outline'
+      className='ml-2 inline-flex items-center gap-1 border-amber-500/60 bg-amber-500/10 px-1.5 py-0 text-[10px] font-medium text-amber-700 dark:text-amber-300'
+    >
+      <EyeOffIcon className='size-3' />
+      {label('formPreview.conditionalBadge')}
+    </Badge>
   );
 }

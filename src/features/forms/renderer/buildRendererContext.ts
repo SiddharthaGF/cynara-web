@@ -6,6 +6,7 @@ import type { UseFormRendererReturn } from './useFormRenderer.ts';
 export function buildRendererContext(
   model: FormDraftModel,
   renderer: UseFormRendererReturn,
+  options?: { showConditionalFields?: boolean },
 ): FormRendererContext {
   return {
     model,
@@ -14,6 +15,7 @@ export function buildRendererContext(
     showValidation: renderer.showValidation,
     evaluation: renderer.evaluation,
     fieldErrors: renderer.fieldErrors,
+    showConditionalFields: options?.showConditionalFields ?? false,
     onValueChange: renderer.onValueChange,
     onRepeaterRowChange: renderer.onRepeaterRowChange,
     onAddRepeaterRow: renderer.onAddRepeaterRow,

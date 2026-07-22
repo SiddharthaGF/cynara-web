@@ -42,6 +42,11 @@ interface FieldInspectorBodyProps {
   onChangePresentation: (patch: Partial<FieldPresentation>) => void;
   onChangeRules: (patch: Partial<FieldRules>) => void;
   onClose: () => void;
+  /**
+   * When true (mobile sheet surface), the in-body close X is omitted because
+   * the parent sheet already provides one.
+   */
+  hideCloseButton?: boolean;
   readOnly?: boolean;
 }
 
@@ -56,6 +61,7 @@ export function FieldInspectorBody({
   onChangePresentation,
   onChangeRules,
   onClose,
+  hideCloseButton = false,
   readOnly = false,
 }: FieldInspectorBodyProps): JSX.Element {
   const { t } = useTranslation('designer');
@@ -146,14 +152,17 @@ export function FieldInspectorBody({
             size='icon-sm'
             aria-label={tc('actions.close')}
             onClick={onClose}
-            className='absolute top-2.5 right-2.5 hidden rounded-full md:flex'
+            className={cn(
+              'absolute top-2.5 right-2.5 hidden rounded-full md:flex',
+              hideCloseButton && 'md:hidden',
+            )}
           >
             <X className='size-4' />
           </Button>
         </div>
       </header>
 
-      <div className='shrink-0 px-3 pt-2 sm:px-4'>
+      <div className='shrink-0 px-4 pt-3 pb-2 sm:px-5'>
         <Tabs
           value={activeTab}
           onValueChange={(value) => {
@@ -164,13 +173,14 @@ export function FieldInspectorBody({
         >
           <TabsList
             variant='line'
-            className='grid w-full grid-cols-3'
+            className='grid h-9 w-full grid-cols-3 rounded-none bg-transparent px-1'
             aria-label={t('inspector.tabNavLabel')}
           >
             {sections.map((section) => (
               <TabsTrigger
                 key={section.id}
                 value={section.id}
+                className='px-4'
               >
                 {section.label}
               </TabsTrigger>

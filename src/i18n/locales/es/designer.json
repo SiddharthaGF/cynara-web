@@ -227,6 +227,9 @@
     "runValidation": "Ejecutar validación",
     "tabPreview": "Formulario",
     "tabRules": "Reglas",
+    "showAll": "Mostrar todos los campos",
+    "showAllHint": "Renderiza los campos ocultos por reglas condicionales para que puedas iterar sobre cada pregunta.",
+    "conditionalBadge": "Condicional",
     "exportJson": "Exportar JSON",
     "copyJson": "Copiar JSON",
     "downloadJson": "Descargar JSON",
@@ -330,12 +333,16 @@
     "fieldSettings": {
       "fab": "Abrir ajustes del campo",
       "fabHint": "Inspecciona la pregunta seleccionada",
-      "description": "Presentación, mapeado clínico y reglas de la pregunta seleccionada."
+      "description": "Presentación, mapeado clínico y reglas de la pregunta seleccionada.",
+      "sheetTitle": "Ajustes del campo",
+      "sheetSubtitle": "UI, mapeo clínico y reglas"
     },
     "ai": {
       "fab": "Abrir chat IA",
       "fabHint": "Habla con el asistente del formulario",
-      "description": "Conversa con el asistente mientras el lienzo sigue siendo editable."
+      "description": "Conversa con el asistente mientras el lienzo sigue siendo editable.",
+      "sheetTitle": "Cynara",
+      "sheetSubtitle": "Habla con el asistente del formulario"
     }
   },
   "ai": {
@@ -352,6 +359,7 @@
       "meds": "Lista de medicamentos con nombre, dosis y frecuencia en un repetidor"
     },
     "placeholder": "Pregunta lo que sea… @ pregunta · # tipo",
+    "placeholderShort": "Pregunta…",
     "composerHint": "Se aplica al borrador abierto",
     "mention": {
       "label": "Citar pregunta del formulario",
@@ -390,6 +398,12 @@
     "configure": "Configurar IA",
     "errorGeneric": "No se pudo generar el formulario. Inténtalo de nuevo.",
     "persistOn": "Mantener el chat visible al recargar (activado)",
-    "persistOff": "Mantener el chat visible al recargar (desactivado)"
+    "persistOff": "Mantener el chat visible al recargar (desactivado)",
+    "clear": "Limpiar chat",
+    "clearHint": "Borra la conversación actual",
+    "clearConfirmTitle": "¿Limpiar el chat?",
+    "clearConfirmDescription": "Esto elimina todos los mensajes de esta conversación. No se puede deshacer.",
+    "clearConfirmAction": "Limpiar chat",
+    "clearConfirmCancel": "Mantener conversación"
   }
 }

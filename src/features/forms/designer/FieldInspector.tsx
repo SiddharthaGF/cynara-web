@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { CSSProperties, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -14,6 +14,7 @@ import type {
   FieldPresentation,
   FieldRules,
 } from '@/features/forms/types.ts';
+import { useKeyboardInset } from '@/hooks/use-keyboard-inset.ts';
 import { useIsMobile } from '@/hooks/use-mobile.ts';
 import { cn } from '@/lib/utils.ts';
 
@@ -56,6 +57,7 @@ export function FieldInspector({
 }: FieldInspectorProps): JSX.Element | null {
   const { t } = useTranslation('designer');
   const isMobile = useIsMobile();
+  const keyboardInset = useKeyboardInset();
 
   if (!open) {
     return null;
@@ -76,11 +78,21 @@ export function FieldInspector({
       onClose={() => {
         onOpenChange(false);
       }}
+      hideCloseButton={isMobile}
       readOnly={readOnly}
     />
   );
 
   if (isMobile) {
+    // Same `min(calc(...), N)` workaround as in FormPreviewDialog: avoid
+    // Mixing the calc() inside min() because some engines serialize the
+    // Resulting max-height too aggressively and the sheet shrinks to a stub.
+    const insetPx = `${Math.max(0, keyboardInset)}px`;
+    const sheetStyle: CSSProperties = {
+      maxHeight: `calc(100dvh - ${insetPx})`,
+      height: `calc(100dvh - ${insetPx})`,
+      paddingBottom: insetPx,
+    };
     return (
       <Sheet
         open={open}
@@ -90,13 +102,22 @@ export function FieldInspector({
         <SheetContent
           side='bottom'
           showCloseButton
-          className='inset-x-0 bottom-0 flex max-h-[90dvh] flex-col overflow-hidden rounded-t-2xl border-t p-0'
+          fullHeight
+          style={sheetStyle}
+          className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
         >
-          <SheetHeader className='sr-only'>
-            <SheetTitle>{t('inspector.caseFile')}</SheetTitle>
-            <SheetDescription>
-              {t('mobile.fieldSettings.description')}
-            </SheetDescription>
+          <SheetHeader
+            style={{ paddingRight: 'calc(var(--kb-safe) + 2.5rem)' }}
+            className='flex flex-row items-center justify-between gap-2 border-b px-4 py-2.5'
+          >
+            <div className='flex min-w-0 flex-col'>
+              <SheetTitle className='text-sm font-semibold'>
+                {t('mobile.fieldSettings.sheetTitle')}
+              </SheetTitle>
+              <SheetDescription className='truncate text-xs text-muted-foreground'>
+                {t('mobile.fieldSettings.sheetSubtitle')}
+              </SheetDescription>
+            </div>
           </SheetHeader>
           {body}
         </SheetContent>

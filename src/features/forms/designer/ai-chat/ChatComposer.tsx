@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/mention.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import type { FieldType, FormDraftModel } from '@/features/forms/types.ts';
+import { useIsMobile } from '@/hooks/use-mobile.ts';
 
 import { ChatComposerActions } from './ChatComposerActions.tsx';
 import { FieldMentionList, TypeMentionList } from './ChatMentionLists.tsx';
@@ -78,10 +79,12 @@ export function ChatComposer({
   onStop,
 }: ChatComposerProps): JSX.Element {
   const { t } = useTranslation('designer');
+  const isMobile = useIsMobile();
   const [mentionedValues, setMentionedValues] = useState<string[]>([]);
   const [mentionOpen, setMentionOpen] = useState(false);
   const [activeTrigger, setActiveTrigger] = useState<'@' | '#'>('@');
   const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
   /**
    * DiceUI stores `trigger` in useState and does not sync prop changes, so we
    * remount when switching @ ↔ #. Guard + restore so remount does not wipe text
@@ -122,10 +125,10 @@ export function ChatComposer({
   );
 
   // Autofocus on open (mount) and restore text/caret after remount (clear / trigger switch).
+  // On mobile (<768px) skip the autofocus — opening the chat must not pop the
+  // Soft keyboard. The user can tap the composer to focus it explicitly.
   useLayoutEffect(() => {
-    const input = wrapRef.current?.querySelector<
-      HTMLTextAreaElement | HTMLInputElement
-    >('[data-slot="mention-input"]');
+    const input = inputRef.current;
     if (!input) {
       return;
     }
@@ -147,10 +150,10 @@ export function ChatComposer({
       return;
     }
 
-    if (!disabled) {
+    if (!disabled && !isMobile) {
       input.focus({ preventScroll: true });
     }
-  }, [disabled, activeTrigger]);
+  }, [disabled, activeTrigger, isMobile]);
 
   function syncTriggerFromCaret(nextValue: string, caret: number): void {
     const detected = detectMentionTrigger(nextValue, caret);
@@ -270,8 +273,11 @@ export function ChatComposer({
           <ScrollArea className='ai-chat-composer-scroll w-full'>
             <MentionTextarea
               // DiceUI does not bind inputValue to the DOM; seed on remount.
+              ref={inputRef}
               defaultValue={value}
-              placeholder={t('ai.placeholder')}
+              placeholder={
+                isMobile ? t('ai.placeholderShort') : t('ai.placeholder')
+              }
               disabled={disabled}
               onKeyDown={handleKeyDown}
               onClick={(event) => {

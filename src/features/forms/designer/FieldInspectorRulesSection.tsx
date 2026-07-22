@@ -10,14 +10,6 @@ import {
   FieldSet,
 } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select.tsx';
 import type { ClinicalField, FieldRules } from '@/features/forms/types.ts';
 import { useSyncedTanstackForm } from '@/lib/useSyncedTanstackForm.ts';
 
@@ -26,6 +18,12 @@ import {
   rulesToFormValues,
   type RulesFormValues,
 } from './fieldInspectorFormUtils.ts';
+import {
+  InspectorSelect,
+  InspectorSelectContent,
+  InspectorSelectItem,
+  InspectorSelectTrigger,
+} from './InspectorSelect.tsx';
 
 export interface RuleFieldOption {
   code: string;
@@ -113,36 +111,39 @@ export function FieldInspectorRulesSection({
               ];
 
               return (
-                <Select
+                <InspectorSelect
                   items={items}
                   value={toSelectValue(fieldApi.state.value)}
                   onValueChange={(value) => {
                     fieldApi.handleChange(fromSelectValue(value));
                   }}
                 >
-                  <SelectTrigger className='w-full'>
-                    <SelectValue placeholder={t('inspector.selectSourceField')}>
+                  <InspectorSelectTrigger className='w-full'>
+                    <SelectValueLabel>
                       {renderSelectedFieldOption(
                         toSelectValue(fieldApi.state.value),
                         otherFields,
                         noneLabel,
                       )}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value={null}>{noneLabel}</SelectItem>
-                      {otherFields.map((option) => (
-                        <SelectItem
-                          key={option.code}
-                          value={option.code}
-                        >
-                          <RuleFieldOptionLabel option={option} />
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                    </SelectValueLabel>
+                  </InspectorSelectTrigger>
+                  <InspectorSelectContent>
+                    <InspectorSelectItem value={null}>
+                      {noneLabel}
+                    </InspectorSelectItem>
+                    {otherFields.map((option) => (
+                      <InspectorSelectItem
+                        key={option.code}
+                        value={option.code}
+                      >
+                        <RuleFieldOptionLabel
+                          option={option}
+                          variant='stacked'
+                        />
+                      </InspectorSelectItem>
+                    ))}
+                  </InspectorSelectContent>
+                </InspectorSelect>
               );
             }}
           </form.Field>
@@ -185,36 +186,39 @@ function RulePairFields({
                 ];
 
                 return (
-                  <Select
+                  <InspectorSelect
                     items={items}
                     value={toSelectValue(fieldApi.state.value)}
                     onValueChange={(value) => {
                       fieldApi.handleChange(fromSelectValue(value));
                     }}
                   >
-                    <SelectTrigger className='w-full'>
-                      <SelectValue placeholder={t('inspector.selectFieldCode')}>
+                    <InspectorSelectTrigger className='w-full'>
+                      <SelectValueLabel>
                         {renderSelectedFieldOption(
                           toSelectValue(fieldApi.state.value),
                           fieldOptions,
                           noneLabel,
                         )}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value={null}>{noneLabel}</SelectItem>
-                        {fieldOptions.map((option) => (
-                          <SelectItem
-                            key={option.code}
-                            value={option.code}
-                          >
-                            <RuleFieldOptionLabel option={option} />
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                      </SelectValueLabel>
+                    </InspectorSelectTrigger>
+                    <InspectorSelectContent>
+                      <InspectorSelectItem value={null}>
+                        {noneLabel}
+                      </InspectorSelectItem>
+                      {fieldOptions.map((option) => (
+                        <InspectorSelectItem
+                          key={option.code}
+                          value={option.code}
+                        >
+                          <RuleFieldOptionLabel
+                            option={option}
+                            variant='stacked'
+                          />
+                        </InspectorSelectItem>
+                      ))}
+                    </InspectorSelectContent>
+                  </InspectorSelect>
                 );
               }}
             </form.Field>
@@ -255,10 +259,27 @@ function RulePairFields({
 
 function RuleFieldOptionLabel({
   option,
+  variant = 'inline',
 }: {
   option: RuleFieldOption;
+  variant?: 'inline' | 'stacked';
 }): JSX.Element {
   const showCodeApart = option.label !== option.code;
+
+  if (variant === 'stacked') {
+    return (
+      <span className='flex min-w-0 flex-col gap-0'>
+        <span className='break-words text-popover-foreground'>
+          {option.label}
+        </span>
+        {showCodeApart ? (
+          <span className='font-mono text-[10px] text-muted-foreground'>
+            {option.code}
+          </span>
+        ) : null}
+      </span>
+    );
+  }
 
   return (
     <span className='flex min-w-0 items-baseline gap-1.5'>
@@ -268,6 +289,18 @@ function RuleFieldOptionLabel({
       ) : null}
     </span>
   );
+}
+
+/**
+ * Wrapper for the trigger value: the trigger is a single line, so we render the
+ * option label inline (current behavior). The popup uses the stacked variant.
+ */
+function SelectValueLabel({
+  children,
+}: {
+  children: React.ReactNode;
+}): JSX.Element {
+  return <>{children}</>;
 }
 
 function fieldOptionSelectLabel(option: RuleFieldOption): string {

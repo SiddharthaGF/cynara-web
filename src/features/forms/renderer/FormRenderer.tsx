@@ -11,15 +11,24 @@ import type { UseFormRendererReturn } from './useFormRenderer.ts';
 interface FormRendererViewProps {
   model: FormSnapshot;
   renderer: UseFormRendererReturn;
+  /**
+   * When true, the renderer keeps fields whose `visibleWhen` rule currently
+   * evaluates to false but tags them as "conditional" so authors can see
+   * every authored question while iterating on the form.
+   */
+  showConditionalFields?: boolean;
   className?: string;
 }
 
 export function FormRendererView({
   model,
   renderer,
+  showConditionalFields = false,
   className,
 }: FormRendererViewProps): JSX.Element {
-  const context = buildRendererContext(model, renderer);
+  const context = buildRendererContext(model, renderer, {
+    showConditionalFields,
+  });
   const layout = model.ui.layout ?? [];
 
   return (

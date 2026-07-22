@@ -227,6 +227,9 @@
     "runValidation": "Run validation",
     "tabPreview": "Form",
     "tabRules": "Rules",
+    "showAll": "Show all fields",
+    "showAllHint": "Render fields hidden by conditional rules so you can iterate on every authored question.",
+    "conditionalBadge": "Conditional",
     "exportJson": "Export JSON",
     "copyJson": "Copy JSON",
     "downloadJson": "Download JSON",
@@ -330,12 +333,16 @@
     "fieldSettings": {
       "fab": "Open field settings",
       "fabHint": "Inspect the selected question",
-      "description": "Presentation, clinical mapping, and rules for the selected question."
+      "description": "Presentation, clinical mapping, and rules for the selected question.",
+      "sheetTitle": "Field settings",
+      "sheetSubtitle": "Adjust UI, clinical map, and rules"
     },
     "ai": {
       "fab": "Open AI chat",
       "fabHint": "Ask the form assistant",
-      "description": "Chat with the assistant while keeping the canvas editable."
+      "description": "Chat with the assistant while keeping the canvas editable.",
+      "sheetTitle": "Cynara",
+      "sheetSubtitle": "Chat with the form assistant"
     }
   },
   "ai": {
@@ -352,6 +359,7 @@
       "meds": "Medication list with name, dose, and frequency as a repeater"
     },
     "placeholder": "Ask anything… @ question · # type",
+    "placeholderShort": "Ask something…",
     "composerHint": "Applies to the open draft",
     "mention": {
       "label": "Cite a form question",
@@ -390,6 +398,12 @@
     "configure": "Configure AI",
     "errorGeneric": "Could not generate the form. Try again.",
     "persistOn": "Keep chat visible after reload (on)",
-    "persistOff": "Keep chat visible after reload (off)"
+    "persistOff": "Keep chat visible after reload (off)",
+    "clear": "Clear chat",
+    "clearHint": "Erase the current conversation",
+    "clearConfirmTitle": "Clear chat?",
+    "clearConfirmDescription": "This removes every message in this thread. There is no undo.",
+    "clearConfirmAction": "Clear chat",
+    "clearConfirmCancel": "Keep conversation"
   }
 }

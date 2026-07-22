@@ -49,16 +49,21 @@ function MentionInput({
   );
 }
 
-/** Auto-growing textarea slotted into DiceUI Mention (input-only primitive). */
-function MentionTextarea({
-  className,
-  onInput,
-  ...props
-}: Omit<React.ComponentProps<'textarea'>, 'children'>): React.JSX.Element {
-  const ref = React.useRef<HTMLTextAreaElement>(null);
+const MentionTextarea = React.forwardRef<
+  HTMLTextAreaElement,
+  Omit<React.ComponentProps<'textarea'>, 'children'>
+>(function MentionTextarea({ className, onInput, ...props }, forwardedRef) {
+  const localRef = React.useRef<HTMLTextAreaElement>(null);
+
+  // Merge an external ref (used by ChatComposer to autofocus after mount and
+  // to skip the querySelector fallback) with the local one used for auto-sizing.
+  React.useImperativeHandle(
+    forwardedRef,
+    () => localRef.current as HTMLTextAreaElement,
+  );
 
   function resize(): void {
-    const el = ref.current;
+    const el = localRef.current;
     if (!el) {
       return;
     }
@@ -81,7 +86,7 @@ function MentionTextarea({
   return (
     <MentionPrimitive.Input asChild>
       <textarea
-        ref={ref}
+        ref={localRef}
         data-slot='mention-input'
         rows={1}
         className={cn(
@@ -96,7 +101,7 @@ function MentionTextarea({
       />
     </MentionPrimitive.Input>
   );
-}
+});
 
 
 function MentionContent({

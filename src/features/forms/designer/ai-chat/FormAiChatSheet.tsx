@@ -22,6 +22,7 @@ import {
   listMentionableFields,
 } from './fieldMentions.ts';
 import { extractMentionedFieldTypes } from './fieldTypeMentions.ts';
+import type { FormAiChatPanelProps } from './FormAiChatPanel.tsx';
 import { FormAiChatSheetView } from './FormAiChatSheetView.tsx';
 import {
   type PendingChatPayload,
@@ -331,11 +332,28 @@ export function FormAiChatSheet({
     onOpenChange(false);
   }
 
+  const handleClear = useCallback((): void => {
+    if (isBusy) {
+      handleStop();
+    }
+    clearQueuedTurns();
+    queueRef.current = [];
+    userInitiatedStopRef.current = false;
+    setComposer((prev) => ({ value: '', key: prev.key + 1 }));
+    setError(null);
+    setStopped(false);
+    setPendingPayload(null);
+    setTurns([]);
+    if (persistEnabled) {
+      clearStorage();
+    }
+  }, [isBusy, handleStop, clearQueuedTurns, persistEnabled, clearStorage]);
+
   if (!open) {
     return null;
   }
 
-  const panelProps = {
+  const panelProps: FormAiChatPanelProps = {
     aiSettingsOpen,
     configured,
     draftModel: model,
@@ -357,6 +375,7 @@ export function FormAiChatSheet({
     onChange: (value: string) => {
       setComposer((prev) => ({ ...prev, value }));
     },
+    onClear: handleClear,
     onClose: handleClose,
     onOpenSettings: () => {
       setAiSettingsOpen(true);
