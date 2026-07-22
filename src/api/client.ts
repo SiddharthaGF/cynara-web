@@ -18,9 +18,14 @@ interface ProblemDetails {
 }
 
 function resolveApiOrigin(): string {
-  const origin = import.meta.env.VITE_API_ORIGIN;
-  if (typeof origin === 'string' && origin.trim() !== '') {
-    return origin.trim().replace(/\/$/u, '');
+  const candidates = [
+    import.meta.env.VITE_API_ORIGIN,
+    import.meta.env.API_ORIGIN,
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim() !== '') {
+      return candidate.trim().replace(/\/$/u, '');
+    }
   }
   throw new Error('Server unavailable');
 }
