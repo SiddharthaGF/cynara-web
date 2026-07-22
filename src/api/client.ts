@@ -38,10 +38,7 @@ export const resolveApiUrl = createIsomorphicFn()
     if (/^https?:\/\//i.test(path)) {
       return path;
     }
-    if (import.meta.env.DEV) {
-      return path.startsWith('/') ? path : `/${path}`;
-    }
-    return new URL(path, `${resolveApiOrigin()}/`).href;
+    return path.startsWith('/') ? path : `/${path}`;
   })
   .server((path: string) => {
     if (/^https?:\/\//i.test(path)) {
