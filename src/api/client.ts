@@ -41,11 +41,26 @@ function summarizeErrorBody(status: number, bodyText: string): string {
   return bodyText;
 }
 
+async function parseJsonResponse<T>(response: Response): Promise<T> {
+  const bodyText = await response.text();
+
+  try {
+    return JSON.parse(bodyText) as T;
+  } catch {
+    throw new ApiError(
+      response.status,
+      'Invalid API response',
+      summarizeErrorBody(response.status, bodyText),
+    );
+  }
+}
+
 export async function apiRequest<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
   const headers = new Headers(init?.headers);
+  headers.set('Accept', 'application/json');
   headers.set('Content-Type', 'application/json');
   headers.set('X-Actor-Id', 'designer-user');
 
@@ -76,14 +91,5 @@ export async function apiRequest<T>(
     return undefined as T;
   }
 
-  const bodyText = await response.text();
-  try {
-    return JSON.parse(bodyText) as T;
-  } catch {
-    throw new ApiError(
-      response.status,
-      'Invalid API response',
-      summarizeErrorBody(response.status, bodyText),
-    );
-  }
+  return parseJsonResponse<T>(response);
 }
