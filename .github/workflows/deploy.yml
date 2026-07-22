@@ -1,0 +1,83 @@
+# Cloudflare Workers deploy via Wrangler.
+#
+# Replaces the Cloudflare GitHub App auto-deploy path, which currently marks
+# builds as failed without surfacing the log in this repo's checks API.
+# With this workflow the full Wrangler output is visible in the Actions run,
+# and the wrangler-action step picks up the @cloudflare/vite-plugin-generated
+# `dist/server/wrangler.json` directly (the plugin auto-detects Vite builds).
+#
+# Secrets required (set under Settings -> Secrets and variables -> Actions):
+#   CLOUDFLARE_API_TOKEN   — https://dash.cloudflare.com/profile/api-tokens
+#                            with the "Edit Cloudflare Workers" template scope.
+#   CLOUDFLARE_ACCOUNT_ID  — shown on the Workers project overview page.
+#
+# Variables (Settings -> Secrets and variables -> Actions -> Variables):
+#   VITE_API_ORIGIN        — public build-time constant, compiled into the
+#                            client bundle (and read by the SSR worker).
+#                            Same value used for production and PRs; use a
+#                            staging api value if your team provisions one.
+#   CLOUDFLARE_PROJECT_NAME — defaults to `cynara-web` if unset.
+#
+# After this workflow merges and is enabled, disconnect the Cloudflare GitHub
+# App on `ailuracode/cynara-web` so the two deploy pipelines don't both run.
+
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: deploy-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VITE_API_ORIGIN: ${{ vars.VITE_API_ORIGIN }}
+      CLOUDFLARE_NAME: ${{ vars.CLOUDFLARE_PROJECT_NAME || 'cynara-web' }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (Vite + @cloudflare/vite-plugin)
+        run: pnpm build
+
+      - name: Deploy (push to main only — production)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: pnpm
+          command: deploy --keep-vars --config dist/server/wrangler.json
+
+      - name: Smoke check (PRs — uploads a Worker version without traffic)
+        if: github.event_name == 'pull_request'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          packageManager: pnpm
+          command:
+            versions upload --keep-vars --config dist/server/wrangler.json

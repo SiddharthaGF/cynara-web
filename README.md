@@ -108,30 +108,58 @@ Do **not** commit secrets. Any runtime-only secrets should be set under
 The project is deployed as a **Cloudflare Worker** (not a Pages Function).
 `@cloudflare/vite-plugin` builds the SSR worker under `dist/server/` (entry
 `dist/server/index.js`) and the client assets under `dist/client/`. The
-plugin-generated `dist/server/wrangler.json` is what Cloudflare's deployment
-pipeline consumes; it pins `assets.directory` to the client output and sets
-`no_bundle = true` (Cloudflare uploads the prebuilt worker as-is).
+plugin-generated `dist/server/wrangler.json` is what Cloudflare consumes; it
+pins `assets.directory` to the client output and sets `no_bundle = true`
+(Cloudflare uploads the prebuilt worker as-is, without re-bundling).
 
-- **Production branch:** `main`. Every push to `main` is deployed to the
-  production worker URL.
-- **Preview branches:** every open pull request targeting `main` automatically
-  receives its own preview URL — useful for design review and stakeholder
-  feedback before a PR is merged.
-- This is configured once in the Cloudflare dashboard under **Workers → Settings
-  → Builds**:
+Deploys run via **GitHub Actions** (`.github/workflows/deploy.yml`), not via the
+Cloudflare GitHub App:
 
-  | Setting               | Value                                           |
-  | --------------------- | ----------------------------------------------- |
-  | **Build command**     | `pnpm install --frozen-lockfile && pnpm build`  |
-  | **Deploy command**    | `pnpm deploy:keep-vars`                         |
-  | **Build output dir**  | (empty — the deploy command uploads the worker) |
-  | **Production branch** | `main`                                          |
-  | **Preview branches**  | default (all non-production branches)           |
+- **Production** — `push` to `main` runs
+  `wrangler deploy --keep-vars --config dist/server/wrangler.json`. The deploy
+  step uploads the prebuilt worker bundle and the client assets, and preserves
+  existing worker vars.
+- **PR smoke check** — every `pull_request` to `main` runs
+  `wrangler versions upload` against the same config. This uploads the build as
+  a new **Worker version** (visible in the dashboard under Deployments) but does
+  not roll any production traffic. Reviewers can promote the version to 100 %
+  manually once the PR is approved, or merge and let the `push`-to-`main`
+  workflow handle the rollout.
 
-> The deploy command runs `wrangler deploy --keep-vars` so environment variables
-> set on the worker (for example `VITE_API_ORIGIN` if it were runtime-only) are
-> preserved across redeploys. Always use this variant from CI/Git integration;
-> `pnpm deploy` (no flag) will erase dashboard-configured vars on every push.
+> The deployment surface is **two GitHub Actions workflows** (React Doctor for
+> static analysis and this one for the worker itself). The Cloudflare GitHub App
+> is **not** used on this repo.
+
+### GitHub Actions setup
+
+1. Add two secrets and (optionally) two variables on
+   <https://github.com/ailuracode/cynara-web/settings/secrets/actions>:
+
+   | Kind     | Name                      | Value                                                                                                        |
+   | -------- | ------------------------- | ------------------------------------------------------------------------------------------------------------ |
+   | Secret   | `CLOUDFLARE_API_TOKEN`    | A token from <https://dash.cloudflare.com/profile/api-tokens> with the **Edit Cloudflare Workers** template. |
+   | Secret   | `CLOUDFLARE_ACCOUNT_ID`   | Shown on the Workers project overview page.                                                                  |
+   | Variable | `VITE_API_ORIGIN`         | Public build-time constant. Example: `https://api.cynara.example.com`.                                       |
+   | Variable | `CLOUDFLARE_PROJECT_NAME` | Defaults to `cynara-web` if unset.                                                                           |
+
+2. **Disconnect the Cloudflare GitHub App** on the same repo's installation
+   settings (Settings -> GitHub Apps) so it stops creating the duplicate
+   `Workers Builds: cynara-web` check on every PR. The bot from the GitHub App
+   doesn't surface its build log on the PR, which is the reason we switched to
+   GitHub Actions in the first place.
+
+3. Verify locally against your account before opening the PR:
+
+   ```bash
+   pnpm build
+   npx wrangler whoami            # sanity-check the token
+   npx wrangler deploy --dry-run --outdir /tmp/wrangler-dryrun
+   ```
+
+   `wrangler deploy --dry-run` reads `dist/server/wrangler.json` and the
+   matching `dist/server/index.js` + `dist/client/` assets, lists what would be
+   uploaded, and exits without contacting Cloudflare. The bundle under
+   `dist/server/` is exactly what GitHub Actions ships.
 
 ### One-time setup
 
@@ -150,8 +178,8 @@ This invokes `vite build`, which now runs the Cloudflare Vite plugin. The
 artifact is a `dist/` directory containing:
 
 - `dist/server/index.js` — the SSR worker bundle.
-- `dist/server/wrangler.json` — generated worker config (committed alongside the
-  source `wrangler.toml`; the plugin regenerates it on each build).
+- `dist/server/wrangler.json` — generated worker config (the plugin regenerates
+  it on each build; this is the config that `wrangler deploy` consumes).
 - `dist/client/` — static client assets served by Workers Assets.
 
 A small `closeBundle` hook in `vite.config.ts` strips the `dist/server/.vite`
@@ -171,17 +199,17 @@ preview URL.
 
 ### Manual production deploy (optional)
 
-Cloudflare handles production deploys automatically on push to `main`. To
-publish a manual production build bypassing the Git integration:
+GitHub Actions handles production deploys automatically on push to `main`. To
+publish a manual production build bypassing CI:
 
 ```bash
-pnpm deploy            # mirrors the Git integration deploy
-pnpm deploy:keep-vars  # use this if you have vars set in the Cloudflare
-                       # dashboard — preserves them across redeploys
+pnpm deploy            # mirrors the GitHub Actions deploy
+pnpm deploy:keep-vars  # use this if you have vars set on the worker in
+                       # the Cloudflare dashboard — preserves them across deploys
 ```
 
-Both run `pnpm build` followed by `wrangler deploy`. Use sparingly — the Git
-integration is the default path.
+Both run `pnpm build` followed by `wrangler deploy`. Use sparingly — the GH
+Actions workflow is the default path.
 
 ### Generated types
 
