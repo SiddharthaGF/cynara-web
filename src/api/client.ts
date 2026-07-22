@@ -27,7 +27,7 @@ function resolveApiOrigin(): string {
       return candidate.trim().replace(/\/$/u, '');
     }
   }
-  throw new Error('Server unavailable');
+  throw new Error(`Server unavailable ${  candidates.join(', ')}`);
 }
 
 export const resolveApiUrl = createIsomorphicFn()
