@@ -26,10 +26,14 @@ function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
   );
 }
 
-function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
+function TooltipTrigger({
+  delay = 0,
+  ...props
+}: TooltipPrimitive.Trigger.Props) {
   return (
     <TooltipPrimitive.Trigger
       data-slot='tooltip-trigger'
+      delay={delay}
       {...props}
     />
   );

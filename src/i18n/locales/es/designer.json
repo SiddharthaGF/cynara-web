@@ -125,6 +125,7 @@
   "inspector": {
     "moreOptions": "Más opciones",
     "caseFile": "Ajustes del campo",
+    "close": "Cerrar ajustes del campo",
     "questionNumber": "Pregunta {{number}}",
     "codeLabel": "Código",
     "presentation": "Presentación (UI schema)",
@@ -219,6 +220,7 @@
   "formPreview": {
     "open": "Vista previa",
     "title": "Vista previa del formulario",
+    "close": "Cerrar vista previa",
     "description": "Prueba interactiva de {{code}} — los valores permanecen solo en esta sesión.",
     "disclaimer": "La vista previa usa datos de prueba simulados. Nada de esto se guarda como respuesta clínica.",
     "simulationLabel": "Simulación",

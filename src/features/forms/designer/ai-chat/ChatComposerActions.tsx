@@ -3,6 +3,7 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
+import { TooltipIconButton } from '@/components/ui/tooltip-button.tsx';
 
 interface ChatComposerActionsProps {
   canRetry: boolean;
@@ -36,7 +37,6 @@ export function ChatComposerActions({
             variant='ghost'
             className='h-8 gap-1.5 rounded-full px-2.5 text-xs'
             onClick={onRetry}
-            title={t('ai.retry')}
           >
             <RotateCwIcon className='size-3.5' />
             {t('ai.retry')}
@@ -45,41 +45,38 @@ export function ChatComposerActions({
         {isBusy ? (
           <>
             {canSubmit ? (
-              <Button
+              <TooltipIconButton
                 type='submit'
                 size='icon-sm'
                 variant='secondary'
                 className='rounded-full'
-                aria-label={t('ai.queue')}
-                title={t('ai.queue')}
+                label={t('ai.queue')}
               >
                 <ArrowUpIcon className='size-3.5' />
-              </Button>
+              </TooltipIconButton>
             ) : null}
-            <Button
+            <TooltipIconButton
               type='button'
               size='icon-sm'
               variant='default'
               className='rounded-full'
-              aria-label={t('ai.stop')}
-              title={t('ai.stop')}
+              label={t('ai.stop')}
               onClick={onStop}
             >
               <SquareIcon className='size-3 fill-current' />
-            </Button>
+            </TooltipIconButton>
           </>
         ) : (
-          <Button
+          <TooltipIconButton
             type='submit'
             size='icon-sm'
             variant='default'
             disabled={!canSubmit}
             className='rounded-full'
-            aria-label={t('ai.send')}
-            title={t('ai.send')}
+            label={t('ai.send')}
           >
             <ArrowUpIcon className='size-3.5' />
-          </Button>
+          </TooltipIconButton>
         )}
       </div>
     </div>

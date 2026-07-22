@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
+import { TooltipIconButton } from '@/components/ui/tooltip-button.tsx';
 import { cn } from '@/lib/utils.ts';
 
 import { ChatEmptyState } from './ChatComposer.tsx';
@@ -240,11 +241,11 @@ export function ChatTranscript({
         </div>
       </ScrollArea>
 
-      <Button
+      <TooltipIconButton
         type='button'
         size='icon-sm'
         variant='secondary'
-        aria-label={t('ai.scrollToLatest')}
+        label={t('ai.scrollToLatest')}
         className={cn(
           'absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-border bg-background shadow-sm transition-[translate,scale,opacity] duration-200',
           showJumpToLatest
@@ -257,7 +258,7 @@ export function ChatTranscript({
         }}
       >
         <ArrowDownIcon className='size-3.5' />
-      </Button>
+      </TooltipIconButton>
     </div>
   );
 }

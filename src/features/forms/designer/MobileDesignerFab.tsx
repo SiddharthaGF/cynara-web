@@ -2,7 +2,7 @@ import { Settings2, Sparkles } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/components/ui/button.tsx';
+import { TooltipIconButton } from '@/components/ui/tooltip-button.tsx';
 
 import type { useFormDesignerLayout } from './useFormDesignerLayout.ts';
 
@@ -31,15 +31,14 @@ export function MobileDesignerFab({
   return (
     <div className='pointer-events-none fixed inset-x-0 bottom-4 z-40 flex flex-col items-end gap-3 px-4 pb-[env(safe-area-inset-bottom)]'>
       {hasInspectorFab ? (
-        <Button
+        <TooltipIconButton
           type='button'
           size='icon-lg'
           variant='secondary'
           className='pointer-events-auto size-14 rounded-full shadow-lg'
-          aria-label={t('mobile.fieldSettings.fab')}
+          label={t('mobile.fieldSettings.fabHint')}
           aria-haspopup='dialog'
           aria-expanded={layout.showAdvanced}
-          title={t('mobile.fieldSettings.fabHint')}
           onClick={() => {
             const selected = layout.selectedField;
             if (selected) {
@@ -48,22 +47,21 @@ export function MobileDesignerFab({
           }}
         >
           <Settings2 className='size-5' />
-        </Button>
+        </TooltipIconButton>
       ) : null}
       {aiChatOpen ? null : (
-        <Button
+        <TooltipIconButton
           type='button'
           size='icon-lg'
           variant='default'
           className='pointer-events-auto size-14 rounded-full shadow-lg'
-          aria-label={t('mobile.ai.fab')}
+          label={t('mobile.ai.fabHint')}
           aria-haspopup='dialog'
           aria-expanded={aiChatOpen}
-          title={t('mobile.ai.fabHint')}
           onClick={onOpenChat}
         >
           <Sparkles className='size-5' />
-        </Button>
+        </TooltipIconButton>
       )}
     </div>
   );

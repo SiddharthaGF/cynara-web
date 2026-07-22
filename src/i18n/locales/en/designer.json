@@ -125,6 +125,7 @@
   "inspector": {
     "moreOptions": "More options",
     "caseFile": "Field settings",
+    "close": "Close field settings",
     "questionNumber": "Question {{number}}",
     "codeLabel": "Code",
     "presentation": "Presentation (UI schema)",
@@ -219,6 +220,7 @@
   "formPreview": {
     "open": "Preview",
     "title": "Form preview",
+    "close": "Close preview",
     "description": "Interactive test run for {{code}} — values stay in this session only.",
     "disclaimer": "Preview mode uses simulated test data. Nothing here is saved as a clinical response.",
     "simulationLabel": "Simulation",

@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu.tsx';
 import { Field, FieldLabel } from '@/components/ui/field.tsx';
 import { Separator } from '@/components/ui/separator.tsx';
+import { TooltipIconButton } from '@/components/ui/tooltip-button.tsx';
 
 import type { QuestionCardProps } from './QuestionCard.tsx';
 
@@ -50,32 +51,30 @@ export function QuestionCardActions({
   return (
     <div className='flex w-full items-center justify-between gap-1.5 sm:contents'>
       <div className='flex items-center gap-0.5'>
-        <Button
+        <TooltipIconButton
           type='button'
           variant='ghost'
           size='icon-sm'
-          aria-label={t('canvas.moveUp')}
-          title={t('canvas.moveUp')}
+          label={t('canvas.moveUp')}
           disabled={index === 0}
           onClick={() => {
             onMoveUp(index);
           }}
         >
           <ChevronUp />
-        </Button>
-        <Button
+        </TooltipIconButton>
+        <TooltipIconButton
           type='button'
           variant='ghost'
           size='icon-sm'
-          aria-label={t('canvas.moveDown')}
-          title={t('canvas.moveDown')}
+          label={t('canvas.moveDown')}
           disabled={index === total - 1}
           onClick={() => {
             onMoveDown(index);
           }}
         >
           <ChevronDown />
-        </Button>
+        </TooltipIconButton>
       </div>
 
       <div className='hidden items-center sm:flex'>
@@ -97,32 +96,30 @@ export function QuestionCardActions({
           className='mx-1 h-4'
         />
 
-        <Button
+        <TooltipIconButton
           type='button'
           variant='ghost'
           size='icon-sm'
-          aria-label={t('canvas.moreOptions')}
-          title={t('canvas.moreOptions')}
+          label={t('canvas.moreOptions')}
           onClick={() => {
             onOpenAdvanced(field.id);
           }}
         >
           <MoreVertical />
-        </Button>
+        </TooltipIconButton>
 
-        <Button
+        <TooltipIconButton
           type='button'
           variant='ghost'
           size='icon-sm'
-          aria-label={t('canvas.deleteQuestion')}
-          title={t('canvas.deleteQuestion')}
+          label={t('canvas.deleteQuestion')}
           onClick={() => {
             onRemove(field.id);
           }}
           className='text-destructive hover:bg-destructive/10 hover:text-destructive'
         >
           <Trash2 />
-        </Button>
+        </TooltipIconButton>
       </div>
 
       <DropdownMenu>
@@ -134,7 +131,6 @@ export function QuestionCardActions({
               size='icon-sm'
               className='sm:hidden'
               aria-label={t('canvas.actionsMenu')}
-              title={t('canvas.actionsMenu')}
             />
           }
         >

@@ -1,4 +1,11 @@
-import { Languages, Moon, Settings, Sparkles, Sun } from 'lucide-react';
+import {
+  ComputerIcon,
+  Languages,
+  Moon,
+  Settings,
+  Sparkles,
+  Sun,
+} from 'lucide-react';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,10 +24,15 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu.tsx';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip.tsx';
 import { useLocale } from '@/hooks/use-locale.ts';
 import { useTheme } from '@/hooks/use-theme.ts';
 import type { AppLocale } from '@/lib/locale.ts';
-import type { Theme } from '@/lib/theme.ts';
+import type { ThemePreference } from '@/lib/theme.ts';
 import { cn } from '@/lib/utils.ts';
 
 interface SettingsMenuProps {
@@ -36,28 +48,51 @@ interface SettingsMenuProps {
 export function SettingsMenu({ className }: SettingsMenuProps): JSX.Element {
   const { t } = useTranslation('common');
   const { locale, setLocale } = useLocale();
-  const { theme, setTheme } = useTheme();
+  const { preference, setPreference, theme } = useTheme();
   const [aiOpen, setAiOpen] = useState(false);
 
   const localeLabel = locale === 'es' ? t('locale.es') : t('locale.en');
 
+  function getThemeLabel(): string {
+    if (preference === 'system') {
+      return t('theme.system');
+    }
+    return theme === 'dark' ? t('theme.dark') : t('theme.light');
+  }
+
+  function getThemeIcon(): typeof ComputerIcon {
+    if (preference === 'system') {
+      return ComputerIcon;
+    }
+    return theme === 'dark' ? Moon : Sun;
+  }
+
+  const themeLabel = getThemeLabel();
+  const ThemeIcon = getThemeIcon();
+
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon-sm'
-              aria-label={t('settings.open')}
-              title={t('settings.open')}
-              className={cn('text-muted-foreground', className)}
-            />
-          }
-        >
-          <Settings className='size-4' />
-        </DropdownMenuTrigger>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='icon-sm'
+                    aria-label={t('settings.open')}
+                    className={cn('text-muted-foreground', className)}
+                  />
+                }
+              >
+                <Settings className='size-4' />
+              </DropdownMenuTrigger>
+            }
+          />
+          <TooltipContent side='bottom'>{t('settings.open')}</TooltipContent>
+        </Tooltip>
         <DropdownMenuContent
           align='end'
           className='w-56'
@@ -91,28 +126,36 @@ export function SettingsMenu({ className }: SettingsMenuProps): JSX.Element {
 
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
-              {theme === 'dark' ? (
-                <Moon className='size-4' />
-              ) : (
-                <Sun className='size-4' />
-              )}
+              <ThemeIcon className='size-4' />
               <span>{t('settings.theme')}</span>
               <span className='ml-auto text-xs text-muted-foreground'>
-                {theme === 'dark' ? t('theme.dark') : t('theme.light')}
+                {themeLabel}
               </span>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuRadioGroup
-                value={theme}
+                value={preference}
                 onValueChange={(value) => {
-                  setTheme(value as Theme);
+                  if (
+                    value === 'light' ||
+                    value === 'dark' ||
+                    value === 'system'
+                  ) {
+                    setPreference(value as ThemePreference);
+                  }
                 }}
               >
                 <DropdownMenuRadioItem value='light'>
+                  <Sun className='size-4' />
                   {t('theme.light')}
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value='dark'>
+                  <Moon className='size-4' />
                   {t('theme.dark')}
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value='system'>
+                  <ComputerIcon className='size-4' />
+                  {t('theme.system')}
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuSubContent>

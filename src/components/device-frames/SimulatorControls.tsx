@@ -2,6 +2,11 @@ import { Monitor, RotateCcw, Smartphone } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip.tsx';
 import { cn } from '@/lib/utils.ts';
 
 import {
@@ -45,24 +50,31 @@ export function DesktopResolutionControl({
       </span>
       {DESKTOP_RESOLUTIONS.map((option) => {
         const isActive = option.id === value;
+        const label = `${option.width} × ${option.height}`;
         return (
-          <button
-            key={option.id}
-            type='button'
-            onClick={() => {
-              onChange(option.id);
-            }}
-            aria-pressed={isActive}
-            className={cn(
-              'rounded-full px-2.5 py-1 font-mono text-[10px] tracking-tight transition-colors',
-              isActive
-                ? 'bg-primary/15 text-primary shadow-[inset_0_0_0_1px_oklch(0.62_0.105_148/32%)]'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-            title={`${option.width} × ${option.height}`}
-          >
-            {t(option.shortKey)}
-          </button>
+          <Tooltip key={option.id}>
+            <TooltipTrigger
+              render={
+                <button
+                  type='button'
+                  onClick={() => {
+                    onChange(option.id);
+                  }}
+                  aria-pressed={isActive}
+                  aria-label={label}
+                  className={cn(
+                    'rounded-full px-2.5 py-1 font-mono text-[10px] tracking-tight transition-colors',
+                    isActive
+                      ? 'bg-primary/15 text-primary shadow-[inset_0_0_0_1px_oklch(0.62_0.105_148/32%)]'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                />
+              }
+            >
+              {t(option.shortKey)}
+            </TooltipTrigger>
+            <TooltipContent side='top'>{label}</TooltipContent>
+          </Tooltip>
         );
       })}
     </div>
@@ -91,42 +103,57 @@ export function MobileOrientationControl({
           {t('formPreview.rotation.shortLabel')}
         </span>
       </span>
-      <button
-        type='button'
-        onClick={onToggle}
-        aria-label={t('formPreview.rotation.toggle')}
-        title={t('formPreview.rotation.toggle')}
-        className='flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground'
-      >
-        <RotateCcw
-          className={cn(
-            'size-3 transition-transform duration-500',
-            value === 'landscape' ? 'rotate-90' : 'rotate-0',
-          )}
-          strokeWidth={2.25}
-        />
-      </button>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <button
+              type='button'
+              onClick={onToggle}
+              aria-label={t('formPreview.rotation.toggle')}
+              className='flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground'
+            />
+          }
+        >
+          <RotateCcw
+            className={cn(
+              'size-3 transition-transform duration-500',
+              value === 'landscape' ? 'rotate-90' : 'rotate-0',
+            )}
+            strokeWidth={2.25}
+          />
+        </TooltipTrigger>
+        <TooltipContent side='top'>
+          {t('formPreview.rotation.toggle')}
+        </TooltipContent>
+      </Tooltip>
       <div className='inline-flex items-center rounded-full bg-background/60 p-0.5 shadow-[inset_0_0_0_1px_oklch(0.62_0.09_148/14%)]'>
         {MOBILE_ORIENTATIONS.map((option) => {
           const isActive = option.id === value;
+          const label = `${option.width} × ${option.height}`;
           return (
-            <button
-              key={option.id}
-              type='button'
-              onClick={() => {
-                onChange(option.id);
-              }}
-              aria-pressed={isActive}
-              className={cn(
-                'rounded-full px-2.5 py-0.5 font-mono text-[10px] tracking-tight transition-colors',
-                isActive
-                  ? 'bg-primary/15 text-primary'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-              title={`${option.width} × ${option.height}`}
-            >
-              {t(option.shortKey)}
-            </button>
+            <Tooltip key={option.id}>
+              <TooltipTrigger
+                render={
+                  <button
+                    type='button'
+                    onClick={() => {
+                      onChange(option.id);
+                    }}
+                    aria-pressed={isActive}
+                    aria-label={label}
+                    className={cn(
+                      'rounded-full px-2.5 py-0.5 font-mono text-[10px] tracking-tight transition-colors',
+                      isActive
+                        ? 'bg-primary/15 text-primary'
+                        : 'text-muted-foreground hover:text-foreground',
+                    )}
+                  />
+                }
+              >
+                {t(option.shortKey)}
+              </TooltipTrigger>
+              <TooltipContent side='top'>{label}</TooltipContent>
+            </Tooltip>
           );
         })}
       </div>

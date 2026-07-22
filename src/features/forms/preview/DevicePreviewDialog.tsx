@@ -163,7 +163,6 @@ function DeviceSwitcher({
               )}
               aria-label={t(labelKey)}
               aria-pressed={isActive}
-              title={t(labelKey)}
               onClick={() => {
                 onChange(optionValue);
               }}

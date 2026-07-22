@@ -18,7 +18,11 @@ interface PanelHeaderProps {
   badges?: ReactNode;
   /** Optional metadata row rendered beneath the badges (e.g. code chip). */
   meta?: ReactNode;
-  /** Optional row of action buttons rendered on the right of the title. */
+  /**
+   * Optional row of action buttons. On desktop they sit to the right of the
+   * title; on mobile they drop to a sub-row below the title so they do not
+   * collide with the sheet's built-in close X.
+   */
   actions?: ReactNode;
   /** Optional absolutely-positioned slot for things like the close X. */
   overlay?: ReactNode;
@@ -61,6 +65,10 @@ export function PanelHeader({
         className={cn(
           'flex min-w-0 items-start gap-2',
           isMobile ? 'px-4 py-2.5' : 'px-4 py-3',
+          // Reserve space for an absolutely-positioned close X (overlay slot)
+          // So action buttons never end up underneath it. The X is ~28px with
+          // ~10px of inset on the right; `pr-9` (36px) keeps a safe gap.
+          overlay && 'pr-9',
         )}
       >
         {icon ? (
@@ -72,7 +80,15 @@ export function PanelHeader({
           </span>
         ) : null}
 
-        <div className='flex min-w-0 flex-1 flex-col gap-0.5'>
+        <div
+          className={cn(
+            'flex min-w-0 flex-1 flex-col gap-0.5',
+            // On mobile the actions slot flows into a sub-row, so the title
+            // Column gets the full width. On desktop actions live beside the
+            // Title so we cap the column width to leave room for them.
+            !isMobile && 'min-w-0',
+          )}
+        >
           {eyebrow ? (
             <p className='text-[10px] font-medium tracking-wide text-muted-foreground uppercase'>
               {eyebrow}
@@ -87,10 +103,18 @@ export function PanelHeader({
           ) : null}
         </div>
 
-        {actions ? (
+        {actions && !isMobile ? (
           <div className='flex shrink-0 items-center gap-1'>{actions}</div>
         ) : null}
       </div>
+
+      {actions && isMobile ? (
+        // `pr-9` keeps the actions clear of any `overlay` (the close X lives
+        // At top-right).
+        <div className='flex items-center justify-end gap-1 px-4 pr-9 pb-2'>
+          <div className='flex items-center gap-1'>{actions}</div>
+        </div>
+      ) : null}
 
       {badges ? (
         <div className='flex flex-wrap items-center gap-1.5 px-4 pt-1 pb-2'>
@@ -132,9 +156,9 @@ function Title({
 }
 
 /**
- * Optional close-X that anchors to the top-right corner. The docked surface
- * uses this; the bottom sheet relies on `SheetContent`'s built-in close
- * button so it does not render this.
+ * Optional close-X that anchors to the top-right corner of a `PanelHeader`.
+ * Always renders inside the panel's reserved right gutter (`pr-9`) so it does
+ * not collide with title or action content.
  */
 export function PanelHeaderCloseButton({
   onClick,
@@ -150,7 +174,6 @@ export function PanelHeaderCloseButton({
       type='button'
       onClick={onClick}
       aria-label={label}
-      title={label}
       className={cn(
         'absolute top-2.5 right-2.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none',
         className,

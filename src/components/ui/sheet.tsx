@@ -63,6 +63,13 @@ function SheetContent({
   ...props
 }: SheetPrimitive.Popup.Props & {
   side?: 'top' | 'right' | 'bottom' | 'left';
+  /**
+   * Render the built-in absolute close X. When the sheet content already
+   * Mounts a `PanelHeaderCloseButton` inside a `PanelHeader.overlay`, pass
+   * `false` here to avoid rendering two overlapping close buttons (a common
+   * Designer regression — the absolute X collided with the header action
+   * Cluster on mobile sheets).
+   */
   showCloseButton?: boolean;
   /**
    * Stretch the sheet to the full viewport height on top/bottom sides. Used by

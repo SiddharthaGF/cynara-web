@@ -9,7 +9,8 @@
     "switchToLight": "Cambiar a modo claro",
     "switchToDark": "Cambiar a modo oscuro",
     "light": "Claro",
-    "dark": "Oscuro"
+    "dark": "Oscuro",
+    "system": "Sistema"
   },
   "locale": {
     "switch": "Cambiar idioma",

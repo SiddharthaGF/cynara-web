@@ -2,8 +2,8 @@ import { Cloud, CloudOff } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/components/ui/button.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
+import { TooltipIconButton } from '@/components/ui/tooltip-button.tsx';
 import type { SaveState } from '@/features/forms/designer/useFormDraft.ts';
 
 interface SaveButtonProps {
@@ -36,18 +36,22 @@ export function SaveButton({
   const isBusy = state === 'saving';
 
   return (
-    <Button
+    <TooltipIconButton
       type='button'
       size='sm'
       variant={variant}
       disabled={disabled || isBusy}
       onClick={onClick}
-      title={label}
+      // Reuse the visible label as the tooltip copy on mobile, where only
+      // The icon is rendered. Desktop still displays the label inline, so
+      // The tooltip overlays it — the design accepts the extra affordance
+      // Because it doubles as the SR-accessible name.
+      label={label}
       className='shrink-0 gap-1.5 px-2.5 sm:px-3'
     >
       {icon}
       <span className='hidden sm:inline'>{label}</span>
-    </Button>
+    </TooltipIconButton>
   );
 }
 

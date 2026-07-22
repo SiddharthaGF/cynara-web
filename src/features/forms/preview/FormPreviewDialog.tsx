@@ -3,7 +3,10 @@ import { useState, type CSSProperties, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PlainPreviewFrame } from '@/components/device-frames/index.ts';
-import { PanelHeader } from '@/components/panel/index.ts';
+import {
+  PanelHeader,
+  PanelHeaderCloseButton,
+} from '@/components/panel/index.ts';
 import { Button } from '@/components/ui/button.tsx';
 import {
   Dialog,
@@ -18,6 +21,11 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs.tsx';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip.tsx';
 import {
   FormRendererView,
   useFormRenderer,
@@ -88,8 +96,8 @@ export function FormPreviewDialog({
       >
         <SheetContent
           side='bottom'
-          showCloseButton
           fullHeight
+          showCloseButton={false}
           style={sheetStyle}
           className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
         >
@@ -97,6 +105,14 @@ export function FormPreviewDialog({
             surface='mobile'
             icon={<FlaskConical className='size-4' />}
             title={t('formPreview.title')}
+            overlay={
+              <PanelHeaderCloseButton
+                onClick={() => {
+                  onOpenChange(false);
+                }}
+                label={t('formPreview.close')}
+              />
+            }
           />
           <FormPreviewBody
             formCode={formCode}
@@ -113,7 +129,7 @@ export function FormPreviewDialog({
       onOpenChange={onOpenChange}
     >
       <DialogContent
-        showCloseButton
+        showCloseButton={false}
         className='preview-modal flex h-[min(90dvh,52rem)] w-[min(96vw,52rem)] max-w-[min(96vw,52rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(96vw,52rem)]'
       >
         <DialogDescription className='sr-only'>
@@ -128,6 +144,14 @@ export function FormPreviewDialog({
             <p className='max-w-prose text-xs leading-relaxed text-muted-foreground'>
               {t('formPreview.disclaimer')}
             </p>
+          }
+          overlay={
+            <PanelHeaderCloseButton
+              onClick={() => {
+                onOpenChange(false);
+              }}
+              label={t('formPreview.close')}
+            />
           }
         />
 
@@ -183,23 +207,31 @@ function FormPreviewBody({
           </TabsList>
 
           <div className='flex min-w-0 flex-wrap items-center gap-2 sm:flex-nowrap sm:justify-end'>
-            <Button
-              type='button'
-              variant={showConditional ? 'default' : 'outline'}
-              size='sm'
-              className={cn(
-                'h-8 shrink-0 gap-1.5 whitespace-nowrap px-2.5 text-xs shadow-none',
-                showConditional && 'shadow-primary/15',
-              )}
-              aria-pressed={showConditional}
-              title={t('formPreview.showAllHint')}
-              onClick={() => {
-                setShowConditional((current) => !current);
-              }}
-            >
-              <EyeIcon className='size-3.5' />
-              <span>{t('formPreview.showAll')}</span>
-            </Button>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    type='button'
+                    variant={showConditional ? 'default' : 'outline'}
+                    size='sm'
+                    className={cn(
+                      'h-8 shrink-0 gap-1.5 whitespace-nowrap px-2.5 text-xs shadow-none',
+                      showConditional && 'shadow-primary/15',
+                    )}
+                    aria-pressed={showConditional}
+                    onClick={() => {
+                      setShowConditional((current) => !current);
+                    }}
+                  />
+                }
+              >
+                <EyeIcon className='size-3.5' />
+                <span>{t('formPreview.showAll')}</span>
+              </TooltipTrigger>
+              <TooltipContent side='bottom'>
+                {t('formPreview.showAllHint')}
+              </TooltipContent>
+            </Tooltip>
 
             {activeTab === 'preview' ? (
               <DevicePreviewLauncher

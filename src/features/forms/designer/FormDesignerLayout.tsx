@@ -9,6 +9,11 @@ import { DocumentMeta } from '@/components/theme-toggle.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip.tsx';
 import { useIsMobile } from '@/hooks/use-mobile.ts';
 
 import { FormPreviewTrigger } from '../preview/FormPreviewTrigger.tsx';
@@ -204,22 +209,24 @@ export function FormDesignerLayout({
       <div className='grain ambient-bg flex h-svh flex-col overflow-hidden bg-background'>
         <DocumentMeta />
         <header className='flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-background/80 px-3 backdrop-blur-md md:gap-3 md:px-4'>
-          <Button
-            variant='ghost'
-            size='sm'
-            className='shrink-0 gap-1.5 px-2'
-            title={tc('actions.forms')}
-            render={
-              <Link
-                to='/$locale/forms'
-                params={{ locale }}
-              />
-            }
-            nativeButton={false}
-          >
-            <ArrowLeft className='size-4' />
-            <span className='hidden sm:inline'>{tc('actions.forms')}</span>
-          </Button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Link
+                  to='/$locale/forms'
+                  params={{ locale }}
+                  aria-label={tc('actions.forms')}
+                  className='inline-flex h-7 shrink-0 items-center justify-center gap-1.5 rounded-[min(var(--radius-md),12px)] border border-transparent px-2 text-[0.8rem] font-medium whitespace-nowrap transition-all outline-none select-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
+                >
+                  <ArrowLeft className='size-4' />
+                  <span className='hidden sm:inline'>
+                    {tc('actions.forms')}
+                  </span>
+                </Link>
+              }
+            />
+            <TooltipContent side='bottom'>{tc('actions.forms')}</TooltipContent>
+          </Tooltip>
 
           <div className='min-w-0 flex-1 sm:border-l sm:border-border/50 sm:pl-3'>
             <p className='truncate font-heading text-sm font-medium'>{code}</p>

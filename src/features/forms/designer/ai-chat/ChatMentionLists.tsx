@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button.tsx';
 import { MentionItem } from '@/components/ui/mention.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
+import { Tooltip, TooltipContent } from '@/components/ui/tooltip.tsx';
 
 import { FieldTypeIcon } from '../FieldTypeIcon.tsx';
 import type { listMentionableFields } from './fieldMentions.ts';
@@ -163,17 +164,19 @@ export function ChatAiTrigger({
   const { t } = useTranslation('designer');
 
   return (
-    <Button
-      type='button'
-      size='sm'
-      variant='secondary'
-      disabled={disabled}
-      onClick={onOpen}
-      title={t('ai.open')}
-      className='shrink-0 gap-1.5 rounded-full px-2.5 sm:px-3'
-    >
-      <Sparkles className='size-3.5' />
-      <span className='hidden sm:inline'>{t('ai.open')}</span>
-    </Button>
+    <Tooltip>
+      <Button
+        type='button'
+        size='sm'
+        variant='secondary'
+        disabled={disabled}
+        onClick={onOpen}
+        className='shrink-0 gap-1.5 rounded-full px-2.5 sm:px-3'
+      >
+        <Sparkles className='size-3.5' />
+        <span className='hidden sm:inline'>{t('ai.open')}</span>
+      </Button>
+      <TooltipContent side='bottom'>{t('ai.open')}</TooltipContent>
+    </Tooltip>
   );
 }

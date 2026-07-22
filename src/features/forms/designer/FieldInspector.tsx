@@ -1,7 +1,10 @@
 import type { CSSProperties, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { PanelHeader } from '@/components/panel/index.ts';
+import {
+  PanelHeader,
+  PanelHeaderCloseButton,
+} from '@/components/panel/index.ts';
 import { Sheet, SheetContent } from '@/components/ui/sheet.tsx';
 import type {
   ClinicalField,
@@ -96,8 +99,8 @@ export function FieldInspector({
       >
         <SheetContent
           side='bottom'
-          showCloseButton
           fullHeight
+          showCloseButton={false}
           style={sheetStyle}
           className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
         >
@@ -105,6 +108,14 @@ export function FieldInspector({
             surface='mobile'
             title={t('mobile.fieldSettings.sheetTitle')}
             subtitle={t('mobile.fieldSettings.sheetSubtitle')}
+            overlay={
+              <PanelHeaderCloseButton
+                onClick={() => {
+                  onOpenChange(false);
+                }}
+                label={t('inspector.close')}
+              />
+            }
           />
           {body}
         </SheetContent>

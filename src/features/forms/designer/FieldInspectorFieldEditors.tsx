@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button.tsx';
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
+import { TooltipIconButton } from '@/components/ui/tooltip-button.tsx';
 import type {
   ChoiceOption,
   ClinicalField,
@@ -70,11 +71,11 @@ export function ChoiceOptionsEditor({
                 onChange(next);
               }}
             />
-            <Button
+            <TooltipIconButton
               type='button'
               variant='ghost'
               size='icon-sm'
-              aria-label={t('inspector.removeOption')}
+              label={t('inspector.removeOption')}
               disabled={options.length <= 1}
               onClick={() => {
                 onChange(options.filter((_, itemIndex) => itemIndex !== index));
@@ -84,7 +85,7 @@ export function ChoiceOptionsEditor({
               }}
             >
               <Trash2 />
-            </Button>
+            </TooltipIconButton>
           </div>
         ))}
         <Button

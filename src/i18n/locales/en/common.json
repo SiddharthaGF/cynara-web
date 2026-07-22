@@ -9,7 +9,8 @@
     "switchToLight": "Switch to light mode",
     "switchToDark": "Switch to dark mode",
     "light": "Light",
-    "dark": "Dark"
+    "dark": "Dark",
+    "system": "System"
   },
   "locale": {
     "switch": "Change language",

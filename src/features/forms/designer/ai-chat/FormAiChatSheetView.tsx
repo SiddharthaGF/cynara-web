@@ -1,10 +1,14 @@
 import type { CSSProperties, JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { PanelHeader } from '@/components/panel/index.ts';
+import {
+  PanelHeader,
+  PanelHeaderCloseButton,
+} from '@/components/panel/index.ts';
 import { Sheet, SheetContent } from '@/components/ui/sheet.tsx';
 import { useKeyboardInset } from '@/hooks/use-keyboard-inset.ts';
 
+import { FormAiChatActions } from './FormAiChatActions.tsx';
 import {
   FormAiChatPanel,
   type FormAiChatPanelProps,
@@ -35,14 +39,18 @@ export function FormAiChatSheetView({
 
   if (isMobile) {
     // Cap the sheet so it never exceeds the visual viewport minus the soft
-    // Keyboard inset. The body itself drops its in-body close X (the sheet
-    // Provides one) and keeps title + model + persist + settings inline.
+    // Keyboard inset. The chrome header is rendered inline (above) so the
+    // Close X comes from `SheetContent showCloseButton`.
     const insetPx = `${Math.max(0, keyboardInset)}px`;
     const sheetStyle: CSSProperties = {
       height: `calc(100dvh - ${insetPx})`,
       maxHeight: `calc(100dvh - ${insetPx})`,
       paddingBottom: insetPx,
     };
+    const hasConversation =
+      panelProps.turns.length > 0 ||
+      panelProps.input.length > 0 ||
+      panelProps.error !== null;
     return (
       <Sheet
         open={open}
@@ -51,8 +59,8 @@ export function FormAiChatSheetView({
       >
         <SheetContent
           side='bottom'
-          showCloseButton
           fullHeight
+          showCloseButton={false}
           style={sheetStyle}
           className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
         >
@@ -60,6 +68,24 @@ export function FormAiChatSheetView({
             surface='mobile'
             title={t('mobile.ai.sheetTitle')}
             subtitle={t('mobile.ai.sheetSubtitle')}
+            actions={
+              <FormAiChatActions
+                configured={panelProps.configured}
+                persistChat={panelProps.persistChat}
+                hasConversation={hasConversation}
+                onTogglePersist={panelProps.onTogglePersist}
+                onOpenSettings={panelProps.onOpenSettings}
+                onClearConfirmed={panelProps.onClear}
+              />
+            }
+            overlay={
+              <PanelHeaderCloseButton
+                onClick={() => {
+                  onOpenChange(false);
+                }}
+                label={t('ai.close')}
+              />
+            }
           />
           <FormAiChatPanelBody
             hideHeader

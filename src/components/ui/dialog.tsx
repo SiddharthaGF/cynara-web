@@ -65,6 +65,12 @@ function DialogContent({
   showCloseButton = true,
   ...props
 }: DialogPrimitive.Popup.Props & {
+  /**
+   * Render the built-in absolute close X. When the dialog content mounts a
+   * `PanelHeaderCloseButton` inside a `PanelHeader.overlay`, pass `false`
+   * here to avoid rendering two overlapping close buttons (the absolute X
+   * Collided with the header action cluster in the Designer preview).
+   */
   showCloseButton?: boolean;
 }) {
   return (

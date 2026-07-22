@@ -1,6 +1,4 @@
-import { SaveIcon, SaveOffIcon, Settings2Icon, Trash2Icon } from 'lucide-react';
 import type { FormEvent, JSX } from 'react';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AiSettingsDialog } from '@/components/ai-settings-dialog.tsx';
@@ -10,15 +8,6 @@ import {
 } from '@/components/panel/index.ts';
 import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
 import type { FormDraftModel } from '@/features/forms/types.ts';
 import { cn } from '@/lib/utils.ts';
@@ -28,6 +17,7 @@ import { ChatTranscript } from './ChatTranscript.tsx';
 import type { ChatTurn } from './chatTurns.ts';
 import type { MentionableField } from './fieldMentions.ts';
 import type { MentionableFieldType } from './fieldTypeMentions.ts';
+import { FormAiChatActions } from './FormAiChatActions.tsx';
 
 /** Interaction flags for the AI chat shell (kept as one bag to avoid boolean-prop sprawl). */
 export interface FormAiChatInteraction {
@@ -185,14 +175,8 @@ export function FormAiChatPanelBody({
 }: FormAiChatPanelProps): JSX.Element {
   const { t } = useTranslation('designer');
   const { canRetry, canSubmit, busy, statusLoading } = interaction;
-  const [clearOpen, setClearOpen] = useState(false);
   const hasConversation =
     turns.length > 0 || input.length > 0 || error !== null;
-
-  function handleClear(): void {
-    setClearOpen(false);
-    onClear();
-  }
 
   return (
     <>
@@ -202,55 +186,14 @@ export function FormAiChatPanelBody({
           eyebrow={modelName ?? undefined}
           title={t('ai.title')}
           actions={
-            configured ? (
-              <>
-                <Button
-                  type='button'
-                  variant='ghost'
-                  size='icon-sm'
-                  className={cn(
-                    'shrink-0 rounded-full text-muted-foreground',
-                    persistChat &&
-                      'text-foreground ring-1 ring-inset ring-border/70',
-                  )}
-                  aria-label={t(persistChat ? 'ai.persistOn' : 'ai.persistOff')}
-                  aria-pressed={persistChat}
-                  title={t(persistChat ? 'ai.persistOn' : 'ai.persistOff')}
-                  onClick={onTogglePersist}
-                >
-                  {persistChat ? (
-                    <SaveIcon className='size-3.5' />
-                  ) : (
-                    <SaveOffIcon className='size-3.5' />
-                  )}
-                </Button>
-                <Button
-                  type='button'
-                  variant='ghost'
-                  size='icon-sm'
-                  className='shrink-0 rounded-full text-muted-foreground'
-                  aria-label={t('ai.clearHint')}
-                  title={t('ai.clearHint')}
-                  disabled={!hasConversation}
-                  onClick={() => {
-                    setClearOpen(true);
-                  }}
-                >
-                  <Trash2Icon className='size-3.5' />
-                </Button>
-                <Button
-                  type='button'
-                  variant='ghost'
-                  size='icon-sm'
-                  className='shrink-0 rounded-full text-muted-foreground'
-                  aria-label={t('ai.configure')}
-                  title={t('ai.configure')}
-                  onClick={onOpenSettings}
-                >
-                  <Settings2Icon className='size-3.5' />
-                </Button>
-              </>
-            ) : null
+            <FormAiChatActions
+              configured={configured}
+              persistChat={persistChat}
+              hasConversation={hasConversation}
+              onTogglePersist={onTogglePersist}
+              onOpenSettings={onOpenSettings}
+              onClearConfirmed={onClear}
+            />
           }
           overlay={
             <PanelHeaderCloseButton
@@ -326,31 +269,6 @@ export function FormAiChatPanelBody({
         open={aiSettingsOpen}
         onOpenChange={onAiSettingsOpenChange}
       />
-
-      <Dialog
-        open={clearOpen}
-        onOpenChange={setClearOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('ai.clearConfirmTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('ai.clearConfirmDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose render={<Button variant='outline' />}>
-              {t('ai.clearConfirmCancel')}
-            </DialogClose>
-            <Button
-              variant='destructive'
-              onClick={handleClear}
-            >
-              {t('ai.clearConfirmAction')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
