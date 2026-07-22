@@ -5,15 +5,13 @@ compatibility_date = "2026-07-22"
 compatibility_flags = ["nodejs_compat"]
 main = "@tanstack/react-start/server-entry"
 
-# VITE_API_ORIGIN is build-time (it is compiled into the client bundle by Vite)
-# and must be configured in the Cloudflare dashboard as a build environment
-# variable, not here. CORS for the cynara-api origin is also configured there.
-#
-# API_ORIGIN is the SSR-side counterpart: it is read by the Worker at runtime
-# (see src/api/client.ts) so SSR fetches reach cynara-api. Set it here to the
-# same origin the client uses.
+# VITE_API_ORIGIN is the cynara-api origin used by both the client bundle and
+# the Worker runtime. The @cloudflare/vite-plugin propagates [vars] as build-time
+# env (so the client sees it as import.meta.env.VITE_API_ORIGIN) and as runtime
+# bindings (so the SSR Worker sees it too). CORS for this origin must be
+# configured on the cynara-api side.
 [vars]
-VITE_API_ORIGIN = "http://cynara-demo.runasp.net"
+VITE_API_ORIGIN = "https://cynara-demo.runasp.net"
 
 [observability]
 enabled = true
