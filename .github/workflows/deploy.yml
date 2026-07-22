@@ -55,20 +55,31 @@ jobs:
         run: pnpm build
 
       - name: Deploy (push to main only — production)
+        id: deploy
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          packageManager: pnpm
-          command: deploy --keep-vars --config dist/server/wrangler.json
+        env:
+          HAS_CLOUDFLARE_CREDS:
+            ${{ secrets.CLOUDFLARE_API_TOKEN != '' &&
+            secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          if [ "${HAS_CLOUDFLARE_CREDS}" != "true" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID are not configured. Add them under Settings -> Secrets and variables -> Actions -> Secrets before pushing to main." >&2
+            exit 1
+          fi
+          pnpm exec wrangler deploy --keep-vars --config dist/server/wrangler.json
 
       - name: Smoke check (PRs — uploads a Worker version without traffic)
+        id: smoke
         if: github.event_name == 'pull_request'
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          packageManager: pnpm
-          command:
-            versions upload --keep-vars --config dist/server/wrangler.json
+        env:
+          HAS_CLOUDFLARE_CREDS:
+            ${{ secrets.CLOUDFLARE_API_TOKEN != '' &&
+            secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          if [ "${HAS_CLOUDFLARE_CREDS}" != "true" ]; then
+            echo "::warning::CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID are not configured. Skipping the PR smoke check; add them under Settings -> Secrets and variables -> Actions -> Secrets to enable Worker version uploads for PRs." >&2
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "skipped=false" >> "$GITHUB_OUTPUT"
+          pnpm exec wrangler versions upload --keep-vars --config dist/server/wrangler.json
