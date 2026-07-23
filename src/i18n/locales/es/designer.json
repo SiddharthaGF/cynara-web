@@ -387,6 +387,8 @@
     "streamingReply": "Escribiendo respuesta…",
     "applying": "Generando cambios del esquema…",
     "applied": "Aplicado al borrador",
+    "unchanged": "No se aplicaron cambios al borrador",
+    "errorTimeout": "La respuesta agotó el tiempo antes de llegar los cambios del esquema. Reintenta o simplifica la petición.",
     "thinkingLabel": "Pensó",
     "you": "Tú",
     "assistant": "Cynara",

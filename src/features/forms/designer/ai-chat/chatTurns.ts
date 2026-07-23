@@ -12,7 +12,8 @@ export interface ChatTurn {
    * changes). Cleared when the turn settles.
    */
   streamPhase?: 'message' | 'schema';
-  /** True when this turn updated the open form draft. */
+  /** True when this turn updated the open form draft.
+   *  Explicit `false` means the turn finished without changing schemas. */
   draftApplied?: boolean;
   /** Short designer-facing note about what was applied. */
   appliedSummary?: string;

@@ -58,7 +58,12 @@ export function ChatTurnMessage({
   );
   const showBody = turn.content.length > 0 || turn.streaming;
   const showApplied =
-    Boolean(turn.draftApplied) && !turn.streaming && !turn.failed;
+    turn.draftApplied === true && !turn.streaming && !turn.failed;
+  // Explicit false means the turn finished with schemas identical to the
+  // Open draft (mode unchanged / no-op patch). Surface that so a confident
+  // Assistant claim cannot be mistaken for a canvas update.
+  const showUnchanged =
+    turn.draftApplied === false && !turn.streaming && !turn.failed;
   let authorIcon = (
     <SparklesIcon
       className='size-3 opacity-70'
@@ -181,6 +186,18 @@ export function ChatTurnMessage({
                   </>
                 ) : null}
               </span>
+            </BubbleContent>
+          </Bubble>
+        ) : null}
+
+        {showUnchanged ? (
+          <Bubble
+            variant='outline'
+            align='start'
+            className='ai-chat-bubble ai-chat-bubble--assistant ai-chat-bubble--unchanged'
+          >
+            <BubbleContent className='ai-chat-bubble-content text-[14px] leading-relaxed text-muted-foreground'>
+              {t('ai.unchanged')}
             </BubbleContent>
           </Bubble>
         ) : null}

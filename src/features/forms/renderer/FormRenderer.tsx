@@ -34,6 +34,7 @@ export function FormRendererView({
   return (
     <form
       className={cn('grid gap-6', className)}
+      data-testid='preview-form'
       action={() => {
         renderer.triggerValidation();
       }}

@@ -387,6 +387,8 @@
     "streamingReply": "Writing reply…",
     "applying": "Generating schema changes…",
     "applied": "Applied to draft",
+    "unchanged": "No changes applied to the draft",
+    "errorTimeout": "The reply timed out before schema changes arrived. Retry or simplify the request.",
     "thinkingLabel": "Thought",
     "you": "You",
     "assistant": "Cynara",

@@ -90,12 +90,45 @@ export function syncUiSchema(clinical: ClinicalSchema, ui: UiSchema): UiSchema {
   };
 }
 
+/**
+ * Walk the UI layout in document order and collect top-level field ids
+ * (sections are flattened). Used to detect when layout drifts from the
+ * designer canvas order (`clinical.fields`).
+ */
+function collectLayoutFieldOrder(layout: LayoutNode[]): string[] {
+  const ids: string[] = [];
+  for (const node of layout) {
+    if (node.type === 'section') {
+      ids.push(...collectLayoutFieldOrder(node.children));
+    } else {
+      ids.push(node.fieldId);
+    }
+  }
+  return ids;
+}
+
+/**
+ * Preview renders `ui.layout`; the designer canvas renders `clinical.fields`.
+ * Keep the authored layout only when its field set and order still match the
+ * clinical schema. Otherwise rebuild from clinical so AI applies, reorder, and
+ * save always leave preview in the same order as the designer.
+ */
 function resolveLayout(clinical: ClinicalSchema, ui: UiSchema): LayoutNode[] {
-  if (ui.layout && ui.layout.length > 0) {
+  const fromClinical = buildLayout(clinical.fields);
+  if (!ui.layout || ui.layout.length === 0) {
+    return fromClinical;
+  }
+
+  const clinicalIds = clinical.fields.map((field) => field.id);
+  const layoutIds = collectLayoutFieldOrder(ui.layout);
+  if (
+    clinicalIds.length === layoutIds.length &&
+    clinicalIds.every((id, index) => id === layoutIds[index])
+  ) {
     return ui.layout;
   }
 
-  return buildLayout(clinical.fields);
+  return fromClinical;
 }
 
 export function appendFieldToLayout(

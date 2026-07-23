@@ -157,6 +157,7 @@ export function FormAiChatSheet({
       setPendingPayload,
       buildPayloadForUserTurn,
       errorGeneric: t('ai.errorGeneric'),
+      errorTimeout: t('ai.errorTimeout'),
     });
 
   const configured = statusQuery.data?.configured === true;

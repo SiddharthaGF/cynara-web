@@ -21,3 +21,23 @@ export function isTransientAiErrorMessage(message: string): boolean {
 /** Sentinel error used when the upstream SSE closes without a `done` payload
  *  carrying schema content. Mirrors the original parseDraft failure mode. */
 export const EMPTY_AI_SCHEMA_MESSAGE = 'Empty AI schema payload.';
+
+/**
+ * Sentinel when the client safety timeout fires before a terminal SSE event.
+ * Large authoring turns often finish the assistant text first and then spend
+ * a long time emitting the schema patch — aborting that mid-flight used to
+ * leave a confident reply with no draft apply and no error.
+ */
+export const AI_STREAM_TIMEOUT_MESSAGE =
+  'AI stream timed out before schema changes arrived.';
+
+/** Per-attempt cap. Schema generation for large forms routinely exceeds 60s. */
+export const AI_STREAM_TIMEOUT_MS = 180_000;
+
+export function isRetryableAiErrorMessage(message: string): boolean {
+  return (
+    isTransientAiErrorMessage(message) ||
+    message === EMPTY_AI_SCHEMA_MESSAGE ||
+    message === AI_STREAM_TIMEOUT_MESSAGE
+  );
+}
