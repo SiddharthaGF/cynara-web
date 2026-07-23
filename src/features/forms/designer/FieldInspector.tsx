@@ -12,7 +12,6 @@ import type {
   FieldPresentation,
   FieldRules,
 } from '@/features/forms/types.ts';
-import { useKeyboardInset } from '@/hooks/use-keyboard-inset.ts';
 import { useIsMobile } from '@/hooks/use-mobile.ts';
 import { cn } from '@/lib/utils.ts';
 
@@ -55,7 +54,6 @@ export function FieldInspector({
 }: FieldInspectorProps): JSX.Element | null {
   const { t } = useTranslation('designer');
   const isMobile = useIsMobile();
-  const keyboardInset = useKeyboardInset();
 
   if (!open) {
     return null;
@@ -82,15 +80,14 @@ export function FieldInspector({
   );
 
   if (isMobile) {
-    // Same `min(calc(...), N)` workaround as in FormPreviewDialog: avoid
-    // Mixing the calc() inside min() because some engines serialize the
-    // Resulting max-height too aggressively and the sheet shrinks to a stub.
-    const insetPx = `${Math.max(0, keyboardInset)}px`;
-    const sheetStyle: CSSProperties = {
-      maxHeight: `calc(100dvh - ${insetPx})`,
-      height: `calc(100dvh - ${insetPx})`,
-      paddingBottom: insetPx,
-    };
+    // `fullHeight` on `SheetContent` already pins the sheet to `100dvh`, which
+    // On modern engines (Chrome 108+, Safari 15.4+) is the visible viewport
+    // Once the soft keyboard is open. We must not subtract `keyboardInset`
+    // From the height or add it as padding-bottom — that pushes the body
+    // Up by the keyboard height and leaves a gap between the inputs and
+    // The keyboard. The body simply sits at the bottom of the visible
+    // Viewport (= top of the keyboard) on its own.
+    const sheetStyle: CSSProperties = {};
     return (
       <Sheet
         open={open}

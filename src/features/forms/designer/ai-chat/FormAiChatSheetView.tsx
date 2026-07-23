@@ -6,7 +6,6 @@ import {
   PanelHeaderCloseButton,
 } from '@/components/panel/index.ts';
 import { Sheet, SheetContent } from '@/components/ui/sheet.tsx';
-import { useKeyboardInset } from '@/hooks/use-keyboard-inset.ts';
 
 import { FormAiChatActions } from './FormAiChatActions.tsx';
 import {
@@ -31,22 +30,20 @@ export function FormAiChatSheetView({
   panelProps,
 }: FormAiChatSheetViewProps): JSX.Element | null {
   const { t } = useTranslation('designer');
-  const keyboardInset = useKeyboardInset();
 
   if (!open) {
     return null;
   }
 
   if (isMobile) {
-    // Cap the sheet so it never exceeds the visual viewport minus the soft
-    // Keyboard inset. The chrome header is rendered inline (above) so the
-    // Close X comes from `SheetContent showCloseButton`.
-    const insetPx = `${Math.max(0, keyboardInset)}px`;
-    const sheetStyle: CSSProperties = {
-      height: `calc(100dvh - ${insetPx})`,
-      maxHeight: `calc(100dvh - ${insetPx})`,
-      paddingBottom: insetPx,
-    };
+    // `fullHeight` on `SheetContent` already pins the sheet to `100dvh`, which
+    // On modern engines (Chrome 108+, Safari 15.4+) is the visible viewport
+    // Once the soft keyboard is open. Adding `paddingBottom: keyboardInset`
+    // On top of that pushes the composer up by the keyboard height, leaving
+    // A visible gap between the composer and the keyboard. With `100dvh`
+    // Already accounting for the keyboard, the composer just sits at the
+    // Bottom of the sheet (= top of the keyboard) on its own.
+    const sheetStyle: CSSProperties = {};
     const hasConversation =
       panelProps.turns.length > 0 ||
       panelProps.input.length > 0 ||
