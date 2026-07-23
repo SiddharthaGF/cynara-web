@@ -8,7 +8,7 @@ import { useFormsCatalog } from './useFormsCatalog.ts';
 
 export function FormListPage(): JSX.Element {
   const { t } = useTranslation('forms');
-  const { forms, error, isCreating, createForm } = useFormsCatalog();
+  const { forms, error, isCreating, isLoading, createForm } = useFormsCatalog();
 
   async function handleCreate(values: {
     code: string;
@@ -60,6 +60,7 @@ export function FormListPage(): JSX.Element {
         forms={forms}
         error={error}
         isCreating={isCreating}
+        isLoading={isLoading}
         onCreate={handleCreate}
       />
     </AppShell>

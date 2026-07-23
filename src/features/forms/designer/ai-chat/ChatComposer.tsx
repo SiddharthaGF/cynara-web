@@ -19,6 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import type { FieldType, FormDraftModel } from '@/features/forms/types.ts';
 import { useIsMobile } from '@/hooks/use-mobile.ts';
 
+import { FIELD_TYPE_KEYS } from '../fieldTypeMeta.ts';
 import { ChatComposerActions } from './ChatComposerActions.tsx';
 import { FieldMentionList, TypeMentionList } from './ChatMentionLists.tsx';
 import {
@@ -30,8 +31,6 @@ import {
   filterMentionableFieldTypes,
   listMentionableFieldTypes,
 } from './fieldTypeMentions.ts';
-
-export { ChatAiTrigger, ChatEmptyState } from './ChatMentionLists.tsx';
 
 interface ChatComposerProps {
   value: string;
@@ -48,21 +47,6 @@ interface ChatComposerProps {
   onRetry: () => void;
   onStop: () => void;
 }
-
-const FIELD_TYPE_KEYS = [
-  'text',
-  'textarea',
-  'number',
-  'integer',
-  'boolean',
-  'date',
-  'datetime',
-  'time',
-  'choice',
-  'group',
-  'repeater',
-  'component-ref',
-] as const satisfies readonly FieldType[];
 
 export function ChatComposer({
   value,

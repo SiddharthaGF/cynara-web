@@ -27,7 +27,6 @@ import type {
   FieldPresentation,
 } from '@/features/forms/types.ts';
 import { useSyncedTanstackForm } from '@/lib/useSyncedTanstackForm.ts';
-import { cn } from '@/lib/utils.ts';
 
 import {
   presentationFormValuesToPatch,
@@ -194,18 +193,12 @@ export function FieldInspectorPresentationSection({
   );
 }
 
-function WidthOptionLabel({
-  width,
-  className,
-}: {
-  width: FieldWidth;
-  className?: string;
-}): JSX.Element {
+function WidthOptionLabel({ width }: { width: FieldWidth }): JSX.Element {
   const { t } = useTranslation('designer');
   const Icon = getWidthIcon(width);
 
   return (
-    <span className={cn('inline-flex min-w-0 items-center gap-2', className)}>
+    <span className='inline-flex min-w-0 items-center gap-2'>
       <Icon
         className='size-4 shrink-0 text-muted-foreground'
         aria-hidden='true'

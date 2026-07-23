@@ -7,7 +7,6 @@ export type FieldWidth = NonNullable<FieldPresentation['width']>;
 
 export const WIDTH_OPTIONS: FieldWidth[] = ['full', 'half', 'third', 'quarter'];
 
-/** Shared icons for width options in the inspector select. */
 const WIDTH_ICONS: Record<FieldWidth, LucideIcon> = {
   full: Square,
   half: Columns2,

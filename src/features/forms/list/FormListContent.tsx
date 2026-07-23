@@ -12,6 +12,7 @@ interface FormListContentProps {
   forms: FormSummary[];
   error: string | null;
   isCreating: boolean;
+  isLoading: boolean;
   onCreate: (values: { code: string; name: string }) => Promise<void>;
 }
 
@@ -19,6 +20,7 @@ export function FormListContent({
   forms,
   error,
   isCreating,
+  isLoading,
   onCreate,
 }: FormListContentProps): JSX.Element {
   const { t } = useTranslation('forms');
@@ -80,6 +82,7 @@ export function FormListContent({
           />
           <FormsCatalogCard
             forms={forms}
+            isLoading={isLoading}
             reduceMotion={reduceMotion}
           />
         </div>

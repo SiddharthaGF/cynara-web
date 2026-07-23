@@ -175,12 +175,11 @@ export function FormFieldControl({
           >
             {labelNode}
           </FieldLabel>
-          {helpText ? (
-            <FieldDescription className='text-xs'>{helpText}</FieldDescription>
-          ) : null}
-          {invalid ? (
-            <FieldError errors={errors.map((message) => ({ message }))} />
-          ) : null}
+          <FieldFeedback
+            helpText={helpText}
+            errors={errors}
+            invalid={invalid}
+          />
         </FieldContent>
       </Field>
     );
@@ -209,13 +208,37 @@ export function FormFieldControl({
         inputId,
         invalid,
       )}
+      <FieldFeedback
+        helpText={helpText}
+        errors={errors}
+        invalid={invalid}
+      />
+    </Field>
+  );
+}
+
+function FieldFeedback({
+  helpText,
+  errors,
+  invalid,
+}: {
+  helpText?: string;
+  errors: string[];
+  invalid: boolean;
+}): JSX.Element | null {
+  if (!helpText && !invalid) {
+    return null;
+  }
+
+  return (
+    <>
       {helpText ? (
         <FieldDescription className='text-xs'>{helpText}</FieldDescription>
       ) : null}
       {invalid ? (
         <FieldError errors={errors.map((message) => ({ message }))} />
       ) : null}
-    </Field>
+    </>
   );
 }
 
@@ -227,7 +250,7 @@ function ConditionalBadge({
   return (
     <Badge
       variant='outline'
-      className='ml-2 inline-flex items-center gap-1 border-amber-500/60 bg-amber-500/10 px-1.5 py-0 text-[10px] font-medium text-amber-700 dark:text-amber-300'
+      className='ml-2 inline-flex items-center gap-1 border-warning/60 bg-warning/10 px-1.5 py-0 text-[0.625rem] font-medium text-warning-foreground'
     >
       <EyeOffIcon className='size-3' />
       {label('formPreview.conditionalBadge')}

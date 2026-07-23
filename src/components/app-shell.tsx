@@ -24,7 +24,7 @@ export function AppShell({
   return (
     <div className={cn('grain ambient-bg relative min-h-svh', className)}>
       <DocumentMeta />
-      <header className='relative z-10 flex items-center justify-between border-b border-border/60 bg-background/70 px-6 py-4 backdrop-blur-md'>
+      <header className='relative z-10 flex items-center justify-between border-b border-border/60 bg-card/80 px-6 py-4 backdrop-blur-md'>
         <Link
           to='/$locale/forms'
           params={{ locale }}

@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
+  PANEL_SHEET_CLASSNAME,
   PanelHeader,
   PanelHeaderCloseButton,
 } from '@/components/panel/index.ts';
@@ -18,11 +19,9 @@ interface FormAiChatSheetViewProps {
   open: boolean;
   isMobile: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Pre-built props for `FormAiChatPanel` / `FormAiChatPanelBody`. */
   panelProps: FormAiChatPanelProps;
 }
 
-/** Render the chat panel as a docked aside (desktop) or a bottom sheet (mobile). */
 export function FormAiChatSheetView({
   open,
   isMobile,
@@ -50,7 +49,7 @@ export function FormAiChatSheetView({
           side='bottom'
           fullHeight
           showCloseButton={false}
-          className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
+          className={PANEL_SHEET_CLASSNAME}
         >
           <PanelHeader
             surface='mobile'

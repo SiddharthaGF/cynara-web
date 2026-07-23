@@ -133,6 +133,8 @@ export const FIELD_TYPES: FieldTypeMeta[] = [
   },
 ];
 
+export const FIELD_TYPE_KEYS = FIELD_TYPES.map((item) => item.type);
+
 export function getFieldTypeMeta(type: FieldType): FieldTypeMeta {
   return (
     FIELD_TYPES.find((item) => item.type === type) ?? {

@@ -85,7 +85,7 @@ export function CreateFormCard({
     >
       <Card className='border-primary/10 shadow-sm'>
         <CardHeader>
-          <CardTitle className='flex items-center gap-2 font-display text-lg'>
+          <CardTitle className='flex items-center gap-2 font-heading text-lg'>
             <Plus className='size-4 text-primary' />
             {t('list.newDraft')}
           </CardTitle>

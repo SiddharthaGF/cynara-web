@@ -32,8 +32,6 @@ import { useAiChatStreamCommand } from './useAiChatStreamCommand.ts';
 import { useAiChatStreamLifecycle } from './useAiChatStreamLifecycle.ts';
 import { usePersistedChatTurns } from './usePersistedChatTurns.ts';
 
-export { ChatAiTrigger as FormAiChatTrigger } from './ChatComposer.tsx';
-
 interface FormAiChatSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -44,7 +42,6 @@ interface FormAiChatSheetProps {
   onApplyDraft: (next: FormDraftModel) => void;
 }
 
-/** Docked right-rail chat — ChatGPT-like transcript beside the canvas. */
 export function FormAiChatSheet({
   open,
   onOpenChange,
@@ -288,7 +285,6 @@ export function FormAiChatSheet({
     draftModel: model,
     error,
     fieldsById,
-    idPrefix,
     input: composer.value,
     composerKey: composer.key,
     interaction: {

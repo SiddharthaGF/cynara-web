@@ -230,22 +230,52 @@ export function QuestionCard({
   const helpText = presentation?.helpText ?? '';
 
   return (
-    <li className='min-w-0'>
+    <li className='grid min-w-0 grid-cols-[2rem_minmax(0,1fr)] gap-2 sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-3'>
+      <div
+        className='flex min-h-full flex-col items-center pt-5'
+        aria-hidden='true'
+      >
+        <span
+          className={cn(
+            'font-mono text-[0.625rem] font-medium tracking-wide text-muted-foreground transition-colors',
+            isSelected && 'text-primary',
+            fieldIssues.length > 0 && 'text-destructive',
+          )}
+        >
+          {String(index + 1).padStart(2, '0')}
+        </span>
+        <span
+          className={cn(
+            'mt-2 w-px flex-1 bg-border/70',
+            isSelected && 'bg-primary/45',
+            fieldIssues.length > 0 && 'bg-destructive/45',
+          )}
+        />
+      </div>
       <Card
         className={cn(
-          'min-w-0 cursor-pointer transition-[box-shadow,background-color]',
+          'min-w-0 cursor-pointer transition-[box-shadow,background-color,border-color]',
           isSelected
-            ? 'bg-primary/[0.07] ring-2 ring-primary/25 dark:bg-primary/10'
+            ? 'border-l-2 border-l-primary bg-primary/[0.07] ring-2 ring-primary/25 dark:bg-primary/10'
             : 'bg-card',
         )}
+        role='button'
+        tabIndex={0}
+        aria-label={label}
+        aria-current={isSelected ? 'true' : undefined}
         onClick={() => {
           onSelect(field.id);
         }}
+        onKeyDown={(event) => {
+          if (event.target !== event.currentTarget) {
+            return;
+          }
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onSelect(field.id);
+          }
+        }}
       >
-        {isSelected ? (
-          <div className='h-1 bg-linear-to-r from-primary to-accent' />
-        ) : null}
-
         <CardContent
           className={cn(
             'grid min-w-0 px-4 sm:px-5',

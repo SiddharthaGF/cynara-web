@@ -23,11 +23,9 @@ import { useFieldGroupLabel, useFieldTypeMeta } from './useFieldTypeMeta.ts';
 interface QuestionInsertGapProps {
   insertAt: number;
   onAdd: (type: FieldType, atIndex: number) => void;
-  /** Keep the + visible (empty canvas CTA). */
   alwaysVisible?: boolean;
 }
 
-/** Centered Google Forms–style insert: + only appears while hovering the gap. */
 export function QuestionInsertGap({
   insertAt,
   onAdd,

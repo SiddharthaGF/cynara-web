@@ -246,7 +246,7 @@ function DesktopTopBar(): JSX.Element {
 
       <div className='ml-auto flex items-center gap-1.5'>
         <span className='inline-flex h-6 items-center gap-1 rounded-full border border-border/60 bg-card/60 px-2 text-[10.5px] text-muted-foreground'>
-          <span className='size-1.5 rounded-full bg-emerald-500/80 shadow-[0_0_0_2px_oklch(0.72_0.15_148/22%)]' />
+          <span className='size-1.5 rounded-full bg-sage shadow-[0_0_0_2px_oklch(0.72_0.15_148/22%)]' />
           {t('formPreview.chrome.liveBadge')}
         </span>
         <span className='inline-flex h-6 items-center rounded-full border border-border/60 px-2 font-mono text-[10px] tracking-[0.12em] text-muted-foreground uppercase'>

@@ -1,8 +1,7 @@
-import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
 import {
   Card,
@@ -13,33 +12,25 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import type { ValidationIssue } from '@/features/forms/types.ts';
 import { translateValidationIssue } from '@/features/forms/validation/translateValidationIssue.ts';
-import { cn } from '@/lib/utils.ts';
 
 interface ValidationPanelProps {
   issues: ValidationIssue[];
-  className?: string;
 }
 
 export function ValidationPanel({
   issues,
-  className,
-}: ValidationPanelProps): JSX.Element {
+}: ValidationPanelProps): JSX.Element | null {
   const { t } = useTranslation('validation');
 
   if (issues.length === 0) {
-    return (
-      <Alert className={cn('mx-auto mt-4 max-w-2xl', className)}>
-        <CheckCircle2 />
-        <AlertDescription>{t('panel.allPassed')}</AlertDescription>
-      </Alert>
-    );
+    return null;
   }
 
   return (
-    <Card className={cn('mx-auto mt-4 max-w-2xl', className)}>
-      <CardHeader className='border-b'>
-        <CardTitle className='flex items-center gap-2 text-base'>
-          <AlertTriangle className='size-4 text-amber-600 dark:text-amber-400' />
+    <Card className='mx-auto mt-4 max-w-2xl border-destructive/30 bg-card/90'>
+      <CardHeader className='border-b border-destructive/20 px-4 py-3'>
+        <CardTitle className='flex items-center gap-2 text-sm'>
+          <AlertTriangle className='size-4 text-destructive' />
           {t('panel.issuesToFix', { count: issues.length })}
         </CardTitle>
       </CardHeader>
@@ -51,10 +42,15 @@ export function ValidationPanel({
                 key={`${issue.code}-${issue.path}`}
                 className='grid gap-1 px-4 py-3'
               >
-                <Badge variant='outline'>{issue.code}</Badge>
-                <AlertDescription className='text-foreground'>
+                <Badge
+                  variant='outline'
+                  className='w-fit font-mono text-[0.625rem]'
+                >
+                  {issue.code}
+                </Badge>
+                <p className='text-sm text-foreground'>
                   {translateValidationIssue(issue, t)}
-                </AlertDescription>
+                </p>
                 <code className='text-xs text-muted-foreground'>
                   {issue.path}
                 </code>

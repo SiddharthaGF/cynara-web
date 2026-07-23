@@ -5,10 +5,9 @@ import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { SettingsMenu } from '@/components/settings-menu.tsx';
+import { StatusState } from '@/components/status-state.tsx';
 import { DocumentMeta } from '@/components/theme-toggle.tsx';
-import { Button } from '@/components/ui/button.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
-import { Spinner } from '@/components/ui/spinner.tsx';
 import {
   Tooltip,
   TooltipContent,
@@ -65,48 +64,24 @@ export function FormDesignerLayout({
   function renderMain(): JSX.Element {
     if (layout.draft.isLoading) {
       return (
-        <div className='flex min-h-0 flex-1 items-center justify-center px-6'>
-          <div
-            className='flex flex-col items-center gap-3 text-center'
-            role='status'
-            aria-live='polite'
-          >
-            <Spinner className='size-8 text-primary' />
-            <div className='space-y-1'>
-              <p className='font-heading text-sm font-medium'>
-                {t('loading.title')}
-              </p>
-              <p className='text-sm text-muted-foreground'>
-                {t('loading.description')}
-              </p>
-            </div>
-          </div>
-        </div>
+        <StatusState
+          kind='loading'
+          title={t('loading.title')}
+          description={t('loading.description')}
+        />
       );
     }
     if (layout.draft.loadError !== null) {
       return (
-        <div className='flex min-h-0 flex-1 items-center justify-center px-6'>
-          <div className='flex max-w-sm flex-col items-center gap-4 text-center'>
-            <div className='space-y-1'>
-              <p className='font-heading text-sm font-medium'>
-                {t('loadError.title')}
-              </p>
-              <p className='text-sm text-muted-foreground'>
-                {layout.draft.loadError}
-              </p>
-            </div>
-            <Button
-              type='button'
-              size='sm'
-              onClick={() => {
-                void layout.draft.reloadDraft();
-              }}
-            >
-              {t('loadError.retry')}
-            </Button>
-          </div>
-        </div>
+        <StatusState
+          kind='error'
+          title={t('loadError.title')}
+          description={layout.draft.loadError}
+          actionLabel={t('loadError.retry')}
+          onAction={() => {
+            void layout.draft.reloadDraft();
+          }}
+        />
       );
     }
     return (
@@ -114,7 +89,6 @@ export function FormDesignerLayout({
         <ScrollArea className='canvas-grid min-w-0 flex-1'>
           <main className='min-w-0 max-w-full overflow-x-clip px-3 py-4 md:px-6 md:py-6'>
             <FieldCanvas
-              formCode={code}
               fields={layout.draft.model.clinical.fields}
               presentations={layout.draft.model.ui.fields}
               fieldRules={layout.draft.model.rules.fields}
@@ -208,7 +182,7 @@ export function FormDesignerLayout({
     <>
       <div className='grain ambient-bg flex h-svh flex-col overflow-hidden bg-background'>
         <DocumentMeta />
-        <header className='flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-background/80 px-3 backdrop-blur-md md:gap-3 md:px-4'>
+        <header className='flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-card/80 px-3 backdrop-blur-md md:gap-3 md:px-4'>
           <Tooltip>
             <TooltipTrigger
               render={

@@ -2,8 +2,10 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
+  PANEL_SHEET_CLASSNAME,
   PanelHeader,
   PanelHeaderCloseButton,
+  PanelSurface,
 } from '@/components/panel/index.ts';
 import { Sheet, SheetContent } from '@/components/ui/sheet.tsx';
 import type {
@@ -13,7 +15,6 @@ import type {
   FieldRules,
 } from '@/features/forms/types.ts';
 import { useIsMobile } from '@/hooks/use-mobile.ts';
-import { cn } from '@/lib/utils.ts';
 
 import { FieldInspectorBody } from './FieldInspectorBody.tsx';
 import type { RuleFieldOption } from './FieldInspectorRulesSection.tsx';
@@ -90,7 +91,7 @@ export function FieldInspector({
           side='bottom'
           fullHeight
           showCloseButton={false}
-          className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
+          className={PANEL_SHEET_CLASSNAME}
         >
           <PanelHeader
             surface='mobile'
@@ -112,13 +113,11 @@ export function FieldInspector({
   }
 
   return (
-    <aside
-      className={cn(
-        'inspector-shell flex h-full min-h-0 w-full max-w-[22rem] shrink-0 flex-col border-l border-border/50 xl:max-w-[24rem]',
-      )}
+    <PanelSurface
+      className='inspector-shell w-full max-w-[22rem] xl:max-w-[24rem]'
       aria-label={t('inspector.caseFile')}
     >
       {body}
-    </aside>
+    </PanelSurface>
   );
 }

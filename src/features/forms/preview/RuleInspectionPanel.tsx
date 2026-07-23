@@ -3,6 +3,7 @@ import { Eye, EyeOff, Lock, LockOpen, Sigma } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PanelSurface } from '@/components/panel/index.ts';
 import { Badge } from '@/components/ui/badge.tsx';
 import {
   Card,
@@ -56,8 +57,8 @@ export function RuleInspectionPanel({
   const panelContent = (
     <div className='grid gap-3 pb-2'>
       {configWarnings.length > 0 ? (
-        <Card className='border-amber-500/20 bg-card/80 shadow-sm backdrop-blur-sm'>
-          <CardHeader className='border-b py-3'>
+        <Card className='border-warning/30 bg-card shadow-sm'>
+          <CardHeader className='border-b border-warning/20 py-3'>
             <CardTitle className='text-sm'>
               {t('formPreview.configWarnings', {
                 count: configWarnings.length,
@@ -68,7 +69,7 @@ export function RuleInspectionPanel({
             {configWarnings.map((warning) => (
               <div
                 key={`${warning.code}-${warning.fieldId ?? warning.message}`}
-                className='grid gap-1 rounded-md border border-amber-500/30 bg-amber-500/5 p-2'
+                className='grid gap-1 rounded-md border border-warning/30 bg-warning/5 p-2'
               >
                 <Badge variant='outline'>
                   {tv(`warningCodes.${warning.code}`, {
@@ -82,7 +83,7 @@ export function RuleInspectionPanel({
         </Card>
       ) : null}
 
-      <Card className='border-border/60 bg-card/80 shadow-sm backdrop-blur-sm'>
+      <Card className='border-border/70 bg-card shadow-sm'>
         <CardHeader className='space-y-3 border-b py-3'>
           <CardTitle className='text-sm'>
             {t('formPreview.fieldStates')}
@@ -221,8 +222,8 @@ export function RuleInspectionPanel({
       </Card>
 
       {evaluation.validationErrors.length > 0 ? (
-        <Card className='border-destructive/25 bg-card/80 shadow-sm backdrop-blur-sm'>
-          <CardHeader className='border-b py-3'>
+        <Card className='border-destructive/25 bg-card shadow-sm'>
+          <CardHeader className='border-b border-destructive/20 py-3'>
             <CardTitle className='text-sm text-destructive'>
               {t('formPreview.crossFieldValidation')}
             </CardTitle>
@@ -248,7 +249,7 @@ export function RuleInspectionPanel({
   }
 
   return (
-    <aside className='flex h-full min-h-0 w-80 shrink-0 flex-col overflow-hidden border-l bg-card xl:w-96'>
+    <PanelSurface className='w-80 overflow-hidden xl:w-96'>
       <div className='shrink-0 border-b px-4 py-3'>
         <h3 className='font-heading text-sm font-medium'>
           {t('formPreview.ruleInspection')}
@@ -259,7 +260,7 @@ export function RuleInspectionPanel({
       </div>
 
       <ScrollArea className='min-h-0 w-full flex-1'>{panelContent}</ScrollArea>
-    </aside>
+    </PanelSurface>
   );
 }
 

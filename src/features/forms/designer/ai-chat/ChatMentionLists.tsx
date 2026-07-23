@@ -1,5 +1,5 @@
 import { Sparkles } from 'lucide-react';
-import type { JSX } from 'react';
+import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
@@ -21,42 +21,33 @@ export function FieldMentionList({
   menuHint: string;
 }): JSX.Element {
   if (fields.length === 0) {
-    return (
-      <p className='px-2.5 py-2 text-xs text-muted-foreground'>{emptyLabel}</p>
-    );
+    return <MentionEmptyState label={emptyLabel} />;
   }
 
   return (
-    <>
-      <ScrollArea className='max-h-44 w-full pr-1'>
-        <div className='flex flex-col gap-0.5'>
-          {fields.map((field) => (
-            <MentionItem
-              key={field.id}
-              value={field.id}
-              label={field.id}
-              className='items-start gap-2.5 rounded-lg px-2.5 py-2'
-            >
-              <FieldTypeIcon
-                type={field.type}
-                className='mt-0.5 size-3.5 text-muted-foreground'
-              />
-              <span className='min-w-0 flex-1'>
-                <span className='block truncate text-sm font-medium'>
-                  {field.pathLabel}
-                </span>
-                <span className='mt-0.5 block truncate font-mono text-[10px] text-muted-foreground'>
-                  @{field.id}
-                </span>
-              </span>
-            </MentionItem>
-          ))}
-        </div>
-      </ScrollArea>
-      <p className='mt-1 border-t border-border/50 px-2.5 pt-1.5 text-[10px] text-muted-foreground'>
-        {menuHint}
-      </p>
-    </>
+    <MentionListShell menuHint={menuHint}>
+      {fields.map((field) => (
+        <MentionItem
+          key={field.id}
+          value={field.id}
+          label={field.id}
+          className='items-start gap-2.5 rounded-lg px-2.5 py-2'
+        >
+          <FieldTypeIcon
+            type={field.type}
+            className='mt-0.5 size-3.5 text-muted-foreground'
+          />
+          <span className='min-w-0 flex-1'>
+            <span className='block truncate text-sm font-medium'>
+              {field.pathLabel}
+            </span>
+            <span className='mt-0.5 block truncate font-mono text-[10px] text-muted-foreground'>
+              @{field.id}
+            </span>
+          </span>
+        </MentionItem>
+      ))}
+    </MentionListShell>
   );
 }
 
@@ -70,46 +61,60 @@ export function TypeMentionList({
   menuHint: string;
 }): JSX.Element {
   if (types.length === 0) {
-    return (
-      <p className='px-2.5 py-2 text-xs text-muted-foreground'>{emptyLabel}</p>
-    );
+    return <MentionEmptyState label={emptyLabel} />;
   }
 
   return (
+    <MentionListShell menuHint={menuHint}>
+      {types.map((item) => (
+        <MentionItem
+          key={item.type}
+          value={item.slug}
+          label={item.slug}
+          className='items-start gap-2.5 rounded-lg px-2.5 py-2'
+        >
+          <FieldTypeIcon
+            type={item.type}
+            className='mt-0.5 size-3.5 text-muted-foreground'
+          />
+          <span className='min-w-0 flex-1'>
+            <span className='block truncate text-sm font-medium'>
+              {item.label}
+            </span>
+            <span className='mt-0.5 block truncate text-[11px] text-muted-foreground'>
+              {item.description}
+            </span>
+            <span className='mt-0.5 block truncate font-mono text-[10px] text-muted-foreground'>
+              #{item.slug}
+            </span>
+          </span>
+        </MentionItem>
+      ))}
+    </MentionListShell>
+  );
+}
+
+function MentionListShell({
+  children,
+  menuHint,
+}: {
+  children: ReactNode;
+  menuHint: string;
+}): JSX.Element {
+  return (
     <>
-      <ScrollArea className='max-h-44 w-full pr-1'>
-        <div className='flex flex-col gap-0.5'>
-          {types.map((item) => (
-            <MentionItem
-              key={item.type}
-              value={item.slug}
-              label={item.slug}
-              className='items-start gap-2.5 rounded-lg px-2.5 py-2'
-            >
-              <FieldTypeIcon
-                type={item.type}
-                className='mt-0.5 size-3.5 text-muted-foreground'
-              />
-              <span className='min-w-0 flex-1'>
-                <span className='block truncate text-sm font-medium'>
-                  {item.label}
-                </span>
-                <span className='mt-0.5 block truncate text-[11px] text-muted-foreground'>
-                  {item.description}
-                </span>
-                <span className='mt-0.5 block truncate font-mono text-[10px] text-muted-foreground'>
-                  #{item.slug}
-                </span>
-              </span>
-            </MentionItem>
-          ))}
-        </div>
+      <ScrollArea className='h-44 w-full pr-1'>
+        <div className='flex flex-col gap-0.5'>{children}</div>
       </ScrollArea>
-      <p className='mt-1 border-t border-border/50 px-2.5 pt-1.5 text-[10px] text-muted-foreground'>
+      <p className='mt-1 shrink-0 border-t border-border/50 px-2.5 pt-1.5 text-[10px] text-muted-foreground'>
         {menuHint}
       </p>
     </>
   );
+}
+
+function MentionEmptyState({ label }: { label: string }): JSX.Element {
+  return <p className='px-2.5 py-2 text-xs text-muted-foreground'>{label}</p>;
 }
 
 export function ChatEmptyState({

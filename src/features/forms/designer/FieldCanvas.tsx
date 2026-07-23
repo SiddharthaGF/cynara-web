@@ -2,12 +2,11 @@ import { Fragment, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card.tsx';
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@/components/ui/empty.tsx';
 import type {
   ClinicalField,
   FieldPresentation,
@@ -21,7 +20,6 @@ import { QuestionCard } from './QuestionCard.tsx';
 import { QuestionInsertGap } from './QuestionInsertGap.tsx';
 
 interface FieldCanvasProps {
-  formCode: string;
   fields: ClinicalField[];
   presentations: Record<string, FieldPresentation>;
   fieldRules: Record<string, FieldRules>;
@@ -43,7 +41,6 @@ interface FieldCanvasProps {
 }
 
 export function FieldCanvas({
-  formCode,
   fields,
   presentations,
   fieldRules,
@@ -64,31 +61,32 @@ export function FieldCanvas({
 
   return (
     <div className='mx-auto w-full min-w-0 max-w-2xl'>
-      <Card className='mb-4 overflow-hidden'>
-        <div className='h-1.5 bg-linear-to-r from-primary via-accent to-primary/60' />
-        <CardHeader>
-          <p className='text-xs font-medium tracking-wide text-accent uppercase'>
+      <div className='mb-4 flex items-end justify-between border-b border-border/60 px-1 pb-3'>
+        <div className='grid gap-0.5'>
+          <p className='text-[0.625rem] font-medium tracking-[0.14em] text-primary uppercase'>
             {t('header.clinicalDraft')}
           </p>
-          <CardTitle className='font-heading text-2xl font-semibold md:text-3xl'>
-            {formCode}
-          </CardTitle>
-          <CardDescription>{t('header.editHint')}</CardDescription>
-        </CardHeader>
-      </Card>
+          <h1 className='font-heading text-xl font-medium tracking-tight'>
+            {t('canvas.questions')}
+          </h1>
+        </div>
+        <span className='font-mono text-xs text-muted-foreground'>
+          {String(fields.length).padStart(2, '0')}
+        </span>
+      </div>
 
       {fields.length === 0 ? (
         <div className='grid gap-2'>
-          <Card>
-            <CardContent className='py-14 text-center'>
-              <CardTitle className='font-heading text-lg font-medium'>
+          <Empty className='min-h-48 rounded-xl border border-dashed border-border/70 bg-card/60'>
+            <EmptyHeader>
+              <EmptyTitle className='text-lg'>
                 {t('canvas.emptyTitle')}
-              </CardTitle>
-              <CardDescription className='mt-2'>
+              </EmptyTitle>
+              <EmptyDescription>
                 {t('canvas.emptyDescription')}
-              </CardDescription>
-            </CardContent>
-          </Card>
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
           {readOnly ? null : (
             <ul className='grid min-w-0 gap-0'>
               <QuestionInsertGap

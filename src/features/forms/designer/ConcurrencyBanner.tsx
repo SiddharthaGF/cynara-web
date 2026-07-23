@@ -20,10 +20,10 @@ export function ConcurrencyBanner({
 
   return (
     <Alert
-      className='mb-4 border-amber-500/25 bg-amber-500/8'
+      className='mb-4 border-warning/30 bg-warning/8'
       role='alert'
     >
-      <AlertTriangle className='text-amber-600 dark:text-amber-400' />
+      <AlertTriangle className='text-warning-foreground' />
       <AlertTitle>{t('concurrency.title')}</AlertTitle>
       <AlertDescription>{message}</AlertDescription>
       <div className='col-span-full mt-2 flex flex-wrap gap-2'>

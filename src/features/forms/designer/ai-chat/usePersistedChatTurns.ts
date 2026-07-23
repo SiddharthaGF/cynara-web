@@ -17,12 +17,6 @@ interface UsePersistedChatTurns {
   setTurns: React.Dispatch<React.SetStateAction<ChatTurn[]>>;
 }
 
-/**
- * Manages the visible transcript plus the user-controlled "keep chat after
- * Reload" preference. The transcript is hydrated from `sessionStorage` on
- * Mount, debounced-write on every change, and a final flush on pagehide keeps
- * The last streaming fragment durable.
- */
 export function usePersistedChatTurns(
   formCode: string,
   locale: string,

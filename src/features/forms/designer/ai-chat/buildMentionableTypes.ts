@@ -1,24 +1,10 @@
 import type { TFunction } from 'i18next';
 
+import { FIELD_TYPE_KEYS } from '../fieldTypeMeta.ts';
 import {
   listMentionableFieldTypes,
   type MentionableFieldType,
 } from './fieldTypeMentions.ts';
-
-const FIELD_TYPE_KEYS = [
-  'text',
-  'textarea',
-  'number',
-  'integer',
-  'boolean',
-  'date',
-  'datetime',
-  'time',
-  'choice',
-  'group',
-  'repeater',
-  'component-ref',
-] as const;
 
 export function buildMentionableTypes(
   locale: string,

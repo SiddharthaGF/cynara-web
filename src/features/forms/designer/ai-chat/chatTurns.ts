@@ -13,7 +13,7 @@ export interface ChatTurn {
   appliedSummary?: string;
 }
 
-export function toApiMessages(
+export function turnsToFormAiMessages(
   nextTurns: ChatTurn[],
 ): { role: 'user' | 'assistant'; content: string }[] {
   return nextTurns.flatMap((turn) => {
@@ -27,15 +27,4 @@ export function toApiMessages(
       },
     ];
   });
-}
-
-/**
- * Same shape as `toApiMessages` but typed against the canonical
- * `FormAiChatMessage`. Lets the rest of the chat pipeline talk to the API
- * types directly without re-mapping in every call site.
- */
-export function turnsToFormAiMessages(
-  nextTurns: ChatTurn[],
-): { role: 'user' | 'assistant'; content: string }[] {
-  return toApiMessages(nextTurns);
 }

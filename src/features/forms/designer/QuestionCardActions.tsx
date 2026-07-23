@@ -2,7 +2,6 @@ import {
   Asterisk,
   ChevronDown,
   ChevronUp,
-  Copy,
   MoreVertical,
   Settings2,
   Trash2,
@@ -77,8 +76,11 @@ export function QuestionCardActions({
         </TooltipIconButton>
       </div>
 
-      <div className='hidden items-center sm:flex'>
-        <Field orientation='horizontal'>
+      <div className='flex items-center gap-1'>
+        <Field
+          orientation='horizontal'
+          className='hidden sm:flex'
+        >
           <Checkbox
             id={`${field.id}-required-footer`}
             checked={field.required ?? false}
@@ -93,92 +95,58 @@ export function QuestionCardActions({
 
         <Separator
           orientation='vertical'
-          className='mx-1 h-4'
+          className='mx-1 hidden h-4 sm:block'
         />
-
-        <TooltipIconButton
-          type='button'
-          variant='ghost'
-          size='icon-sm'
-          label={t('canvas.moreOptions')}
-          onClick={() => {
-            onOpenAdvanced(field.id);
-          }}
-        >
-          <MoreVertical />
-        </TooltipIconButton>
-
-        <TooltipIconButton
-          type='button'
-          variant='ghost'
-          size='icon-sm'
-          label={t('canvas.deleteQuestion')}
-          onClick={() => {
-            onRemove(field.id);
-          }}
-          className='text-destructive hover:bg-destructive/10 hover:text-destructive'
-        >
-          <Trash2 />
-        </TooltipIconButton>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon-sm'
+                aria-label={t('canvas.actionsMenu')}
+              />
+            }
+          >
+            <MoreVertical />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align='end'
+            className='min-w-44'
+          >
+            <DropdownMenuCheckboxItem
+              checked={field.required ?? false}
+              onCheckedChange={(checked) => {
+                onToggleRequired(field.id, checked);
+              }}
+              className='whitespace-nowrap sm:hidden'
+            >
+              <Asterisk className='size-4' />
+              <span>{t('canvas.required')}</span>
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuItem
+              className='whitespace-nowrap'
+              onClick={() => {
+                onOpenAdvanced(field.id);
+              }}
+            >
+              <Settings2 className='size-4' />
+              <span>{t('canvas.fieldSettings')}</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant='destructive'
+              className='whitespace-nowrap'
+              onClick={() => {
+                onRemove(field.id);
+              }}
+            >
+              <Trash2 className='size-4' />
+              <span>{t('canvas.deleteQuestion')}</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon-sm'
-              className='sm:hidden'
-              aria-label={t('canvas.actionsMenu')}
-            />
-          }
-        >
-          <MoreVertical />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align='end'
-          className='min-w-44'
-        >
-          <DropdownMenuCheckboxItem
-            checked={field.required ?? false}
-            onCheckedChange={(checked) => {
-              onToggleRequired(field.id, checked);
-            }}
-            className='whitespace-nowrap'
-          >
-            <Asterisk className='size-4' />
-            <span>{t('canvas.required')}</span>
-          </DropdownMenuCheckboxItem>
-          <DropdownMenuItem
-            className='whitespace-nowrap'
-            onClick={() => {
-              onOpenAdvanced(field.id);
-            }}
-          >
-            <Settings2 className='size-4' />
-            <span>{t('canvas.moreOptions')}</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled
-            className='whitespace-nowrap'
-          >
-            <Copy className='size-4' />
-            <span>{t('canvas.duplicateSoon')}</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant='destructive'
-            className='whitespace-nowrap'
-            onClick={() => {
-              onRemove(field.id);
-            }}
-          >
-            <Trash2 className='size-4' />
-            <span>{t('canvas.deleteQuestion')}</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </div>
   );
 }

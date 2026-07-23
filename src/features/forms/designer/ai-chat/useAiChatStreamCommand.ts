@@ -39,7 +39,6 @@ export interface UseAiChatStreamCommand {
   runStream: (payload: PendingChatPayload) => Promise<void>;
   handleStop: () => void;
   clearQueuedTurns: () => void;
-  drainQueue: () => Promise<void>;
   handleRemoveQueued: (turnId: string) => void;
 }
 
@@ -140,7 +139,6 @@ export function useAiChatStreamCommand({
     runStream,
     handleStop,
     clearQueuedTurns,
-    drainQueue,
     handleRemoveQueued,
   };
 }

@@ -31,9 +31,6 @@ import type { ChatTurn } from './chatTurns.ts';
 import type { MentionableField } from './fieldMentions.ts';
 import type { MentionableFieldType } from './fieldTypeMentions.ts';
 
-export type { ChatTurn } from './chatTurns.ts';
-
-/** Matches shadcn Bubble “Show More / Collapsible” example. */
 const USER_PREVIEW_LENGTH = 180;
 
 export function ChatTurnMessage({
@@ -166,7 +163,7 @@ export function ChatTurnMessage({
           >
             <BubbleContent className='ai-chat-bubble-content flex items-start gap-2 whitespace-pre-wrap text-[14px] leading-relaxed'>
               <CheckIcon
-                className='mt-0.5 size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400'
+                className='mt-0.5 size-3.5 shrink-0 text-primary'
                 aria-hidden
               />
               <span className='min-w-0'>

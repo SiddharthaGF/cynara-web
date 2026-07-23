@@ -12,7 +12,6 @@ interface FieldTypeIconProps {
   className?: string;
 }
 
-/** Shared glyph for a field type — use everywhere types are shown. */
 export function FieldTypeIcon({
   type,
   className,
@@ -28,23 +27,16 @@ export function FieldTypeIcon({
 
 interface FieldTypeLabelProps {
   type: FieldType;
-  className?: string;
-  iconClassName?: string;
 }
 
-/** Icon + localized label, for selects and compact rows. */
-export function FieldTypeLabel({
-  type,
-  className,
-  iconClassName,
-}: FieldTypeLabelProps): JSX.Element {
+export function FieldTypeLabel({ type }: FieldTypeLabelProps): JSX.Element {
   const meta = useFieldTypeMeta(type);
 
   return (
-    <span className={cn('inline-flex min-w-0 items-center gap-2', className)}>
+    <span className='inline-flex min-w-0 items-center gap-2'>
       <FieldTypeIcon
         type={type}
-        className={cn('text-muted-foreground', iconClassName)}
+        className='text-muted-foreground'
       />
       <span className='truncate'>{meta.label}</span>
     </span>
@@ -53,20 +45,15 @@ export function FieldTypeLabel({
 
 interface FieldTypeBadgeProps {
   type: FieldType;
-  className?: string;
 }
 
-/** Badge with the same icon used in palette and type select. */
-export function FieldTypeBadge({
-  type,
-  className,
-}: FieldTypeBadgeProps): JSX.Element {
+export function FieldTypeBadge({ type }: FieldTypeBadgeProps): JSX.Element {
   const meta = useFieldTypeMeta(type);
 
   return (
     <Badge
       variant='secondary'
-      className={cn('gap-1 font-normal', className)}
+      className='gap-1 font-normal'
     >
       <FieldTypeIcon
         type={type}

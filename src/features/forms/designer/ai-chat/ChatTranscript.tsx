@@ -13,7 +13,7 @@ import {
   MessageScrollerViewport,
 } from '@/components/ui/message-scroller.tsx';
 
-import { ChatEmptyState } from './ChatComposer.tsx';
+import { ChatEmptyState } from './ChatMentionLists.tsx';
 import { ChatTurnMessage } from './ChatTurnMessage.tsx';
 import type { ChatTurn } from './chatTurns.ts';
 import type { MentionableField } from './fieldMentions.ts';
@@ -27,7 +27,6 @@ export function ChatTranscript({
   error,
   stopped,
   canRetry,
-  idPrefix: _idPrefix,
   onRetry,
   onPickPrompt,
   onRemoveQueued,
@@ -39,7 +38,6 @@ export function ChatTranscript({
   error: string | null;
   stopped: boolean;
   canRetry: boolean;
-  idPrefix: string;
   onRetry: () => void;
   onPickPrompt: (prompt: string) => void;
   onRemoveQueued: (turnId: string) => void;

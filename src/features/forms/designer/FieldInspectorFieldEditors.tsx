@@ -128,21 +128,21 @@ export function ComponentDependencyHint({
   }
   if (!component) {
     return (
-      <FieldDescription className='text-amber-600 dark:text-amber-400'>
+      <FieldDescription className='text-warning-foreground'>
         {t('inspector.blockNotFound')}
       </FieldDescription>
     );
   }
   if (!field.componentVersion) {
     return (
-      <FieldDescription className='text-amber-600 dark:text-amber-400'>
+      <FieldDescription className='text-warning-foreground'>
         {t('inspector.pinVersion')}
       </FieldDescription>
     );
   }
   if (!component.publishedVersions.includes(field.componentVersion)) {
     return (
-      <FieldDescription className='text-amber-600 dark:text-amber-400'>
+      <FieldDescription className='text-warning-foreground'>
         {t('inspector.versionNotPublished', {
           version: field.componentVersion,
         })}
@@ -150,7 +150,7 @@ export function ComponentDependencyHint({
     );
   }
   return (
-    <FieldDescription className='text-emerald-600 dark:text-emerald-400'>
+    <FieldDescription className='text-primary'>
       {t('inspector.linkedTo', {
         name: component.name,
         version: field.componentVersion,

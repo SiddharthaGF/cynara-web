@@ -119,13 +119,11 @@ export function FieldInspectorRulesSection({
                   }}
                 >
                   <InspectorSelectTrigger className='w-full'>
-                    <SelectValueLabel>
-                      {renderSelectedFieldOption(
-                        toSelectValue(fieldApi.state.value),
-                        otherFields,
-                        noneLabel,
-                      )}
-                    </SelectValueLabel>
+                    {renderSelectedFieldOption(
+                      toSelectValue(fieldApi.state.value),
+                      otherFields,
+                      noneLabel,
+                    )}
                   </InspectorSelectTrigger>
                   <InspectorSelectContent>
                     <InspectorSelectItem value={null}>
@@ -194,13 +192,11 @@ function RulePairFields({
                     }}
                   >
                     <InspectorSelectTrigger className='w-full'>
-                      <SelectValueLabel>
-                        {renderSelectedFieldOption(
-                          toSelectValue(fieldApi.state.value),
-                          fieldOptions,
-                          noneLabel,
-                        )}
-                      </SelectValueLabel>
+                      {renderSelectedFieldOption(
+                        toSelectValue(fieldApi.state.value),
+                        fieldOptions,
+                        noneLabel,
+                      )}
                     </InspectorSelectTrigger>
                     <InspectorSelectContent>
                       <InspectorSelectItem value={null}>
@@ -289,18 +285,6 @@ function RuleFieldOptionLabel({
       ) : null}
     </span>
   );
-}
-
-/**
- * Wrapper for the trigger value: the trigger is a single line, so we render the
- * option label inline (current behavior). The popup uses the stacked variant.
- */
-function SelectValueLabel({
-  children,
-}: {
-  children: React.ReactNode;
-}): JSX.Element {
-  return <>{children}</>;
 }
 
 function fieldOptionSelectLabel(option: RuleFieldOption): string {

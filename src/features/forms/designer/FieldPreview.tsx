@@ -29,7 +29,6 @@ interface FieldPreviewProps {
   presentation?: FieldPresentation;
   rules?: FieldRules | null;
   placeholder?: string;
-  className?: string;
 }
 
 export function FieldPreview({
@@ -37,14 +36,13 @@ export function FieldPreview({
   presentation,
   rules,
   placeholder,
-  className,
 }: FieldPreviewProps): JSX.Element {
   const { t } = useTranslation('designer');
   const validationRules = collectFieldValidationRules(field, rules, t);
   const resolvedPlaceholder = placeholder ?? presentation?.placeholder;
 
   return (
-    <div className={cn('grid w-full min-w-0 max-w-full gap-3', className)}>
+    <div className='grid w-full min-w-0 max-w-full gap-3'>
       {renderPreviewControl(field, presentation, resolvedPlaceholder, t)}
       {validationRules.length > 0 ? (
         <ValidationRuleBadges

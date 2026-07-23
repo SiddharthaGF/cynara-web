@@ -5,12 +5,12 @@ import { AiSettingsDialog } from '@/components/ai-settings-dialog.tsx';
 import {
   PanelHeader,
   PanelHeaderCloseButton,
+  PanelSurface,
 } from '@/components/panel/index.ts';
+import { StatusState } from '@/components/status-state.tsx';
 import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { Spinner } from '@/components/ui/spinner.tsx';
 import type { FormDraftModel } from '@/features/forms/types.ts';
-import { cn } from '@/lib/utils.ts';
 
 import { ChatComposer } from './ChatComposer.tsx';
 import { ChatTranscript } from './ChatTranscript.tsx';
@@ -33,7 +33,6 @@ export interface FormAiChatPanelProps {
   draftModel: FormDraftModel;
   error: string | null;
   fieldsById: Map<string, MentionableField>;
-  idPrefix: string;
   input: string;
   /** Bumped when the parent clears `input` so DiceUI remounts a fresh editor. */
   composerKey: number;
@@ -70,7 +69,6 @@ export function FormAiChatPanel({
   draftModel,
   error,
   fieldsById,
-  idPrefix,
   input,
   composerKey,
   interaction,
@@ -97,10 +95,8 @@ export function FormAiChatPanel({
   const { t } = useTranslation('designer');
 
   return (
-    <aside
-      className={cn(
-        'ai-chat-shell flex h-full min-h-0 w-full max-w-[22rem] shrink-0 flex-col border-l border-border/50 xl:max-w-[24rem]',
-      )}
+    <PanelSurface
+      className='ai-chat-shell w-full max-w-[22rem] xl:max-w-[24rem]'
       aria-label={t('ai.title')}
     >
       <FormAiChatPanelBody
@@ -109,7 +105,6 @@ export function FormAiChatPanel({
         draftModel={draftModel}
         error={error}
         fieldsById={fieldsById}
-        idPrefix={idPrefix}
         input={input}
         composerKey={composerKey}
         interaction={interaction}
@@ -133,7 +128,7 @@ export function FormAiChatPanel({
         typesBySlug={typesBySlug}
         readOnly={readOnly}
       />
-    </aside>
+    </PanelSurface>
   );
 }
 
@@ -148,7 +143,6 @@ export function FormAiChatPanelBody({
   draftModel,
   error,
   fieldsById,
-  idPrefix,
   input,
   composerKey,
   interaction,
@@ -206,9 +200,11 @@ export function FormAiChatPanelBody({
 
       <div className='flex min-h-0 flex-1 flex-col'>
         {statusLoading ? (
-          <div className='flex flex-1 items-center justify-center'>
-            <Spinner className='size-5 text-muted-foreground' />
-          </div>
+          <StatusState
+            kind='loading'
+            title={t('ai.statusLoading')}
+            className='py-6'
+          />
         ) : null}
 
         {!statusLoading && !configured ? (
@@ -238,7 +234,6 @@ export function FormAiChatPanelBody({
               error={error}
               stopped={stopped}
               canRetry={canRetry}
-              idPrefix={idPrefix}
               onRetry={onRetry}
               onPickPrompt={onPickPrompt}
               onRemoveQueued={onRemoveQueued}

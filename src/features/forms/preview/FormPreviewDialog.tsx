@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { PlainPreviewFrame } from '@/components/device-frames/index.ts';
 import {
+  PANEL_SHEET_CLASSNAME,
   PanelHeader,
   PanelHeaderCloseButton,
 } from '@/components/panel/index.ts';
@@ -90,7 +91,7 @@ export function FormPreviewDialog({
           side='bottom'
           fullHeight
           showCloseButton={false}
-          className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
+          className={PANEL_SHEET_CLASSNAME}
         >
           <PanelHeader
             surface='mobile'
