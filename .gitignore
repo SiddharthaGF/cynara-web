@@ -44,3 +44,4 @@ dist/server/.dev.vars
 
 # IA tools
 .atl/
+.codegraph/

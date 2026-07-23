@@ -3,6 +3,7 @@ import { XIcon } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
+import { useKeyboardInset } from '@/hooks/use-keyboard-inset';
 import { cn } from '@/lib/utils';
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
@@ -60,6 +61,7 @@ function SheetContent({
   side = 'right',
   showCloseButton = true,
   fullHeight = false,
+  style,
   ...props
 }: SheetPrimitive.Popup.Props & {
   side?: 'top' | 'right' | 'bottom' | 'left';
@@ -79,6 +81,17 @@ function SheetContent({
    */
   fullHeight?: boolean;
 }) {
+  const keyboardInset = useKeyboardInset();
+  const keyboardStyle =
+    side === 'bottom' && fullHeight && keyboardInset > 0
+      ? {
+          ...style,
+          bottom: `${keyboardInset}px`,
+          height: `calc(100vh - ${keyboardInset}px)`,
+          maxHeight: `calc(100vh - ${keyboardInset}px)`,
+        }
+      : style;
+
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -92,6 +105,7 @@ function SheetContent({
             'data-[side=bottom]:!h-dvh data-[side=top]:!h-dvh data-[side=bottom]:!max-h-dvh data-[side=top]:!max-h-dvh',
           className,
         )}
+        style={keyboardStyle}
         {...props}
       >
         {children}

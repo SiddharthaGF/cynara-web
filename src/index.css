@@ -1024,7 +1024,7 @@
     height: 100%;
   }
 
-  .ai-chat-transcript-scroll [data-slot='scroll-area-viewport'] {
+  .ai-chat-transcript-scroll [data-slot='message-scroller-viewport'] {
     height: 100%;
     overscroll-behavior: contain;
   }

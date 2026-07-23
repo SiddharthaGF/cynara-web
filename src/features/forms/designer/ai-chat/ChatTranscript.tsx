@@ -1,18 +1,17 @@
 import { ArrowDownIcon, RotateCwIcon } from 'lucide-react';
-import {
-  type JSX,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
-import { ScrollArea } from '@/components/ui/scroll-area.tsx';
-import { TooltipIconButton } from '@/components/ui/tooltip-button.tsx';
-import { cn } from '@/lib/utils.ts';
+import { Marker, MarkerContent } from '@/components/ui/marker.tsx';
+import {
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerProvider,
+  MessageScrollerViewport,
+} from '@/components/ui/message-scroller.tsx';
 
 import { ChatEmptyState } from './ChatComposer.tsx';
 import { ChatTurnMessage } from './ChatTurnMessage.tsx';
@@ -46,112 +45,6 @@ export function ChatTranscript({
   onRemoveQueued: (turnId: string) => void;
 }): JSX.Element {
   const { t } = useTranslation('designer');
-  const viewportRef = useRef<HTMLElement | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const stickToBottomRef = useRef(true);
-  const [showJumpToLatest, setShowJumpToLatest] = useState(false);
-
-  function resolveViewport(): HTMLElement | null {
-    if (viewportRef.current?.isConnected) {
-      return viewportRef.current;
-    }
-    const root = bottomRef.current?.closest('[data-slot="scroll-area"]');
-    const viewport = root?.querySelector<HTMLElement>(
-      '[data-slot="scroll-area-viewport"]',
-    );
-    viewportRef.current = viewport ?? null;
-    return viewportRef.current;
-  }
-
-  function scrollToBottom(behavior: ScrollBehavior = 'smooth'): void {
-    const viewport = resolveViewport();
-    if (!viewport) {
-      bottomRef.current?.scrollIntoView({ behavior, block: 'end' });
-      return;
-    }
-    viewport.scrollTo({ top: viewport.scrollHeight, behavior });
-    stickToBottomRef.current = true;
-  }
-
-  const scrollLatestUserTurnIntoView = useCallback(
-    (node: HTMLDivElement | null): void => {
-      if (!node) {
-        return;
-      }
-      const root = node.closest('[data-slot="scroll-area"]');
-      const viewport = root?.querySelector<HTMLElement>(
-        '[data-slot="scroll-area-viewport"]',
-      );
-      viewportRef.current = viewport ?? null;
-      stickToBottomRef.current = true;
-      if (viewport) {
-        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'auto' });
-      } else {
-        node.scrollIntoView({ behavior: 'auto', block: 'end' });
-      }
-    },
-    [],
-  );
-
-  useLayoutEffect(() => {
-    resolveViewport();
-  });
-
-  useEffect(() => {
-    if (turns.length === 0 && !isBusy) {
-      return undefined;
-    }
-    const viewport = resolveViewport();
-    if (!viewport) {
-      return undefined;
-    }
-
-    function onScroll(): void {
-      const el = resolveViewport();
-      if (!el) {
-        return;
-      }
-      const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
-      const nearBottom = distance < 64;
-      stickToBottomRef.current = nearBottom;
-      setShowJumpToLatest(!nearBottom);
-    }
-
-    viewport.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-    return (): void => {
-      viewport.removeEventListener('scroll', onScroll);
-    };
-  }, [turns.length, isBusy]);
-
-  useEffect(() => {
-    if (!stickToBottomRef.current) {
-      return;
-    }
-    scrollToBottom(isBusy ? 'auto' : 'smooth');
-  }, [turns, isBusy, error, stopped]);
-
-  useEffect(() => {
-    const viewport = resolveViewport();
-    if (!viewport || typeof ResizeObserver === 'undefined') {
-      return undefined;
-    }
-    // Keep the latest message visible when the sheet height changes (e.g. when
-    // The soft keyboard opens/closes on mobile). Only re-snap if the user is
-    // Currently near the bottom — never yank them away from content above.
-    const observer = new ResizeObserver(() => {
-      if (!stickToBottomRef.current) {
-        return;
-      }
-      viewport.scrollTop = viewport.scrollHeight;
-    });
-    observer.observe(viewport);
-    return (): void => {
-      observer.disconnect();
-    };
-  }, []);
-
-  const latestUserTurnId = findLatestUserTurnId(turns);
 
   if (turns.length === 0 && !isBusy) {
     return (
@@ -163,112 +56,106 @@ export function ChatTranscript({
 
   return (
     <div className='relative min-h-0 flex-1 overflow-hidden'>
-      <ScrollArea className='ai-chat-transcript-scroll h-full min-h-0 w-full'>
-        <div
-          role='log'
-          aria-relevant='additions'
-          aria-busy={isBusy}
-          className='flex flex-col gap-6 px-4 py-5'
-        >
-          {turns.map((turn) => (
-            <div
-              key={turn.id}
-              ref={
-                turn.id === latestUserTurnId
-                  ? scrollLatestUserTurnIntoView
-                  : undefined
-              }
-              className='min-w-0 shrink-0'
-            >
-              <ChatTurnMessage
-                turn={turn}
-                fieldsById={fieldsById}
-                typesBySlug={typesBySlug}
-                onRetry={turn.failed && canRetry ? onRetry : undefined}
-                onRemoveQueued={turn.queued ? onRemoveQueued : undefined}
-              />
-            </div>
-          ))}
-
-          {stopped && !isBusy && !error ? (
-            <div className='ai-chat-status'>
-              <p className='text-sm leading-relaxed text-muted-foreground'>
-                {t('ai.stopped')}
-              </p>
-              {canRetry ? (
-                <Button
-                  type='button'
-                  size='sm'
-                  variant='outline'
-                  className='mt-3 h-8 gap-1.5 rounded-full'
-                  onClick={onRetry}
-                >
-                  <RotateCwIcon className='size-3.5' />
-                  {t('ai.retry')}
-                </Button>
-              ) : null}
-            </div>
-          ) : null}
-
-          {error && !isBusy ? (
-            <div className='ai-chat-status ai-chat-status--error'>
-              <p className='text-sm font-medium text-destructive'>
-                {t('ai.errorLabel')}
-              </p>
-              <p className='mt-1 text-sm leading-relaxed text-destructive/90'>
-                {error}
-              </p>
-              {canRetry ? (
-                <Button
-                  type='button'
-                  size='sm'
-                  variant='outline'
-                  className='mt-3 h-8 gap-1.5 rounded-full'
-                  onClick={onRetry}
-                >
-                  <RotateCwIcon className='size-3.5' />
-                  {t('ai.retry')}
-                </Button>
-              ) : null}
-            </div>
-          ) : null}
-
-          <div
-            ref={bottomRef}
-            aria-hidden
-            className='h-px w-full shrink-0'
-          />
-        </div>
-      </ScrollArea>
-
-      <TooltipIconButton
-        type='button'
-        size='icon-sm'
-        variant='secondary'
-        label={t('ai.scrollToLatest')}
-        className={cn(
-          'absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-border bg-background shadow-sm transition-[translate,scale,opacity] duration-200',
-          showJumpToLatest
-            ? 'translate-y-0 scale-100 opacity-100'
-            : 'pointer-events-none translate-y-3 scale-95 opacity-0',
-        )}
-        onClick={() => {
-          scrollToBottom('smooth');
-          setShowJumpToLatest(false);
-        }}
+      <MessageScrollerProvider
+        autoScroll
+        defaultScrollPosition='end'
+        scrollEdgeThreshold={64}
       >
-        <ArrowDownIcon className='size-3.5' />
-      </TooltipIconButton>
+        <MessageScroller className='ai-chat-transcript-scroll h-full min-h-0 w-full'>
+          <MessageScrollerViewport aria-label={t('ai.title')}>
+            <MessageScrollerContent
+              role='log'
+              aria-relevant='additions'
+              aria-busy={isBusy}
+              className='px-4 py-5'
+            >
+              {turns.map((turn) => (
+                <MessageScrollerItem
+                  key={turn.id}
+                  messageId={turn.id}
+                  scrollAnchor={turn.role === 'user'}
+                >
+                  <ChatTurnMessage
+                    turn={turn}
+                    fieldsById={fieldsById}
+                    typesBySlug={typesBySlug}
+                    onRetry={turn.failed && canRetry ? onRetry : undefined}
+                    onRemoveQueued={turn.queued ? onRemoveQueued : undefined}
+                  />
+                </MessageScrollerItem>
+              ))}
+
+              {stopped && !isBusy && !error ? (
+                <MessageScrollerItem
+                  key='stopped'
+                  className='ai-chat-status'
+                >
+                  <Marker
+                    role='status'
+                    variant='border'
+                    className='flex-col items-stretch gap-3 border-border/60 pb-0 text-muted-foreground'
+                  >
+                    <MarkerContent>{t('ai.stopped')}</MarkerContent>
+                    {canRetry ? (
+                      <Button
+                        type='button'
+                        size='sm'
+                        variant='outline'
+                        className='h-8 gap-1.5 self-start rounded-full'
+                        onClick={onRetry}
+                      >
+                        <RotateCwIcon className='size-3.5' />
+                        {t('ai.retry')}
+                      </Button>
+                    ) : null}
+                  </Marker>
+                </MessageScrollerItem>
+              ) : null}
+
+              {error && !isBusy ? (
+                <MessageScrollerItem
+                  key='error'
+                  className='ai-chat-status ai-chat-status--error'
+                >
+                  <Marker
+                    role='status'
+                    variant='border'
+                    className='flex-col items-stretch gap-3 border-destructive/20 pb-0 text-destructive'
+                  >
+                    <MarkerContent className='flex flex-col gap-1'>
+                      <span className='font-medium'>{t('ai.errorLabel')}</span>
+                      <span className='leading-relaxed text-destructive/90'>
+                        {error}
+                      </span>
+                    </MarkerContent>
+                    {canRetry ? (
+                      <Button
+                        type='button'
+                        size='sm'
+                        variant='outline'
+                        className='h-8 gap-1.5 self-start rounded-full'
+                        onClick={onRetry}
+                      >
+                        <RotateCwIcon className='size-3.5' />
+                        {t('ai.retry')}
+                      </Button>
+                    ) : null}
+                  </Marker>
+                </MessageScrollerItem>
+              ) : null}
+            </MessageScrollerContent>
+          </MessageScrollerViewport>
+
+          <MessageScrollerButton
+            type='button'
+            aria-label={t('ai.scrollToLatest')}
+            className='bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-border bg-background shadow-sm'
+          >
+            <ArrowDownIcon className='size-3.5' />
+            <span className='sr-only'>{t('ai.scrollToLatest')}</span>
+          </MessageScrollerButton>
+        </MessageScroller>
+      </MessageScrollerProvider>
     </div>
   );
-}
-
-function findLatestUserTurnId(turns: ChatTurn[]): string | null {
-  for (let index = turns.length - 1; index >= 0; index -= 1) {
-    const turn = turns[index];
-    if (turn?.role === 'user') {
-      return turn.id;
-    }
-  }
-  return null;
 }

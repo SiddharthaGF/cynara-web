@@ -9,8 +9,8 @@ import * as React from 'react';
  * isn't open.
  *
  * Mobile Safari and Android Chrome both fire `visualViewport.resize` while
- * the keyboard is shown, so listening to that event is enough. We also
- * fall back to plain `window.resize` for browsers that ship the older API.
+ * the keyboard is shown. Some engines also pan the visual viewport, so track
+ * its scroll event as well. Fall back to plain `window.resize` for older APIs.
  */
 export function useKeyboardInset(): number {
   const [inset, setInset] = React.useState(0);
@@ -27,19 +27,21 @@ export function useKeyboardInset(): number {
         setInset(0);
         return;
       }
-      // The keyboard inset equals the difference between the layout viewport
-      // (full window height) and the visual viewport (window minus overlays).
+      // The keyboard inset equals the portion of the layout viewport below the
+      // Visual viewport. Include offsetTop for browsers that pan the viewport.
       // Clamp to 0 — some desktops report a small negative delta when the
       // Visual viewport is taller than the layout viewport (DevTools).
-      const delta = window.innerHeight - vp.height;
+      const delta = window.innerHeight - (vp.offsetTop + vp.height);
       setInset(delta > 0 ? Math.round(delta) : 0);
     }
 
     update();
     visualViewport.addEventListener('resize', update);
+    visualViewport.addEventListener('scroll', update);
     window.addEventListener('resize', update);
     return (): void => {
       visualViewport.removeEventListener('resize', update);
+      visualViewport.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
     };
   }, []);

@@ -1,4 +1,4 @@
-import type { CSSProperties, JSX } from 'react';
+import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -36,14 +36,6 @@ export function FormAiChatSheetView({
   }
 
   if (isMobile) {
-    // `fullHeight` on `SheetContent` already pins the sheet to `100dvh`, which
-    // On modern engines (Chrome 108+, Safari 15.4+) is the visible viewport
-    // Once the soft keyboard is open. Adding `paddingBottom: keyboardInset`
-    // On top of that pushes the composer up by the keyboard height, leaving
-    // A visible gap between the composer and the keyboard. With `100dvh`
-    // Already accounting for the keyboard, the composer just sits at the
-    // Bottom of the sheet (= top of the keyboard) on its own.
-    const sheetStyle: CSSProperties = {};
     const hasConversation =
       panelProps.turns.length > 0 ||
       panelProps.input.length > 0 ||
@@ -58,7 +50,6 @@ export function FormAiChatSheetView({
           side='bottom'
           fullHeight
           showCloseButton={false}
-          style={sheetStyle}
           className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
         >
           <PanelHeader

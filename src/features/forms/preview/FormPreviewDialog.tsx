@@ -1,5 +1,5 @@
 import { ChevronsRight, EyeIcon, FlaskConical } from 'lucide-react';
-import { useState, type CSSProperties, type JSX } from 'react';
+import { useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PlainPreviewFrame } from '@/components/device-frames/index.ts';
@@ -32,7 +32,6 @@ import {
 } from '@/features/forms/renderer/FormRenderer.tsx';
 import type { UseFormRendererReturn } from '@/features/forms/renderer/useFormRenderer.ts';
 import type { FormDraftModel } from '@/features/forms/types.ts';
-import { useKeyboardInset } from '@/hooks/use-keyboard-inset.ts';
 import { useIsMobile } from '@/hooks/use-mobile.ts';
 import { cn } from '@/lib/utils.ts';
 
@@ -56,7 +55,6 @@ export function FormPreviewDialog({
 }: FormPreviewDialogProps): JSX.Element {
   const { t } = useTranslation('designer');
   const isMobile = useIsMobile();
-  const keyboardInset = useKeyboardInset();
 
   if (!open) {
     return isMobile ? (
@@ -82,12 +80,6 @@ export function FormPreviewDialog({
     // Stretches to the visual viewport; max-height uses an un-mixed `calc`
     // To avoid the browser serialising it as `0px + ...` and producing
     // Unexpected sizing on some engines.
-    const insetPx = `${Math.max(0, keyboardInset)}px`;
-    const sheetStyle: CSSProperties = {
-      maxHeight: `calc(100dvh - ${insetPx})`,
-      height: `calc(100dvh - ${insetPx})`,
-      paddingBottom: insetPx,
-    };
     return (
       <Sheet
         open={open}
@@ -98,7 +90,6 @@ export function FormPreviewDialog({
           side='bottom'
           fullHeight
           showCloseButton={false}
-          style={sheetStyle}
           className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
         >
           <PanelHeader

@@ -1,4 +1,4 @@
-import type { CSSProperties, JSX } from 'react';
+import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -80,14 +80,6 @@ export function FieldInspector({
   );
 
   if (isMobile) {
-    // `fullHeight` on `SheetContent` already pins the sheet to `100dvh`, which
-    // On modern engines (Chrome 108+, Safari 15.4+) is the visible viewport
-    // Once the soft keyboard is open. We must not subtract `keyboardInset`
-    // From the height or add it as padding-bottom — that pushes the body
-    // Up by the keyboard height and leaves a gap between the inputs and
-    // The keyboard. The body simply sits at the bottom of the visible
-    // Viewport (= top of the keyboard) on its own.
-    const sheetStyle: CSSProperties = {};
     return (
       <Sheet
         open={open}
@@ -98,7 +90,6 @@ export function FieldInspector({
           side='bottom'
           fullHeight
           showCloseButton={false}
-          style={sheetStyle}
           className='inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-2xl border-t p-0'
         >
           <PanelHeader
