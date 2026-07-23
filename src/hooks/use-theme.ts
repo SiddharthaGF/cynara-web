@@ -16,15 +16,29 @@ export function useTheme(): {
   setPreference: (preference: ThemePreference) => void;
   toggleTheme: () => void;
 } {
-  const [preference, setPreferenceState] = useState<ThemePreference>(
-    () => getStoredTheme() ?? 'system',
-  );
-  const [theme, setTheme] = useState<Theme>(() => resolveTheme(preference));
+  // SSR-safe defaults must match the server render. Reading localStorage or
+  // MatchMedia in useState causes a hydration mismatch (e.g. ThemeToggle
+  // Aria-label). `themeInitScript` already applied the real class before paint.
+  const [preference, setPreferenceState] = useState<ThemePreference>('system');
+  const [theme, setTheme] = useState<Theme>('light');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const stored = getStoredTheme() ?? 'system';
+    setPreferenceState(stored);
+    setTheme(resolveTheme(stored));
+    setMounted(true);
+  }, []);
 
   // Re-resolve the concrete theme when the user picks a different preference,
   // And keep it in sync with the OS color scheme while the preference is
-  // `'system'`.
+  // `'system'`. Skip until mounted so we don't overwrite the init script's
+  // Class with the SSR default.
   useEffect(() => {
+    if (!mounted) {
+      return undefined;
+    }
+
     const media = window.matchMedia('(prefers-color-scheme: dark)');
 
     function sync(): void {
@@ -40,11 +54,14 @@ export function useTheme(): {
     return (): void => {
       media.removeEventListener('change', sync);
     };
-  }, [preference]);
+  }, [preference, mounted]);
 
   useEffect(() => {
+    if (!mounted) {
+      return;
+    }
     applyTheme(theme);
-  }, [theme]);
+  }, [theme, mounted]);
 
   const setPreference = useCallback((next: ThemePreference) => {
     if (next === 'system') {

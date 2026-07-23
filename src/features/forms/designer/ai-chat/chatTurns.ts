@@ -7,6 +7,11 @@ export interface ChatTurn {
   queued?: boolean;
   /** True while SSE tokens are still arriving. */
   streaming?: boolean;
+  /**
+   * Stream phase after early assistant text (`schema` = applying draft
+   * changes). Cleared when the turn settles.
+   */
+  streamPhase?: 'message' | 'schema';
   /** True when this turn updated the open form draft. */
   draftApplied?: boolean;
   /** Short designer-facing note about what was applied. */

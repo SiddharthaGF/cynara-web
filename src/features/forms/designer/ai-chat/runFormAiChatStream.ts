@@ -4,7 +4,7 @@ import {
   type FormAiChatMessage,
   isRequestAborted,
   streamFormDraftAi,
-} from '@/api/forms.ts';
+} from '@/api/form-ai-chat.ts';
 import {
   parseDraft,
   serializeDraft,
@@ -12,6 +12,13 @@ import {
 import type { FormDraftModel } from '@/features/forms/types.ts';
 
 import type { ChatTurn } from './chatTurns.ts';
+import {
+  findLastUserTurn,
+  markTurnFailed,
+  patchAssistant,
+  resetAssistantForRetry,
+  settleAssistantStreaming,
+} from './chatStreamTurnHelpers.ts';
 import {
   playErrorNotificationSound,
   playNotificationSound,
@@ -61,6 +68,11 @@ interface RunFormAiChatStreamOptions {
   setTurns: Dispatch<SetStateAction<ChatTurn[]>>;
   clearQueuedTurns: () => void;
 }
+
+type AttemptResult =
+  | { status: 'succeeded' }
+  | { status: 'aborted' }
+  | { status: 'failed'; message: string };
 
 export async function runFormAiChatStream({
   abortRef,
@@ -114,16 +126,7 @@ export async function runFormAiChatStream({
     }
   }, 60_000);
 
-  /**
-   * Run the inner stream loop once. Returns the failure shape when the
-   * upstream SSE errored; otherwise resolves void on success. Callers
-   * decide whether to retry based on the failed shape.
-   */
-  const runAttempt = async (): Promise<
-    | { status: 'succeeded' }
-    | { status: 'aborted' }
-    | { status: 'failed'; message: string }
-  > => {
+  const runAttempt = async (): Promise<AttemptResult> => {
     let turnContentSnapshot = '';
     try {
       const serialized = serializeDraft(modelRef.current);
@@ -143,77 +146,34 @@ export async function runFormAiChatStream({
         if (event.type === 'thinking') {
           // Thinking events only indicate that the server is still working.
         } else if (event.type === 'phase') {
-          // Phase hints are unreliable; rely on the assistant
-          // Message + done event for the real state.
+          // `schema` means the assistant text is done and the server is
+          // Building the draft patch — keep streaming so the UI can show
+          // "Generating schema changes…" until `done`.
+          patchAssistant(setTurns, assistantId, (turn) => ({
+            ...turn,
+            streamPhase: event.phase,
+          }));
         } else if (event.type === 'message') {
           turnContentSnapshot = `${turnContentSnapshot}${event.delta}`;
           patchAssistant(setTurns, assistantId, (turn) => ({
             ...turn,
             content: `${turn.content}${event.delta}`,
+            streamPhase: turn.streamPhase ?? 'message',
           }));
         } else if (event.type === 'error') {
           throw new Error(event.message);
         } else if (event.type === 'done') {
-          const {
-            clinicalSchemaJson,
-            uiSchemaJson,
-            rulesSchemaJson,
-            assistantMessage,
-            summary,
-          } = event.result;
-          const before = serializeDraft(modelRef.current);
-          const normalizedUiSchemaJson = uiSchemaJson ?? null;
-          const normalizedRulesSchemaJson = rulesSchemaJson ?? null;
-          const draftChanged =
-            before.clinicalSchemaJson !== clinicalSchemaJson ||
-            before.uiSchemaJson !== normalizedUiSchemaJson ||
-            before.rulesSchemaJson !== normalizedRulesSchemaJson;
-          // Defensive: `streamFormDraftAi` may synthesize a `done` when the
-          // Upstream SSE closes early (no `done`, no `error`). That
-          // Synthetic payload carries empty schema strings; matching it
-          // Against the live draft would falsely report `draftChanged: true`
-          // And then crash inside `parseDraft(JSON.parse(''))`. Treat any
-          // Empty schema as "nothing usable arrived" so the outer retry
-          // Layer can take over.
-          const resultEmpty =
-            clinicalSchemaJson.length === 0 &&
-            (uiSchemaJson ?? '').length === 0 &&
-            (rulesSchemaJson ?? '').length === 0;
-          if (resultEmpty) {
-            throw new Error(EMPTY_AI_SCHEMA_MESSAGE);
-          }
-          const finalContent = assistantMessage || turnContentSnapshot || '';
-          patchAssistant(setTurns, assistantId, (turn) => ({
-            ...turn,
-            content: finalContent,
-            streaming: false,
-            draftApplied: draftChanged,
-            appliedSummary: draftChanged
-              ? summary.trim() || undefined
-              : undefined,
-          }));
-          // Re-apply `streaming: false` on the next frame in case React
-          // Batched a competing `setTurns` (from a queued drain, etc.) after
-          // This patch. This guarantees the spinner stops even when concurrent
-          // Rendering reorders state updates around the `done` handler.
-          requestAnimationFrame(() => {
-            patchAssistant(setTurns, assistantId, (turn) =>
-              turn.streaming ? { ...turn, streaming: false } : turn,
-            );
+          applyDoneEvent({
+            assistantId,
+            modelRef,
+            onApplyDraft,
+            result: event.result,
+            setError,
+            setPendingPayload,
+            setStopped,
+            setTurns,
+            turnContentSnapshot,
           });
-          if (draftChanged) {
-            onApplyDraft(
-              parseDraft({
-                clinicalSchemaJson,
-                uiSchemaJson,
-                rulesSchemaJson,
-              }),
-            );
-          }
-          setPendingPayload(null);
-          setError(null);
-          setStopped(false);
-          playNotificationSound();
           return { status: 'succeeded' };
         }
       }
@@ -240,55 +200,28 @@ export async function runFormAiChatStream({
   const attemptResult = await runAttempt();
   let errorMessage: string | null = null;
   let wasAborted = false;
-  if (attemptResult.status === 'failed') {
-    if (
-      isTransientAiErrorMessage(attemptResult.message) &&
-      !wasUserStopped &&
-      !controller.signal.aborted
-    ) {
-      // Reset the assistant turn in-place so the user sees a fresh spinner
-      // Without a duplicate bubble; keep the same `assistantId` so the
-      // Conversation UI looks like one continuous reply.
-      patchAssistant(setTurns, assistantId, (turn) => ({
-        ...turn,
-        content: '',
-        streaming: true,
-      }));
-      const retry = await runAttempt();
-      if (retry.status === 'succeeded') {
-        finalizeSuccess();
-        return;
-      }
-      if (retry.status === 'aborted') {
-        wasAborted = true;
-      } else {
-        errorMessage = retry.message;
-      }
-    } else if (
-      attemptResult.message === EMPTY_AI_SCHEMA_MESSAGE &&
-      !wasUserStopped &&
-      !controller.signal.aborted
-    ) {
-      // Stream closed without `done` or `error` (common when the provider
-      // Flushes a `phase:schema` then drops the socket). One more try.
-      patchAssistant(setTurns, assistantId, (turn) => ({
-        ...turn,
-        content: '',
-        streaming: true,
-      }));
-      const retry = await runAttempt();
-      if (retry.status === 'succeeded') {
-        finalizeSuccess();
-        return;
-      }
-      if (retry.status === 'aborted') {
-        wasAborted = true;
-      } else {
-        errorMessage = retry.message;
-      }
-    } else {
-      errorMessage = attemptResult.message;
+
+  const canRetry =
+    !wasUserStopped &&
+    !controller.signal.aborted &&
+    attemptResult.status === 'failed' &&
+    (isTransientAiErrorMessage(attemptResult.message) ||
+      attemptResult.message === EMPTY_AI_SCHEMA_MESSAGE);
+
+  if (canRetry) {
+    resetAssistantForRetry(setTurns, assistantId);
+    const retry = await runAttempt();
+    if (retry.status === 'succeeded') {
+      finalizeSuccess();
+      return;
     }
+    if (retry.status === 'aborted') {
+      wasAborted = true;
+    } else {
+      errorMessage = retry.message;
+    }
+  } else if (attemptResult.status === 'failed') {
+    errorMessage = attemptResult.message;
   } else if (attemptResult.status === 'aborted') {
     wasAborted = true;
   }
@@ -315,22 +248,12 @@ export async function runFormAiChatStream({
   }
 
   if (wasAborted) {
-    setTurns((current) =>
-      current.map((turn) =>
-        turn.id === assistantId && turn.streaming
-          ? { ...turn, streaming: false }
-          : turn,
-      ),
-    );
+    settleAssistantStreaming(setTurns, assistantId);
     setError(null);
     // Only surface the "generation stopped" banner when the user
     // Explicitly hit Stop. Replaced streams and the 60s safety timeout
     // Should not leave a stale card on screen.
-    if (wasUserStopped) {
-      setStopped(true);
-    } else {
-      setStopped(false);
-    }
+    setStopped(wasUserStopped);
     // Keep queue for after stop settles — still drain next.
   } else if (errorMessage !== null) {
     const errMessage = errorMessage;
@@ -349,43 +272,98 @@ export async function runFormAiChatStream({
     // On hard error, clear queue so we don't cascade failures.
     clearQueuedTurns();
     playErrorNotificationSound();
-    // Force `streaming: false` defensively so the UI spinner stops even
-    // When the assistant turn somehow survives the catch block above.
-    setTurns((current) =>
-      current.map((turn) =>
-        turn.id === assistantId && turn.streaming
-          ? { ...turn, streaming: false }
-          : turn,
-      ),
-    );
+    settleAssistantStreaming(setTurns, assistantId);
   }
 
   finalizeSuccess();
 }
 
-function patchAssistant(
-  setTurns: Dispatch<SetStateAction<ChatTurn[]>>,
-  assistantId: string,
-  patch: (turn: ChatTurn) => ChatTurn,
-): void {
-  setTurns((current) =>
-    current.map((turn) => (turn.id === assistantId ? patch(turn) : turn)),
-  );
-}
-
-function markTurnFailed(turn: ChatTurn, failedTurnId?: string): ChatTurn {
-  if (turn.id !== failedTurnId) {
-    return turn;
+function applyDoneEvent({
+  assistantId,
+  modelRef,
+  onApplyDraft,
+  result,
+  setError,
+  setPendingPayload,
+  setStopped,
+  setTurns,
+  turnContentSnapshot,
+}: {
+  assistantId: string;
+  modelRef: MutableRefObject<FormDraftModel>;
+  onApplyDraft: (next: FormDraftModel) => void;
+  result: {
+    clinicalSchemaJson: string;
+    uiSchemaJson: string;
+    rulesSchemaJson: string;
+    assistantMessage: string;
+    summary: string;
+  };
+  setError: Dispatch<SetStateAction<string | null>>;
+  setPendingPayload: Dispatch<SetStateAction<PendingChatPayload | null>>;
+  setStopped: Dispatch<SetStateAction<boolean>>;
+  setTurns: Dispatch<SetStateAction<ChatTurn[]>>;
+  turnContentSnapshot: string;
+}): void {
+  const {
+    clinicalSchemaJson,
+    uiSchemaJson,
+    rulesSchemaJson,
+    assistantMessage,
+    summary,
+  } = result;
+  const before = serializeDraft(modelRef.current);
+  const normalizedUiSchemaJson = uiSchemaJson ?? null;
+  const normalizedRulesSchemaJson = rulesSchemaJson ?? null;
+  const draftChanged =
+    before.clinicalSchemaJson !== clinicalSchemaJson ||
+    before.uiSchemaJson !== normalizedUiSchemaJson ||
+    before.rulesSchemaJson !== normalizedRulesSchemaJson;
+  // Defensive: `streamFormDraftAi` may synthesize a `done` when the
+  // Upstream SSE closes early (no `done`, no `error`). That
+  // Synthetic payload carries empty schema strings; matching it
+  // Against the live draft would falsely report `draftChanged: true`
+  // And then crash inside `parseDraft(JSON.parse(''))`. Treat any
+  // Empty schema as "nothing usable arrived" so the outer retry
+  // Layer can take over.
+  const resultEmpty =
+    clinicalSchemaJson.length === 0 &&
+    (uiSchemaJson ?? '').length === 0 &&
+    (rulesSchemaJson ?? '').length === 0;
+  if (resultEmpty) {
+    throw new Error(EMPTY_AI_SCHEMA_MESSAGE);
   }
-  return { ...turn, failed: true };
-}
-
-function findLastUserTurn(turns: ChatTurn[]): ChatTurn | undefined {
-  let latest: ChatTurn | undefined = undefined;
-  for (const turn of turns) {
-    if (turn.role === 'user') {
-      latest = turn;
-    }
+  const finalContent = assistantMessage || turnContentSnapshot || '';
+  patchAssistant(setTurns, assistantId, (turn) => ({
+    ...turn,
+    content: finalContent,
+    streaming: false,
+    streamPhase: undefined,
+    draftApplied: draftChanged,
+    appliedSummary: draftChanged ? summary.trim() || undefined : undefined,
+  }));
+  // Re-apply `streaming: false` on the next frame in case React
+  // Batched a competing `setTurns` (from a queued drain, etc.) after
+  // This patch. This guarantees the spinner stops even when concurrent
+  // Rendering reorders state updates around the `done` handler.
+  requestAnimationFrame(() => {
+    patchAssistant(setTurns, assistantId, (turn) =>
+      turn.streaming
+        ? { ...turn, streaming: false, streamPhase: undefined }
+        : turn,
+    );
+  });
+  if (draftChanged) {
+    onApplyDraft(
+      parseDraft({
+        clinicalSchemaJson,
+        uiSchemaJson,
+        rulesSchemaJson,
+      }),
+    );
   }
-  return latest;
+  setPendingPayload(null);
+  setError(null);
+  setStopped(false);
+  playNotificationSound();
 }

@@ -1,69 +1,225 @@
-import { ApiError, apiRequest, resolveApiUrl } from '@/api/client.ts';
+import { ApiError } from '@/api/client.ts';
+import {
+  attrNumber,
+  attrString,
+  includedOfType,
+  jsonApiGet,
+  jsonApiGetCollection,
+  jsonApiPatchResource,
+  jsonApiPostResource,
+  relatedIds,
+  type JsonApiResource,
+} from '@/api/json-api.ts';
 import type { FormSummary, FormVersion } from '@/features/forms/types.ts';
 
-interface ApiFormSummary {
-  code: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-  editableVersionId: string | null;
-  editableStatus: string | null;
-  editableRowVersion: number | null;
-  publishedVersions: string[];
+interface FormDefinitionAttributes {
+  code?: string;
+  name?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-interface ApiFormVersion {
-  id: string;
-  code: string;
-  version: string | null;
-  status: string;
-  clinicalSchemaJson: string;
-  uiSchemaJson: string | null;
-  rulesSchemaJson: string | null;
-  contentHash: string | null;
-  dependencyMetadataJson: string | null;
-  rowVersion: number;
-  createdAt: string;
-  submittedForReviewAt: string | null;
-  publishedAt: string | null;
-  retiredAt: string | null;
+interface FormVersionAttributes {
+  version?: string | null;
+  status?: string;
+  clinicalSchemaJson?: string;
+  uiSchemaJson?: string | null;
+  rulesSchemaJson?: string | null;
+  contentHash?: string | null;
+  dependencyMetadataJson?: string | null;
+  rowVersion?: number;
+  createdAt?: string;
+  submittedForReviewAt?: string | null;
+  publishedAt?: string | null;
+  retiredAt?: string | null;
 }
 
-function mapSummary(item: ApiFormSummary): FormSummary {
+const FORM_DEFINITIONS = 'formDefinitions';
+const FORM_VERSIONS = 'formVersions';
+
+function listFormsQuery(): string {
+  const params = new URLSearchParams();
+  params.set('include', 'versions');
+  params.set('page[size]', '100');
+  params.set('sort', 'code');
+  return params.toString();
+}
+
+function isEditableStatus(status: string | null): boolean {
+  return status === 'draft' || status === 'review';
+}
+
+function versionById(
+  included: JsonApiResource[],
+): Map<string, JsonApiResource<FormVersionAttributes>> {
+  const map = new Map<string, JsonApiResource<FormVersionAttributes>>();
+  for (const item of includedOfType(included, FORM_VERSIONS)) {
+    map.set(item.id, item);
+  }
+  return map;
+}
+
+function requireDefinition(
+  data: JsonApiResource<FormDefinitionAttributes> | JsonApiResource[],
+): JsonApiResource<FormDefinitionAttributes> {
+  if (Array.isArray(data)) {
+    const first = data[0] as
+      | JsonApiResource<FormDefinitionAttributes>
+      | undefined;
+    if (!first) {
+      throw new ApiError(404, 'Not Found', 'Form definition was not found.');
+    }
+    return first;
+  }
+  return data;
+}
+
+function mapSummary(
+  definition: JsonApiResource<FormDefinitionAttributes>,
+  versions: Map<string, JsonApiResource<FormVersionAttributes>>,
+): FormSummary {
+  const attrs = definition.attributes;
+  const related = relatedIds(definition, 'versions')
+    .map((id) => versions.get(id))
+    .filter(
+      (item): item is JsonApiResource<FormVersionAttributes> =>
+        item !== undefined,
+    );
+
+  const editable = related.find((item) =>
+    isEditableStatus(attrString(item.attributes, 'status')),
+  );
+  const publishedVersions: string[] = [];
+  for (const item of related) {
+    if (attrString(item.attributes, 'status') === 'published') {
+      const value = attrString(item.attributes, 'version');
+      if (value !== null && value.length > 0) {
+        publishedVersions.push(value);
+      }
+    }
+  }
+  publishedVersions.sort();
+
   return {
-    code: item.code,
-    name: item.name,
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
-    editableVersionId: item.editableVersionId,
-    editableStatus: item.editableStatus,
-    editableRowVersion: item.editableRowVersion,
-    publishedVersions: item.publishedVersions,
+    code: attrString(attrs, 'code') ?? '',
+    name: attrString(attrs, 'name') ?? '',
+    createdAt: attrString(attrs, 'createdAt') ?? '',
+    updatedAt: attrString(attrs, 'updatedAt') ?? '',
+    editableVersionId: editable?.id ?? null,
+    editableStatus: editable ? attrString(editable.attributes, 'status') : null,
+    editableRowVersion: editable
+      ? attrNumber(editable.attributes, 'rowVersion')
+      : null,
+    publishedVersions,
   };
 }
 
-function mapVersion(item: ApiFormVersion): FormVersion {
+function mapVersion(
+  version: JsonApiResource<FormVersionAttributes>,
+  code: string,
+): FormVersion {
+  const attrs = version.attributes;
   return {
-    id: item.id,
-    code: item.code,
-    version: item.version,
-    status: item.status,
-    clinicalSchemaJson: item.clinicalSchemaJson,
-    uiSchemaJson: item.uiSchemaJson,
-    rulesSchemaJson: item.rulesSchemaJson,
-    contentHash: item.contentHash,
-    dependencyMetadataJson: item.dependencyMetadataJson,
-    rowVersion: item.rowVersion,
-    createdAt: item.createdAt,
-    submittedForReviewAt: item.submittedForReviewAt,
-    publishedAt: item.publishedAt,
-    retiredAt: item.retiredAt,
+    id: version.id,
+    code,
+    version: attrString(attrs, 'version'),
+    status: attrString(attrs, 'status') ?? '',
+    clinicalSchemaJson: attrString(attrs, 'clinicalSchemaJson') ?? '',
+    uiSchemaJson: attrString(attrs, 'uiSchemaJson'),
+    rulesSchemaJson: attrString(attrs, 'rulesSchemaJson'),
+    contentHash: attrString(attrs, 'contentHash'),
+    dependencyMetadataJson: attrString(attrs, 'dependencyMetadataJson'),
+    rowVersion: attrNumber(attrs, 'rowVersion') ?? 0,
+    createdAt: attrString(attrs, 'createdAt') ?? '',
+    submittedForReviewAt: attrString(attrs, 'submittedForReviewAt'),
+    publishedAt: attrString(attrs, 'publishedAt'),
+    retiredAt: attrString(attrs, 'retiredAt'),
   };
+}
+
+async function fetchDefinitionDocument(path: string): Promise<{
+  definition: JsonApiResource<FormDefinitionAttributes>;
+  versions: Map<string, JsonApiResource<FormVersionAttributes>>;
+}> {
+  const document = await jsonApiGet(path);
+  const definition = requireDefinition(document.data);
+  return {
+    definition,
+    versions: versionById(document.included ?? []),
+  };
+}
+
+async function getDefinitionByCode(code: string): Promise<{
+  definition: JsonApiResource<FormDefinitionAttributes>;
+  versions: Map<string, JsonApiResource<FormVersionAttributes>>;
+}> {
+  // Prefer list+match over filter=equals(...): JADNC filters are fragile across
+  // SSR/proxy encoding, and the catalog is small (page size 100).
+  const { data, included } =
+    await jsonApiGetCollection<FormDefinitionAttributes>(
+      `/api/${FORM_DEFINITIONS}?${listFormsQuery()}`,
+    );
+  const definition = data.find(
+    (item) => attrString(item.attributes, 'code') === code,
+  );
+  if (!definition) {
+    throw new ApiError(404, 'Not Found', `Form '${code}' was not found.`);
+  }
+  return {
+    definition,
+    versions: versionById(included),
+  };
+}
+
+export async function getFormVersion(
+  versionId: string,
+  expectedCode?: string,
+): Promise<FormVersion> {
+  const params = new URLSearchParams();
+  params.set('include', 'formDefinition');
+  const document = await jsonApiGet(
+    `/api/${FORM_VERSIONS}/${versionId}?${params.toString()}`,
+  );
+  if (Array.isArray(document.data) || !document.data) {
+    throw new ApiError(
+      404,
+      'Not Found',
+      `Form version '${versionId}' was not found.`,
+    );
+  }
+  const version = document.data as JsonApiResource<FormVersionAttributes>;
+  const definitions = includedOfType(document.included ?? [], FORM_DEFINITIONS);
+  const [relatedDefinitionId] = relatedIds(version, 'formDefinition');
+  const definition =
+    definitions.find((item) => item.id === relatedDefinitionId) ??
+    definitions[0];
+  const code = definition
+    ? (attrString(definition.attributes, 'code') ?? '')
+    : '';
+  if (expectedCode && code !== expectedCode) {
+    throw new ApiError(
+      404,
+      'Not Found',
+      `Form version '${versionId}' does not belong to '${expectedCode}'.`,
+    );
+  }
+  if (!isEditableStatus(attrString(version.attributes, 'status'))) {
+    throw new ApiError(
+      409,
+      'Conflict',
+      `Form version '${versionId}' is not an editable draft.`,
+    );
+  }
+  return mapVersion(version, code || (expectedCode ?? ''));
 }
 
 export async function listForms(): Promise<FormSummary[]> {
-  const items = await apiRequest<ApiFormSummary[]>('/api/forms');
-  return items.map(mapSummary);
+  const { data, included } =
+    await jsonApiGetCollection<FormDefinitionAttributes>(
+      `/api/${FORM_DEFINITIONS}?${listFormsQuery()}`,
+    );
+  const versions = versionById(included);
+  return data.map((definition) => mapSummary(definition, versions));
 }
 
 export async function createForm(input: {
@@ -73,16 +229,48 @@ export async function createForm(input: {
   uiSchemaJson?: string | null;
   rulesSchemaJson?: string | null;
 }): Promise<FormSummary> {
-  const created = await apiRequest<ApiFormSummary>('/api/forms', {
-    method: 'POST',
-    body: JSON.stringify(input),
-  });
-  return mapSummary(created);
+  const created = await jsonApiPostResource<FormDefinitionAttributes>(
+    FORM_DEFINITIONS,
+    {
+      code: input.code,
+      name: input.name,
+      initialClinicalSchemaJson: input.clinicalSchemaJson,
+      ...(input.uiSchemaJson
+        ? { initialUiSchemaJson: input.uiSchemaJson }
+        : {}),
+      ...(input.rulesSchemaJson
+        ? { initialRulesSchemaJson: input.rulesSchemaJson }
+        : {}),
+    },
+  );
+  const { definition, versions } = await fetchDefinitionDocument(
+    `/api/${FORM_DEFINITIONS}/${created.id}?include=versions`,
+  );
+  return mapSummary(definition, versions);
 }
 
 export async function getFormDraft(code: string): Promise<FormVersion> {
-  const version = await apiRequest<ApiFormVersion>(`/api/forms/${code}/draft`);
-  return mapVersion(version);
+  const { definition, versions } = await getDefinitionByCode(code);
+  const related = relatedIds(definition, 'versions')
+    .map((id) => versions.get(id))
+    .filter(
+      (item): item is JsonApiResource<FormVersionAttributes> =>
+        item !== undefined,
+    );
+  const editable = related.find((item) =>
+    isEditableStatus(attrString(item.attributes, 'status')),
+  );
+  if (!editable) {
+    throw new ApiError(
+      404,
+      'Not Found',
+      `Form '${code}' has no editable draft.`,
+    );
+  }
+  return mapVersion(
+    editable,
+    attrString(definition.attributes, 'code') ?? code,
+  );
 }
 
 export async function updateFormDraft(
@@ -94,271 +282,21 @@ export async function updateFormDraft(
     rowVersion: number;
   },
 ): Promise<FormVersion> {
-  const version = await apiRequest<ApiFormVersion>(`/api/forms/${code}/draft`, {
-    method: 'PUT',
-    body: JSON.stringify(input),
-  });
-  return mapVersion(version);
-}
-
-export interface FormAiChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-export interface FormAiChatResult {
-  summary: string;
-  assistantMessage: string;
-  thinking: string | null;
-  clinicalSchemaJson: string;
-  uiSchemaJson: string;
-  rulesSchemaJson: string;
-}
-
-export interface FormAiChatInput {
-  messages: FormAiChatMessage[];
-  locale: string;
-  focusedFieldIds?: string[];
-  focusedFieldTypes?: string[];
-  clinicalSchemaJson: string;
-  uiSchemaJson: string | null;
-  rulesSchemaJson: string | null;
-}
-
-function parseFormAiStreamEvent(data: string): FormAiStreamEvent | null {
-  if (!data || data === '[DONE]') {
-    return null;
-  }
-  try {
-    const parsed: unknown = JSON.parse(data);
-    if (!isRecord(parsed) || typeof parsed.type !== 'string') {
-      return null;
-    }
-
-    if (parsed.type === 'phase') {
-      if (parsed.phase === 'message' || parsed.phase === 'schema') {
-        return { type: 'phase', phase: parsed.phase };
-      }
-      return null;
-    }
-    if (parsed.type === 'thinking' || parsed.type === 'message') {
-      return typeof parsed.delta === 'string'
-        ? { type: parsed.type, delta: parsed.delta }
-        : null;
-    }
-    if (parsed.type === 'error') {
-      return typeof parsed.message === 'string'
-        ? { type: 'error', message: parsed.message }
-        : null;
-    }
-    if (parsed.type === 'done' && isRecord(parsed.result)) {
-      return {
-        type: 'done',
-        result: {
-          summary: readString(parsed.result, 'summary', 'Summary'),
-          assistantMessage: readString(
-            parsed.result,
-            'assistantMessage',
-            'AssistantMessage',
-          ),
-          thinking: readNullableString(parsed.result, 'thinking', 'Thinking'),
-          clinicalSchemaJson: readString(
-            parsed.result,
-            'clinicalSchemaJson',
-            'ClinicalSchemaJson',
-          ),
-          uiSchemaJson: readString(
-            parsed.result,
-            'uiSchemaJson',
-            'UiSchemaJson',
-          ),
-          rulesSchemaJson: readString(
-            parsed.result,
-            'rulesSchemaJson',
-            'RulesSchemaJson',
-          ),
-        },
-      };
-    }
-  } catch {
-    return null;
-  }
-  return null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function readString(value: Record<string, unknown>, ...keys: string[]): string {
-  for (const key of keys) {
-    if (typeof value[key] === 'string') {
-      return value[key];
-    }
-  }
-  return '';
-}
-
-function readNullableString(
-  value: Record<string, unknown>,
-  ...keys: string[]
-): string | null {
-  for (const key of keys) {
-    const candidate = value[key];
-    if (typeof candidate === 'string') {
-      return candidate;
-    }
-    if (candidate === null) {
-      return null;
-    }
-  }
-  return null;
-}
-
-export type FormAiStreamEvent =
-  | { type: 'phase'; phase: 'message' | 'schema' }
-  | { type: 'thinking'; delta: string }
-  | { type: 'message'; delta: string }
-  | { type: 'done'; result: FormAiChatResult }
-  | { type: 'error'; message: string };
-
-export async function* streamFormDraftAi(
-  code: string,
-  input: FormAiChatInput,
-  options?: { signal?: AbortSignal },
-): AsyncGenerator<FormAiStreamEvent> {
-  const headers = new Headers();
-  headers.set('Content-Type', 'application/json');
-  headers.set('X-Actor-Id', 'designer-user');
-  headers.set('Accept', 'text/event-stream');
-
-  const response = await fetch(
-    resolveApiUrl(`/api/forms/${code}/draft/ai-chat/stream`),
+  const draft = await getFormDraft(code);
+  const updated = await jsonApiPatchResource<FormVersionAttributes>(
+    FORM_VERSIONS,
+    draft.id,
     {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(input),
-      signal: options?.signal,
+      clinicalSchemaJson: input.clinicalSchemaJson,
+      uiSchemaJson: input.uiSchemaJson,
+      rulesSchemaJson: input.rulesSchemaJson,
+      rowVersion: input.rowVersion,
     },
   );
-
-  if (!response.ok) {
-    let title = response.statusText;
-    let detail = `Request failed with status ${response.status}`;
-    const bodyText = await response.text();
-    if (bodyText) {
-      try {
-        const problem = JSON.parse(bodyText) as {
-          title?: string;
-          detail?: string;
-        };
-        title = problem.title ?? title;
-        detail = problem.detail ?? detail;
-      } catch {
-        detail = bodyText;
-      }
-    }
-    throw new ApiError(response.status, title, detail);
-  }
-
-  if (!response.body) {
-    throw new ApiError(500, 'Empty stream', 'AI stream returned no body.');
-  }
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let sawTerminal = false;
-  let lastAssistantDelta = '';
-
-  const processLine = (line: string): FormAiStreamEvent | null => {
-    const trimmed = line.trim();
-    if (!trimmed) {
-      return null;
-    }
-    const event = parseFormAiStreamEvent(
-      trimmed.startsWith('data:') ? trimmed.slice(5).trim() : '',
-    );
-    if (!event) {
-      return null;
-    }
-    if (event.type === 'message') {
-      lastAssistantDelta = event.delta;
-    }
-    if (event.type === 'done' || event.type === 'error') {
-      sawTerminal = true;
-    }
-    return event;
-  };
-
-  const processLines = (rawLines: string[]): FormAiStreamEvent[] => {
-    const out: FormAiStreamEvent[] = [];
-    for (const line of rawLines) {
-      const ev = processLine(line);
-      if (ev) {
-        out.push(ev);
-      }
-    }
-    return out;
-  };
-
-  try {
-    while (true) {
-      // Stream chunks must be read sequentially.
-      // eslint-disable-next-line no-await-in-loop
-      const { done, value } = await reader.read();
-      if (done) {
-        // Flush decoder bytes and drain any remaining SSE line so the
-        // Terminal `done` event is never silently dropped.
-        buffer += decoder.decode();
-        for (const ev of processLines(buffer.split('\n'))) {
-          yield ev;
-        }
-        break;
-      }
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() ?? '';
-      let terminalSeen = false;
-      for (const ev of processLines(lines)) {
-        yield ev;
-        if (ev.type === 'done' || ev.type === 'error') {
-          terminalSeen = true;
-        }
-      }
-      if (terminalSeen) {
-        return;
-      }
-    }
-  } finally {
-    reader.releaseLock();
-  }
-
-  // Defensive fallback: synthesize a `done` if the server closed the SSE
-  // Stream without sending one (some providers flush a partial `phase:
-  // Schema` then drop the socket). This keeps the UI from staying stuck on
-  // The "writing reply" spinner forever.
-  if (!sawTerminal) {
-    yield {
-      type: 'done',
-      result: {
-        summary: '',
-        assistantMessage: lastAssistantDelta,
-        thinking: null,
-        clinicalSchemaJson: '',
-        uiSchemaJson: '',
-        rulesSchemaJson: '',
-      },
-    };
-  }
+  return mapVersion(updated, code);
 }
 
-export function isRequestAborted(error: unknown): boolean {
-  if (error instanceof DOMException && error.name === 'AbortError') {
-    return true;
-  }
-  if (error instanceof Error && error.name === 'AbortError') {
-    return true;
-  }
-  return false;
+export async function resolveFormDefinitionId(code: string): Promise<string> {
+  const { definition } = await getDefinitionByCode(code);
+  return definition.id;
 }

@@ -129,7 +129,9 @@ export function ChatTurnMessage({
                   {turn.streaming && turn.content.length === 0 ? (
                     <span className='flex w-full min-w-[10rem] items-center justify-between gap-3'>
                       <span className='shimmer text-muted-foreground'>
-                        {t('ai.thinking')}
+                        {turn.streamPhase === 'schema'
+                          ? t('ai.applying')
+                          : t('ai.thinking')}
                       </span>
                       <Spinner className='size-3.5 shrink-0 text-muted-foreground' />
                     </span>
@@ -148,7 +150,9 @@ export function ChatTurnMessage({
           >
             <BubbleContent className='ai-chat-bubble-content flex w-full min-w-[10rem] items-center justify-between gap-3 text-[14px] leading-relaxed'>
               <span className='text-muted-foreground'>
-                {t('ai.streamingReply')}
+                {turn.streamPhase === 'schema'
+                  ? t('ai.applying')
+                  : t('ai.streamingReply')}
               </span>
               <Spinner className='size-3.5 shrink-0 text-muted-foreground' />
             </BubbleContent>

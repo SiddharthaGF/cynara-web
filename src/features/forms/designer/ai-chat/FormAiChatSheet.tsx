@@ -80,6 +80,7 @@ export function FormAiChatSheet({
   useAiChatStreamLifecycle({
     turns,
     setTurns,
+    isBusy,
     abortRef,
     clearStorage,
   });
