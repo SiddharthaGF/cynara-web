@@ -31,22 +31,41 @@ jobs:
         with:
           cache: pnpm
 
-      - name: Verify required build-time variables
+      - name: Resolve VITE_API_ORIGIN (vars > wrangler.toml > fail)
+        id: api-origin
         env:
-          VITE_API_ORIGIN: ${{ vars.VITE_API_ORIGIN || '__UNSET__' }}
+          VITE_API_ORIGIN: ${{ vars.VITE_API_ORIGIN || '' }}
           PRODUCTION_BUILD:
-            ${{ github.event_name == 'push' && github.ref == 'refs/heads/main'
-            }}
+            ${{ github.event_name == 'push' && github.ref == 'refs/heads/main'}}
         run: |
-          if [ "${VITE_API_ORIGIN}" = "__UNSET__" ]; then
-            if [ "${PRODUCTION_BUILD}" = "true" ]; then
-              echo "::error::VITE_API_ORIGIN is not configured." >&2
-              echo "Production deploys require the cynara-api origin. Add it under Settings -> Secrets and variables -> Actions -> Variables on this repo so Vite can compile it into the client bundle." >&2
-              exit 1
-            fi
-            echo "::warning::VITE_API_ORIGIN is not configured. PR smoke check will build with a placeholder origin; configure it under Settings -> Secrets and variables -> Actions -> Variables to compile the real cynara-api origin into the client bundle." >&2
-            echo "VITE_API_ORIGIN=__UNSET__" >> "$GITHUB_ENV"
+          set -eo pipefail
+          settings_url='https://github.com/ailuracode/cynara-web/settings/variables/actions'
+          github_env="${GITHUB_ENV:-/dev/null}"
+          github_output="${GITHUB_OUTPUT:-/dev/null}"
+
+          if [ -n "${VITE_API_ORIGIN}" ]; then
+            echo "Using VITE_API_ORIGIN from repository Actions variables."
+            echo "source=vars" >> "$github_output"
+            exit 0
           fi
+
+          if [ -f wrangler.toml ]; then
+            from_wrangler="$(awk -F'"' '/^VITE_API_ORIGIN[[:space:]]*=/ {print $2; exit}' wrangler.toml || true)"
+            if [ -n "${from_wrangler}" ]; then
+              echo "VITE_API_ORIGIN is not set in repository Actions variables; falling back to wrangler.toml [vars] (${from_wrangler})."
+              echo "VITE_API_ORIGIN=${from_wrangler}" >> "$github_env"
+              echo "source=wrangler" >> "$github_output"
+              exit 0
+            fi
+          fi
+
+          if [ "${PRODUCTION_BUILD}" = "true" ]; then
+            echo "::error::VITE_API_ORIGIN is not configured." >&2
+            echo "Production deploys require the cynara-api origin. Set it under ${settings_url} on this repo, or add a [vars] VITE_API_ORIGIN entry to wrangler.toml, so Vite can compile it into the client bundle." >&2
+            exit 1
+          fi
+
+          echo "::warning::VITE_API_ORIGIN is not configured. PR smoke check will build with a placeholder origin; configure it under ${settings_url} on this repo, or add a [vars] VITE_API_ORIGIN entry to wrangler.toml, to compile the real cynara-api origin into the client bundle." >&2
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
