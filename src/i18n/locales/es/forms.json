@@ -1,0 +1,33 @@
+{
+  "list": {
+    "eyebrow": "Diseñador de formularios",
+    "title": "Crea formularios clínicos",
+    "titleAccent": " con precisión",
+    "subtitle": "Compón borradores de ingreso y evaluación de forma visual. Cada cambio se autoguarda con concurrencia optimista — para que tu equipo permanezca sincronizado.",
+    "draftCount_one": "Borrador en catálogo",
+    "draftCount_other": "Borradores en catálogo",
+    "newDraft": "Nuevo borrador",
+    "newDraftDescription": "Elige un código único y un nombre visible para empezar a diseñar.",
+    "code": "Código",
+    "name": "Nombre",
+    "codePlaceholder": "evaluacion-ingreso",
+    "namePlaceholder": "Evaluación de ingreso",
+    "creating": "Creando…",
+    "createForm": "Crear formulario",
+    "yourForms": "Tus formularios",
+    "yourFormsDescription": "Abre un borrador para editar campos, presentación y reglas.",
+    "emptyTitle": "Aún no hay formularios",
+    "emptyDescription": "Crea tu primer borrador para comenzar.",
+    "openDesigner": "Abrir diseñador",
+    "noDraft": "sin borrador",
+    "published": "Publicado: {{versions}}",
+    "defaultFieldLabel": "Notas clínicas",
+    "errors": {
+      "loadFailed": "No se pudieron cargar los formularios.",
+      "createFailed": "No se pudo crear el formulario.",
+      "codeRequired": "El código es obligatorio.",
+      "codeInvalid": "Usa minúsculas, números, puntos, guiones o guiones bajos.",
+      "nameRequired": "El nombre es obligatorio."
+    }
+  }
+}

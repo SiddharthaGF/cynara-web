@@ -10,8 +10,26 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+!/packages/rule-engine/dist/
 *.local
+.env
+.dev.vars
+.env.*
+!.env.example
 package-lock.json
+
+# TanStack Start / Router (generated)
+.tanstack
+.nitro
+.output
+.vinxi
+__unconfig*
+src/routeTree.gen.ts
+
+# Cloudflare / Wrangler (generated)
+.wrangler/
+worker-configuration.d.ts
+dist/server/.dev.vars
 
 # Editor directories and files
 .vscode/*
@@ -23,3 +41,10 @@ package-lock.json
 *.njsproj
 *.sln
 *.sw?
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+

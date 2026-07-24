@@ -1,0 +1,41 @@
+packages:
+  - 'packages/*'
+
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
+minimumReleaseAge: 10080
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - semver@6.3.1
+minimumReleaseAgeExclude:
+  - '@cloudflare/*'
+  - 'wrangler'
+  - 'miniflare'
+  - 'workerd'
+  - '@tanstack/*'
+  - '@tailwindcss/*'
+  - '@voidzero-dev/*'
+  - '@oxfmt/*'
+  - '@oxlint/*'
+  - '@oxlint-tsgolint/*'
+  - oxfmt
+  - oxlint
+  - oxlint-tsgolint
+  - tailwindcss
+  - vite
+  - vite-plus
+  - postcss
+  - ws
+  - obug
+  - caniuse-lite
+  - electron-to-chromium
+  - express-rate-limit
+  - hono
+  - isbot
+  - lucide-react
+  - react-i18next
+  - shadcn
+  - systeminformation
+  - yocto-spinner

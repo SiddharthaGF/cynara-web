@@ -1,0 +1,70 @@
+{
+  "appName": "Cynara",
+  "clinicalForms": "Clinical Forms",
+  "meta": {
+    "title": "Cynara — Clinical Forms",
+    "description": "Design clinical intake and assessment forms for hospitals — visually, with autosave and validation."
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "locale": {
+    "switch": "Change language",
+    "en": "English",
+    "es": "Español"
+  },
+  "settings": {
+    "open": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "ai": {
+      "menu": "AI provider",
+      "title": "AI provider",
+      "description": "Use any OpenAI-compatible endpoint. Set the base URL, API key, and model — same pattern as Cursor’s OpenAI override.",
+      "suggestions": "Quick fill",
+      "suggestionsHint": "Optional presets that only fill the fields below. You can edit everything afterward.",
+      "baseUrl": "Base URL",
+      "apiKey": "API key",
+      "apiKeyPlaceholder": "Paste your API key",
+      "apiKeyKeep": "Leave blank to keep {{masked}}",
+      "model": "Model",
+      "jsonObject": "JSON object mode",
+      "jsonObjectHint": "Turn off for providers that reject response_format (e.g. MiniMax).",
+      "baseUrlRequired": "Base URL is required.",
+      "modelRequired": "Model is required.",
+      "apiKeyRequired": "API key is required.",
+      "saveError": "Could not save AI settings.",
+      "saving": "Saving…"
+    }
+  },
+  "actions": {
+    "save": "Save",
+    "back": "Back",
+    "close": "Close",
+    "forms": "Forms"
+  },
+  "yes": "Yes",
+  "no": "No",
+  "placeholders": {
+    "selectDate": "Select date…",
+    "selectDateTime": "Select date & time…"
+  },
+  "numberInput": {
+    "increase": "Increase value",
+    "decrease": "Decrease value"
+  },
+  "timeInput": {
+    "openPicker": "Open time picker",
+    "selectTime": "Select time",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "seconds": "Seconds",
+    "presets": {
+      "now": "Now"
+    }
+  }
+}

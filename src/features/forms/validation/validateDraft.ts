@@ -1,0 +1,104 @@
+import { iterateFields } from '../model/formDraft.ts';
+import type { FormDraftModel, ValidationIssue } from '../types.ts';
+
+export function validateDraft(model: FormDraftModel): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const fieldIdCounts = new Map<string, number>();
+  const fieldCodeCounts = new Map<string, number>();
+
+  for (const field of iterateFields(model.clinical.fields)) {
+    fieldIdCounts.set(field.id, (fieldIdCounts.get(field.id) ?? 0) + 1);
+    fieldCodeCounts.set(field.code, (fieldCodeCounts.get(field.code) ?? 0) + 1);
+  }
+
+  if (!model.clinical.schemaVersion) {
+    issues.push({
+      code: 'MISSING_SCHEMA_VERSION',
+      path: '/clinical/schemaVersion',
+      message: 'Clinical schemaVersion is required.',
+    });
+  }
+
+  for (const field of iterateFields(model.clinical.fields)) {
+    const path = `/clinical/fields/${field.id}`;
+
+    if (!field.id.trim()) {
+      issues.push({
+        code: 'MISSING_FIELD_ID',
+        path: `${path}/id`,
+        message: 'Field id is required.',
+      });
+    }
+
+    if (!field.code.trim()) {
+      issues.push({
+        code: 'MISSING_FIELD_CODE',
+        path: `${path}/code`,
+        message: 'Field code is required.',
+      });
+    }
+
+    if ((fieldIdCounts.get(field.id) ?? 0) > 1) {
+      issues.push({
+        code: 'DUPLICATE_FIELD_ID',
+        path: `${path}/id`,
+        message: `Duplicate field id '${field.id}'.`,
+      });
+    }
+
+    if ((fieldCodeCounts.get(field.code) ?? 0) > 1) {
+      issues.push({
+        code: 'DUPLICATE_FIELD_CODE',
+        path: `${path}/code`,
+        message: `Duplicate field code '${field.code}'.`,
+      });
+    }
+
+    if (field.type === 'component-ref') {
+      if (!field.componentCode?.trim()) {
+        issues.push({
+          code: 'MISSING_COMPONENT_CODE',
+          path: `${path}/componentCode`,
+          message: 'Select a reusable component.',
+        });
+      } else if (field.componentVersion && !field.componentVersion.trim()) {
+        issues.push({
+          code: 'INVALID_COMPONENT_VERSION',
+          path: `${path}/componentVersion`,
+          message: 'Component version must not be blank when set.',
+        });
+      }
+    }
+
+    if (
+      field.type === 'choice' &&
+      (!field.options || field.options.length === 0)
+    ) {
+      issues.push({
+        code: 'CHOICE_OPTIONS_REQUIRED',
+        path: `${path}/options`,
+        message: 'Choice fields require at least one option.',
+      });
+    }
+  }
+
+  if (
+    model.ui.clinicalSchemaVersion &&
+    model.ui.clinicalSchemaVersion !== model.clinical.schemaVersion
+  ) {
+    issues.push({
+      code: 'CLINICAL_VERSION_MISMATCH',
+      path: '/ui/clinicalSchemaVersion',
+      message: 'UI schema version does not match clinical schema version.',
+    });
+  }
+
+  return issues;
+}
+
+export function issuesForField(
+  issues: ValidationIssue[],
+  fieldId: string,
+): ValidationIssue[] {
+  return issues.filter((issue) => issue.path.includes(`/${fieldId}`));
+}

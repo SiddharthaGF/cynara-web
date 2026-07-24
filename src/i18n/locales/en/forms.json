@@ -1,0 +1,33 @@
+{
+  "list": {
+    "eyebrow": "Form designer",
+    "title": "Build clinical forms",
+    "titleAccent": " with precision",
+    "subtitle": "Compose intake and assessment drafts visually. Every change autosaves with optimistic concurrency — so your team stays in sync.",
+    "draftCount_one": "Draft in catalog",
+    "draftCount_other": "Drafts in catalog",
+    "newDraft": "New draft",
+    "newDraftDescription": "Choose a unique code and display name to start designing.",
+    "code": "Code",
+    "name": "Name",
+    "codePlaceholder": "intake-assessment",
+    "namePlaceholder": "Intake assessment",
+    "creating": "Creating…",
+    "createForm": "Create form",
+    "yourForms": "Your forms",
+    "yourFormsDescription": "Open a draft to edit fields, presentation, and rules.",
+    "emptyTitle": "No forms yet",
+    "emptyDescription": "Create your first draft to get started.",
+    "openDesigner": "Open designer",
+    "noDraft": "no draft",
+    "published": "Published: {{versions}}",
+    "defaultFieldLabel": "Clinical notes",
+    "errors": {
+      "loadFailed": "Failed to load forms.",
+      "createFailed": "Failed to create form.",
+      "codeRequired": "Code is required.",
+      "codeInvalid": "Use lowercase letters, numbers, dots, hyphens, or underscores.",
+      "nameRequired": "Name is required."
+    }
+  }
+}

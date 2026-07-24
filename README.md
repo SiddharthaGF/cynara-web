@@ -3,9 +3,9 @@
 Primary frontend for [Cynara](https://github.com/ailuracode/cynara): a
 configurable clinical platform for hospitals.
 
-Built with **React**, **TypeScript**, and **[Vite+](https://viteplus.dev/)**
-(Vite, Oxlint, Oxfmt). Renders forms defined by the technology-neutral
-[clinical form schema contract](https://github.com/ailuracode/cynara/blob/main/docs/clinical-form-schema.md).
+Built with **React 19**, **TypeScript**, and
+**[TanStack Start](https://tanstack.com/start)** (file-based routing,
+SSR-ready). The form designer lives here and talks to `cynara-api` over `/api`.
 
 ## Related repositories
 
@@ -14,44 +14,212 @@ Built with **React**, **TypeScript**, and **[Vite+](https://viteplus.dev/)**
 | [cynara](https://github.com/ailuracode/cynara)         | Schema contract, docs, fixtures |
 | [cynara-api](https://github.com/ailuracode/cynara-api) | ASP.NET backend (primary)       |
 
-## Contract conformance
+## Routes
 
-Client-side validation should use a JSON Schema Draft 2020-12 validator (e.g.
-[Ajv](https://ajv.js.org/)) against the meta-schemas in `cynara/schemas/v1/`.
-
-Semantic rules are documented in
-[`semantic-rules.md`](https://github.com/ailuracode/cynara/blob/main/docs/semantic-rules.md).
+| Path                    | Purpose                       |
+| ----------------------- | ----------------------------- |
+| `/forms`                | Form catalog and create draft |
+| `/forms/:code/designer` | Visual form designer (CYN-11) |
 
 ## Getting started
 
-Prerequisites: [Node.js](https://nodejs.org/) 20+, [pnpm](https://pnpm.io/) 9+
+Prerequisites: [Node.js](https://nodejs.org/) 22+, [pnpm](https://pnpm.io/) 9+
+
+Start the API (`cynara-api` on port 3000), then:
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-The dev server listens on `http://localhost:5173` by default.
-
-### Schema submodule
-
-```bash
-git submodule add https://github.com/ailuracode/cynara.git schemas
-git submodule update --init --recursive
-```
+The dev server proxies `/api` to `http://localhost:3000`.
 
 ## Scripts
 
-| Command           | Description                   |
-| ----------------- | ----------------------------- |
-| `pnpm dev`        | Start Vite+ dev server        |
-| `pnpm build`      | Production build              |
-| `pnpm preview`    | Preview production build      |
-| `pnpm lint:check` | Oxlint via Vite+              |
-| `pnpm lint:fix`   | Oxlint with autofix           |
-| `pnpm fmt`        | Oxfmt                         |
-| `pnpm fmt:check`  | Check formatting              |
-| `pnpm check`      | Format, lint, and type checks |
+| Command          | Description                   |
+| ---------------- | ----------------------------- |
+| `pnpm dev`       | TanStack Start dev server     |
+| `pnpm build`     | Client + SSR production build |
+| `pnpm preview`   | Preview production build      |
+| `pnpm typecheck` | TypeScript check              |
+
+## Project structure
+
+```
+src/
+├── routes/              # TanStack Start file routes
+│   ├── __root.tsx
+│   ├── index.tsx        # → /forms redirect
+│   └── forms/
+│       ├── index.tsx    # form list
+│       └── $code/designer.tsx
+├── features/forms/      # designer UI + draft model
+├── api/                 # cynara-api client
+└── router.tsx
+```
+
+## Contract conformance
+
+Client-side validation uses draft-model checks before autosave. Full JSON
+Schema + semantic validation runs on the API when saving drafts.
+
+See the
+[clinical form schema contract](https://github.com/ailuracode/cynara/blob/main/docs/clinical-form-schema.md)
+and
+[rules schema](https://github.com/ailuracode/cynara/blob/main/docs/rules-schema.md).
+
+## Deploying to Cloudflare
+
+`cynara-web` is configured for full SSR on Cloudflare via the
+[`@cloudflare/vite-plugin`](https://developers.cloudflare.com/workers/vite-plugin/)
+and `wrangler`. The config is checked in (`wrangler.toml`) and the dev
+dependencies are already listed in `package.json`.
+
+### Prerequisites
+
+- A Cloudflare account with Workers paid plan (the SSR worker runs on Workers
+  runtime; client assets are served by Workers Assets, the same model Pages uses
+  internally).
+- `cynara-api` reachable from the public internet, with CORS allowed for the
+  Cloudflare Workers origin(s) where this app is deployed
+  (`https://<project-name>.<account-subdomain>.workers.dev` for preview, and
+  your custom domain for production).
+
+### Environment variables
+
+Set in the Cloudflare dashboard for the project, under **Settings → Build →
+Build variables & secrets**:
+
+| Variable          | Kind   | Example                          |
+| ----------------- | ------ | -------------------------------- |
+| `VITE_API_ORIGIN` | Public | `https://api.cynara.example.com` |
+
+`VITE_API_ORIGIN` is a build-time constant compiled into the client bundle by
+Vite (and read by the SSR worker too). It must be present during `vite build`,
+so it must be set on **both** the production and preview environments — preview
+URLs may otherwise fail when the API rejects cross-origin requests.
+
+Do **not** commit secrets. Any runtime-only secrets should be set under
+**Settings → Variables → Environment variables** (encrypted) and consumed via
+`context.env` / Nitro bindings if/when a server function needs them.
+
+### Deployment model
+
+The project is deployed as a **Cloudflare Worker** (not a Pages Function).
+`@cloudflare/vite-plugin` builds the SSR worker under `dist/server/` (entry
+`dist/server/index.js`) and the client assets under `dist/client/`. The
+plugin-generated `dist/server/wrangler.json` is what Cloudflare consumes; it
+pins `assets.directory` to the client output and sets `no_bundle = true`
+(Cloudflare uploads the prebuilt worker as-is, without re-bundling).
+
+Deploys run via **GitHub Actions** (`.github/workflows/deploy.yml`), not via the
+Cloudflare GitHub App:
+
+- **Production** — `push` to `main` runs
+  `wrangler deploy --keep-vars --config dist/server/wrangler.json`. The deploy
+  step uploads the prebuilt worker bundle and the client assets, and preserves
+  existing worker vars.
+- **PR smoke check** — every `pull_request` to `main` runs
+  `wrangler versions upload` against the same config. This uploads the build as
+  a new **Worker version** (visible in the dashboard under Deployments) but does
+  not roll any production traffic. Reviewers can promote the version to 100 %
+  manually once the PR is approved, or merge and let the `push`-to-`main`
+  workflow handle the rollout.
+
+> The deployment surface is **two GitHub Actions workflows** (React Doctor for
+> static analysis and this one for the worker itself). The Cloudflare GitHub App
+> is **not** used on this repo.
+
+### GitHub Actions setup
+
+1. Add two secrets and (optionally) two variables on
+   <https://github.com/ailuracode/cynara-web/settings/secrets/actions>:
+
+   | Kind     | Name                      | Value                                                                                                        |
+   | -------- | ------------------------- | ------------------------------------------------------------------------------------------------------------ |
+   | Secret   | `CLOUDFLARE_API_TOKEN`    | A token from <https://dash.cloudflare.com/profile/api-tokens> with the **Edit Cloudflare Workers** template. |
+   | Secret   | `CLOUDFLARE_ACCOUNT_ID`   | Shown on the Workers project overview page.                                                                  |
+   | Variable | `VITE_API_ORIGIN`         | Public build-time constant. Example: `https://api.cynara.example.com`.                                       |
+   | Variable | `CLOUDFLARE_PROJECT_NAME` | Defaults to `cynara-web` if unset.                                                                           |
+
+2. **Disconnect the Cloudflare GitHub App** on the same repo's installation
+   settings (Settings -> GitHub Apps) so it stops creating the duplicate
+   `Workers Builds: cynara-web` check on every PR. The bot from the GitHub App
+   doesn't surface its build log on the PR, which is the reason we switched to
+   GitHub Actions in the first place.
+
+3. Verify locally against your account before opening the PR:
+
+   ```bash
+   pnpm build
+   npx wrangler whoami            # sanity-check the token
+   npx wrangler deploy --dry-run --outdir /tmp/wrangler-dryrun
+   ```
+
+   `wrangler deploy --dry-run` reads `dist/server/wrangler.json` and the
+   matching `dist/server/index.js` + `dist/client/` assets, lists what would be
+   uploaded, and exits without contacting Cloudflare. The bundle under
+   `dist/server/` is exactly what GitHub Actions ships.
+
+### One-time setup
+
+```bash
+pnpm install
+npx wrangler login
+```
+
+### Build
+
+```bash
+pnpm build
+```
+
+This invokes `vite build`, which now runs the Cloudflare Vite plugin. The
+artifact is a `dist/` directory containing:
+
+- `dist/server/index.js` — the SSR worker bundle.
+- `dist/server/wrangler.json` — generated worker config (the plugin regenerates
+  it on each build; this is the config that `wrangler deploy` consumes).
+- `dist/client/` — static client assets served by Workers Assets.
+
+A small `closeBundle` hook in `vite.config.ts` strips the `dist/server/.vite`
+cache and `dist/server/.dev.vars` secrets file from the output so local dev
+artifacts never leak into the deploy bundle.
+
+### Local preview before opening a PR
+
+```bash
+pnpm build
+npx wrangler dev
+```
+
+This boots the actual `workerd` runtime locally — closer to production than
+`vite preview`. Reproduce this before opening a PR so reviewers see a green
+preview URL.
+
+### Manual production deploy (optional)
+
+GitHub Actions handles production deploys automatically on push to `main`. To
+publish a manual production build bypassing CI:
+
+```bash
+pnpm deploy            # mirrors the GitHub Actions deploy
+pnpm deploy:keep-vars  # use this if you have vars set on the worker in
+                       # the Cloudflare dashboard — preserves them across deploys
+```
+
+Both run `pnpm build` followed by `wrangler deploy`. Use sparingly — the GH
+Actions workflow is the default path.
+
+### Generated types
+
+```bash
+pnpm cf-typegen
+```
+
+Produces `worker-configuration.d.ts` (gitignored) so the SSR worker can refer to
+typed Cloudflare bindings. Add the file's path to `tsconfig.app.json`
+`compilerOptions.types` only if the app starts reading `Env`-typed bindings.
 
 ## License
 

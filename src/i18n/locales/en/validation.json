@@ -1,0 +1,62 @@
+{
+  "issues": {
+    "MISSING_SCHEMA_VERSION": "Clinical schemaVersion is required.",
+    "MISSING_FIELD_ID": "Field id is required.",
+    "MISSING_FIELD_CODE": "Field code is required.",
+    "DUPLICATE_FIELD_ID": "Duplicate field id '{{id}}'.",
+    "DUPLICATE_FIELD_CODE": "Duplicate field code '{{code}}'.",
+    "MISSING_COMPONENT_CODE": "Select a reusable component.",
+    "INVALID_COMPONENT_VERSION": "Component version must not be blank when set.",
+    "CHOICE_OPTIONS_REQUIRED": "Choice fields require at least one option.",
+    "CLINICAL_VERSION_MISMATCH": "UI schema version does not match clinical schema version."
+  },
+  "panel": {
+    "allPassed": "All checks passed — form structure looks valid.",
+    "issuesToFix_one": "{{count}} issue to fix",
+    "issuesToFix_other": "{{count}} issues to fix"
+  },
+  "save": {
+    "fixBeforeSave": "Fix validation issues before saving.",
+    "failed": "Save failed."
+  },
+  "fieldErrors": {
+    "REQUIRED": "Required",
+    "MIN_LENGTH": "Minimum length is {{count}}",
+    "MAX_LENGTH": "Maximum length is {{count}}",
+    "PATTERN_MISMATCH": "Value does not match the required pattern",
+    "INVALID_PATTERN": "Invalid pattern configured",
+    "INVALID_NUMBER": "Enter a valid number",
+    "WHOLE_NUMBER_REQUIRED": "Enter a whole number",
+    "MIN_VALUE": "Minimum value is {{value}}",
+    "MAX_VALUE": "Maximum value is {{value}}",
+    "MULTIPLE_OF": "Value must be a multiple of {{value}}",
+    "INVALID_OPTION": "Invalid option selected",
+    "MIN_ROWS": "At least {{count}} rows required",
+    "MAX_ROWS": "At most {{count}} rows allowed"
+  },
+  "renderer": {
+    "UNSUPPORTED_FIELD_TYPE": "Field type \"{{type}}\" is not supported by the renderer.",
+    "UNRESOLVED_COMPONENT": "Clinical block reference is missing a component code.",
+    "COMPONENT_NOT_COMPILED": "Clinical block \"{{componentCode}}\" will resolve at publish time — preview shows a placeholder.",
+    "UNPINNED_COMPONENT": "Clinical block \"{{componentCode}}\" needs a pinned version for preview.",
+    "UNKNOWN_WIDGET": "Widget \"{{widget}}\" is not recognized for {{fieldType}}.",
+    "HIDDEN_BY_UI": "Field is hidden by default in the UI schema."
+  },
+  "warningCodes": {
+    "MISSING_SCHEMA_VERSION": "Schema version",
+    "MISSING_FIELD_ID": "Missing field id",
+    "MISSING_FIELD_CODE": "Missing field code",
+    "DUPLICATE_FIELD_ID": "Duplicate id",
+    "DUPLICATE_FIELD_CODE": "Duplicate code",
+    "MISSING_COMPONENT_CODE": "Missing component",
+    "INVALID_COMPONENT_VERSION": "Invalid version",
+    "CHOICE_OPTIONS_REQUIRED": "Missing options",
+    "CLINICAL_VERSION_MISMATCH": "Version mismatch",
+    "UNSUPPORTED_FIELD_TYPE": "Unsupported type",
+    "UNRESOLVED_COMPONENT": "Unresolved component",
+    "COMPONENT_NOT_COMPILED": "Block not compiled",
+    "UNPINNED_COMPONENT": "Unpinned version",
+    "UNKNOWN_WIDGET": "Unknown widget",
+    "HIDDEN_BY_UI": "Hidden in UI"
+  }
+}
