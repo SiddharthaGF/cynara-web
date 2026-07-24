@@ -13,6 +13,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip.tsx';
+import type { FormDraftModel } from '@/features/forms/types.ts';
 import { useIsMobile } from '@/hooks/use-mobile.ts';
 
 import { FormPreviewTrigger } from '../preview/FormPreviewTrigger.tsx';
@@ -116,7 +117,7 @@ export function FormDesignerLayout({
           <Suspense fallback={null}>
             <LazyFormAiChatSheet
               open={aiChatOpen}
-              onOpenChange={(open) => {
+              onOpenChange={(open: boolean) => {
                 setAiChatOpen(open);
                 if (open) {
                   layout.setShowAdvanced(false);
@@ -126,7 +127,7 @@ export function FormDesignerLayout({
               locale={locale}
               model={layout.draft.model}
               readOnly={layout.draft.isReadOnly}
-              onApplyDraft={(next) => {
+              onApplyDraft={(next: FormDraftModel) => {
                 layout.setSelectedFieldId(null);
                 layout.setShowAdvanced(false);
                 layout.draft.setModel(() => next);
