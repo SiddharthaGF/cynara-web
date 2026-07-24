@@ -38,12 +38,14 @@ jobs:
           PRODUCTION_BUILD:
             ${{ github.event_name == 'push' && github.ref == 'refs/heads/main'}}
         run: |
-          set -euo pipefail
+          set -eo pipefail
           settings_url='https://github.com/ailuracode/cynara-web/settings/variables/actions'
+          github_env="${GITHUB_ENV:-/dev/null}"
+          github_output="${GITHUB_OUTPUT:-/dev/null}"
 
           if [ -n "${VITE_API_ORIGIN}" ]; then
             echo "Using VITE_API_ORIGIN from repository Actions variables."
-            echo "source=vars" >> "$GITHUB_OUTPUT"
+            echo "source=vars" >> "$github_output"
             exit 0
           fi
 
@@ -51,8 +53,8 @@ jobs:
             from_wrangler="$(awk -F'"' '/^VITE_API_ORIGIN[[:space:]]*=/ {print $2; exit}' wrangler.toml || true)"
             if [ -n "${from_wrangler}" ]; then
               echo "VITE_API_ORIGIN is not set in repository Actions variables; falling back to wrangler.toml [vars] (${from_wrangler})."
-              echo "VITE_API_ORIGIN=${from_wrangler}" >> "$GITH_ENV"
-              echo "source=wrangler" >> "$GITHUB_OUTPUT"
+              echo "VITE_API_ORIGIN=${from_wrangler}" >> "$github_env"
+              echo "source=wrangler" >> "$github_output"
               exit 0
             fi
           fi
