@@ -1,17 +1,14 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 
-import {
-  type FormAiChatMessage,
-  isRequestAborted,
-  streamFormDraftAi,
-} from '@/api/form-ai-chat.ts';
+import type { FormAiChatMessage } from '@/api/form-ai-chat.ts';
 import {
   parseDraft,
   serializeDraft,
+  syncRulesSchema,
+  syncUiSchema,
 } from '@/features/forms/model/formDraft.ts';
 import type { FormDraftModel } from '@/features/forms/types.ts';
 
-import type { ChatTurn } from './chatTurns.ts';
 import {
   findLastUserTurn,
   markTurnFailed,
@@ -19,13 +16,15 @@ import {
   resetAssistantForRetry,
   settleAssistantStreaming,
 } from './chatStreamTurnHelpers.ts';
+import type { ChatTurn } from './chatTurns.ts';
 import {
   playErrorNotificationSound,
   playNotificationSound,
 } from './playNotificationSound.ts';
+import { runStreamAttempt } from './runFormAiChatStreamAttempt.ts';
 import {
   EMPTY_AI_SCHEMA_MESSAGE,
-  isTransientAiErrorMessage,
+  isRetryableAiErrorMessage,
 } from './transientAiRetry.ts';
 
 export interface PendingChatPayload {
@@ -49,6 +48,7 @@ interface RunFormAiChatStreamOptions {
   clearStoppedFlag: () => void;
   drainQueue: () => Promise<void>;
   errorGeneric: string;
+  errorTimeout: string;
   formCode: string;
   idPrefix: string;
   isBusyRef: MutableRefObject<boolean>;
@@ -57,10 +57,8 @@ interface RunFormAiChatStreamOptions {
   onApplyDraft: (next: FormDraftModel) => void;
   payload: PendingChatPayload;
   queueRef: MutableRefObject<QueuedMessage[]>;
-  /** True only when the previous stream was aborted by the user clicking
-   *  Stop. Internal cancels (replaced stream, 60s safety timeout) leave
-   *  this false so we don't show a misleading "generation stopped" banner. */
-  wasUserStopped: boolean;
+  /** Live check for an explicit Stop click (not a snapshot at stream start). */
+  isUserStopped: () => boolean;
   setError: Dispatch<SetStateAction<string | null>>;
   setIsBusy: Dispatch<SetStateAction<boolean>>;
   setPendingPayload: Dispatch<SetStateAction<PendingChatPayload | null>>;
@@ -69,10 +67,12 @@ interface RunFormAiChatStreamOptions {
   clearQueuedTurns: () => void;
 }
 
-type AttemptResult =
-  | { status: 'succeeded' }
-  | { status: 'aborted' }
-  | { status: 'failed'; message: string };
+/** Convenience re-export so callers can import the attempt types from the
+ *  Single chat-stream entry point. */
+export type {
+  AttemptResult,
+  AttemptTelemetry,
+} from './runFormAiChatStreamAttempt.ts';
 
 export async function runFormAiChatStream({
   abortRef,
@@ -80,6 +80,7 @@ export async function runFormAiChatStream({
   clearStoppedFlag,
   drainQueue,
   errorGeneric,
+  errorTimeout,
   formCode,
   idPrefix,
   isBusyRef,
@@ -88,16 +89,16 @@ export async function runFormAiChatStream({
   onApplyDraft,
   payload,
   queueRef,
-  wasUserStopped,
+  isUserStopped,
   setError,
   setIsBusy,
   setPendingPayload,
   setStopped,
   setTurns,
 }: RunFormAiChatStreamOptions): Promise<void> {
+  // Cancel any in-flight turn (replaced by this one). That abort is silent —
+  // Only user Stop and per-attempt timeouts are surfaced below.
   abortRef.current?.abort();
-  const controller = new AbortController();
-  abortRef.current = controller;
   setPendingPayload(payload);
   setError(null);
   setStopped(false);
@@ -116,101 +117,60 @@ export async function runFormAiChatStream({
     },
   ]);
 
-  // Safety net: cap any single chat turn at 60s so the UI never gets stuck
-  // On the "writing reply" spinner if the upstream provider hangs without
-  // Sending a terminal event. The controller is aborted, the SSE parser
-  // Drains its buffer, and the synthetic `done` settles the turn.
-  const streamTimeout = setTimeout(() => {
-    if (abortRef.current === controller) {
-      controller.abort();
-    }
-  }, 60_000);
+  const promptChars = payload.messages.reduce(
+    (sum, message) => sum + message.content.length,
+    0,
+  );
 
-  const runAttempt = async (): Promise<AttemptResult> => {
-    let turnContentSnapshot = '';
-    try {
-      const serialized = serializeDraft(modelRef.current);
-      for await (const event of streamFormDraftAi(
-        formCode,
-        {
-          messages: payload.messages,
-          locale,
-          focusedFieldIds: payload.focusedFieldIds,
-          focusedFieldTypes: payload.focusedFieldTypes,
-          clinicalSchemaJson: serialized.clinicalSchemaJson,
-          uiSchemaJson: serialized.uiSchemaJson,
-          rulesSchemaJson: serialized.rulesSchemaJson,
-        },
-        { signal: controller.signal },
-      )) {
-        if (event.type === 'thinking') {
-          // Thinking events only indicate that the server is still working.
-        } else if (event.type === 'phase') {
-          // `schema` means the assistant text is done and the server is
-          // Building the draft patch — keep streaming so the UI can show
-          // "Generating schema changes…" until `done`.
-          patchAssistant(setTurns, assistantId, (turn) => ({
-            ...turn,
-            streamPhase: event.phase,
-          }));
-        } else if (event.type === 'message') {
-          turnContentSnapshot = `${turnContentSnapshot}${event.delta}`;
-          patchAssistant(setTurns, assistantId, (turn) => ({
-            ...turn,
-            content: `${turn.content}${event.delta}`,
-            streamPhase: turn.streamPhase ?? 'message',
-          }));
-        } else if (event.type === 'error') {
-          throw new Error(event.message);
-        } else if (event.type === 'done') {
-          applyDoneEvent({
-            assistantId,
-            modelRef,
-            onApplyDraft,
-            result: event.result,
-            setError,
-            setPendingPayload,
-            setStopped,
-            setTurns,
-            turnContentSnapshot,
-          });
-          return { status: 'succeeded' };
-        }
-      }
-      return { status: 'succeeded' };
-    } catch (error) {
-      if (isRequestAborted(error)) {
-        return { status: 'aborted' };
-      }
-      return {
-        status: 'failed',
-        message: error instanceof Error ? error.message : errorGeneric,
-      };
-    }
-  };
+  const runAttempt = runStreamAttempt({
+    abortRef,
+    assistantId,
+    errorGeneric,
+    errorTimeout,
+    formCode,
+    isUserStopped,
+    isRetryable: isRetryableAiErrorMessage,
+    locale,
+    modelRef,
+    onApplyDone: (event, turnContentSnapshot) => {
+      applyDoneEvent({
+        assistantId,
+        modelRef,
+        onApplyDraft,
+        result: event.result,
+        setError,
+        setPendingPayload,
+        setStopped,
+        setTurns,
+        turnContentSnapshot,
+      });
+    },
+    payload,
+    promptChars,
+    setError,
+    setPendingPayload,
+    setStopped,
+    setTurns,
+  });
 
   /**
-   * Auto-retry once when the upstream produced a transient parse failure.
-   * The `cynara-api` LLM provider occasionally emits truncated/malformed
-   * JSON for short prompts; a second invocation almost always lands a clean
-   * schema. We do not retry user aborts, network failures, or non-recoverable
-   * errors. We also do not retry when the assistant never produced any
-   * content (suggests auth/billing issue, not a flaky parse).
+   * Auto-retry once on transient parse failures, empty schema payloads, or
+   * Client safety timeouts. User Stop and non-recoverable errors are not
+   * Retried. Each attempt owns its own AbortController so a timed-out signal
+   * Does not block the retry.
    */
-  const attemptResult = await runAttempt();
+  const attemptResult = await runAttempt(1);
   let errorMessage: string | null = null;
   let wasAborted = false;
 
   const canRetry =
-    !wasUserStopped &&
-    !controller.signal.aborted &&
+    !isUserStopped() &&
     attemptResult.status === 'failed' &&
-    (isTransientAiErrorMessage(attemptResult.message) ||
-      attemptResult.message === EMPTY_AI_SCHEMA_MESSAGE);
+    Boolean(attemptResult.retryable);
 
   if (canRetry) {
     resetAssistantForRetry(setTurns, assistantId);
-    const retry = await runAttempt();
+    const retry = await runAttempt(2);
     if (retry.status === 'succeeded') {
       finalizeSuccess();
       return;
@@ -236,10 +196,6 @@ export async function runFormAiChatStream({
   }
 
   function finalizeSuccess(): void {
-    clearTimeout(streamTimeout);
-    if (abortRef.current === controller) {
-      abortRef.current = null;
-    }
     setIsBusy(false);
     isBusyRef.current = false;
     if (queueRef.current.length > 0) {
@@ -251,9 +207,8 @@ export async function runFormAiChatStream({
     settleAssistantStreaming(setTurns, assistantId);
     setError(null);
     // Only surface the "generation stopped" banner when the user
-    // Explicitly hit Stop. Replaced streams and the 60s safety timeout
-    // Should not leave a stale card on screen.
-    setStopped(wasUserStopped);
+    // Explicitly hit Stop. Replaced streams should not leave a stale card.
+    setStopped(isUserStopped());
     // Keep queue for after stop settles — still drain next.
   } else if (errorMessage !== null) {
     const errMessage = errorMessage;
@@ -354,13 +309,21 @@ function applyDoneEvent({
     );
   });
   if (draftChanged) {
-    onApplyDraft(
-      parseDraft({
-        clinicalSchemaJson,
-        uiSchemaJson,
-        rulesSchemaJson,
-      }),
-    );
+    const parsed = parseDraft({
+      clinicalSchemaJson,
+      uiSchemaJson,
+      rulesSchemaJson,
+    });
+    // Sync UI/rules (incl. layout order) before apply so preview matches the
+    // Designer canvas immediately, and so queued follow-ups serialize the
+    // Applied draft rather than a stale modelRef from before React re-renders.
+    const next: FormDraftModel = {
+      clinical: parsed.clinical,
+      ui: syncUiSchema(parsed.clinical, parsed.ui),
+      rules: syncRulesSchema(parsed.clinical, parsed.rules),
+    };
+    modelRef.current = next;
+    onApplyDraft(next);
   }
   setPendingPayload(null);
   setError(null);

@@ -27,10 +27,10 @@ export const resolveApiUrl = createIsomorphicFn()
     }
     return buildApiUrl(path);
   })
-  .server((path: string) => 
+  .server((path: string) =>
     // In Vite/Cloudflare SSR, prefer the API origin directly. Relative /api
     // Paths are not valid fetch targets on the server.
-    buildApiUrl(path)
+    buildApiUrl(path),
   );
 
 function summarizeErrorBody(status: number, bodyText: string): string {

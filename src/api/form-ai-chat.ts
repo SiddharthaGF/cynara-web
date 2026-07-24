@@ -13,6 +13,18 @@ export interface FormAiChatResult {
   clinicalSchemaJson: string;
   uiSchemaJson: string;
   rulesSchemaJson: string;
+  /**
+   * Diagnostic metadata emitted by the backend. The only field we currently
+   * care about is `fallback.outcome` (the honesty-net layer from B3 surfaces
+   * any discarded schema parts here), but we keep the wider record so we can
+   * pick up new fields without a contract change.
+   */
+  notes?: {
+    fallback?: {
+      outcome: string;
+      droppedLayers?: readonly string[];
+    };
+  };
 }
 
 export interface FormAiChatInput {
@@ -61,6 +73,32 @@ function readNullableString(
   return null;
 }
 
+function readNotes(
+  result: Record<string, unknown>,
+): FormAiChatResult['notes'] | undefined {
+  const candidate = result.notes ?? result.Notes;
+  if (!isRecord(candidate)) {
+    return undefined;
+  }
+  const { fallback } = candidate;
+  if (!isRecord(fallback)) {
+    return Object.keys(candidate).length > 0 ? {} : undefined;
+  }
+  const outcome = readString(fallback, 'outcome', 'Outcome');
+  const droppedLayersRaw = fallback.droppedLayers ?? fallback.DroppedLayers;
+  const droppedLayers = Array.isArray(droppedLayersRaw)
+    ? droppedLayersRaw.filter(
+        (item): item is string => typeof item === 'string',
+      )
+    : undefined;
+  return {
+    fallback: {
+      outcome: outcome.length > 0 ? outcome : 'unknown',
+      droppedLayers,
+    },
+  };
+}
+
 function parseFormAiStreamEvent(data: string): FormAiStreamEvent | null {
   if (!data || data === '[DONE]') {
     return null;
@@ -88,33 +126,28 @@ function parseFormAiStreamEvent(data: string): FormAiStreamEvent | null {
         : null;
     }
     if (parsed.type === 'done' && isRecord(parsed.result)) {
-      return {
-        type: 'done',
-        result: {
-          summary: readString(parsed.result, 'summary', 'Summary'),
-          assistantMessage: readString(
-            parsed.result,
-            'assistantMessage',
-            'AssistantMessage',
-          ),
-          thinking: readNullableString(parsed.result, 'thinking', 'Thinking'),
-          clinicalSchemaJson: readString(
-            parsed.result,
-            'clinicalSchemaJson',
-            'ClinicalSchemaJson',
-          ),
-          uiSchemaJson: readString(
-            parsed.result,
-            'uiSchemaJson',
-            'UiSchemaJson',
-          ),
-          rulesSchemaJson: readString(
-            parsed.result,
-            'rulesSchemaJson',
-            'RulesSchemaJson',
-          ),
-        },
+      const result = {
+        summary: readString(parsed.result, 'summary', 'Summary'),
+        assistantMessage: readString(
+          parsed.result,
+          'assistantMessage',
+          'AssistantMessage',
+        ),
+        thinking: readNullableString(parsed.result, 'thinking', 'Thinking'),
+        clinicalSchemaJson: readString(
+          parsed.result,
+          'clinicalSchemaJson',
+          'ClinicalSchemaJson',
+        ),
+        uiSchemaJson: readString(parsed.result, 'uiSchemaJson', 'UiSchemaJson'),
+        rulesSchemaJson: readString(
+          parsed.result,
+          'rulesSchemaJson',
+          'RulesSchemaJson',
+        ),
+        notes: readNotes(parsed.result),
       };
+      return { type: 'done', result };
     }
   } catch {
     return null;

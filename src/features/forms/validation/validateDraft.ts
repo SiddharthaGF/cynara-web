@@ -19,14 +19,6 @@ export function validateDraft(model: FormDraftModel): ValidationIssue[] {
     });
   }
 
-  if (model.clinical.fields.length === 0) {
-    issues.push({
-      code: 'EMPTY_FORM',
-      path: '/clinical/fields',
-      message: 'Add at least one field before saving.',
-    });
-  }
-
   for (const field of iterateFields(model.clinical.fields)) {
     const path = `/clinical/fields/${field.id}`;
 

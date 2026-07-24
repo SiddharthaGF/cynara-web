@@ -8,7 +8,7 @@ import {
   XIcon,
 } from 'lucide-react';
 import type { JSX, ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Bubble, BubbleContent } from '@/components/ui/bubble.tsx';
@@ -23,6 +23,7 @@ import {
   MessageFooter,
   MessageHeader,
 } from '@/components/ui/message.tsx';
+import { Progress } from '@/components/ui/progress.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
 import { cn } from '@/lib/utils.ts';
 
@@ -30,8 +31,28 @@ import { ChatMentionContent } from './ChatMentionContent.tsx';
 import type { ChatTurn } from './chatTurns.ts';
 import type { MentionableField } from './fieldMentions.ts';
 import type { MentionableFieldType } from './fieldTypeMentions.ts';
+import { AI_SCHEMA_PHASE_LONG_MS } from './transientAiRetry.ts';
 
 const USER_PREVIEW_LENGTH = 180;
+
+const useLongSchemaPhase = (turn: ChatTurn): boolean => {
+  const isSchema = turn.streaming === true && turn.streamPhase === 'schema';
+  const startedAtKey = isSchema ? `${turn.id}:schema` : '';
+  const [longRunning, setLongRunning] = useState(false);
+  useEffect(() => {
+    if (!isSchema) {
+      setLongRunning(false);
+      return undefined;
+    }
+    const timer = setTimeout(() => {
+      setLongRunning(true);
+    }, AI_SCHEMA_PHASE_LONG_MS);
+    return (): void => {
+      clearTimeout(timer);
+    };
+  }, [isSchema, startedAtKey]);
+  return longRunning && isSchema;
+};
 
 export function ChatTurnMessage({
   turn,
@@ -49,6 +70,7 @@ export function ChatTurnMessage({
   const { t } = useTranslation('designer');
   const isUser = turn.role === 'user';
   const isQueued = Boolean(turn.queued);
+  const showSchemaLong = useLongSchemaPhase(turn);
   const contentNodes = (
     <ChatMentionContent
       content={turn.content}
@@ -58,7 +80,12 @@ export function ChatTurnMessage({
   );
   const showBody = turn.content.length > 0 || turn.streaming;
   const showApplied =
-    Boolean(turn.draftApplied) && !turn.streaming && !turn.failed;
+    turn.draftApplied === true && !turn.streaming && !turn.failed;
+  // Explicit false means the turn finished with schemas identical to the
+  // Open draft (mode unchanged / no-op patch). Surface that so a confident
+  // Assistant claim cannot be mistaken for a canvas update.
+  const showUnchanged =
+    turn.draftApplied === false && !turn.streaming && !turn.failed;
   let authorIcon = (
     <SparklesIcon
       className='size-3 opacity-70'
@@ -148,13 +175,31 @@ export function ChatTurnMessage({
             align='start'
             className='ai-chat-bubble ai-chat-bubble--assistant ai-chat-bubble--status'
           >
-            <BubbleContent className='ai-chat-bubble-content flex w-full min-w-[10rem] items-center justify-between gap-3 text-[14px] leading-relaxed'>
-              <span className='text-muted-foreground'>
-                {turn.streamPhase === 'schema'
-                  ? t('ai.applying')
-                  : t('ai.streamingReply')}
-              </span>
-              <Spinner className='size-3.5 shrink-0 text-muted-foreground' />
+            <BubbleContent className='ai-chat-bubble-content flex w-full min-w-[10rem] flex-col gap-2 text-[14px] leading-relaxed'>
+              <div className='flex w-full items-center justify-between gap-3'>
+                <span className='text-muted-foreground'>
+                  {turn.streamPhase === 'schema'
+                    ? t('ai.applying')
+                    : t('ai.streamingReply')}
+                </span>
+                <Spinner className='size-3.5 shrink-0 text-muted-foreground' />
+              </div>
+              {showSchemaLong ? (
+                <div
+                  role='status'
+                  aria-live='polite'
+                  className='flex flex-col gap-1.5'
+                >
+                  <Progress
+                    indeterminate
+                    aria-label={t('ai.phaseSchemaLong')}
+                    className='h-1'
+                  />
+                  <span className='text-xs text-muted-foreground'>
+                    {t('ai.phaseSchemaLong')}
+                  </span>
+                </div>
+              ) : null}
             </BubbleContent>
           </Bubble>
         ) : null}
@@ -181,6 +226,18 @@ export function ChatTurnMessage({
                   </>
                 ) : null}
               </span>
+            </BubbleContent>
+          </Bubble>
+        ) : null}
+
+        {showUnchanged ? (
+          <Bubble
+            variant='outline'
+            align='start'
+            className='ai-chat-bubble ai-chat-bubble--assistant ai-chat-bubble--unchanged'
+          >
+            <BubbleContent className='ai-chat-bubble-content text-[14px] leading-relaxed text-muted-foreground'>
+              {t('ai.unchanged')}
             </BubbleContent>
           </Bubble>
         ) : null}

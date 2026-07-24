@@ -33,6 +33,7 @@ interface UseAiChatStreamCommandOptions {
   setPendingPayload: Dispatch<SetStateAction<PendingChatPayload | null>>;
   buildPayloadForUserTurn: BuildPayloadForUserTurn;
   errorGeneric: string;
+  errorTimeout: string;
 }
 
 export interface UseAiChatStreamCommand {
@@ -65,6 +66,7 @@ export function useAiChatStreamCommand({
   setPendingPayload,
   buildPayloadForUserTurn,
   errorGeneric,
+  errorTimeout,
 }: UseAiChatStreamCommandOptions): UseAiChatStreamCommand {
   // Latest-ref dance so the imperative handlers always see the current
   // Props without re-creating the `runStream` closure on every render.
@@ -82,6 +84,7 @@ export function useAiChatStreamCommand({
       },
       drainQueue,
       errorGeneric,
+      errorTimeout,
       formCode,
       idPrefix,
       isBusyRef,
@@ -90,7 +93,7 @@ export function useAiChatStreamCommand({
       onApplyDraft,
       payload,
       queueRef,
-      wasUserStopped: userInitiatedStopRef.current,
+      isUserStopped: () => userInitiatedStopRef.current,
       setError,
       setIsBusy,
       setPendingPayload,

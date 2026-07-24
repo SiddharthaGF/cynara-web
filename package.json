@@ -17,6 +17,8 @@
     "precommit": "pnpm lint:check && pnpm typecheck",
     "prepare": "husky",
     "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
@@ -48,6 +50,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.46.0",
+    "@playwright/test": "^1.61.1",
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",

@@ -787,6 +787,20 @@
     }
   }
 
+  /* Indeterminate progress stripe used by the long-running AI schema phase
+     indicator. We translate a 1/3-width bar across the full track on a loop. */
+  @keyframes progress-indeterminate {
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(150%);
+    }
+    100% {
+      transform: translateX(150%);
+    }
+  }
+
   @media (prefers-reduced-motion: no-preference) {
     .inspector-shell {
       animation: inspector-fade-in 180ms ease-out;

@@ -42,6 +42,9 @@ dist/server/.dev.vars
 *.sln
 *.sw?
 
-# IA tools
-.atl/
-.codegraph/
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+

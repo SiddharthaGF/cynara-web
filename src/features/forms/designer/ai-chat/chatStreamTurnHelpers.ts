@@ -40,7 +40,10 @@ export function settleAssistantStreaming(
   );
 }
 
-export function markTurnFailed(turn: ChatTurn, failedTurnId?: string): ChatTurn {
+export function markTurnFailed(
+  turn: ChatTurn,
+  failedTurnId?: string,
+): ChatTurn {
   if (turn.id !== failedTurnId) {
     return turn;
   }
