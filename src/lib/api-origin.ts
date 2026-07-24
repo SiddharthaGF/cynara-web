@@ -15,7 +15,22 @@ export class ApiOriginUnavailableError extends Error {
     const seen = candidates
       .map(({ name, value }) => `${name}=${JSON.stringify(value)}`)
       .join(', ');
-    super(`Server unavailable (env: ${seen})`);
+
+    super(
+      [
+        'Cannot resolve the cynara-api origin: no VITE_API_ORIGIN or API_ORIGIN ' +
+          'is set for this environment.',
+        `Observed: ${seen}`,
+        '',
+        'To fix:',
+        '  - Local dev: set VITE_API_ORIGIN in .env (see .env.example) or ' +
+          'export it in your shell before `pnpm dev` / `pnpm build`.',
+        '  - Production / preview: set the [vars] block in wrangler.toml or ' +
+          'a Cloudflare build variable.',
+        '  - See docs/local-development.md for the full setup walkthrough.',
+      ].join('\n'),
+    );
+
     this.name = 'ApiOriginUnavailableError';
     this.candidates = candidates;
   }
