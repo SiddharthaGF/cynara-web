@@ -1,9 +1,7 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
-import {
-  createFormViaApi,
-  mockAiChatStream,
-} from './fixtures/ai-chat-mock.ts';
+import { createFormViaApi, mockAiChatStream } from './fixtures/ai-chat-mock.ts';
 import {
   APPLIED_FIELD_ORDER,
   APPLIED_LABELS,
@@ -100,10 +98,7 @@ test.describe('AI chat draft sync (real app, mocked stream)', () => {
     const { code } = await createFormViaApi(request, baseURL!);
     await openDesigner(page, code);
 
-    await sendAiPrompt(
-      page,
-      'Create a form for bariatric patient follow-up',
-    );
+    await sendAiPrompt(page, 'Create a form for bariatric patient follow-up');
 
     await expect(page.getByTestId('designer-field')).toHaveCount(
       APPLIED_FIELD_ORDER.length,

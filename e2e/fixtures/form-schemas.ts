@@ -1,7 +1,6 @@
 /** Deterministic AI stream payloads for e2e (real app, mocked SSE only). */
 
 export const INITIAL_CLINICAL = {
-  schemaVersion: '1.0.0',
   fields: [
     {
       id: 'notes',
@@ -10,10 +9,10 @@ export const INITIAL_CLINICAL = {
       maxLength: 500,
     },
   ],
+  schemaVersion: '1.0.0',
 };
 
 export const INITIAL_UI = {
-  schemaVersion: '1.0.0',
   clinicalSchemaVersion: '1.0.0',
   fields: {
     notes: {
@@ -22,12 +21,13 @@ export const INITIAL_UI = {
     },
   },
   layout: [{ type: 'field', fieldId: 'notes' }],
+  schemaVersion: '1.0.0',
 };
 
 export const INITIAL_RULES = {
-  schemaVersion: '1.0.0',
   clinicalSchemaVersion: '1.0.0',
   fields: {},
+  schemaVersion: '1.0.0',
   validations: [],
 };
 
@@ -53,7 +53,6 @@ export const APPLIED_LABELS = [
  * against the real API succeeds.
  */
 export const APPLIED_CLINICAL = {
-  schemaVersion: '1.0.0',
   fields: [
     {
       id: 'surgery-date',
@@ -84,34 +83,35 @@ export const APPLIED_CLINICAL = {
       maxLength: 500,
     },
   ],
+  schemaVersion: '1.0.0',
 };
 
 export const APPLIED_UI = {
   schemaVersion: '1.0.0',
   clinicalSchemaVersion: '1.0.0',
   fields: {
-    'surgery-date': { label: 'Surgery date', widget: 'date-picker' },
-    'current-weight': { label: 'Current weight', widget: 'number-input' },
-    comorbidities: { label: 'Comorbidities', widget: 'textarea' },
     'clinical-notes': {
       label: 'Clinical notes',
-      widget: 'text-input',
       placeholder: 'Short answer text.',
+      widget: 'text-input',
     },
+    'comorbidities': { label: 'Comorbidities', widget: 'textarea' },
+    'current-weight': { label: 'Current weight', widget: 'number-input' },
+    'surgery-date': { label: 'Surgery date', widget: 'date-picker' },
   },
   // Wrong order on purpose — sync must rebuild from clinical.fields.
   layout: [
-    { type: 'field', fieldId: 'clinical-notes' },
-    { type: 'field', fieldId: 'comorbidities' },
-    { type: 'field', fieldId: 'current-weight' },
-    { type: 'field', fieldId: 'surgery-date' },
+    { fieldId: 'clinical-notes', type: 'field' },
+    { fieldId: 'comorbidities', type: 'field' },
+    { fieldId: 'current-weight', type: 'field' },
+    { fieldId: 'surgery-date', type: 'field' },
   ],
 };
 
 export const APPLIED_RULES = {
-  schemaVersion: '1.0.0',
   clinicalSchemaVersion: '1.0.0',
   fields: {},
+  schemaVersion: '1.0.0',
   validations: [],
 };
 

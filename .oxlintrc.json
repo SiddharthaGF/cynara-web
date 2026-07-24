@@ -29,6 +29,8 @@
     "src/routeTree.gen.ts",
     "**/tsconfig*.json",
     "**/*.json",
+    "playwright.config.ts",
+    "e2e/**",
     "src/components/ui/**",
     "src/lib/utils.ts",
     "src/hooks/use-mobile.ts"

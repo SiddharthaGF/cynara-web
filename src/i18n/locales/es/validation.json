@@ -1,7 +1,6 @@
 {
   "issues": {
     "MISSING_SCHEMA_VERSION": "schemaVersion clínico es obligatorio.",
-    "EMPTY_FORM": "Añade al menos un campo antes de guardar.",
     "MISSING_FIELD_ID": "El id del campo es obligatorio.",
     "MISSING_FIELD_CODE": "El código del campo es obligatorio.",
     "DUPLICATE_FIELD_ID": "Id de campo duplicado '{{id}}'.",
@@ -45,7 +44,6 @@
   },
   "warningCodes": {
     "MISSING_SCHEMA_VERSION": "Versión de schema",
-    "EMPTY_FORM": "Formulario vacío",
     "MISSING_FIELD_ID": "Sin id de campo",
     "MISSING_FIELD_CODE": "Sin código de campo",
     "DUPLICATE_FIELD_ID": "Id duplicado",

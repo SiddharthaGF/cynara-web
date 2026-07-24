@@ -1,10 +1,6 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 
-import {
-  type FormAiChatMessage,
-  isRequestAborted,
-  streamFormDraftAi,
-} from '@/api/form-ai-chat.ts';
+import type { FormAiChatMessage } from '@/api/form-ai-chat.ts';
 import {
   parseDraft,
   serializeDraft,
@@ -13,7 +9,6 @@ import {
 } from '@/features/forms/model/formDraft.ts';
 import type { FormDraftModel } from '@/features/forms/types.ts';
 
-import type { ChatTurn } from './chatTurns.ts';
 import {
   findLastUserTurn,
   markTurnFailed,
@@ -21,12 +16,13 @@ import {
   resetAssistantForRetry,
   settleAssistantStreaming,
 } from './chatStreamTurnHelpers.ts';
+import type { ChatTurn } from './chatTurns.ts';
 import {
   playErrorNotificationSound,
   playNotificationSound,
 } from './playNotificationSound.ts';
+import { runStreamAttempt } from './runFormAiChatStreamAttempt.ts';
 import {
-  AI_STREAM_TIMEOUT_MS,
   EMPTY_AI_SCHEMA_MESSAGE,
   isRetryableAiErrorMessage,
 } from './transientAiRetry.ts';
@@ -71,10 +67,12 @@ interface RunFormAiChatStreamOptions {
   clearQueuedTurns: () => void;
 }
 
-type AttemptResult =
-  | { status: 'succeeded' }
-  | { status: 'aborted' }
-  | { status: 'failed'; message: string; retryable?: boolean };
+/** Convenience re-export so callers can import the attempt types from the
+ *  Single chat-stream entry point. */
+export type {
+  AttemptResult,
+  AttemptTelemetry,
+} from './runFormAiChatStreamAttempt.ts';
 
 export async function runFormAiChatStream({
   abortRef,
@@ -119,97 +117,41 @@ export async function runFormAiChatStream({
     },
   ]);
 
-  const runAttempt = async (): Promise<AttemptResult> => {
-    const controller = new AbortController();
-    abortRef.current = controller;
-    let timedOut = false;
-    // Cap each attempt so a hung provider cannot leave the composer busy
-    // Forever. Timeouts are retryable; user Stop is not.
-    const streamTimeout = setTimeout(() => {
-      if (abortRef.current === controller) {
-        timedOut = true;
-        controller.abort();
-      }
-    }, AI_STREAM_TIMEOUT_MS);
+  const promptChars = payload.messages.reduce(
+    (sum, message) => sum + message.content.length,
+    0,
+  );
 
-    let turnContentSnapshot = '';
-    try {
-      const serialized = serializeDraft(modelRef.current);
-      for await (const event of streamFormDraftAi(
-        formCode,
-        {
-          messages: payload.messages,
-          locale,
-          focusedFieldIds: payload.focusedFieldIds,
-          focusedFieldTypes: payload.focusedFieldTypes,
-          clinicalSchemaJson: serialized.clinicalSchemaJson,
-          uiSchemaJson: serialized.uiSchemaJson,
-          rulesSchemaJson: serialized.rulesSchemaJson,
-        },
-        { signal: controller.signal },
-      )) {
-        if (event.type === 'thinking') {
-          // Thinking events only indicate that the server is still working.
-        } else if (event.type === 'phase') {
-          // `schema` means the assistant text is done and the server is
-          // Building the draft patch — keep streaming so the UI can show
-          // "Generating schema changes…" until `done`.
-          patchAssistant(setTurns, assistantId, (turn) => ({
-            ...turn,
-            streamPhase: event.phase,
-          }));
-        } else if (event.type === 'message') {
-          turnContentSnapshot = `${turnContentSnapshot}${event.delta}`;
-          patchAssistant(setTurns, assistantId, (turn) => ({
-            ...turn,
-            content: `${turn.content}${event.delta}`,
-            streamPhase: turn.streamPhase ?? 'message',
-          }));
-        } else if (event.type === 'error') {
-          throw new Error(event.message);
-        } else if (event.type === 'done') {
-          applyDoneEvent({
-            assistantId,
-            modelRef,
-            onApplyDraft,
-            result: event.result,
-            setError,
-            setPendingPayload,
-            setStopped,
-            setTurns,
-            turnContentSnapshot,
-          });
-          return { status: 'succeeded' };
-        }
-      }
-      return { status: 'succeeded' };
-    } catch (error) {
-      if (isRequestAborted(error)) {
-        // Safety timeout: treat as a failed (retryable) turn rather than a
-        // Silent abort. Otherwise the UI keeps the streamed assistant claim
-        // ("I added sections…") without ever applying a draft patch.
-        if (timedOut && !isUserStopped()) {
-          return {
-            status: 'failed',
-            message: errorTimeout,
-            retryable: true,
-          };
-        }
-        return { status: 'aborted' };
-      }
-      const message = error instanceof Error ? error.message : errorGeneric;
-      return {
-        status: 'failed',
-        message,
-        retryable: isRetryableAiErrorMessage(message),
-      };
-    } finally {
-      clearTimeout(streamTimeout);
-      if (abortRef.current === controller) {
-        abortRef.current = null;
-      }
-    }
-  };
+  const runAttempt = runStreamAttempt({
+    abortRef,
+    assistantId,
+    errorGeneric,
+    errorTimeout,
+    formCode,
+    isUserStopped,
+    isRetryable: isRetryableAiErrorMessage,
+    locale,
+    modelRef,
+    onApplyDone: (event, turnContentSnapshot) => {
+      applyDoneEvent({
+        assistantId,
+        modelRef,
+        onApplyDraft,
+        result: event.result,
+        setError,
+        setPendingPayload,
+        setStopped,
+        setTurns,
+        turnContentSnapshot,
+      });
+    },
+    payload,
+    promptChars,
+    setError,
+    setPendingPayload,
+    setStopped,
+    setTurns,
+  });
 
   /**
    * Auto-retry once on transient parse failures, empty schema payloads, or
@@ -217,7 +159,7 @@ export async function runFormAiChatStream({
    * Retried. Each attempt owns its own AbortController so a timed-out signal
    * Does not block the retry.
    */
-  const attemptResult = await runAttempt();
+  const attemptResult = await runAttempt(1);
   let errorMessage: string | null = null;
   let wasAborted = false;
 
@@ -228,7 +170,7 @@ export async function runFormAiChatStream({
 
   if (canRetry) {
     resetAssistantForRetry(setTurns, assistantId);
-    const retry = await runAttempt();
+    const retry = await runAttempt(2);
     if (retry.status === 'succeeded') {
       finalizeSuccess();
       return;

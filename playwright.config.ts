@@ -16,7 +16,7 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
-    viewport: { width: 1280, height: 800 },
+    viewport: { height: 800, width: 1280 },
   },
   projects: [
     {
@@ -27,8 +27,8 @@ export default defineConfig({
   // Real Vite app (proxies /api to cynara-api). AI chat SSE is mocked in-test.
   webServer: {
     command: 'pnpm dev --host 127.0.0.1 --port 5173',
-    url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    url: baseURL,
   },
 });

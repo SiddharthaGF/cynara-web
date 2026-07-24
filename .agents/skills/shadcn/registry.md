@@ -9,8 +9,8 @@ A registry has two forms:
 
 - **Source registry**: an authored `registry.json` in a project or repository.
   It may use `include` and file paths that point at source files.
-- **Built registry**: generated JSON files served to CLI consumers, usually
-  from `public/r`. Use `npx shadcn@latest build` to create this form.
+- **Built registry**: generated JSON files served to CLI consumers, usually from
+  `public/r`. Use `npx shadcn@latest build` to create this form.
 
 The CLI installer consumes registry item payloads. A source registry is a way to
 author those payloads from real files.
@@ -191,9 +191,9 @@ When reasoning about a registry item string, classify it first.
 | `acme/ui/forms/login#main`          | github    | Item `forms/login` from GitHub repo `acme/ui` at ref `main`. |
 
 For namespace and GitHub addresses, slashful item names are allowed and are item
-names, not file paths. Addresses ending in `.json` keep file-address
-precedence, so `acme/ui/data/schema.json` is treated as a file path, not a
-GitHub item address.
+names, not file paths. Addresses ending in `.json` keep file-address precedence,
+so `acme/ui/data/schema.json` is treated as a file path, not a GitHub item
+address.
 
 ## GitHub Registries
 

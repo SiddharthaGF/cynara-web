@@ -3,10 +3,12 @@
 Components for conversation and chat UI. Compose these instead of hand-rolling
 bubbles, scroll containers, dividers, or attachment cards.
 
-Install: `npx shadcn@latest add message-scroller message bubble attachment marker`
+Install:
+`npx shadcn@latest add message-scroller message bubble attachment marker`
 
 The same component names and props ship for both `base` and `radix`; only
-composition differs (`render` vs `asChild`). See [base-vs-radix.md](./base-vs-radix.md).
+composition differs (`render` vs `asChild`). See
+[base-vs-radix.md](./base-vs-radix.md).
 
 ## Contents
 
@@ -35,10 +37,17 @@ track visibility, and jump to it. `MessageScrollerButton` sits inside
 
 ```tsx
 // Hand-rolled scroll container with manual stick-to-bottom logic.
-<div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
-  <div className="flex flex-col gap-6 p-4">
+<div
+  ref={scrollRef}
+  onScroll={handleScroll}
+  className='flex-1 overflow-y-auto'
+>
+  <div className='flex flex-col gap-6 p-4'>
     {messages.map((m) => (
-      <ChatMessage key={m.id} message={m} />
+      <ChatMessage
+        key={m.id}
+        message={m}
+      />
     ))}
   </div>
 </div>
@@ -55,9 +64,9 @@ track visibility, and jump to it. `MessageScrollerButton` sits inside
           <MessageScrollerItem
             key={message.id}
             messageId={message.id}
-            scrollAnchor={message.role === "user"}
+            scrollAnchor={message.role === 'user'}
           >
-            <Message align={message.role === "user" ? "end" : "start"}>
+            <Message align={message.role === 'user' ? 'end' : 'start'}>
               {/* ...message content... */}
             </Message>
           </MessageScrollerItem>
@@ -80,10 +89,13 @@ rebuild the row from flex divs.
 `align="end"` is the current user's side; `align="start"` is everyone else.
 
 ```tsx
-<Message align="start">
+<Message align='start'>
   <MessageAvatar>
     <Avatar>
-      <AvatarImage src={sender.avatar} alt={sender.name} />
+      <AvatarImage
+        src={sender.avatar}
+        alt={sender.name}
+      />
       <AvatarFallback>{initials}</AvatarFallback>
     </Avatar>
   </MessageAvatar>
@@ -104,17 +116,18 @@ rebuild the row from flex divs.
 The colored message surface is `Bubble` + `BubbleContent`, never a styled `div`
 with `bg-muted` / `bg-primary` and hand-managed corners.
 
-- `variant`: `default`, `secondary`, `muted`, `tinted`, `outline`, `ghost`, `destructive`.
+- `variant`: `default`, `secondary`, `muted`, `tinted`, `outline`, `ghost`,
+  `destructive`.
 - `align`: `start` or `end` (matches the `Message` side).
 
 `BubbleReactions` renders the reaction cluster. `side` (`top` | `bottom`) and
-`align` (`start` | `end`) position it against the bubble. Don't lay reactions out
-with absolutely-positioned `Badge`s.
+`align` (`start` | `end`) position it against the bubble. Don't lay reactions
+out with absolutely-positioned `Badge`s.
 
 **Incorrect:**
 
 ```tsx
-<div className="w-fit rounded-2xl bg-primary px-3 py-2 text-primary-foreground">
+<div className='w-fit rounded-2xl bg-primary px-3 py-2 text-primary-foreground'>
   {text}
 </div>
 ```
@@ -122,10 +135,16 @@ with absolutely-positioned `Badge`s.
 **Correct:**
 
 ```tsx
-<Bubble variant="default" align="end">
+<Bubble
+  variant='default'
+  align='end'
+>
   <BubbleContent>{text}</BubbleContent>
-  <BubbleReactions side="bottom" align="end">
-    <Badge variant="secondary">👍 2</Badge>
+  <BubbleReactions
+    side='bottom'
+    align='end'
+  >
+    <Badge variant='secondary'>👍 2</Badge>
   </BubbleReactions>
 </Bubble>
 ```
@@ -144,8 +163,8 @@ separate spinner.
 - Use `AttachmentGroup` to lay out several attachments in a scrolling row.
 
 ```tsx
-<Attachment state="done">
-  <AttachmentMedia variant="icon">
+<Attachment state='done'>
+  <AttachmentMedia variant='icon'>
     <FileTextIcon />
   </AttachmentMedia>
   <AttachmentContent>
@@ -176,17 +195,17 @@ labeled separators are `Marker`, not a `Separator` plus a centered span.
 **Incorrect:**
 
 ```tsx
-<div className="flex items-center gap-3 py-2">
-  <Separator className="flex-1" />
-  <span className="text-xs text-muted-foreground">Today</span>
-  <Separator className="flex-1" />
+<div className='flex items-center gap-3 py-2'>
+  <Separator className='flex-1' />
+  <span className='text-xs text-muted-foreground'>Today</span>
+  <Separator className='flex-1' />
 </div>
 ```
 
 **Correct:**
 
 ```tsx
-<Marker variant="separator">
+<Marker variant='separator'>
   <MarkerContent>Today</MarkerContent>
 </Marker>
 ```
@@ -206,8 +225,8 @@ write a `useStickToBottom` hook, a `ResizeObserver`, or manual `scrollTop` math.
   hold in view (typically the user's message that started the turn).
 - **Jump to latest.** `MessageScrollerButton` appears when the user scrolls away
   and scrolls back on click. `direction="end"` (default) or `direction="start"`.
-  It is a self-managing control, so don't gate it behind your own scroll-position
-  state.
+  It is a self-managing control, so don't gate it behind your own
+  scroll-position state.
 
 For a "thinking…" indicator while the model generates, apply the `shimmer`
 utility to text. Don't author a custom keyframe animation. See

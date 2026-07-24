@@ -21,19 +21,19 @@ function sseEvent(payload: unknown): string {
 /** Build the mocked AI chat SSE body (deterministic schema apply). */
 export function buildMockAiChatSse(): string {
   return [
-    sseEvent({ type: 'phase', phase: 'message' }),
-    sseEvent({ type: 'message', delta: ASSISTANT_MESSAGE }),
-    sseEvent({ type: 'phase', phase: 'schema' }),
+    sseEvent({ phase: 'message', type: 'phase' }),
+    sseEvent({ delta: ASSISTANT_MESSAGE, type: 'message' }),
+    sseEvent({ phase: 'schema', type: 'phase' }),
     sseEvent({
-      type: 'done',
       result: {
-        summary: ASSISTANT_SUMMARY,
         assistantMessage: ASSISTANT_MESSAGE,
-        thinking: null,
         clinicalSchemaJson: JSON.stringify(APPLIED_CLINICAL),
-        uiSchemaJson: JSON.stringify(APPLIED_UI),
         rulesSchemaJson: JSON.stringify(APPLIED_RULES),
+        summary: ASSISTANT_SUMMARY,
+        thinking: null,
+        uiSchemaJson: JSON.stringify(APPLIED_UI),
       },
+      type: 'done',
     }),
   ].join('');
 }
@@ -50,13 +50,13 @@ export async function mockAiChatStream(page: Page): Promise<void> {
       return;
     }
     await route.fulfill({
-      status: 200,
-      headers: {
-        'Content-Type': 'text/event-stream; charset=utf-8',
-        'Cache-Control': 'no-cache, no-transform',
-        Connection: 'keep-alive',
-      },
       body,
+      headers: {
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+        'Content-Type': 'text/event-stream; charset=utf-8',
+      },
+      status: 200,
     });
   });
 }
@@ -73,22 +73,22 @@ export async function createFormViaApi(
 ): Promise<CreatedForm> {
   const code = `e2e-ai-${Date.now()}`;
   const response = await request.post(`${baseURL}/api/formDefinitions`, {
-    headers: {
-      Accept: JSON_API,
-      'Content-Type': JSON_API,
-      'X-Actor-Id': ACTOR,
-    },
     data: {
       data: {
-        type: 'formDefinitions',
         attributes: {
           code,
-          name: `E2E AI chat ${code}`,
           initialClinicalSchemaJson: JSON.stringify(INITIAL_CLINICAL),
-          initialUiSchemaJson: JSON.stringify(INITIAL_UI),
           initialRulesSchemaJson: JSON.stringify(INITIAL_RULES),
+          initialUiSchemaJson: JSON.stringify(INITIAL_UI),
+          name: `E2E AI chat ${code}`,
         },
+        type: 'formDefinitions',
       },
+    },
+    headers: {
+      'Accept': JSON_API,
+      'Content-Type': JSON_API,
+      'X-Actor-Id': ACTOR,
     },
   });
 

@@ -106,9 +106,7 @@ function jsonApiHeaders(contentType?: string): Headers {
   return headers;
 }
 
-export async function jsonApiGet(
-  path: string,
-): Promise<JsonApiDocument> {
+export async function jsonApiGet(path: string): Promise<JsonApiDocument> {
   const response = await fetch(resolveApiUrl(path), {
     headers: jsonApiHeaders(),
   });
@@ -129,9 +127,7 @@ export async function jsonApiGetResource<TAttributes>(
   return document.data as JsonApiResource<TAttributes>;
 }
 
-export async function jsonApiGetCollection<TAttributes>(
-  path: string,
-): Promise<{
+export async function jsonApiGetCollection<TAttributes>(path: string): Promise<{
   data: JsonApiResource<TAttributes>[];
   included: JsonApiResource[];
 }> {
@@ -225,18 +221,12 @@ export function relatedIds(
   return [rel.id];
 }
 
-export function attrString(
-  attributes: object,
-  name: string,
-): string | null {
+export function attrString(attributes: object, name: string): string | null {
   const value = (attributes as Record<string, unknown>)[name];
   return typeof value === 'string' ? value : null;
 }
 
-export function attrNumber(
-  attributes: object,
-  name: string,
-): number | null {
+export function attrNumber(attributes: object, name: string): number | null {
   const value = (attributes as Record<string, unknown>)[name];
   return typeof value === 'number' ? value : null;
 }

@@ -1,8 +1,5 @@
 import { apiRequest } from '@/api/client.ts';
-import {
-  jsonApiGetResource,
-  jsonApiPatchResource,
-} from '@/api/json-api.ts';
+import { jsonApiGetResource, jsonApiPatchResource } from '@/api/json-api.ts';
 
 export interface AiEndpointSuggestion {
   id: string;
@@ -50,10 +47,8 @@ interface AiProviderSettingsAttributes {
 const AI_PROVIDER_SETTINGS_ID = 'default';
 const AI_PROVIDER_SETTINGS_TYPE = 'aiProviderSettings';
 
-function mapSettings(
-  attributes: AiProviderSettingsAttributes,
-): FormAiSettings {
-  const {source} = attributes;
+function mapSettings(attributes: AiProviderSettingsAttributes): FormAiSettings {
+  const { source } = attributes;
   const normalizedSource =
     source === 'database' || source === 'env' || source === 'none'
       ? source

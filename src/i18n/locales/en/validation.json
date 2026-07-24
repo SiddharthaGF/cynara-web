@@ -1,7 +1,6 @@
 {
   "issues": {
     "MISSING_SCHEMA_VERSION": "Clinical schemaVersion is required.",
-    "EMPTY_FORM": "Add at least one field before saving.",
     "MISSING_FIELD_ID": "Field id is required.",
     "MISSING_FIELD_CODE": "Field code is required.",
     "DUPLICATE_FIELD_ID": "Duplicate field id '{{id}}'.",
@@ -45,7 +44,6 @@
   },
   "warningCodes": {
     "MISSING_SCHEMA_VERSION": "Schema version",
-    "EMPTY_FORM": "Empty form",
     "MISSING_FIELD_ID": "Missing field id",
     "MISSING_FIELD_CODE": "Missing field code",
     "DUPLICATE_FIELD_ID": "Duplicate id",
