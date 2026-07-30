@@ -82,9 +82,11 @@ jobs:
             secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
         run: |
           if [ "${HAS_CLOUDFLARE_CREDS}" != "true" ]; then
-            echo "::error::CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID are not configured. Add them under Settings -> Secrets and variables -> Actions -> Secrets before pushing to main." >&2
-            exit 1
+            echo "::warning::CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID are not configured. Skipping deploy; add them under Settings -> Secrets and variables -> Actions -> Secrets to enable production deploys on push to main." >&2
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          echo "skipped=false" >> "$GITHUB_OUTPUT"
           pnpm exec wrangler deploy --keep-vars --config dist/server/wrangler.json
 
       - name: Smoke check (PRs — uploads a Worker version without traffic)
