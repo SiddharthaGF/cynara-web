@@ -108,7 +108,13 @@
       }
     },
     {
-      "files": ["vite.config.ts", "src/vite-env.d.ts"],
+      "files": [
+        "vite.config.ts",
+        "src/env.d.ts",
+        "src/vite-env.d.ts",
+        "src/server.ts",
+        "src/server/**/*.{ts,tsx}"
+      ],
       "env": {
         "node": true
       },
@@ -124,7 +130,8 @@
         "sort-keys": "off",
         "typescript/explicit-function-return-type": "off",
         "typescript/explicit-module-boundary-types": "off",
-        "oxc/no-async-await": "off"
+        "oxc/no-async-await": "off",
+        "typescript/promise-function-async": "off"
       }
     },
     {

@@ -1,4 +1,4 @@
-import { resolveApiUrl } from '@/api/client.ts';
+import { performRequest } from '@/api/client.ts';
 import {
   buildPaginatedQuery,
   jsonApiAction,
@@ -342,7 +342,8 @@ export async function deleteDocumentDefinition(
     options.rowVersion === undefined
       ? base
       : `${base}?${new URLSearchParams({ rowVersion: String(options.rowVersion) }).toString()}`;
-  const response = await fetch(resolveApiUrl(path), {
+  const context = { path, method: 'DELETE', url: '' };
+  const response = await performRequest(path, context, {
     method: 'DELETE',
     headers: new Headers({ Accept: JSON_API_MEDIA }),
   });

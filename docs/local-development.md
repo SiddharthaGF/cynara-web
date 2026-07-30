@@ -183,9 +183,8 @@ dist/
 └── client/                # static assets served by Workers Assets
 ```
 
-`vite.config.ts` adds a `closeBundle` hook that strips `dist/server/.vite` and
-`dist/server/.dev.vars` from the output so local dev artifacts never leak into
-the deploy bundle.
+`vite.config.ts` adds a `closeBundle` hook that strips `dist/server/.vite`
+from the output so local dev artifacts never leak into the deploy bundle.
 
 ### Local preview (Vite)
 
@@ -224,8 +223,7 @@ exactly what GitHub Actions ships.
 
 | Variable                  | Required         | Where it comes from                      | Purpose                                                                                                                                                              |
 | ------------------------- | ---------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `VITE_API_ORIGIN`         | yes              | `.env`, shell, or `wrangler.toml [vars]` | Public origin of `cynara-api`. Compiled into the client bundle and propagated to the SSR worker by the Cloudflare Vite plugin. Must be present at `vite build` time. |
-| `API_ORIGIN`              | runtime fallback | `.dev.vars` (Cloudflare), or shell       | Read by `src/lib/api-origin.ts` as a fallback for `VITE_API_ORIGIN`. Mostly useful in Cloudflare Worker contexts.                                                    |
+| `VITE_API_ORIGIN`         | yes              | `.env`, shell, or `wrangler.jsonc [vars]` | Public origin of `cynara-api`. Compiled into the client bundle and propagated to the SSR worker by the Cloudflare Vite plugin. Must be present at `vite build` time. |
 | `APP_ENV`                 | optional         | shell                                    | `development` / `production` / `testing`. Drives `environment.ts`. Falls back to `import.meta.env.DEV`.                                                              |
 | `CLOUDFLARE_API_TOKEN`    | deploy only      | CI secret                                | Wrangler deploy token with the **Edit Cloudflare Workers** template.                                                                                                 |
 | `CLOUDFLARE_ACCOUNT_ID`   | deploy only      | CI secret                                | Shown on the Workers project overview page.                                                                                                                          |

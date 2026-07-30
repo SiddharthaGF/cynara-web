@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "compatibility_date": "2026-07-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "src/server.ts",
+  "vars": {
+    "VITE_API_ORIGIN": "https://cynara-api.onrender.com",
+    "VITE_HOSPITAL_CODE": "default",
+  },
+
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+    },
+    "traces": {
+      "enabled": false,
+    },
+  },
+  "name": "cynara-web",
+  "env": {
+    "dev": {
+      "name": "cynara-web-dev",
+      "vars": {
+        "VITE_API_ORIGIN": "https://cynara-api.onrender.com",
+        "VITE_HOSPITAL_CODE": "default",
+      },
+    },
+  },
+}

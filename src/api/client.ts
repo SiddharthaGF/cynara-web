@@ -1,7 +1,9 @@
 import { createIsomorphicFn } from '@tanstack/react-start';
 
-import { buildApiUrl } from '@/lib/api-origin.ts';
-import { isDevelopment } from '@/lib/environment.ts';
+import {
+  buildApiUrl,
+  resolveHospitalCode as resolveHospitalCodeShared,
+} from '@/lib/api-origin.ts';
 
 export const HOSPITAL_HEADER_NAME = 'X-Hospital-Code';
 
@@ -10,13 +12,9 @@ export const DEFAULT_ACTOR_ID = 'designer-user';
 
 const TENANT_FALLBACK = 'default';
 
-function resolveTenantCode(): string {
-  const fromEnv = import.meta.env.VITE_HOSPITAL_CODE;
-  if (typeof fromEnv === 'string' && fromEnv.trim() !== '') {
-    return fromEnv.trim();
-  }
-  return TENANT_FALLBACK;
-}
+const resolveTenantCode = createIsomorphicFn()
+  .client((): string => resolveHospitalCodeShared() || TENANT_FALLBACK)
+  .server((): string => resolveHospitalCodeShared() || TENANT_FALLBACK);
 
 export function resolveHospitalCode(): string {
   return resolveTenantCode();
@@ -79,6 +77,38 @@ function summarizeErrorBody(status: number, bodyText: string): string {
 
 function isConcurrencyConflict(status: number): boolean {
   return status === 409 || status === 412;
+}
+
+function logApiError(
+  phase: 'http' | 'parse' | 'network',
+  context: {
+    path: string;
+    method: string;
+    url: string;
+  },
+  error: unknown,
+): void {
+  const detail =
+    error instanceof ApiError
+      ? {
+          status: error.status,
+          title: error.title,
+          message: error.message,
+        }
+      : {
+          status: undefined,
+          title: phase === 'network' ? 'Network error' : 'Unexpected error',
+          message: error instanceof Error ? error.message : String(error),
+        };
+
+  console.error(
+    `[cynara-api] ${phase} ${context.method} ${context.path}`,
+    {
+      url: context.url,
+      ...detail,
+    },
+    error,
+  );
 }
 
 function buildErrorFromJsonApi(status: number, bodyText: string): ApiError {
@@ -159,21 +189,34 @@ function buildDefaultHeaders(init?: RequestInit): Headers {
 }
 
 export const resolveApiUrl = createIsomorphicFn()
-  .client((path: string) => {
-    if (isDevelopment()) {
-      return path.startsWith('/') ? path : `/${path}`;
-    }
-    return buildApiUrl(path);
-  })
-  .server((path: string) =>
-    // In Vite/Cloudflare SSR, prefer the API origin directly. Relative /api
-    // Paths are not valid fetch targets on the server.
-    buildApiUrl(path),
-  );
+  .client((path: string) => buildApiUrl(path))
+  .server((path: string) => buildApiUrl(path));
 
 export interface ApiRequestInit extends RequestInit {
-  /** Set `true` to send the `If-None-Match` header when an ETag is known. */
   etag?: string | null;
+}
+
+interface RequestContext {
+  readonly path: string;
+  readonly method: string;
+  url: string;
+}
+
+export type { RequestContext };
+
+export async function performRequest(
+  path: string,
+  context: RequestContext,
+  fetchInit: RequestInit,
+): Promise<Response> {
+  const url = resolveApiUrl(path);
+  context.url = url;
+  try {
+    return await fetch(url, fetchInit);
+  } catch (error) {
+    logApiError('network', context, error);
+    throw error;
+  }
 }
 
 export async function apiRequest<T>(
@@ -186,28 +229,33 @@ export async function apiRequest<T>(
     headers.set('If-None-Match', etag);
   }
 
-  const response = await fetch(resolveApiUrl(path), {
+  const method = (requestInit.method ?? 'GET').toUpperCase();
+  const context: RequestContext = { path, method, url: '' };
+  const response = await performRequest(path, context, {
     ...requestInit,
     headers,
   });
+  context.url = response.url || context.url;
 
   if (!response.ok) {
     const bodyText = await response.text();
-    throw buildErrorFromJsonApi(response.status, bodyText);
+    const apiError = buildErrorFromJsonApi(response.status, bodyText);
+    logApiError('http', context, apiError);
+    throw apiError;
   }
 
   if (response.status === 204) {
     return undefined as T;
   }
 
-  return parseJsonResponse<T>(response);
+  try {
+    return await parseJsonResponse<T>(response);
+  } catch (error) {
+    logApiError('parse', context, error);
+    throw error;
+  }
 }
 
-/**
- * Returns either the parsed body or, when the server replies `304 Not Modified`,
- * the supplied cached value. The ETag echo is intentionally not surfaced — the
- * caller can refresh it from the response when needed.
- */
 export async function apiRequestWithCache<T>(
   path: string,
   etag: string | null | undefined,
@@ -219,11 +267,14 @@ export async function apiRequestWithCache<T>(
     headers.set('If-None-Match', etag);
   }
 
-  const response = await fetch(resolveApiUrl(path), {
+  const method = (init?.method ?? 'GET').toUpperCase();
+  const context: RequestContext = { path, method, url: '' };
+  const response = await performRequest(path, context, {
     ...init,
     method: init?.method ?? 'GET',
     headers,
   });
+  context.url = response.url || context.url;
 
   if (response.status === 304) {
     return { data: fallback, etag: etag ?? null };
@@ -231,15 +282,22 @@ export async function apiRequestWithCache<T>(
 
   if (!response.ok) {
     const bodyText = await response.text();
-    throw buildErrorFromJsonApi(response.status, bodyText);
+    const apiError = buildErrorFromJsonApi(response.status, bodyText);
+    logApiError('http', context, apiError);
+    throw apiError;
   }
 
   if (response.status === 204) {
     return { data: fallback, etag: response.headers.get('etag') };
   }
 
-  const data = await parseJsonResponse<T>(response);
-  return { data, etag: response.headers.get('etag') };
+  try {
+    const data = await parseJsonResponse<T>(response);
+    return { data, etag: response.headers.get('etag') };
+  } catch (error) {
+    logApiError('parse', context, error);
+    throw error;
+  }
 }
 
 export { isConcurrencyConflict };

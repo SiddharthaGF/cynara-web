@@ -1,12 +1,12 @@
+import { createIsomorphicFn } from '@tanstack/react-start';
+
 interface ApiOriginCandidate {
   readonly name: string;
   readonly value: string | undefined;
 }
 
-const API_ORIGIN_CANDIDATES: readonly ApiOriginCandidate[] = [
-  { name: 'VITE_API_ORIGIN', value: import.meta.env.VITE_API_ORIGIN },
-  { name: 'API_ORIGIN', value: import.meta.env.API_ORIGIN },
-];
+const EMPTY_STRING_LENGTH = 0;
+const TENANT_FALLBACK = 'default';
 
 export class ApiOriginUnavailableError extends Error {
   public readonly candidates: readonly ApiOriginCandidate[];
@@ -18,16 +18,13 @@ export class ApiOriginUnavailableError extends Error {
 
     super(
       [
-        'Cannot resolve the cynara-api origin: no VITE_API_ORIGIN or API_ORIGIN ' +
-          'is set for this environment.',
+        'Cannot resolve the cynara-api origin: VITE_API_ORIGIN is not set.',
         `Observed: ${seen}`,
         '',
         'To fix:',
-        '  - Local dev: set VITE_API_ORIGIN in .env (see .env.example) or ' +
-          'export it in your shell before `pnpm dev` / `pnpm build`.',
-        '  - Production / preview: set the [vars] block in wrangler.toml or ' +
-          'a Cloudflare build variable.',
-        '  - See docs/local-development.md for the full setup walkthrough.',
+        '  - Local dev: copy .env.example to .env (or set VITE_API_ORIGIN ' +
+          'directly).',
+        '  - Production: set VITE_API_ORIGIN at build time.',
       ].join('\n'),
     );
 
@@ -36,16 +33,79 @@ export class ApiOriginUnavailableError extends Error {
   }
 }
 
-export function getApiOrigin(): string {
-  for (const candidate of API_ORIGIN_CANDIDATES) {
-    const { value } = candidate;
-    if (typeof value === 'string' && value.trim() !== '') {
-      return value.trim().replace(/\/$/u, '');
-    }
+function normalizeOrigin(value: string | undefined): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
   }
-  throw new ApiOriginUnavailableError(API_ORIGIN_CANDIDATES);
+  const trimmed = value.trim();
+  if (trimmed.length === EMPTY_STRING_LENGTH) {
+    return undefined;
+  }
+  return trimmed.replace(/\/$/u, '');
+}
+
+function resolveApiOriginServer(): string | undefined {
+  const cloudflareEnv = (
+    globalThis as { Cloudflare?: { env?: { VITE_API_ORIGIN?: string } } }
+  ).Cloudflare?.env?.VITE_API_ORIGIN;
+  if (cloudflareEnv !== undefined) {
+    return normalizeOrigin(cloudflareEnv);
+  }
+  const nodeEnv = (
+    globalThis as { process?: { env?: { VITE_API_ORIGIN?: string } } }
+  ).process?.env?.VITE_API_ORIGIN;
+  return normalizeOrigin(nodeEnv);
+}
+
+function resolveApiOriginClient(): string | undefined {
+  const raw: string | undefined = import.meta.env.VITE_API_ORIGIN;
+  return normalizeOrigin(raw);
+}
+
+const resolveApiOrigin = createIsomorphicFn()
+  .server(resolveApiOriginServer)
+  .client(resolveApiOriginClient);
+
+function resolveHospitalCodeServer(): string | undefined {
+  const cloudflareEnv = (
+    globalThis as { Cloudflare?: { env?: { VITE_HOSPITAL_CODE?: string } } }
+  ).Cloudflare?.env?.VITE_HOSPITAL_CODE;
+  if (cloudflareEnv !== undefined) {
+    return normalizeOrigin(cloudflareEnv);
+  }
+  const nodeEnv = (
+    globalThis as { process?: { env?: { VITE_HOSPITAL_CODE?: string } } }
+  ).process?.env?.VITE_HOSPITAL_CODE;
+  return normalizeOrigin(nodeEnv);
+}
+
+function resolveHospitalCodeClient(): string | undefined {
+  const raw: string | undefined = import.meta.env.VITE_HOSPITAL_CODE;
+  return normalizeOrigin(raw);
+}
+
+const resolveHospitalCodeOrigin = createIsomorphicFn()
+  .server(resolveHospitalCodeServer)
+  .client(resolveHospitalCodeClient);
+
+export function getApiOrigin(): string {
+  const candidate = resolveApiOrigin();
+  const seen: ApiOriginCandidate[] = [
+    {
+      name: 'env.VITE_API_ORIGIN',
+      value: candidate,
+    },
+  ];
+  if (candidate) {
+    return candidate;
+  }
+  throw new ApiOriginUnavailableError(seen);
 }
 
 export function buildApiUrl(path: string): string {
   return new URL(path, `${getApiOrigin()}/`).href;
+}
+
+export function resolveHospitalCode(): string {
+  return resolveHospitalCodeOrigin() ?? TENANT_FALLBACK;
 }

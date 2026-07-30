@@ -1,4 +1,4 @@
-import { ApiError } from '@/api/client.ts';
+import { ApiError, performRequest } from '@/api/client.ts';
 import {
   buildPaginatedQuery,
   jsonApiAction,
@@ -160,10 +160,9 @@ export async function patchComponentDefinition(
 export async function deleteComponentDefinition(
   definitionId: string,
 ): Promise<void> {
-  const response = await fetch(
-    `/api/${COMPONENT_DEFINITIONS}/${definitionId}`,
-    { method: 'DELETE' },
-  );
+  const path = `/api/${COMPONENT_DEFINITIONS}/${definitionId}`;
+  const context = { path, method: 'DELETE', url: '' };
+  const response = await performRequest(path, context, { method: 'DELETE' });
   if (!response.ok && response.status !== 404) {
     throw new ApiError(
       response.status,

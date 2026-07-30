@@ -29,7 +29,6 @@ src/routeTree.gen.ts
 # Cloudflare / Wrangler (generated)
 .wrangler/
 worker-configuration.d.ts
-dist/server/.dev.vars
 
 # Editor directories and files
 .vscode/*

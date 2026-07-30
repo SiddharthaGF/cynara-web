@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { ApiError, resolveApiUrl } from '@/api/client.ts';
+import { ApiError, performRequest } from '@/api/client.ts';
 import { resolveFormDefinitionId } from '@/api/forms.ts';
 
 export interface FormAiChatMessage {
@@ -126,15 +126,14 @@ async function* streamFromId(
   headers.set('Content-Type', 'application/json');
   headers.set('Accept', 'text/event-stream');
 
-  const response = await fetch(
-    resolveApiUrl(`/api/ai/forms/${formDefinitionId}/chat/stream`),
-    {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(input),
-      signal: options?.signal,
-    },
-  );
+  const path = `/api/ai/forms/${formDefinitionId}/chat/stream`;
+  const context = { path, method: 'POST', url: '' };
+  const response = await performRequest(path, context, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(input),
+    signal: options?.signal,
+  });
 
   if (!response.ok) {
     let title = response.statusText;
@@ -161,7 +160,7 @@ async function* streamFromId(
     throw new ApiError(500, 'Empty stream', 'AI stream returned no body.');
   }
 
-  yield* readAiStream(response.body);
+  yield* readAiStream(response.body as ReadableStream<Uint8Array>);
 }
 
 async function* streamFromCode(

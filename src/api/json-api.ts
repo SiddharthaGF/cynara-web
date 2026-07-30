@@ -3,8 +3,9 @@ import {
   ApiError,
   DEFAULT_ACTOR_ID,
   HOSPITAL_HEADER_NAME,
-  resolveApiUrl,
+  performRequest,
   resolveHospitalCode,
+  type RequestContext,
 } from '@/api/client.ts';
 
 export const JSON_API_MEDIA = 'application/vnd.api+json';
@@ -195,9 +196,11 @@ function isJsonApiErrorDocument(value: unknown): value is {
 }
 
 export async function jsonApiGet(path: string): Promise<JsonApiDocument> {
-  const response = await fetch(resolveApiUrl(path), {
+  const context: RequestContext = { path, method: 'GET', url: '' };
+  const response = await performRequest(path, context, {
     headers: jsonApiHeaders(),
   });
+  context.url = response.url || context.url;
   return parseJsonApiResponse(response);
 }
 
@@ -238,11 +241,14 @@ export async function jsonApiPostResource<TAttributes>(
     data.relationships = relationships;
   }
 
-  const response = await fetch(resolveApiUrl(`/api/${resourceType}`), {
+  const path = `/api/${resourceType}`;
+  const context: RequestContext = { path, method: 'POST', url: '' };
+  const response = await performRequest(path, context, {
     method: 'POST',
     headers: jsonApiHeaders(JSON_API_MEDIA),
     body: JSON.stringify({ data }),
   });
+  context.url = response.url || context.url;
   const document = await parseJsonApiResponse(response);
   return requireSingleResource<TAttributes>(document.data);
 }
@@ -262,11 +268,14 @@ export async function jsonApiPatchResource<TAttributes>(
     data.relationships = relationships;
   }
 
-  const response = await fetch(resolveApiUrl(`/api/${resourceType}/${id}`), {
+  const path = `/api/${resourceType}/${id}`;
+  const context: RequestContext = { path, method: 'PATCH', url: '' };
+  const response = await performRequest(path, context, {
     method: 'PATCH',
     headers: jsonApiHeaders(JSON_API_MEDIA),
     body: JSON.stringify({ data }),
   });
+  context.url = response.url || context.url;
   const document = await parseJsonApiResponse(response);
   return requireSingleResource<TAttributes>(document.data);
 }
@@ -288,16 +297,14 @@ export async function jsonApiPatchToOneRelationship(
       },
     },
   };
-  const response = await fetch(
-    resolveApiUrl(
-      `/api/${resourceType}/${resourceId}/relationships/${relationshipName}`,
-    ),
-    {
-      method: 'PATCH',
-      headers: jsonApiHeaders(JSON_API_MEDIA),
-      body: JSON.stringify({ data }),
-    },
-  );
+  const path = `/api/${resourceType}/${resourceId}/relationships/${relationshipName}`;
+  const context: RequestContext = { path, method: 'PATCH', url: '' };
+  const response = await performRequest(path, context, {
+    method: 'PATCH',
+    headers: jsonApiHeaders(JSON_API_MEDIA),
+    body: JSON.stringify({ data }),
+  });
+  context.url = response.url || context.url;
   const document = await parseJsonApiResponse(response);
   if (Array.isArray(document.data) || !document.data) {
     throw new ApiError(
@@ -333,11 +340,13 @@ export async function jsonApiAction<TAttributes = Record<string, unknown>>(
     `/api/${resourceType}/${resourceId}/${action}`,
     query ?? '',
   );
-  const response = await fetch(resolveApiUrl(targetPath), {
+  const context: RequestContext = { path: targetPath, method: 'POST', url: '' };
+  const response = await performRequest(targetPath, context, {
     method: 'POST',
     headers: jsonApiHeaders(body ? JSON_API_MEDIA : undefined),
     body: body ? JSON.stringify({ data: body }) : undefined,
   });
+  context.url = response.url || context.url;
   const document = await parseJsonApiResponse(response);
   return requireSingleActionResource<TAttributes>(document.data);
 }
@@ -353,10 +362,12 @@ export async function jsonApiActionDelete(
     `/api/${resourceType}/${resourceId}/${action}`,
     query ?? '',
   );
-  const response = await fetch(resolveApiUrl(targetPath), {
+  const context: RequestContext = { path: targetPath, method: 'DELETE', url: '' };
+  const response = await performRequest(targetPath, context, {
     method: 'DELETE',
     headers: jsonApiHeaders(),
   });
+  context.url = response.url || context.url;
   const document = await parseJsonApiResponse(response);
   if (
     !document.data ||

@@ -209,8 +209,7 @@ artifact is a `dist/` directory containing:
 - `dist/client/` — static client assets served by Workers Assets.
 
 A small `closeBundle` hook in `vite.config.ts` strips the `dist/server/.vite`
-cache and `dist/server/.dev.vars` secrets file from the output so local dev
-artifacts never leak into the deploy bundle.
+cache from the output so local dev artifacts never leak into the deploy bundle.
 
 ### Local preview before opening a PR
 
