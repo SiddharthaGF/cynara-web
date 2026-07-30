@@ -12,6 +12,7 @@ main = "@tanstack/react-start/server-entry"
 # configured on the cynara-api side.
 [vars]
 VITE_API_ORIGIN = "https://cynara-demo.runasp.net"
+VITE_HOSPITAL_CODE = "default"
 
 [observability]
 enabled = true

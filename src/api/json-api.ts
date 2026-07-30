@@ -1,16 +1,13 @@
-import { ApiError, resolveApiUrl } from '@/api/client.ts';
+import {
+  ACTOR_HEADER_NAME,
+  ApiError,
+  DEFAULT_ACTOR_ID,
+  HOSPITAL_HEADER_NAME,
+  resolveApiUrl,
+  resolveHospitalCode,
+} from '@/api/client.ts';
 
 export const JSON_API_MEDIA = 'application/vnd.api+json';
-
-interface JsonApiErrorObject {
-  title?: string;
-  detail?: string;
-  status?: string;
-}
-
-interface JsonApiErrorDocument {
-  errors?: JsonApiErrorObject[];
-}
 
 export interface JsonApiResource<TAttributes = Record<string, unknown>> {
   id: string;
@@ -25,51 +22,78 @@ export interface JsonApiResource<TAttributes = Record<string, unknown>> {
         | null;
     }
   >;
+  links?: Record<string, string>;
+  meta?: Record<string, unknown>;
 }
 
 export interface JsonApiDocument<TAttributes = Record<string, unknown>> {
   data: JsonApiResource<TAttributes> | JsonApiResource<TAttributes>[];
   included?: JsonApiResource[];
+  links?: Record<string, string>;
+  meta?: Record<string, unknown>;
 }
 
-function summarizeErrorBody(status: number, bodyText: string): string {
-  const trimmed = bodyText.trimStart();
-  if (
-    trimmed.startsWith('<!DOCTYPE') ||
-    trimmed.startsWith('<html') ||
-    trimmed.startsWith('<HTML')
-  ) {
-    return `Request failed with status ${status}`;
+export interface JsonApiCollection<TAttributes = Record<string, unknown>> {
+  data: JsonApiResource<TAttributes>[];
+  included: JsonApiResource[];
+  links: Record<string, string>;
+  meta: Record<string, unknown>;
+}
+
+export interface PaginatedQueryOptions {
+  /** Resource `include[]` names, joined as `?include=a,b`. */
+  include?: readonly string[];
+  /** Sort expression passed verbatim (`-updatedAt` or `code`). */
+  sort?: string;
+  /** Page number (1-based). */
+  pageNumber?: number;
+  /** Page size. */
+  pageSize?: number;
+  /** Free-form filters — keys become `filter[<key>]` entries. */
+  filters?: Readonly<Record<string, string | number | boolean | undefined>>;
+}
+
+export function buildPaginatedQuery(options: PaginatedQueryOptions): string {
+  const params = new URLSearchParams();
+  if (options.include && options.include.length > 0) {
+    params.set('include', options.include.join(','));
   }
-  return bodyText;
-}
-
-function throwFromJsonApiBody(status: number, bodyText: string): never {
-  if (bodyText) {
-    try {
-      const document = JSON.parse(bodyText) as JsonApiErrorDocument;
-      const first = document.errors?.[0];
-      if (first) {
-        throw new ApiError(
-          status,
-          first.title ?? 'Request failed',
-          first.detail ?? `Request failed with status ${status}`,
-        );
-      }
-    } catch (error) {
-      if (error instanceof ApiError) {
-        throw error;
+  if (options.sort) {
+    params.set('sort', options.sort);
+  }
+  if (options.pageNumber !== undefined) {
+    params.set('page[number]', String(options.pageNumber));
+  }
+  if (options.pageSize !== undefined) {
+    params.set('page[size]', String(options.pageSize));
+  }
+  if (options.filters) {
+    for (const [key, value] of Object.entries(options.filters)) {
+      if (value !== undefined) {
+        params.set(`filter[${key}]`, String(value));
       }
     }
   }
+  return params.toString();
+}
 
-  throw new ApiError(
-    status,
-    'Request failed',
-    bodyText
-      ? summarizeErrorBody(status, bodyText)
-      : `Request failed with status ${status}`,
-  );
+function appendQuery(path: string, query: string): string {
+  if (query.length === 0) {
+    return path;
+  }
+  const separator = path.includes('?') ? '&' : '?';
+  return `${path}${separator}${query}`;
+}
+
+function jsonApiHeaders(contentType?: string): Headers {
+  const headers = new Headers();
+  headers.set('Accept', JSON_API_MEDIA);
+  if (contentType) {
+    headers.set('Content-Type', contentType);
+  }
+  headers.set(HOSPITAL_HEADER_NAME, resolveHospitalCode());
+  headers.set(ACTOR_HEADER_NAME, DEFAULT_ACTOR_ID);
+  return headers;
 }
 
 async function parseJsonApiResponse(
@@ -78,7 +102,7 @@ async function parseJsonApiResponse(
   const bodyText = await response.text();
 
   if (!response.ok) {
-    throwFromJsonApiBody(response.status, bodyText);
+    throwJsonApiError(response.status, bodyText);
   }
 
   if (response.status === 204 || bodyText.trim() === '') {
@@ -91,19 +115,83 @@ async function parseJsonApiResponse(
     throw new ApiError(
       response.status,
       'Invalid API response',
-      summarizeErrorBody(response.status, bodyText),
+      summarizeJsonApiBody(response.status, bodyText),
     );
   }
 }
 
-function jsonApiHeaders(contentType?: string): Headers {
-  const headers = new Headers();
-  headers.set('Accept', JSON_API_MEDIA);
-  headers.set('X-Actor-Id', 'designer-user');
-  if (contentType) {
-    headers.set('Content-Type', contentType);
+function throwJsonApiError(status: number, bodyText: string): never {
+  if (bodyText) {
+    const parsed = parseBodyForErrors(bodyText);
+    if (isJsonApiErrorDocument(parsed)) {
+      const first = parsed.errors?.[0];
+      if (first) {
+        throw new ApiError(
+          status,
+          first.title ?? 'Request failed',
+          first.detail ?? `Request failed with status ${status}`,
+          { errors: parsed.errors ?? [] },
+        );
+      }
+    }
   }
-  return headers;
+
+  throw new ApiError(
+    status,
+    'Request failed',
+    bodyText
+      ? summarizeJsonApiBody(status, bodyText)
+      : `Request failed with status ${status}`,
+  );
+}
+
+function requireSingleResource<TAttributes>(
+  data: JsonApiDocument['data'],
+): JsonApiResource<TAttributes> {
+  if (Array.isArray(data) || !data) {
+    throw new ApiError(
+      500,
+      'Invalid API response',
+      'Expected a single JSON:API resource.',
+    );
+  }
+  return data as JsonApiResource<TAttributes>;
+}
+
+function summarizeJsonApiBody(status: number, bodyText: string): string {
+  const trimmed = bodyText.trimStart();
+  if (
+    trimmed.startsWith('<!DOCTYPE') ||
+    trimmed.startsWith('<html') ||
+    trimmed.startsWith('<HTML')
+  ) {
+    return `Request failed with status ${status}`;
+  }
+  return bodyText;
+}
+
+function parseBodyForErrors(bodyText: string): unknown {
+  try {
+    return JSON.parse(bodyText);
+  } catch {
+    return undefined;
+  }
+}
+
+function isJsonApiErrorDocument(value: unknown): value is {
+  errors?: {
+    title?: string;
+    detail?: string;
+    status?: string;
+    code?: string;
+  }[];
+} {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'errors' in value &&
+    Array.isArray((value as { errors?: unknown }).errors)
+  );
 }
 
 export async function jsonApiGet(path: string): Promise<JsonApiDocument> {
@@ -117,14 +205,7 @@ export async function jsonApiGetResource<TAttributes>(
   path: string,
 ): Promise<JsonApiResource<TAttributes>> {
   const document = await jsonApiGet(path);
-  if (Array.isArray(document.data)) {
-    throw new ApiError(
-      500,
-      'Invalid API response',
-      'Expected a single JSON:API resource.',
-    );
-  }
-  return document.data as JsonApiResource<TAttributes>;
+  return requireSingleResource<TAttributes>(document.data);
 }
 
 export async function jsonApiGetCollection<TAttributes>(path: string): Promise<{
@@ -163,32 +244,60 @@ export async function jsonApiPostResource<TAttributes>(
     body: JSON.stringify({ data }),
   });
   const document = await parseJsonApiResponse(response);
-  if (Array.isArray(document.data) || !document.data) {
-    throw new ApiError(
-      500,
-      'Invalid API response',
-      'Expected a single JSON:API resource.',
-    );
-  }
-  return document.data as JsonApiResource<TAttributes>;
+  return requireSingleResource<TAttributes>(document.data);
 }
 
 export async function jsonApiPatchResource<TAttributes>(
   resourceType: string,
   id: string,
   attributes: Record<string, unknown>,
+  relationships?: Record<string, unknown>,
 ): Promise<JsonApiResource<TAttributes>> {
+  const data: Record<string, unknown> = {
+    type: resourceType,
+    id,
+    attributes,
+  };
+  if (relationships) {
+    data.relationships = relationships;
+  }
+
   const response = await fetch(resolveApiUrl(`/api/${resourceType}/${id}`), {
     method: 'PATCH',
     headers: jsonApiHeaders(JSON_API_MEDIA),
-    body: JSON.stringify({
-      data: {
-        type: resourceType,
-        id,
-        attributes,
-      },
-    }),
+    body: JSON.stringify({ data }),
   });
+  const document = await parseJsonApiResponse(response);
+  return requireSingleResource<TAttributes>(document.data);
+}
+
+/** PATCH a single to-one relationship (`{ relationships: { formVersion: { data: ... } } }`). */
+export async function jsonApiPatchToOneRelationship(
+  resourceType: string,
+  resourceId: string,
+  relationshipName: string,
+  relatedType: string,
+  relatedId: string | null,
+): Promise<JsonApiResource> {
+  const data: Record<string, unknown> = {
+    type: resourceType,
+    id: resourceId,
+    relationships: {
+      [relationshipName]: {
+        data: relatedId === null ? null : { type: relatedType, id: relatedId },
+      },
+    },
+  };
+  const response = await fetch(
+    resolveApiUrl(
+      `/api/${resourceType}/${resourceId}/relationships/${relationshipName}`,
+    ),
+    {
+      method: 'PATCH',
+      headers: jsonApiHeaders(JSON_API_MEDIA),
+      body: JSON.stringify({ data }),
+    },
+  );
   const document = await parseJsonApiResponse(response);
   if (Array.isArray(document.data) || !document.data) {
     throw new ApiError(
@@ -197,7 +306,68 @@ export async function jsonApiPatchResource<TAttributes>(
       'Expected a single JSON:API resource.',
     );
   }
-  return document.data as JsonApiResource<TAttributes>;
+  return document.data;
+}
+
+/** Invoke a resource-level custom action (e.g. `/publish`, `/retire`). */
+function requireSingleActionResource<TAttributes>(
+  data: JsonApiDocument['data'],
+): JsonApiResource<TAttributes> {
+  if (Array.isArray(data) || !data) {
+    throw new ApiError(
+      500,
+      'Invalid API response',
+      'Expected a single JSON:API resource.',
+    );
+  }
+  return data as JsonApiResource<TAttributes>;
+}
+export async function jsonApiAction<TAttributes = Record<string, unknown>>(
+  resourceType: string,
+  resourceId: string,
+  action: string,
+  query?: string,
+  body?: { attributes?: Record<string, unknown> },
+): Promise<JsonApiResource<TAttributes>> {
+  const targetPath = appendQuery(
+    `/api/${resourceType}/${resourceId}/${action}`,
+    query ?? '',
+  );
+  const response = await fetch(resolveApiUrl(targetPath), {
+    method: 'POST',
+    headers: jsonApiHeaders(body ? JSON_API_MEDIA : undefined),
+    body: body ? JSON.stringify({ data: body }) : undefined,
+  });
+  const document = await parseJsonApiResponse(response);
+  return requireSingleActionResource<TAttributes>(document.data);
+}
+
+/** DELETE a resource custom action (e.g. `/soft-delete-draft?reason=...`). */
+export async function jsonApiActionDelete(
+  resourceType: string,
+  resourceId: string,
+  action: string,
+  query?: string,
+): Promise<JsonApiResource | null> {
+  const targetPath = appendQuery(
+    `/api/${resourceType}/${resourceId}/${action}`,
+    query ?? '',
+  );
+  const response = await fetch(resolveApiUrl(targetPath), {
+    method: 'DELETE',
+    headers: jsonApiHeaders(),
+  });
+  const document = await parseJsonApiResponse(response);
+  if (
+    !document.data ||
+    (Array.isArray(document.data) && document.data.length === 0)
+  ) {
+    return null;
+  }
+  if (Array.isArray(document.data)) {
+    return document.data[0];
+  }
+  return document.data;
 }
 
 export function includedOfType(
@@ -229,4 +399,9 @@ export function attrString(attributes: object, name: string): string | null {
 export function attrNumber(attributes: object, name: string): number | null {
   const value = (attributes as Record<string, unknown>)[name];
   return typeof value === 'number' ? value : null;
+}
+
+export function attrBoolean(attributes: object, name: string): boolean | null {
+  const value = (attributes as Record<string, unknown>)[name];
+  return typeof value === 'boolean' ? value : null;
 }

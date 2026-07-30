@@ -89,9 +89,8 @@ export function FormPreviewDialog({
       >
         <SheetContent
           side='bottom'
-          fullHeight
           showCloseButton={false}
-          className={PANEL_SHEET_CLASSNAME}
+          className={cn(PANEL_SHEET_CLASSNAME, 'h-full')}
         >
           <PanelHeader
             surface='mobile'

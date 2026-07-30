@@ -7,6 +7,7 @@ import {
   PanelHeaderCloseButton,
 } from '@/components/panel/index.ts';
 import { Sheet, SheetContent } from '@/components/ui/sheet.tsx';
+import { cn } from '@/lib/utils.ts';
 
 import { FormAiChatActions } from './FormAiChatActions.tsx';
 import {
@@ -47,9 +48,8 @@ export function FormAiChatSheetView({
       >
         <SheetContent
           side='bottom'
-          fullHeight
           showCloseButton={false}
-          className={PANEL_SHEET_CLASSNAME}
+          className={cn(PANEL_SHEET_CLASSNAME, 'h-full')}
         >
           <PanelHeader
             surface='mobile'

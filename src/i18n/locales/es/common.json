@@ -1,6 +1,12 @@
 {
   "appName": "Cynara",
   "clinicalForms": "Formularios clínicos",
+  "nav": {
+    "modules": "Módulos",
+    "forms": "Formularios",
+    "design": "Diseñador",
+    "settings": "Ajustes"
+  },
   "meta": {
     "title": "Cynara — Formularios clínicos",
     "description": "Diseña formularios clínicos de ingreso y evaluación para hospitales — visualmente, con autoguardado y validación."

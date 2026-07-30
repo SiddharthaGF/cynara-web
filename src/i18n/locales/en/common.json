@@ -1,6 +1,12 @@
 {
   "appName": "Cynara",
   "clinicalForms": "Clinical Forms",
+  "nav": {
+    "modules": "Modules",
+    "forms": "Forms",
+    "design": "Designer",
+    "settings": "Settings"
+  },
   "meta": {
     "title": "Cynara — Clinical Forms",
     "description": "Design clinical intake and assessment forms for hospitals — visually, with autosave and validation."

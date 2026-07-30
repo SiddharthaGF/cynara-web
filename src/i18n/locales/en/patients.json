@@ -1,0 +1,125 @@
+{
+  "nav": {
+    "patients": "Patients"
+  },
+  "search": {
+    "eyebrow": "Patient registry",
+    "title": "Find a patient",
+    "titleAccent": " in your records",
+    "subtitle": "Search by medical record number, name, or national ID to pull up patient records quickly.",
+    "mrn": "MRN",
+    "mrnPlaceholder": "e.g. 12345",
+    "givenName": "First name",
+    "givenNamePlaceholder": "First name",
+    "familyName": "Last name",
+    "familyNamePlaceholder": "Last name",
+    "nationalId": "National ID",
+    "nationalIdPlaceholder": "e.g. 12345678",
+    "search": "Search",
+    "clear": "Clear",
+    "searching": "Searching…",
+    "resultsTitle": "Results",
+    "resultCount_one": "{{count}} patient found",
+    "resultCount_other": "{{count}} patients found",
+    "emptyTitle": "No patients found",
+    "emptyDescription": "Try a different search term or register a new patient.",
+    "registerPatient": "Register patient",
+    "viewDetail": "View",
+    "loadError": "Failed to load patients.",
+    "columns": {
+      "mrn": "MRN",
+      "name": "Name",
+      "birthDate": "DOB",
+      "sex": "Sex",
+      "status": "Status"
+    }
+  },
+  "register": {
+    "eyebrow": "New patient",
+    "title": "Register a patient",
+    "subtitle": "Enter demographic information to create a new patient record.",
+    "submit": "Register patient",
+    "submitting": "Registering…",
+    "success": "Patient registered successfully.",
+    "backToList": "Back to patient list",
+    "fields": {
+      "mrn": "Medical record number (MRN)",
+      "mrnPlaceholder": "e.g. 12345",
+      "givenName": "First name",
+      "givenNamePlaceholder": "e.g. Jane",
+      "familyName": "Last name",
+      "familyNamePlaceholder": "e.g. Doe",
+      "birthDate": "Date of birth",
+      "birthDatePlaceholder": "YYYY-MM-DD",
+      "sex": "Sex",
+      "sexPlaceholder": "Select sex",
+      "sexMale": "Male",
+      "sexFemale": "Female",
+      "sexOther": "Other",
+      "nationalId": "National ID (optional)",
+      "nationalIdPlaceholder": "e.g. 12345678",
+      "status": "Status",
+      "statusPlaceholder": "Select status",
+      "statusActive": "Active",
+      "statusInactive": "Inactive"
+    },
+    "errors": {
+      "mrnRequired": "MRN is required.",
+      "mrnInvalid": "Use letters, numbers, and hyphens only.",
+      "mrnDuplicate": "A patient with this MRN already exists.",
+      "givenNameRequired": "First name is required.",
+      "familyNameRequired": "Last name is required.",
+      "birthDateRequired": "Date of birth is required.",
+      "birthDateInvalid": "Enter a valid date (YYYY-MM-DD).",
+      "sexRequired": "Sex is required.",
+      "createFailed": "Failed to register patient."
+    }
+  },
+  "detail": {
+    "eyebrow": "Patient record",
+    "title": "Patient details",
+    "edit": "Edit",
+    "editTitle": "Edit patient",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to remove this patient? This action can be undone by an administrator.",
+    "deleteSuccess": "Patient record removed.",
+    "saveSuccess": "Patient updated successfully.",
+    "backToList": "Back to patient list",
+    "loadError": "Failed to load patient details.",
+    "updateError": "Failed to update patient.",
+    "deleteError": "Failed to delete patient.",
+    "notFound": "Patient not found.",
+    "fields": {
+      "mrn": "Medical record number",
+      "givenName": "First name",
+      "familyName": "Last name",
+      "birthDate": "Date of birth",
+      "sex": "Sex",
+      "nationalId": "National ID",
+      "status": "Status",
+      "createdAt": "Created",
+      "updatedAt": "Updated",
+      "rowVersion": "Version"
+    },
+    "sexOptions": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    },
+    "statusOptions": {
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+  "sex": {
+    "male": "Male",
+    "female": "Female",
+    "other": "Other"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  }
+}

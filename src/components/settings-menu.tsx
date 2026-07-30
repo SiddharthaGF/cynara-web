@@ -37,6 +37,13 @@ import { cn } from '@/lib/utils.ts';
 
 interface SettingsMenuProps {
   className?: string;
+  /**
+   * When true, renders the trigger as a full-width row with the icon and the
+   * localized "Settings" label, matching the visual weight of the other
+   * sidebar menu buttons. When false, renders a compact icon-only trigger
+   * sized to the collapsed sidebar (3rem).
+   */
+  showLabel?: boolean;
 }
 
 /**
@@ -45,7 +52,10 @@ interface SettingsMenuProps {
  * value visible in the parent row, mirroring how shadcn settings menus
  * typically work.
  */
-export function SettingsMenu({ className }: SettingsMenuProps): JSX.Element {
+export function SettingsMenu({
+  className,
+  showLabel = false,
+}: SettingsMenuProps): JSX.Element {
   const { t } = useTranslation('common');
   const { locale, setLocale } = useLocale();
   const { preference, setPreference, theme } = useTheme();
@@ -70,29 +80,36 @@ export function SettingsMenu({ className }: SettingsMenuProps): JSX.Element {
   const themeLabel = getThemeLabel();
   const ThemeIcon = getThemeIcon();
 
+  const triggerButton = (
+    <Button
+      type='button'
+      variant='ghost'
+      size={showLabel ? 'sm' : 'icon-sm'}
+      aria-label={t('settings.open')}
+      className={cn(
+        'text-muted-foreground',
+        showLabel && 'w-full justify-start gap-2',
+        className,
+      )}
+    >
+      <Settings className='size-4' />
+      {showLabel ? <span>{t('settings.open')}</span> : null}
+    </Button>
+  );
+
   return (
     <>
       <DropdownMenu>
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='icon-sm'
-                    aria-label={t('settings.open')}
-                    className={cn('text-muted-foreground', className)}
-                  />
-                }
-              >
-                <Settings className='size-4' />
-              </DropdownMenuTrigger>
-            }
-          />
-          <TooltipContent side='bottom'>{t('settings.open')}</TooltipContent>
-        </Tooltip>
+        {showLabel ? (
+          <DropdownMenuTrigger render={triggerButton} />
+        ) : (
+          <Tooltip>
+            <TooltipTrigger
+              render={<DropdownMenuTrigger render={triggerButton} />}
+            />
+            <TooltipContent side='bottom'>{t('settings.open')}</TooltipContent>
+          </Tooltip>
+        )}
         <DropdownMenuContent
           align='end'
           className='w-56'

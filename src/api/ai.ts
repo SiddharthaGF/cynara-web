@@ -67,8 +67,6 @@ function mapSettings(attributes: AiProviderSettingsAttributes): FormAiSettings {
   };
 }
 
-// The API client contract intentionally exposes async functions.
-// eslint-disable-next-line require-await
 export async function getFormAiStatus(): Promise<FormAiStatus> {
   return apiRequest<FormAiStatus>('/api/ai/status');
 }

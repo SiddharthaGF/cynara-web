@@ -15,6 +15,7 @@ import type {
   FieldRules,
 } from '@/features/forms/types.ts';
 import { useIsMobile } from '@/hooks/use-mobile.ts';
+import { cn } from '@/lib/utils.ts';
 
 import { FieldInspectorBody } from './FieldInspectorBody.tsx';
 import type { RuleFieldOption } from './FieldInspectorRulesSection.tsx';
@@ -89,9 +90,8 @@ export function FieldInspector({
       >
         <SheetContent
           side='bottom'
-          fullHeight
           showCloseButton={false}
-          className={PANEL_SHEET_CLASSNAME}
+          className={cn(PANEL_SHEET_CLASSNAME, 'h-full')}
         >
           <PanelHeader
             surface='mobile'

@@ -4,7 +4,7 @@ import type { JSX } from 'react';
 import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { SettingsMenu } from '@/components/settings-menu.tsx';
+import { AppShell } from '@/components/app-shell.tsx';
 import { StatusState } from '@/components/status-state.tsx';
 import { DocumentMeta } from '@/components/theme-toggle.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
@@ -165,7 +165,7 @@ export function FormDesignerLayout({
         ) : null}
 
         {/* Mobile floating action buttons: chat (always visible) and field
-            settings (only when a question is selected). The desktop header
+            settings (only when a question is selected). The desktop toolbar
             trigger is hidden below `md`, so the FAB is the sole entry point
             on small viewports. */}
         {isMobile && !isBootstrapping ? (
@@ -180,10 +180,13 @@ export function FormDesignerLayout({
   }
 
   return (
-    <>
-      <div className='grain ambient-bg flex h-svh flex-col overflow-hidden bg-background'>
-        <DocumentMeta />
-        <header className='flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-card/80 px-3 backdrop-blur-md md:gap-3 md:px-4'>
+    <AppShell variant='minimal'>
+      <DocumentMeta />
+      <div className='flex h-[calc(100svh-3.5rem)] min-h-0 flex-col overflow-hidden bg-background'>
+        {/* Designer sub-toolbar: lives inside the page content so the global
+            shell can stay headerless. The same actions that used to sit in the
+            header are still one click away. */}
+        <div className='flex h-12 shrink-0 items-center gap-2 border-b border-border/60 bg-card/70 px-3 backdrop-blur-md md:gap-3 md:px-4'>
           <Tooltip>
             <TooltipTrigger
               render={
@@ -220,8 +223,8 @@ export function FormDesignerLayout({
 
           {isBootstrapping ? null : (
             <>
-              {/* The header chat trigger is desktop-only. The mobile FAB at the
-                  bottom of the canvas replaces it on small viewports. */}
+              {/* The toolbar chat trigger is desktop-only. The mobile FAB at
+                  the bottom of the canvas replaces it on small viewports. */}
               <div className='hidden md:block'>
                 <FormAiChatTrigger
                   disabled={layout.draft.isReadOnly}
@@ -252,9 +255,7 @@ export function FormDesignerLayout({
               />
             </>
           )}
-
-          <SettingsMenu className='shrink-0' />
-        </header>
+        </div>
 
         {layout.draft.saveState === 'conflict' ||
         (layout.draft.saveState === 'error' && layout.draft.saveError) ? (
@@ -284,6 +285,6 @@ export function FormDesignerLayout({
           />
         </Suspense>
       ) : null}
-    </>
+    </AppShell>
   );
 }

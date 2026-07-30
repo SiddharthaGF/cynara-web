@@ -1,0 +1,21 @@
+{
+  "errors": {
+    "network": "No pudimos contactar con Cynara. Revisa tu conexión e inténtalo de nuevo.",
+    "requestFailed": "La solicitud falló.",
+    "notFound": "No encontramos lo que estabas buscando.",
+    "validation": "Hay campos que requieren tu atención.",
+    "conflict": "Este registro cambió mientras lo editabas. Recarga para continuar.",
+    "preconditionFailed": "Este registro fue actualizado por otra persona. Recarga la versión más reciente.",
+    "server": "Cynara tuvo un tropiezo. Inténtalo en un momento.",
+    "unauthorized": "Inicia sesión de nuevo para continuar.",
+    "forbidden": "No tienes permiso para realizar esta acción.",
+    "rateLimited": "Demasiadas solicitudes. Reduce la velocidad e inténtalo otra vez.",
+    "unknown": "Algo salió mal."
+  },
+  "status": {
+    "loading": "Cargando…",
+    "empty": "Aún no hay nada aquí.",
+    "saving": "Guardando…",
+    "saved": "Guardado"
+  }
+}

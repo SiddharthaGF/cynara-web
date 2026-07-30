@@ -191,7 +191,7 @@ export function ChatTurnMessage({
                   className='flex flex-col gap-1.5'
                 >
                   <Progress
-                    indeterminate
+                    value={null}
                     aria-label={t('ai.phaseSchemaLong')}
                     className='h-1'
                   />

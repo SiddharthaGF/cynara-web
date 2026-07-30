@@ -1,0 +1,125 @@
+{
+  "nav": {
+    "patients": "Pacientes"
+  },
+  "search": {
+    "eyebrow": "Registro de pacientes",
+    "title": "Buscar un paciente",
+    "titleAccent": " en tus registros",
+    "subtitle": "Busca por número de historia clínica, nombre o identificación nacional para encontrar registros de pacientes rápidamente.",
+    "mrn": "HC (historia clínica)",
+    "mrnPlaceholder": "ej. 12345",
+    "givenName": "Nombre",
+    "givenNamePlaceholder": "Nombre",
+    "familyName": "Apellidos",
+    "familyNamePlaceholder": "Apellidos",
+    "nationalId": "ID Nacional",
+    "nationalIdPlaceholder": "ej. 12345678",
+    "search": "Buscar",
+    "clear": "Limpiar",
+    "searching": "Buscando…",
+    "resultsTitle": "Resultados",
+    "resultCount_one": "{{count}} paciente encontrado",
+    "resultCount_other": "{{count}} pacientes encontrados",
+    "emptyTitle": "No se encontraron pacientes",
+    "emptyDescription": "Intenta con otros términos de búsqueda o registra un nuevo paciente.",
+    "registerPatient": "Registrar paciente",
+    "viewDetail": "Ver",
+    "loadError": "No se pudieron cargar los pacientes.",
+    "columns": {
+      "mrn": "HC",
+      "name": "Nombre",
+      "birthDate": "Fecha nac.",
+      "sex": "Sexo",
+      "status": "Estado"
+    }
+  },
+  "register": {
+    "eyebrow": "Nuevo paciente",
+    "title": "Registrar un paciente",
+    "subtitle": "Ingresa la información demográfica para crear un nuevo registro de paciente.",
+    "submit": "Registrar paciente",
+    "submitting": "Registrando…",
+    "success": "Paciente registrado exitosamente.",
+    "backToList": "Volver a la lista de pacientes",
+    "fields": {
+      "mrn": "Número de historia clínica (HC)",
+      "mrnPlaceholder": "ej. 12345",
+      "givenName": "Nombre",
+      "givenNamePlaceholder": "ej. María",
+      "familyName": "Apellidos",
+      "familyNamePlaceholder": "ej. García",
+      "birthDate": "Fecha de nacimiento",
+      "birthDatePlaceholder": "AAAA-MM-DD",
+      "sex": "Sexo",
+      "sexPlaceholder": "Seleccionar sexo",
+      "sexMale": "Masculino",
+      "sexFemale": "Femenino",
+      "sexOther": "Otro",
+      "nationalId": "ID Nacional (opcional)",
+      "nationalIdPlaceholder": "ej. 12345678",
+      "status": "Estado",
+      "statusPlaceholder": "Seleccionar estado",
+      "statusActive": "Activo",
+      "statusInactive": "Inactivo"
+    },
+    "errors": {
+      "mrnRequired": "La HC es obligatoria.",
+      "mrnInvalid": "Usa solo letras, números y guiones.",
+      "mrnDuplicate": "Ya existe un paciente con esta HC.",
+      "givenNameRequired": "El nombre es obligatorio.",
+      "familyNameRequired": "Los apellidos son obligatorios.",
+      "birthDateRequired": "La fecha de nacimiento es obligatoria.",
+      "birthDateInvalid": "Ingresa una fecha válida (AAAA-MM-DD).",
+      "sexRequired": "El sexo es obligatorio.",
+      "createFailed": "No se pudo registrar el paciente."
+    }
+  },
+  "detail": {
+    "eyebrow": "Registro del paciente",
+    "title": "Detalles del paciente",
+    "edit": "Editar",
+    "editTitle": "Editar paciente",
+    "save": "Guardar cambios",
+    "saving": "Guardando…",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar este paciente? Esta acción puede ser revertida por un administrador.",
+    "deleteSuccess": "Registro del paciente eliminado.",
+    "saveSuccess": "Paciente actualizado exitosamente.",
+    "backToList": "Volver a la lista de pacientes",
+    "loadError": "No se pudieron cargar los detalles del paciente.",
+    "updateError": "No se pudo actualizar el paciente.",
+    "deleteError": "No se pudo eliminar el paciente.",
+    "notFound": "Paciente no encontrado.",
+    "fields": {
+      "mrn": "Número de historia clínica",
+      "givenName": "Nombre",
+      "familyName": "Apellidos",
+      "birthDate": "Fecha de nacimiento",
+      "sex": "Sexo",
+      "nationalId": "ID Nacional",
+      "status": "Estado",
+      "createdAt": "Creado",
+      "updatedAt": "Actualizado",
+      "rowVersion": "Versión"
+    },
+    "sexOptions": {
+      "male": "Masculino",
+      "female": "Femenino",
+      "other": "Otro"
+    },
+    "statusOptions": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    }
+  },
+  "sex": {
+    "male": "Masculino",
+    "female": "Femenino",
+    "other": "Otro"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo"
+  }
+}
