@@ -11,8 +11,8 @@ main = "@tanstack/react-start/server-entry"
 # bindings (so the SSR Worker sees it too). CORS for this origin must be
 # configured on the cynara-api side.
 [vars]
-VITE_API_ORIGIN = "https://cynara-api.onrender.com"
-VITE_HOSPITAL_CODE = "default"
+API_ORIGIN = "https://cynara-api.onrender.com"
+HOSPITAL_CODE = "default"
 
 [observability]
 enabled = true
