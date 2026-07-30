@@ -14,5 +14,9 @@ main = "@tanstack/react-start/server-entry"
 VITE_API_ORIGIN = "https://cynara-api.onrender.com"
 VITE_HOSPITAL_CODE = "default"
 
-[observability]
+[observability.logs]
 enabled = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
