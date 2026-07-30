@@ -1,0 +1,18 @@
+#:schema node_modules/wrangler/config-schema.json
+
+name = "cynara-web"
+compatibility_date = "2026-07-22"
+compatibility_flags = ["nodejs_compat"]
+main = "@tanstack/react-start/server-entry"
+
+# VITE_API_ORIGIN is the cynara-api origin used by both the client bundle and
+# the Worker runtime. The @cloudflare/vite-plugin propagates [vars] as build-time
+# env (so the client sees it as import.meta.env.VITE_API_ORIGIN) and as runtime
+# bindings (so the SSR Worker sees it too). CORS for this origin must be
+# configured on the cynara-api side.
+[vars]
+VITE_API_ORIGIN = "https://cynara-api.onrender.com"
+VITE_HOSPITAL_CODE = "default"
+
+[observability]
+enabled = true
