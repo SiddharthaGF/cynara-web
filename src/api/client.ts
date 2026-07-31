@@ -79,6 +79,48 @@ function isConcurrencyConflict(status: number): boolean {
   return status === 409 || status === 412;
 }
 
+function describeNetworkError(error: unknown): {
+  status: number;
+  title: string;
+} {
+  if (error instanceof TypeError) {
+    const { message } = error;
+    if (message === 'Failed to fetch') {
+      // The browser refused to perform the request (typically CORS, mixed content, extensions, or offline).
+      return { status: 0, title: 'Network error (CORS or offline)' };
+    }
+    if (message.toLowerCase().includes('networkerror')) {
+      return { status: 0, title: 'Network error' };
+    }
+    if (error.name === 'AbortError') {
+      return { status: 0, title: 'Request aborted' };
+    }
+    return { status: 0, title: 'Network error' };
+  }
+  if (error instanceof DOMException && error.name === 'AbortError') {
+    return { status: 0, title: 'Request aborted' };
+  }
+  return { status: 0, title: 'Unexpected error' };
+}
+
+function buildLogDetail(
+  phase: 'http' | 'parse' | 'network',
+  error: unknown,
+): { status: number; title: string; message: string } {
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (error instanceof ApiError) {
+    return { status: error.status, title: error.title, message: error.message };
+  }
+
+  if (phase === 'network') {
+    const { status, title } = describeNetworkError(error);
+    return { status, title, message };
+  }
+
+  return { status: 0, title: 'Unexpected error', message };
+}
+
 function logApiError(
   phase: 'http' | 'parse' | 'network',
   context: {
@@ -88,18 +130,7 @@ function logApiError(
   },
   error: unknown,
 ): void {
-  const detail =
-    error instanceof ApiError
-      ? {
-          status: error.status,
-          title: error.title,
-          message: error.message,
-        }
-      : {
-          status: undefined,
-          title: phase === 'network' ? 'Network error' : 'Unexpected error',
-          message: error instanceof Error ? error.message : String(error),
-        };
+  const detail = buildLogDetail(phase, error);
 
   console.error(
     `[cynara-api] ${phase} ${context.method} ${context.path}`,
