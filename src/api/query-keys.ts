@@ -48,6 +48,8 @@ export interface PatientListParams {
   givenName?: string;
   familyName?: string;
   includeDeleted?: boolean;
+  page?: number;
+  pageSize?: number;
 }
 
 function key(...segments: readonly unknown[]): readonly unknown[] {

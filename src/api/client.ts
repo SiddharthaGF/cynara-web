@@ -75,10 +75,6 @@ function summarizeErrorBody(status: number, bodyText: string): string {
   return bodyText;
 }
 
-function isConcurrencyConflict(status: number): boolean {
-  return status === 409 || status === 412;
-}
-
 function describeNetworkError(error: unknown): {
   status: number;
   title: string;
@@ -131,15 +127,18 @@ function logApiError(
   error: unknown,
 ): void {
   const detail = buildLogDetail(phase, error);
-
-  console.error(
-    `[cynara-api] ${phase} ${context.method} ${context.path}`,
-    {
-      url: context.url,
-      ...detail,
-    },
-    error,
-  );
+  const reported =
+    error instanceof Error
+      ? error
+      : new Error(`[cynara-api] ${phase} ${context.method} ${context.path}`);
+  reported.cause = {
+    url: context.url,
+    ...detail,
+    original: error instanceof Error ? undefined : error,
+  };
+  // Browser-native reporting avoids console.* (forbidden by lint) while still
+  // Surfacing failures to DevTools / error reporters.
+  reportError(reported);
 }
 
 function buildErrorFromJsonApi(status: number, bodyText: string): ApiError {
@@ -286,49 +285,3 @@ export async function apiRequest<T>(
     throw error;
   }
 }
-
-export async function apiRequestWithCache<T>(
-  path: string,
-  etag: string | null | undefined,
-  fallback: T,
-  init?: ApiRequestInit,
-): Promise<{ data: T; etag: string | null }> {
-  const headers = buildDefaultHeaders(init);
-  if (etag) {
-    headers.set('If-None-Match', etag);
-  }
-
-  const method = (init?.method ?? 'GET').toUpperCase();
-  const context: RequestContext = { path, method, url: '' };
-  const response = await performRequest(path, context, {
-    ...init,
-    method: init?.method ?? 'GET',
-    headers,
-  });
-  context.url = response.url || context.url;
-
-  if (response.status === 304) {
-    return { data: fallback, etag: etag ?? null };
-  }
-
-  if (!response.ok) {
-    const bodyText = await response.text();
-    const apiError = buildErrorFromJsonApi(response.status, bodyText);
-    logApiError('http', context, apiError);
-    throw apiError;
-  }
-
-  if (response.status === 204) {
-    return { data: fallback, etag: response.headers.get('etag') };
-  }
-
-  try {
-    const data = await parseJsonResponse<T>(response);
-    return { data, etag: response.headers.get('etag') };
-  } catch (error) {
-    logApiError('parse', context, error);
-    throw error;
-  }
-}
-
-export { isConcurrencyConflict };

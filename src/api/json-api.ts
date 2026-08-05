@@ -78,14 +78,6 @@ export function buildPaginatedQuery(options: PaginatedQueryOptions): string {
   return params.toString();
 }
 
-function appendQuery(path: string, query: string): string {
-  if (query.length === 0) {
-    return path;
-  }
-  const separator = path.includes('?') ? '&' : '?';
-  return `${path}${separator}${query}`;
-}
-
 function jsonApiHeaders(contentType?: string): Headers {
   const headers = new Headers();
   headers.set('Accept', JSON_API_MEDIA);
@@ -280,107 +272,6 @@ export async function jsonApiPatchResource<TAttributes>(
   return requireSingleResource<TAttributes>(document.data);
 }
 
-/** PATCH a single to-one relationship (`{ relationships: { formVersion: { data: ... } } }`). */
-export async function jsonApiPatchToOneRelationship(
-  resourceType: string,
-  resourceId: string,
-  relationshipName: string,
-  relatedType: string,
-  relatedId: string | null,
-): Promise<JsonApiResource> {
-  const data: Record<string, unknown> = {
-    type: resourceType,
-    id: resourceId,
-    relationships: {
-      [relationshipName]: {
-        data: relatedId === null ? null : { type: relatedType, id: relatedId },
-      },
-    },
-  };
-  const path = `/api/${resourceType}/${resourceId}/relationships/${relationshipName}`;
-  const context: RequestContext = { path, method: 'PATCH', url: '' };
-  const response = await performRequest(path, context, {
-    method: 'PATCH',
-    headers: jsonApiHeaders(JSON_API_MEDIA),
-    body: JSON.stringify({ data }),
-  });
-  context.url = response.url || context.url;
-  const document = await parseJsonApiResponse(response);
-  if (Array.isArray(document.data) || !document.data) {
-    throw new ApiError(
-      500,
-      'Invalid API response',
-      'Expected a single JSON:API resource.',
-    );
-  }
-  return document.data;
-}
-
-/** Invoke a resource-level custom action (e.g. `/publish`, `/retire`). */
-function requireSingleActionResource<TAttributes>(
-  data: JsonApiDocument['data'],
-): JsonApiResource<TAttributes> {
-  if (Array.isArray(data) || !data) {
-    throw new ApiError(
-      500,
-      'Invalid API response',
-      'Expected a single JSON:API resource.',
-    );
-  }
-  return data as JsonApiResource<TAttributes>;
-}
-export async function jsonApiAction<TAttributes = Record<string, unknown>>(
-  resourceType: string,
-  resourceId: string,
-  action: string,
-  query?: string,
-  body?: { attributes?: Record<string, unknown> },
-): Promise<JsonApiResource<TAttributes>> {
-  const targetPath = appendQuery(
-    `/api/${resourceType}/${resourceId}/${action}`,
-    query ?? '',
-  );
-  const context: RequestContext = { path: targetPath, method: 'POST', url: '' };
-  const response = await performRequest(targetPath, context, {
-    method: 'POST',
-    headers: jsonApiHeaders(body ? JSON_API_MEDIA : undefined),
-    body: body ? JSON.stringify({ data: body }) : undefined,
-  });
-  context.url = response.url || context.url;
-  const document = await parseJsonApiResponse(response);
-  return requireSingleActionResource<TAttributes>(document.data);
-}
-
-/** DELETE a resource custom action (e.g. `/soft-delete-draft?reason=...`). */
-export async function jsonApiActionDelete(
-  resourceType: string,
-  resourceId: string,
-  action: string,
-  query?: string,
-): Promise<JsonApiResource | null> {
-  const targetPath = appendQuery(
-    `/api/${resourceType}/${resourceId}/${action}`,
-    query ?? '',
-  );
-  const context: RequestContext = { path: targetPath, method: 'DELETE', url: '' };
-  const response = await performRequest(targetPath, context, {
-    method: 'DELETE',
-    headers: jsonApiHeaders(),
-  });
-  context.url = response.url || context.url;
-  const document = await parseJsonApiResponse(response);
-  if (
-    !document.data ||
-    (Array.isArray(document.data) && document.data.length === 0)
-  ) {
-    return null;
-  }
-  if (Array.isArray(document.data)) {
-    return document.data[0];
-  }
-  return document.data;
-}
-
 export function includedOfType(
   included: JsonApiResource[],
   type: string,
@@ -410,9 +301,4 @@ export function attrString(attributes: object, name: string): string | null {
 export function attrNumber(attributes: object, name: string): number | null {
   const value = (attributes as Record<string, unknown>)[name];
   return typeof value === 'number' ? value : null;
-}
-
-export function attrBoolean(attributes: object, name: string): boolean | null {
-  const value = (attributes as Record<string, unknown>)[name];
-  return typeof value === 'boolean' ? value : null;
 }

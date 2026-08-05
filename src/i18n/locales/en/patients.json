@@ -2,6 +2,12 @@
   "nav": {
     "patients": "Patients"
   },
+  "permissions": {
+    "forbiddenTitle": "Access denied",
+    "forbiddenSearch": "You do not have permission to search the patient registry.",
+    "forbiddenRegister": "You do not have permission to register patients.",
+    "forbiddenMutate": "You do not have permission to change this patient record."
+  },
   "search": {
     "eyebrow": "Patient registry",
     "title": "Find a patient",
@@ -21,6 +27,9 @@
     "resultsTitle": "Results",
     "resultCount_one": "{{count}} patient found",
     "resultCount_other": "{{count}} patients found",
+    "pageRange": "Showing {{start}}–{{end}} of {{total}}",
+    "previousPage": "Previous",
+    "nextPage": "Next",
     "emptyTitle": "No patients found",
     "emptyDescription": "Try a different search term or register a new patient.",
     "registerPatient": "Register patient",
@@ -50,25 +59,26 @@
       "familyName": "Last name",
       "familyNamePlaceholder": "e.g. Doe",
       "birthDate": "Date of birth",
-      "birthDatePlaceholder": "YYYY-MM-DD",
+      "birthDatePlaceholder": "Select date of birth",
       "sex": "Sex",
       "sexPlaceholder": "Select sex",
       "sexMale": "Male",
       "sexFemale": "Female",
-      "sexOther": "Other",
-      "nationalId": "National ID (optional)",
-      "nationalIdPlaceholder": "e.g. 12345678",
-      "status": "Status",
-      "statusPlaceholder": "Select status",
-      "statusActive": "Active",
-      "statusInactive": "Inactive"
+      "sexUnknown": "Other",
+      "nationalId": "National ID",
+      "nationalIdPlaceholder": "e.g. 12345678"
     },
     "errors": {
       "mrnRequired": "MRN is required.",
       "mrnInvalid": "Use letters, numbers, and hyphens only.",
+      "mrnTooLong": "MRN must be 64 characters or fewer.",
       "mrnDuplicate": "A patient with this MRN already exists.",
+      "nationalIdRequired": "National ID is required.",
+      "nationalIdTooLong": "National ID must be 64 characters or fewer.",
       "givenNameRequired": "First name is required.",
+      "givenNameTooLong": "First name must be 128 characters or fewer.",
       "familyNameRequired": "Last name is required.",
+      "familyNameTooLong": "Last name must be 128 characters or fewer.",
       "birthDateRequired": "Date of birth is required.",
       "birthDateInvalid": "Enter a valid date (YYYY-MM-DD).",
       "sexRequired": "Sex is required.",
@@ -91,6 +101,7 @@
     "updateError": "Failed to update patient.",
     "deleteError": "Failed to delete patient.",
     "notFound": "Patient not found.",
+    "mrnImmutable": "MRN cannot be changed after registration.",
     "fields": {
       "mrn": "Medical record number",
       "givenName": "First name",
@@ -106,20 +117,20 @@
     "sexOptions": {
       "male": "Male",
       "female": "Female",
-      "other": "Other"
+      "unknown": "Other"
     },
     "statusOptions": {
       "active": "Active",
-      "inactive": "Inactive"
+      "retired": "Retired"
     }
   },
   "sex": {
     "male": "Male",
     "female": "Female",
-    "other": "Other"
+    "unknown": "Other"
   },
   "status": {
     "active": "Active",
-    "inactive": "Inactive"
+    "retired": "Retired"
   }
 }

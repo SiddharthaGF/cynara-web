@@ -20,14 +20,17 @@ import {
   type ListPatientsParams,
   type PatchPatientInput,
   type PatientDto,
+  type PatientListResponse,
 } from '@/api/patients.ts';
 import { queryKeys } from '@/api/query-keys.ts';
+
+export const DEFAULT_PATIENT_PAGE_SIZE = 20;
 
 // ─── List / Search ───────────────────────────────────────────────────────────
 
 function useListPatientsQuery(
   params: ListPatientsParams,
-): UseQueryResult<PatientDto[]> {
+): UseQueryResult<PatientListResponse> {
   return useQuery({
     queryKey: queryKeys.patients.list(params),
     queryFn: async () => listPatients(params),
@@ -91,12 +94,12 @@ function usePatchPatientMutation(): UseMutationResult<
 function useSoftDeletePatientMutation(): UseMutationResult<
   PatientDto,
   ApiError | Error,
-  { id: string }
+  { id: string; rowVersion: number }
 > {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id }) => softDeletePatient(id),
+    mutationFn: async ({ id, rowVersion }) => softDeletePatient(id, rowVersion),
     onSuccess: async (data) => {
       void queryClient.setQueryData(queryKeys.patients.detail(data.id), data);
       await queryClient.invalidateQueries({ queryKey: queryKeys.patients.all });
@@ -106,7 +109,17 @@ function useSoftDeletePatientMutation(): UseMutationResult<
 
 // ─── Composite Hook: Patient Search ──────────────────────────────────────────
 
-export function usePatientSearch(params: ListPatientsParams) {
+export function usePatientSearch(params: ListPatientsParams): {
+  patients: PatientDto[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  isLoading: boolean;
+  isFetching: boolean;
+  error: string | null;
+  isForbidden: boolean;
+  queryError: Error | null;
+} {
   const { t } = useTranslation(['patients', 'api']);
   const query = useListPatientsQuery(params);
 
@@ -117,16 +130,32 @@ export function usePatientSearch(params: ListPatientsParams) {
     return null;
   }, [query.isError, query.error, t]);
 
+  const isForbidden =
+    query.isError &&
+    query.error instanceof ApiError &&
+    (query.error.status === 401 || query.error.status === 403);
+
   return {
-    patients: query.data ?? [],
+    patients: query.data?.patients ?? [],
+    totalCount: query.data?.totalCount ?? 0,
+    page: query.data?.page ?? params.page ?? 1,
+    pageSize:
+      query.data?.pageSize ?? params.pageSize ?? DEFAULT_PATIENT_PAGE_SIZE,
     isLoading: query.isLoading,
+    isFetching: query.isFetching,
     error,
+    isForbidden,
+    queryError: query.error ?? null,
   };
 }
 
 // ─── Composite Hook: Patient Detail ──────────────────────────────────────────
 
-export function usePatientDetail(id: string) {
+export function usePatientDetail(id: string): {
+  patient: PatientDto | null;
+  isLoading: boolean;
+  error: string | null;
+} {
   const { t } = useTranslation(['patients', 'api']);
   const query = useGetPatientQuery(id);
 
@@ -146,7 +175,14 @@ export function usePatientDetail(id: string) {
 
 // ─── Composite Hook: Patient Registration ────────────────────────────────────
 
-export function useRegisterPatient() {
+export function useRegisterPatient(): {
+  registerPatient: (input: CreatePatientInput) => Promise<PatientDto>;
+  isRegistering: boolean;
+  error: string | null;
+  reset: () => void;
+  isSuccess: boolean;
+  data: PatientDto | null;
+} {
   const { t } = useTranslation(['patients', 'api']);
   const mutation = useCreatePatientMutation();
 
@@ -169,7 +205,16 @@ export function useRegisterPatient() {
 
 // ─── Composite Hook: Patient Edit ────────────────────────────────────────────
 
-export function useEditPatient() {
+export function useEditPatient(): {
+  editPatient: (
+    input: { id: string } & PatchPatientInput,
+  ) => Promise<PatientDto>;
+  isEditing: boolean;
+  error: string | null;
+  reset: () => void;
+  isSuccess: boolean;
+  data: PatientDto | null;
+} {
   const { t } = useTranslation(['patients', 'api']);
   const mutation = usePatchPatientMutation();
 
@@ -192,7 +237,16 @@ export function useEditPatient() {
 
 // ─── Composite Hook: Patient Soft Delete ─────────────────────────────────────
 
-export function useDeletePatient() {
+export function useDeletePatient(): {
+  deletePatient: (input: {
+    id: string;
+    rowVersion: number;
+  }) => Promise<PatientDto>;
+  isDeleting: boolean;
+  error: string | null;
+  reset: () => void;
+  isSuccess: boolean;
+} {
   const { t } = useTranslation(['patients', 'api']);
   const mutation = useSoftDeletePatientMutation();
 
@@ -216,4 +270,5 @@ export type {
   CreatePatientInput,
   ListPatientsParams,
   PatientDto,
+  PatientListResponse,
 } from '@/api/patients.ts';

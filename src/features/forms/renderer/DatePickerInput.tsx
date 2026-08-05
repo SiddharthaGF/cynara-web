@@ -20,14 +20,16 @@ import type { ClinicalField, TimePreset } from '@/features/forms/types.ts';
 import { cn } from '@/lib/utils.ts';
 
 interface DatePickerInputProps {
-  fieldType: Extract<ClinicalField['type'], 'date' | 'datetime'>;
-  value: unknown;
-  enabled: boolean;
-  placeholder: string | undefined;
-  inputId?: string;
-  timePresets?: TimePreset[];
-  ariaInvalid?: boolean;
-  onChange: (value: unknown) => void;
+  'fieldType': Extract<ClinicalField['type'], 'date' | 'datetime'>;
+  'value': unknown;
+  'enabled': boolean;
+  'placeholder': string | undefined;
+  'inputId'?: string;
+  'timePresets'?: TimePreset[];
+  'ariaInvalid'?: boolean;
+  'ariaRequired'?: boolean;
+  'data-testid'?: string;
+  'onChange': (value: unknown) => void;
 }
 
 export function DatePickerInput({
@@ -38,6 +40,8 @@ export function DatePickerInput({
   inputId,
   timePresets,
   ariaInvalid = false,
+  ariaRequired = false,
+  'data-testid': testId,
   onChange,
 }: DatePickerInputProps): JSX.Element {
   const { i18n, t } = useTranslation('common');
@@ -143,7 +147,9 @@ export function DatePickerInput({
                 <Button
                   type='button'
                   variant='outline'
+                  data-testid={testId}
                   aria-invalid={ariaInvalid || undefined}
+                  aria-required={ariaRequired || undefined}
                   className={cn(
                     'w-full min-w-0 justify-start text-left font-normal',
                     !displayDate && 'text-muted-foreground',
@@ -203,7 +209,9 @@ export function DatePickerInput({
           <Button
             type='button'
             variant='outline'
+            data-testid={testId}
             aria-invalid={ariaInvalid || undefined}
+            aria-required={ariaRequired || undefined}
             className={cn(
               'w-full justify-start text-left font-normal',
               !displayDate && 'text-muted-foreground',
@@ -222,6 +230,10 @@ export function DatePickerInput({
           mode='single'
           selected={displayDate}
           locale={locale}
+          captionLayout='dropdown'
+          startMonth={new Date(1900, 0)}
+          endMonth={new Date(2100, 11)}
+          defaultMonth={displayDate}
           onSelect={handleDateSelect}
         />
       </PopoverContent>

@@ -229,13 +229,11 @@ export function FormDesignerLayout({
                 <FormAiChatTrigger
                   disabled={layout.draft.isReadOnly}
                   onOpen={() => {
-                    setAiChatOpen((open) => {
-                      const next = !open;
-                      if (next) {
-                        layout.setShowAdvanced(false);
-                      }
-                      return next;
-                    });
+                    if (aiChatOpen) {
+                      setAiChatOpen(false);
+                    } else {
+                      openChat();
+                    }
                   }}
                 />
               </div>

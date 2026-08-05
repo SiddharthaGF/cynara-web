@@ -1,11 +1,8 @@
 import { ApiError } from '@/api/client.ts';
 import {
   buildPaginatedQuery,
-  jsonApiAction,
-  jsonApiActionDelete,
   jsonApiGet,
   jsonApiGetCollection,
-  jsonApiGetResource,
   jsonApiPatchResource,
   jsonApiPostResource,
   attrNumber,
@@ -13,7 +10,6 @@ import {
   includedOfType,
   relatedIds,
   type JsonApiResource,
-  type PaginatedQueryOptions,
 } from '@/api/json-api.ts';
 import type { FormSummary, FormVersion } from '@/features/forms/types.ts';
 
@@ -224,31 +220,6 @@ export async function listForms(): Promise<FormSummary[]> {
   return data.map((definition) => mapSummary(definition, versions));
 }
 
-export interface ListFormsPaginatedOptions {
-  status?: string;
-  sort?: string;
-  pageNumber?: number;
-  pageSize?: number;
-}
-
-export async function listFormsPaginated(
-  options: ListFormsPaginatedOptions = {},
-): Promise<FormSummary[]> {
-  const query = buildPaginatedQuery({
-    include: ['versions'],
-    filters: options.status ? { status: options.status } : {},
-    sort: options.sort ?? '-updatedAt',
-    pageNumber: options.pageNumber,
-    pageSize: options.pageSize ?? 20,
-  });
-  const { data, included } =
-    await jsonApiGetCollection<FormDefinitionAttributes>(
-      `/api/${FORM_DEFINITIONS}?${query}`,
-    );
-  const versions = versionById(included);
-  return data.map((definition) => mapSummary(definition, versions));
-}
-
 export async function createForm(input: {
   code: string;
   name: string;
@@ -276,138 +247,7 @@ export async function createForm(input: {
   return mapSummary(definition, versions);
 }
 
-export async function getFormDefinitionById(
-  definitionId: string,
-): Promise<FormSummary> {
-  const { definition, versions } = await fetchDefinitionDocument(
-    `/api/${FORM_DEFINITIONS}/${definitionId}?include=versions`,
-  );
-  return mapSummary(definition, versions);
-}
-
-export async function patchFormDefinition(
-  definitionId: string,
-  input: { code?: string; name?: string },
-): Promise<FormSummary> {
-  await jsonApiPatchResource<FormDefinitionAttributes>(
-    FORM_DEFINITIONS,
-    definitionId,
-    input,
-  );
-  return getFormDefinitionById(definitionId);
-}
-
-export async function createDraft(definitionId: string): Promise<FormVersion> {
-  const resource = await jsonApiAction<FormVersionAttributes>(
-    FORM_DEFINITIONS,
-    definitionId,
-    'create-draft',
-  );
-  return mapVersion(resource, '');
-}
-
-export async function softDeleteDraft(
-  definitionId: string,
-  reason: string,
-): Promise<void> {
-  await jsonApiActionDelete(
-    FORM_DEFINITIONS,
-    definitionId,
-    'soft-delete-draft',
-    new URLSearchParams({ reason }).toString(),
-  );
-}
-
-/**
- * NOTE: `POST /api/formDefinitions/{id}/retire` is referenced in the original
- * task brief but is NOT documented in the live cynara-api Swagger contract. We
- * keep the public signature so future wiring is a one-liner once the backend
- * lands the action. For now, calling it throws an explanatory error.
- */
-export async function retireFormDefinition(
-  definitionId: string,
-  rowVersion: number,
-): Promise<FormSummary> {
-  const search = new URLSearchParams({ rowVersion: String(rowVersion) });
-  try {
-    const resource = await jsonApiAction<FormDefinitionAttributes>(
-      FORM_DEFINITIONS,
-      definitionId,
-      'retire',
-      search.toString(),
-    );
-    return mapSummary(resource, new Map());
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) {
-      throw new ApiError(
-        404,
-        'Not Implemented',
-        `retire action on formDefinitions/${definitionId} is not available in the live API.`,
-      );
-    }
-    throw error;
-  }
-}
-
-export async function listFormVersions(
-  options: {
-    formDefinitionId?: string;
-    include?: string;
-  } = {},
-): Promise<FormVersion[]> {
-  const include = options.include ?? 'formDefinition';
-  const query = buildPaginatedQuery({
-    include: include.split(',').filter(Boolean),
-    filters: options.formDefinitionId
-      ? { 'formDefinition.id': options.formDefinitionId }
-      : {},
-    pageSize: 100,
-    sort: '-createdAt',
-  });
-  const { data } = await jsonApiGetCollection<FormVersionAttributes>(
-    `/api/${FORM_VERSIONS}?${query}`,
-  );
-  return data.map((version) => mapVersion(version, ''));
-}
-
-export async function getFormVersionById(
-  versionId: string,
-): Promise<FormVersion> {
-  const resource = await jsonApiGetResource<FormVersionAttributes>(
-    `/api/${FORM_VERSIONS}/${versionId}?include=formDefinition`,
-  );
-  return mapVersion(resource, '');
-}
-
-export async function createFormVersion(input: {
-  formDefinitionId: string;
-  clinicalSchemaJson: string;
-  uiSchemaJson?: string | null;
-  rulesSchemaJson?: string | null;
-  rowVersion: number;
-}): Promise<FormVersion> {
-  const resource = await jsonApiPostResource<FormVersionAttributes>(
-    FORM_VERSIONS,
-    {
-      clinicalSchemaJson: input.clinicalSchemaJson,
-      ...(input.uiSchemaJson !== undefined && {
-        uiSchemaJson: input.uiSchemaJson,
-      }),
-      ...(input.rulesSchemaJson !== undefined && {
-        rulesSchemaJson: input.rulesSchemaJson,
-      }),
-      rowVersion: input.rowVersion,
-    },
-    {
-      formDefinition: {
-        data: { type: FORM_DEFINITIONS, id: input.formDefinitionId },
-      },
-    },
-  );
-  return mapVersion(resource, '');
-}
-
-export async function patchFormVersion(
+async function patchFormVersion(
   versionId: string,
   input: {
     clinicalSchemaJson: string;
@@ -428,81 +268,6 @@ export async function patchFormVersion(
   );
   return mapVersion(resource, '');
 }
-
-async function runVersionWorkflow(
-  versionId: string,
-  action: string,
-  query?: string,
-  body?: { attributes?: Record<string, unknown> },
-): Promise<FormVersion> {
-  const resource = await jsonApiAction<FormVersionAttributes>(
-    FORM_VERSIONS,
-    versionId,
-    action,
-    query,
-    body,
-  );
-  return mapVersion(resource, '');
-}
-
-export async function submitFormVersionForReview(
-  versionId: string,
-  rowVersion: number,
-): Promise<FormVersion> {
-  return runVersionWorkflow(
-    versionId,
-    'submit-review',
-    new URLSearchParams({ rowVersion: String(rowVersion) }).toString(),
-  );
-}
-
-export async function withdrawFormVersionReview(
-  versionId: string,
-  rowVersion: number,
-): Promise<FormVersion> {
-  return runVersionWorkflow(
-    versionId,
-    'withdraw-review',
-    new URLSearchParams({ rowVersion: String(rowVersion) }).toString(),
-  );
-}
-
-export async function publishFormVersion(
-  versionId: string,
-  rowVersion: number,
-): Promise<FormVersion> {
-  return runVersionWorkflow(
-    versionId,
-    'publish',
-    new URLSearchParams({ rowVersion: String(rowVersion) }).toString(),
-  );
-}
-
-export async function rejectFormVersionReview(input: {
-  versionId: string;
-  rowVersion: number;
-  comment: string;
-}): Promise<FormVersion> {
-  const query = new URLSearchParams({
-    rowVersion: String(input.rowVersion),
-  }).toString();
-  return runVersionWorkflow(input.versionId, 'reject-review', query, {
-    attributes: { comment: input.comment },
-  });
-}
-
-export async function retireFormVersion(
-  versionId: string,
-  rowVersion: number,
-): Promise<FormVersion> {
-  return runVersionWorkflow(
-    versionId,
-    'retire',
-    new URLSearchParams({ rowVersion: String(rowVersion) }).toString(),
-  );
-}
-
-// Backwards-compatible convenience aliases used by the existing designer.
 
 export async function getFormDraft(code: string): Promise<FormVersion> {
   const { definition, versions } = await getDefinitionByCode(code);
@@ -546,5 +311,3 @@ export async function resolveFormDefinitionId(code: string): Promise<string> {
   const { definition } = await getDefinitionByCode(code);
   return definition.id;
 }
-
-export type FormVersionListOptions = PaginatedQueryOptions;
