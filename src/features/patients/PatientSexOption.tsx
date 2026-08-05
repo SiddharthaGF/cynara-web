@@ -17,7 +17,7 @@ const SEX_ICONS: Record<PatientSex, LucideIcon> = {
   unknown: CircleHelp,
 };
 
-export function PatientSexOptionLabel({
+function PatientSexOptionLabel({
   value,
   label,
 }: {
@@ -36,7 +36,7 @@ export function PatientSexOptionLabel({
   );
 }
 
-export function patientSexItems(
+function patientSexItems(
   labels: Record<PatientSex, string>,
 ): { value: PatientSex; label: string }[] {
   return [

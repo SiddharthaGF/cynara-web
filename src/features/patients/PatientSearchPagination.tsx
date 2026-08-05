@@ -14,28 +14,34 @@ import { cn } from '@/lib/utils.ts';
 function buildPageItems(
   page: number,
   totalPages: number,
-): (number | 'ellipsis')[] {
+): ({ kind: 'page'; value: number } | { kind: 'ellipsis'; id: string })[] {
   if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, index) => index + 1);
+    return Array.from({ length: totalPages }, (_, index) => ({
+      kind: 'page' as const,
+      value: index + 1,
+    }));
   }
 
-  const items: (number | 'ellipsis')[] = [1];
+  const items: (
+    | { kind: 'page'; value: number }
+    | { kind: 'ellipsis'; id: string }
+  )[] = [{ kind: 'page', value: 1 }];
   const start = Math.max(2, page - 1);
   const end = Math.min(totalPages - 1, page + 1);
 
   if (start > 2) {
-    items.push('ellipsis');
+    items.push({ kind: 'ellipsis', id: `ellipsis-before-${String(start)}` });
   }
 
   for (let current = start; current <= end; current += 1) {
-    items.push(current);
+    items.push({ kind: 'page', value: current });
   }
 
   if (end < totalPages - 1) {
-    items.push('ellipsis');
+    items.push({ kind: 'ellipsis', id: `ellipsis-after-${String(end)}` });
   }
 
-  items.push(totalPages);
+  items.push({ kind: 'page', value: totalPages });
   return items;
 }
 
@@ -96,25 +102,25 @@ export function PatientSearchPagination({
               </span>
             </Button>
           </PaginationItem>
-          {pageItems.map((item, index) =>
-            item === 'ellipsis' ? (
-              <PaginationItem key={`ellipsis-${String(index)}`}>
+          {pageItems.map((item) =>
+            item.kind === 'ellipsis' ? (
+              <PaginationItem key={item.id}>
                 <PaginationEllipsis />
               </PaginationItem>
             ) : (
-              <PaginationItem key={item}>
+              <PaginationItem key={item.value}>
                 <Button
                   type='button'
                   size='icon'
-                  variant={item === page ? 'outline' : 'ghost'}
-                  aria-current={item === page ? 'page' : undefined}
-                  data-testid={`patient-search-page-${String(item)}`}
-                  className={cn(item === page && 'pointer-events-none')}
+                  variant={item.value === page ? 'outline' : 'ghost'}
+                  aria-current={item.value === page ? 'page' : undefined}
+                  data-testid={`patient-search-page-${String(item.value)}`}
+                  className={cn(item.value === page && 'pointer-events-none')}
                   onClick={() => {
-                    onPageChange(item);
+                    onPageChange(item.value);
                   }}
                 >
-                  {item}
+                  {item.value}
                 </Button>
               </PaginationItem>
             ),

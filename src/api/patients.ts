@@ -199,18 +199,3 @@ export function isForbiddenPatientError(error: unknown): boolean {
     error instanceof ApiError && (error.status === 401 || error.status === 403)
   );
 }
-
-export function isTenantContextError(error: unknown): boolean {
-  if (!(error instanceof ApiError)) {
-    return false;
-  }
-  if (error.status !== 400) {
-    return false;
-  }
-  const detail = `${error.title} ${error.message}`.toLowerCase();
-  return (
-    detail.includes('hospital') ||
-    detail.includes('tenant') ||
-    detail.includes('workspace')
-  );
-}

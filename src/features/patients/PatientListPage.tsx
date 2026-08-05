@@ -21,11 +21,11 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty.tsx';
+import { formatPatientResultDescription } from '@/features/patients/patientForm.ts';
+import { PatientSearchPagination } from '@/features/patients/PatientSearchPagination.tsx';
 import {
-  formatPatientResultDescription,
   PatientResultsTable,
   PatientSearchForm,
-  PatientSearchPagination,
 } from '@/features/patients/PatientSearchParts.tsx';
 import {
   DEFAULT_PATIENT_PAGE_SIZE,

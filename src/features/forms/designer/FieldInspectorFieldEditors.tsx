@@ -1,6 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react';
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
@@ -24,8 +24,10 @@ export function ChoiceOptionsEditor({
   const [rowKeys, setRowKeys] = useState(() =>
     options.map(() => crypto.randomUUID()),
   );
+  const [prevOptionsLength, setPrevOptionsLength] = useState(options.length);
 
-  useEffect(() => {
+  if (options.length !== prevOptionsLength) {
+    setPrevOptionsLength(options.length);
     setRowKeys((previous) => {
       if (previous.length === options.length) {
         return previous;
@@ -42,7 +44,7 @@ export function ChoiceOptionsEditor({
 
       return previous.slice(0, options.length);
     });
-  }, [options.length]);
+  }
 
   return (
     <Field>

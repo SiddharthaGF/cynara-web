@@ -31,22 +31,6 @@ import {
 } from '@/features/patients/patientForm.ts';
 import type { ListPatientsParams } from '@/features/patients/usePatientsCatalog.ts';
 
-export { PatientSearchPagination } from '@/features/patients/PatientSearchPagination.tsx';
-
-export function formatPatientResultDescription(
-  isLoading: boolean,
-  resultCount: number,
-  t: ReturnType<typeof useTranslation<'patients'>>['t'],
-): string | undefined {
-  if (isLoading) {
-    return t('search.searching');
-  }
-  if (resultCount > 0) {
-    return t('search.resultCount', { count: resultCount });
-  }
-  return undefined;
-}
-
 interface SearchFormValues {
   mrn: string;
   givenName: string;

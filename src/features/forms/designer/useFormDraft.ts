@@ -81,21 +81,18 @@ export function useFormDraft(
 
   // Adopt the server draft only when we are not mid-edit.
   // Otherwise, a setQueryData race can wipe an AI apply or show a loading flash.
-  useEffect(() => {
-    if (
-      isDirty ||
-      draftQuery.data === undefined ||
-      draftQuery.data === appliedDraft
-    ) {
-      return;
-    }
-
+  // Prefer render-time adjustment over an effect that copies props into state.
+  if (
+    !isDirty &&
+    draftQuery.data !== undefined &&
+    draftQuery.data !== appliedDraft
+  ) {
     const next = draftSnapshot(draftQuery.data);
     setAppliedDraft(draftQuery.data);
     setModelState(next.model);
     setRowVersion(next.rowVersion);
     setIsReadOnly(next.isReadOnly);
-  }, [appliedDraft, draftQuery.data, isDirty]);
+  }
 
   const saveMutation = useMutation({
     mutationFn: async (input: {

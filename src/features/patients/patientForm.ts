@@ -16,7 +16,7 @@ export type PatientFieldErrors = Partial<
   Record<keyof PatientIdentityFields, string>
 >;
 
-type Translate = (key: string) => string;
+type Translate = (key: string, options?: Record<string, unknown>) => string;
 
 export function validatePatientIdentity(
   values: PatientIdentityFields,
@@ -83,4 +83,36 @@ export function formatPatientStatus(status: string, t: Translate): string {
     return t('status.retired');
   }
   return t('status.active');
+}
+
+const PATIENT_DATE_TIME_OPTIONS = {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'UTC',
+} as const satisfies Intl.DateTimeFormatOptions;
+
+const patientDateTimeFormatters: Record<string, Intl.DateTimeFormat> = {
+  en: new Intl.DateTimeFormat('en', PATIENT_DATE_TIME_OPTIONS),
+  es: new Intl.DateTimeFormat('es', PATIENT_DATE_TIME_OPTIONS),
+};
+
+export function formatPatientDateTime(iso: string, locale: string): string {
+  const language = locale.split('-')[0] ?? 'en';
+  const formatter =
+    patientDateTimeFormatters[language] ?? patientDateTimeFormatters.en;
+  return formatter.format(new Date(iso));
+}
+
+export function formatPatientResultDescription(
+  isLoading: boolean,
+  resultCount: number,
+  t: Translate,
+): string | undefined {
+  if (isLoading) {
+    return t('search.searching');
+  }
+  if (resultCount > 0) {
+    return t('search.resultCount', { count: resultCount });
+  }
+  return undefined;
 }

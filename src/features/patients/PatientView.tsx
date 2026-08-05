@@ -6,11 +6,12 @@ import type { PatientDto } from '@/api/patients.ts';
 import { Button } from '@/components/ui/button.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
 import {
+  formatPatientDateTime,
   formatPatientSex,
   formatPatientStatus,
 } from '@/features/patients/patientForm.ts';
 
-export function PatientInfoRow({
+function PatientInfoRow({
   label,
   value,
 }: {
@@ -42,7 +43,7 @@ export function PatientView({
   isDeleting,
   canMutate,
 }: PatientViewProps): JSX.Element {
-  const { t } = useTranslation(['patients', 'api']);
+  const { t, i18n } = useTranslation(['patients', 'api']);
 
   return (
     <div
@@ -118,11 +119,11 @@ export function PatientView({
         />
         <PatientInfoRow
           label={t('detail.fields.createdAt')}
-          value={new Date(patient.createdAt).toLocaleString()}
+          value={formatPatientDateTime(patient.createdAt, i18n.language)}
         />
         <PatientInfoRow
           label={t('detail.fields.updatedAt')}
-          value={new Date(patient.updatedAt).toLocaleString()}
+          value={formatPatientDateTime(patient.updatedAt, i18n.language)}
         />
       </div>
     </div>
