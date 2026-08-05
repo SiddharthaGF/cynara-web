@@ -2,6 +2,12 @@
   "nav": {
     "patients": "Pacientes"
   },
+  "permissions": {
+    "forbiddenTitle": "Acceso denegado",
+    "forbiddenSearch": "No tienes permiso para buscar en el registro de pacientes.",
+    "forbiddenRegister": "No tienes permiso para registrar pacientes.",
+    "forbiddenMutate": "No tienes permiso para modificar este registro de paciente."
+  },
   "search": {
     "eyebrow": "Registro de pacientes",
     "title": "Buscar un paciente",
@@ -21,6 +27,9 @@
     "resultsTitle": "Resultados",
     "resultCount_one": "{{count}} paciente encontrado",
     "resultCount_other": "{{count}} pacientes encontrados",
+    "pageRange": "Mostrando {{start}}–{{end}} de {{total}}",
+    "previousPage": "Anterior",
+    "nextPage": "Siguiente",
     "emptyTitle": "No se encontraron pacientes",
     "emptyDescription": "Intenta con otros términos de búsqueda o registra un nuevo paciente.",
     "registerPatient": "Registrar paciente",
@@ -50,25 +59,26 @@
       "familyName": "Apellidos",
       "familyNamePlaceholder": "ej. García",
       "birthDate": "Fecha de nacimiento",
-      "birthDatePlaceholder": "AAAA-MM-DD",
+      "birthDatePlaceholder": "Seleccionar fecha de nacimiento",
       "sex": "Sexo",
       "sexPlaceholder": "Seleccionar sexo",
       "sexMale": "Masculino",
       "sexFemale": "Femenino",
-      "sexOther": "Otro",
-      "nationalId": "ID Nacional (opcional)",
-      "nationalIdPlaceholder": "ej. 12345678",
-      "status": "Estado",
-      "statusPlaceholder": "Seleccionar estado",
-      "statusActive": "Activo",
-      "statusInactive": "Inactivo"
+      "sexUnknown": "Otro",
+      "nationalId": "ID Nacional",
+      "nationalIdPlaceholder": "ej. 12345678"
     },
     "errors": {
       "mrnRequired": "La HC es obligatoria.",
       "mrnInvalid": "Usa solo letras, números y guiones.",
+      "mrnTooLong": "La HC debe tener 64 caracteres o menos.",
       "mrnDuplicate": "Ya existe un paciente con esta HC.",
+      "nationalIdRequired": "El ID nacional es obligatorio.",
+      "nationalIdTooLong": "El ID nacional debe tener 64 caracteres o menos.",
       "givenNameRequired": "El nombre es obligatorio.",
+      "givenNameTooLong": "El nombre debe tener 128 caracteres o menos.",
       "familyNameRequired": "Los apellidos son obligatorios.",
+      "familyNameTooLong": "Los apellidos deben tener 128 caracteres o menos.",
       "birthDateRequired": "La fecha de nacimiento es obligatoria.",
       "birthDateInvalid": "Ingresa una fecha válida (AAAA-MM-DD).",
       "sexRequired": "El sexo es obligatorio.",
@@ -91,6 +101,7 @@
     "updateError": "No se pudo actualizar el paciente.",
     "deleteError": "No se pudo eliminar el paciente.",
     "notFound": "Paciente no encontrado.",
+    "mrnImmutable": "La HC no se puede cambiar después del registro.",
     "fields": {
       "mrn": "Número de historia clínica",
       "givenName": "Nombre",
@@ -106,20 +117,20 @@
     "sexOptions": {
       "male": "Masculino",
       "female": "Femenino",
-      "other": "Otro"
+      "unknown": "Otro"
     },
     "statusOptions": {
       "active": "Activo",
-      "inactive": "Inactivo"
+      "retired": "Retirado"
     }
   },
   "sex": {
     "male": "Masculino",
     "female": "Femenino",
-    "other": "Otro"
+    "unknown": "Otro"
   },
   "status": {
     "active": "Activo",
-    "inactive": "Inactivo"
+    "retired": "Retirado"
   }
 }

@@ -20,14 +20,17 @@ import {
   type ListPatientsParams,
   type PatchPatientInput,
   type PatientDto,
+  type PatientListResponse,
 } from '@/api/patients.ts';
 import { queryKeys } from '@/api/query-keys.ts';
+
+export const DEFAULT_PATIENT_PAGE_SIZE = 20;
 
 // ─── List / Search ───────────────────────────────────────────────────────────
 
 function useListPatientsQuery(
   params: ListPatientsParams,
-): UseQueryResult<PatientDto[]> {
+): UseQueryResult<PatientListResponse> {
   return useQuery({
     queryKey: queryKeys.patients.list(params),
     queryFn: async () => listPatients(params),
@@ -91,12 +94,12 @@ function usePatchPatientMutation(): UseMutationResult<
 function useSoftDeletePatientMutation(): UseMutationResult<
   PatientDto,
   ApiError | Error,
-  { id: string }
+  { id: string; rowVersion: number }
 > {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id }) => softDeletePatient(id),
+    mutationFn: async ({ id, rowVersion }) => softDeletePatient(id, rowVersion),
     onSuccess: async (data) => {
       void queryClient.setQueryData(queryKeys.patients.detail(data.id), data);
       await queryClient.invalidateQueries({ queryKey: queryKeys.patients.all });
@@ -117,10 +120,22 @@ export function usePatientSearch(params: ListPatientsParams) {
     return null;
   }, [query.isError, query.error, t]);
 
+  const isForbidden =
+    query.isError &&
+    query.error instanceof ApiError &&
+    (query.error.status === 401 || query.error.status === 403);
+
   return {
-    patients: query.data ?? [],
+    patients: query.data?.patients ?? [],
+    totalCount: query.data?.totalCount ?? 0,
+    page: query.data?.page ?? params.page ?? 1,
+    pageSize:
+      query.data?.pageSize ?? params.pageSize ?? DEFAULT_PATIENT_PAGE_SIZE,
     isLoading: query.isLoading,
+    isFetching: query.isFetching,
     error,
+    isForbidden,
+    queryError: query.error ?? null,
   };
 }
 
@@ -216,4 +231,5 @@ export type {
   CreatePatientInput,
   ListPatientsParams,
   PatientDto,
+  PatientListResponse,
 } from '@/api/patients.ts';

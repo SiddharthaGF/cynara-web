@@ -4,6 +4,7 @@
   "nav": {
     "modules": "Modules",
     "forms": "Forms",
+    "patients": "Patients",
     "design": "Designer",
     "settings": "Settings"
   },

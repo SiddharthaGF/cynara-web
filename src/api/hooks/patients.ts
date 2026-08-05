@@ -18,6 +18,7 @@ import {
   type ListPatientsParams,
   type PatchPatientInput,
   type PatientDto,
+  type PatientListResponse,
 } from '@/api/patients.ts';
 import { queryKeys } from '@/api/query-keys.ts';
 
@@ -26,7 +27,7 @@ interface RefreshRowVersion {
 }
 
 export interface UsePatientsQueryOptions extends Omit<
-  UseQueryOptions<PatientDto[], ApiError | Error>,
+  UseQueryOptions<PatientListResponse, ApiError | Error>,
   'queryKey' | 'queryFn'
 > {
   listParams?: ListPatientsParams;
@@ -34,13 +35,15 @@ export interface UsePatientsQueryOptions extends Omit<
 
 export function usePatientsQuery(options: UsePatientsQueryOptions = {}) {
   const { listParams, ...rest } = options;
-  return useQuery<PatientDto[], ApiError | Error>({
+  return useQuery<PatientListResponse, ApiError | Error>({
     queryKey: queryKeys.patients.list({
       mrn: listParams?.mrn,
       nationalId: listParams?.nationalId,
       givenName: listParams?.givenName,
       familyName: listParams?.familyName,
       includeDeleted: listParams?.includeDeleted,
+      page: listParams?.page,
+      pageSize: listParams?.pageSize,
     }),
     queryFn: async () => listPatients(listParams ?? {}),
     staleTime: STALE_TIMES.twoMinutes,
@@ -142,6 +145,7 @@ export function usePatchPatientMutation(
 
 export interface SoftDeletePatientMutationVariables {
   id: string;
+  rowVersion: number;
 }
 
 export type SoftDeletePatientMutationOptions = HookMutationOptions<
@@ -159,8 +163,8 @@ export function useSoftDeletePatientMutation(
     ApiError | Error,
     SoftDeletePatientMutationVariables
   >({
-    mutationFn: async ({ id }) => {
-      const result = await softDeletePatient(id);
+    mutationFn: async ({ id, rowVersion }) => {
+      const result = await softDeletePatient(id, rowVersion);
       return result;
     },
     onSuccess: (data, variables) => {
