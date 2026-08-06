@@ -38,6 +38,7 @@ export type ClinicalAreaListParams = NonNullable<
 export type DisciplineListParams = NonNullable<ListDisciplinesData['query']>;
 
 export interface DocumentDefinitionListParams {
+  includeRetired?: boolean;
   include?: string;
   facilityId?: string;
   clinicalAreaId?: string;
@@ -115,6 +116,8 @@ export const queryKeys = {
       key('formDefinitions', 'list', params),
     detail: (id: string) => key('formDefinitions', 'detail', id),
     versions: (id: string) => key('formDefinitions', 'versions', id),
+    /** Published-version picker options for the document catalog form. */
+    versionOptions: () => key('formDefinitions', 'versionOptions'),
   },
   formVersions: {
     all: FORM_VERSIONS_ALL,

@@ -6,7 +6,8 @@
     "forms": "Forms",
     "patients": "Patients",
     "design": "Designer",
-    "settings": "Settings"
+    "settings": "Settings",
+    "administration": "Administration"
   },
   "meta": {
     "title": "Cynara — Clinical Forms",

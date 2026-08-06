@@ -5,7 +5,10 @@ import { AccessDeniedPage } from '@/features/access-control/AccessDeniedPage.tsx
 import { AccessLoadingState } from '@/features/access-control/AccessLoadingState.tsx';
 import { AccessUnavailablePage } from '@/features/access-control/AccessUnavailablePage.tsx';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
-import { capabilityRequirementForRoute } from '@/lib/capabilities.ts';
+import {
+  canSatisfyRouteRequirement,
+  capabilityRequirementForRoute,
+} from '@/lib/capabilities.ts';
 
 export function CapabilityRouteGuard({
   children,
@@ -19,7 +22,7 @@ export function CapabilityRouteGuard({
     : null;
   const capabilities = useCapabilities();
 
-  if (required === null) {
+  if (required === null || required.length === 0) {
     return <>{children}</>;
   }
 
@@ -31,7 +34,7 @@ export function CapabilityRouteGuard({
     return <AccessUnavailablePage />;
   }
 
-  if (!capabilities.can(required.action, required.subject)) {
+  if (!canSatisfyRouteRequirement(required, capabilities.can)) {
     return <AccessDeniedPage />;
   }
 

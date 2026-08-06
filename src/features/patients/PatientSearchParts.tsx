@@ -201,7 +201,7 @@ export function PatientResultsTable({
 
   return (
     <ScrollArea
-      className='max-h-80 w-full rounded-lg border border-border/60'
+      className='w-full rounded-lg border border-border/60 [&_[data-slot=scroll-area-viewport]]:max-h-80'
       data-testid='patient-search-results'
     >
       <table
