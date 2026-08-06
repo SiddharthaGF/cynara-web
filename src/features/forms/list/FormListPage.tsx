@@ -63,7 +63,7 @@ export function FormListPage(): JSX.Element {
         error={error}
         isCreating={isCreating}
         isLoading={isLoading}
-        canCreate={can('write', 'Form')}
+        canCreate={can('write', 'Catalog')}
         onCreate={handleCreate}
       />
     </AppShell>

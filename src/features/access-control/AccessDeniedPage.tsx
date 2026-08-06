@@ -19,11 +19,17 @@ export function AccessDeniedPage(): JSX.Element {
   const { locale } = useParams({ from: '/$locale' });
   const { can } = useCapabilities();
 
-  let backTarget: '/$locale/forms' | '/$locale/patients' | null = null;
-  if (can('read', 'Form')) {
+  let backTarget:
+    | '/$locale/forms'
+    | '/$locale/patients'
+    | '/$locale/admin'
+    | null = null;
+  if (can('read', 'Catalog')) {
     backTarget = '/$locale/forms';
   } else if (can('read', 'Patient')) {
     backTarget = '/$locale/patients';
+  } else if (can('read', 'Workspace')) {
+    backTarget = '/$locale/admin';
   }
 
   return (

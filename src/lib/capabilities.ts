@@ -30,13 +30,19 @@ export function isCapabilityCode(value: string): value is CapabilityCode {
 
 export type CapabilityAction = 'read' | 'write';
 
+/**
+ * CASL subjects. `catalog.*` protects the whole clinical catalog: published
+ * form definitions (the form catalog) as well as hospital configuration
+ * (facilities, clinical areas, disciplines, and the document catalog), so
+ * those screens share the `Catalog` subject.
+ */
 export type CapabilitySubject =
   | 'Patient'
   | 'Encounter'
   | 'ClinicalDocument'
   | 'FormResponse'
   | 'AuditEvent'
-  | 'Form'
+  | 'Catalog'
   | 'Workspace'
   | 'CapabilityAssignment';
 
@@ -64,8 +70,8 @@ export const CAPABILITY_RULE_MAP: Readonly<
   'form-responses.read': { action: 'read', subject: 'FormResponse' },
   'form-responses.write': { action: 'write', subject: 'FormResponse' },
   'audit.read': { action: 'read', subject: 'AuditEvent' },
-  'catalog.read': { action: 'read', subject: 'Form' },
-  'catalog.write': { action: 'write', subject: 'Form' },
+  'catalog.read': { action: 'read', subject: 'Catalog' },
+  'catalog.write': { action: 'write', subject: 'Catalog' },
   'workspace.read': { action: 'read', subject: 'Workspace' },
   'workspace.write': { action: 'write', subject: 'Workspace' },
   'capabilities.read': { action: 'read', subject: 'CapabilityAssignment' },
@@ -86,26 +92,53 @@ export function buildCapabilityAbility(
 }
 
 /** Minimum CASL rule required to render each protected route, keyed by route id. */
+export type RouteCapabilityRequirement = readonly {
+  action: CapabilityAction;
+  subject: CapabilitySubject;
+}[];
+
 export const ROUTE_CAPABILITY_REQUIREMENTS: Readonly<
-  Record<string, { action: CapabilityAction; subject: CapabilitySubject }>
+  Record<string, RouteCapabilityRequirement>
 > = {
-  '/$locale/patients/': { action: 'read', subject: 'Patient' },
-  '/$locale/patients/register': { action: 'write', subject: 'Patient' },
-  '/$locale/patients/$id': { action: 'read', subject: 'Patient' },
-  '/$locale/patients/$id_/encounters/$encounterId': {
-    action: 'read',
-    subject: 'Encounter',
-  },
-  '/$locale/forms/': { action: 'read', subject: 'Form' },
-  '/$locale/forms/$code/designer/': { action: 'write', subject: 'Form' },
-  '/$locale/forms/$code/designer/$draftId': {
-    action: 'write',
-    subject: 'Form',
-  },
+  '/$locale/patients/': [{ action: 'read', subject: 'Patient' }],
+  '/$locale/patients/register': [{ action: 'write', subject: 'Patient' }],
+  '/$locale/patients/$id': [{ action: 'read', subject: 'Patient' }],
+  '/$locale/patients/$id_/encounters/$encounterId': [
+    { action: 'read', subject: 'Encounter' },
+  ],
+  '/$locale/forms/': [{ action: 'read', subject: 'Catalog' }],
+  '/$locale/forms/$code/designer/': [{ action: 'write', subject: 'Catalog' }],
+  '/$locale/forms/$code/designer/$draftId': [
+    { action: 'write', subject: 'Catalog' },
+  ],
+  '/$locale/admin/': [
+    // The admin hub mixes workspace and catalog sections, so either read capability grants access; each section enforces its own write capability.
+    { action: 'read', subject: 'Workspace' },
+    { action: 'read', subject: 'Catalog' },
+  ],
+  '/$locale/admin/workspace': [{ action: 'read', subject: 'Workspace' }],
+  '/$locale/admin/facilities': [{ action: 'read', subject: 'Catalog' }],
+  '/$locale/admin/clinical-areas': [{ action: 'read', subject: 'Catalog' }],
+  '/$locale/admin/disciplines': [{ action: 'read', subject: 'Catalog' }],
+  '/$locale/admin/documents': [{ action: 'read', subject: 'Catalog' }],
 };
+
+/**
+ * Any single requirement in the list is enough. The array form lets routes
+ * shared by multiple capability domains (e.g. the admin hub) accept either.
+ */
+export function canSatisfyRouteRequirement(
+  requirement: RouteCapabilityRequirement | null | undefined,
+  can: (action: CapabilityAction, subject: CapabilitySubject) => boolean,
+): boolean {
+  if (!requirement || requirement.length === 0) {
+    return true;
+  }
+  return requirement.some(({ action, subject }) => can(action, subject));
+}
 
 export function capabilityRequirementForRoute(
   routeId: string,
-): { action: CapabilityAction; subject: CapabilitySubject } | null {
+): RouteCapabilityRequirement | null {
   return ROUTE_CAPABILITY_REQUIREMENTS[routeId] ?? null;
 }

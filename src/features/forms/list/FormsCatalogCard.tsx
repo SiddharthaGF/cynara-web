@@ -39,7 +39,7 @@ export function FormsCatalogCard({
   const { t } = useTranslation('forms');
   const { locale } = useParams({ from: '/$locale' });
   const { can } = useCapabilities();
-  const canDesign = can('write', 'Form');
+  const canDesign = can('write', 'Catalog');
 
   function renderCatalogBody(): JSX.Element {
     if (isLoading) {

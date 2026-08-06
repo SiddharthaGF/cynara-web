@@ -9,6 +9,7 @@ import commonEn from './locales/en/common.json';
 import designerEn from './locales/en/designer.json';
 import encountersEn from './locales/en/encounters.json';
 import formsEn from './locales/en/forms.json';
+import hospitalEn from './locales/en/hospital.json';
 import patientsEn from './locales/en/patients.json';
 import validationEn from './locales/en/validation.json';
 import apiEs from './locales/es/api.json';
@@ -16,6 +17,7 @@ import commonEs from './locales/es/common.json';
 import designerEs from './locales/es/designer.json';
 import encountersEs from './locales/es/encounters.json';
 import formsEs from './locales/es/forms.json';
+import hospitalEs from './locales/es/hospital.json';
 import patientsEs from './locales/es/patients.json';
 import validationEs from './locales/es/validation.json';
 
@@ -26,6 +28,7 @@ const resources = {
     forms: formsEn,
     designer: designerEn,
     encounters: encountersEn,
+    hospital: hospitalEn,
     patients: patientsEn,
     validation: validationEn,
   },
@@ -35,6 +38,7 @@ const resources = {
     forms: formsEs,
     designer: designerEs,
     encounters: encountersEs,
+    hospital: hospitalEs,
     patients: patientsEs,
     validation: validationEs,
   },
@@ -57,6 +61,7 @@ export function createI18n(
       'designer',
       'encounters',
       'patients',
+      'hospital',
       'validation',
       'api',
     ],

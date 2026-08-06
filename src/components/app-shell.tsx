@@ -1,5 +1,5 @@
 import { Link, useLocation, useParams } from '@tanstack/react-router';
-import { ClipboardList, Users } from 'lucide-react';
+import { ClipboardList, Hospital, Users } from 'lucide-react';
 import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -33,11 +33,11 @@ interface AppShellProps {
 }
 
 interface NavEntry {
-  to: '/$locale/forms' | '/$locale/patients';
+  to: '/$locale/forms' | '/$locale/patients' | '/$locale/admin';
   labelKey: string;
   icon: typeof ClipboardList;
-  action: 'read';
-  subject: 'Form' | 'Patient';
+  /** Any one of these subjects (with the read action) reveals the entry. */
+  subjects: readonly ('Catalog' | 'Patient' | 'Workspace')[];
 }
 
 const NAV_ENTRIES: readonly NavEntry[] = [
@@ -45,15 +45,19 @@ const NAV_ENTRIES: readonly NavEntry[] = [
     to: '/$locale/forms',
     labelKey: 'nav.forms',
     icon: ClipboardList,
-    action: 'read',
-    subject: 'Form',
+    subjects: ['Catalog'],
   },
   {
     to: '/$locale/patients',
     labelKey: 'nav.patients',
     icon: Users,
-    action: 'read',
-    subject: 'Patient',
+    subjects: ['Patient'],
+  },
+  {
+    to: '/$locale/admin',
+    labelKey: 'nav.administration',
+    icon: Hospital,
+    subjects: ['Catalog', 'Workspace'],
   },
 ];
 
@@ -63,7 +67,8 @@ function useAccessibleNav(): {
 } {
   const { can, isLoading } = useCapabilities();
   const entries = NAV_ENTRIES.filter(
-    (entry) => !isLoading && can(entry.action, entry.subject),
+    (entry) =>
+      !isLoading && entry.subjects.some((subject) => can('read', subject)),
   );
   return {
     entries,
@@ -115,7 +120,14 @@ function AppShellContent({
 
   const isOnForms = location.pathname.startsWith(`/${locale}/forms`);
   const isOnPatients = location.pathname.startsWith(`/${locale}/patients`);
+  const isOnAdmin = location.pathname.startsWith(`/${locale}/admin`);
   const isCollapsed = state === 'collapsed';
+
+  const routeActiveByTarget: Record<NavEntry['to'], boolean> = {
+    '/$locale/forms': isOnForms,
+    '/$locale/patients': isOnPatients,
+    '/$locale/admin': isOnAdmin,
+  };
 
   return (
     <>
@@ -157,11 +169,7 @@ function AppShellContent({
                               params={{ locale }}
                             />
                           }
-                          isActive={
-                            entry.to === '/$locale/forms'
-                              ? isOnForms
-                              : isOnPatients
-                          }
+                          isActive={routeActiveByTarget[entry.to]}
                           tooltip={t(entry.labelKey)}
                         >
                           <Icon />
