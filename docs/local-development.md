@@ -115,7 +115,10 @@ database, seed, and migration behavior.
 | Local Worker preview           | `pnpm build && npx wrangler dev` (runs `workerd` locally) |
 | E2E tests (Playwright)         | `pnpm test:e2e` (requires API on `:5000`)                 |
 | E2E tests with UI runner       | `pnpm test:e2e:ui`                                        |
+| Unit tests (Vitest)            | `pnpm test` (transport + SDK façade tests in `src/api/`)  |
 | Regenerate Cloudflare types    | `pnpm cf-typegen` (writes `worker-configuration.d.ts`)    |
+| Regenerate the API client      | `pnpm api:generate` (writes `src/api/generated/`)         |
+| Check API client drift         | `pnpm api:check` (regenerates, fails on stale output)     |
 | Deploy to Cloudflare           | `pnpm deploy`                                             |
 | Deploy preserving vars         | `pnpm deploy:keep-vars`                                   |
 
@@ -163,6 +166,36 @@ pnpm dev
 
 Browser requests will be proxied to the remote origin. CORS still has to allow
 the dev origin (`:5173`) — coordinate with whoever owns the remote API.
+
+## Generated API client
+
+The typed client in `src/api/generated/` is produced by `@hey-api/openapi-ts`
+from `cynara-api`'s committed OpenAPI contract. It is checked in and **never
+edited by hand**; the formatter, linter, and typecheck all ignore it.
+
+To regenerate:
+
+```bash
+pnpm api:generate
+```
+
+By default the generator reads `cynara-api`'s `contracts/openapi.json` from the
+sibling checkout `../cynara-api` (that repository must be present next to
+`cynara-web`). Override the source with environment variables:
+
+```bash
+# path to a local contract copy
+OPENAPI_SPEC=../somewhere/openapi.json pnpm api:generate
+
+# remote URL (what CI uses)
+OPENAPI_SPEC_URL=https://raw.githubusercontent.com/SiddharthaGF/cynara-api/develop/contracts/openapi.json \
+  pnpm api:generate
+```
+
+`pnpm api:check` regenerates and exits non-zero if the committed output differs
+— the drift gate the `API client drift` workflow runs. See
+[`api-client.md`](api-client.md) for the full regeneration and upgrade
+procedure, including how CI pins the contract ref.
 
 ## Build and preview
 
@@ -224,6 +257,8 @@ exactly what GitHub Actions ships.
 | Variable                  | Required    | Where it comes from                       | Purpose                                                                                                                                                              |
 | ------------------------- | ----------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `VITE_API_ORIGIN`         | yes         | `.env`, shell, or `wrangler.jsonc [vars]` | Public origin of `cynara-api`. Compiled into the client bundle and propagated to the SSR worker by the Cloudflare Vite plugin. Must be present at `vite build` time. |
+| `OPENAPI_SPEC`            | optional    | shell                                     | Path to an OpenAPI contract used by `pnpm api:generate` (overrides the sibling-checkout default).                                                                    |
+| `OPENAPI_SPEC_URL`        | optional    | shell / CI                                | URL of an OpenAPI contract used by `pnpm api:generate` (overrides `OPENAPI_SPEC`). The `API client drift` workflow sets this to the pinned contract ref.             |
 | `APP_ENV`                 | optional    | shell                                     | `development` / `production` / `testing`. Drives `environment.ts`. Falls back to `import.meta.env.DEV`.                                                              |
 | `CLOUDFLARE_API_TOKEN`    | deploy only | CI secret                                 | Wrangler deploy token with the **Edit Cloudflare Workers** template.                                                                                                 |
 | `CLOUDFLARE_ACCOUNT_ID`   | deploy only | CI secret                                 | Shown on the Workers project overview page.                                                                                                                          |
@@ -272,12 +307,15 @@ Cors__AllowedOrigins__0=http://localhost:5173 \
 | Verify the API is reachable           | `curl -s http://localhost:5000/health`                                                    |
 | Smoke-test JSON:API through the proxy | `curl -s -H 'Accept: application/vnd.api+json' http://localhost:5173/api/formDefinitions` |
 | Regenerate Cloudflare bindings types  | `pnpm cf-typegen`                                                                         |
+| Regenerate the API client             | `pnpm api:generate` (see [`api-client.md`](api-client.md))                                |
 
 ## Related docs
 
 - [`README.md`](../README.md) — high-level overview, scripts, deployment.
 - [`AGENTS.md`](../AGENTS.md) — implementation rules, source layout, validation
   expectations.
+- [`api-client.md`](api-client.md) — generated client regeneration and upgrade
+  procedure, contract editing, and CI pinning.
 - [cynara-api docs](https://github.com/ailuracode/cynara-api/blob/develop/docs/local-development.md)
   — backend setup, database, and CORS.
 - [TanStack Start docs](https://tanstack.com/start) — file-based routing and

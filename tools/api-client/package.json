@@ -1,0 +1,10 @@
+{
+  "name": "@cynara/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@hey-api/openapi-ts": "^0.99.0",
+    "typescript": "6.0.3"
+  }
+}

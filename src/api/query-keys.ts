@@ -1,3 +1,11 @@
+import type {
+  ListClinicalAreasData,
+  ListDisciplinesData,
+  ListEncountersData,
+  ListFacilitiesData,
+  SearchPatientsData,
+} from '@/api/generated';
+
 /**
  * Centralized React Query key factories. The legacy `forms` and `components`
  * shapes are preserved verbatim so existing consumers do not break. New
@@ -16,11 +24,18 @@ export interface FormVersionListParams {
   sort?: string;
 }
 
-export interface TaxonomyQueryParams {
-  facilityId?: string;
-  clinicalAreaId?: string;
-  includeRetired?: boolean;
-}
+/** Query params modeled by the OpenAPI contract for the patient search. */
+export type PatientListParams = NonNullable<SearchPatientsData['query']>;
+
+/** Query params modeled by the OpenAPI contract for the encounter listing. */
+export type EncounterListParams = NonNullable<ListEncountersData['query']>;
+
+/** Query params modeled by the OpenAPI contract for taxonomy listings. */
+export type FacilityListParams = NonNullable<ListFacilitiesData['query']>;
+export type ClinicalAreaListParams = NonNullable<
+  ListClinicalAreasData['query']
+>;
+export type DisciplineListParams = NonNullable<ListDisciplinesData['query']>;
 
 export interface DocumentDefinitionListParams {
   include?: string;
@@ -40,23 +55,6 @@ export interface AuditEventQueryParams {
   resourceType?: string;
   resourceId?: string;
   sort?: string;
-}
-
-export interface PatientListParams {
-  mrn?: string;
-  nationalId?: string;
-  givenName?: string;
-  familyName?: string;
-  includeDeleted?: boolean;
-  page?: number;
-  pageSize?: number;
-}
-
-export interface EncounterListParams {
-  patientId?: string;
-  facilityId?: string;
-  clinicalAreaId?: string;
-  status?: string;
 }
 
 function key(...segments: readonly unknown[]): readonly unknown[] {
@@ -98,17 +96,17 @@ export const queryKeys = {
   },
   facilities: {
     all: FACILITIES_ALL,
-    list: (params: TaxonomyQueryParams = {}) =>
+    list: (params: FacilityListParams = {}) =>
       key('facilities', 'list', params),
   },
   clinicalAreas: {
     all: CLINICAL_AREAS_ALL,
-    list: (params: TaxonomyQueryParams = {}) =>
+    list: (params: ClinicalAreaListParams = {}) =>
       key('clinicalAreas', 'list', params),
   },
   disciplines: {
     all: DISCIPLINES_ALL,
-    list: (params: TaxonomyQueryParams = {}) =>
+    list: (params: DisciplineListParams = {}) =>
       key('disciplines', 'list', params),
   },
   formDefinitions: {

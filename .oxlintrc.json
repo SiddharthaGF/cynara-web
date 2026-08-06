@@ -32,6 +32,7 @@
     "playwright.config.ts",
     "e2e/**",
     "src/components/ui/**",
+    "src/api/generated/**",
     "src/lib/utils.ts",
     "src/hooks/use-mobile.ts"
   ],
@@ -46,7 +47,12 @@
     "typescript/consistent-type-imports": "error",
     "unicorn/prefer-node-protocol": "error",
     "import/no-cycle": "error",
-    "max-lines": ["warn", { "max": 400 }]
+    "max-lines": [
+      "warn",
+      {
+        "max": 400
+      }
+    ]
   },
   "overrides": [
     {
@@ -110,6 +116,9 @@
     {
       "files": [
         "vite.config.ts",
+        "vitest.config.ts",
+        "vitest.setup.ts",
+        "tools/api-client/**/*.{ts,mts,cts}",
         "src/env.d.ts",
         "src/vite-env.d.ts",
         "src/server.ts",
@@ -165,6 +174,7 @@
         "vitest/consistent-test-filename": "off",
         "vitest/require-test-timeout": "off",
         "vitest/prefer-importing-vitest-globals": "off",
+        "vitest/no-importing-vitest-globals": "off",
         "typescript/no-unsafe-type-assertion": "off"
       }
     }

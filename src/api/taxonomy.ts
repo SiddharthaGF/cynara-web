@@ -1,99 +1,55 @@
+import { contractHeaders, requireDto } from '@/api/client-runtime.ts';
 import {
-  ACTOR_HEADER_NAME,
-  DEFAULT_ACTOR_ID,
-  HOSPITAL_HEADER_NAME,
-  apiRequest,
-  resolveHospitalCode,
-} from '@/api/client.ts';
-import { JSON_API_MEDIA } from '@/api/json-api.ts';
+  listClinicalAreas as sdkListClinicalAreas,
+  listFacilities as sdkListFacilities,
+  type ClinicalAreaDto as ClinicalAreaDtoContract,
+  type ClinicalAreaListResponse as ClinicalAreaListResponseContract,
+  type FacilityDto as FacilityDtoContract,
+  type FacilityListResponse as FacilityListResponseContract,
+  type ListClinicalAreasData,
+  type ListFacilitiesData,
+} from '@/api/generated';
 
-export interface FacilityDto {
-  id: string;
-  code: string;
-  name: string;
-  status: string;
-  rowVersion: number;
-  retiredAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ClinicalAreaDto {
-  id: string;
-  code: string;
-  name: string;
-  facilityId: string;
-  status: string;
-  rowVersion: number;
-  retiredAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface FacilityListResponse {
+/**
+ * Read models for clinical taxonomy. Derived from the generated contract types
+ * with the fields the app relies on as always-present promoted to required.
+ */
+export type FacilityDto = Required<FacilityDtoContract>;
+export type ClinicalAreaDto = Required<ClinicalAreaDtoContract>;
+export type FacilityListResponse = FacilityListResponseContract & {
   facilities: FacilityDto[];
-}
-
-export interface ClinicalAreaListResponse {
+};
+export type ClinicalAreaListResponse = ClinicalAreaListResponseContract & {
   clinicalAreas: ClinicalAreaDto[];
-}
+};
 
-export interface ListFacilitiesParams {
-  includeRetired?: boolean;
-}
-
-export interface ListClinicalAreasParams {
-  facilityId?: string;
-  includeRetired?: boolean;
-}
-
-function taxonomyHeaders(init?: HeadersInit): Headers {
-  const headers = new Headers(init);
-  headers.set('Accept', JSON_API_MEDIA);
-  if (!headers.has('Content-Type')) {
-    headers.set('Content-Type', JSON_API_MEDIA);
-  }
-  if (!headers.has(HOSPITAL_HEADER_NAME)) {
-    headers.set(HOSPITAL_HEADER_NAME, resolveHospitalCode());
-  }
-  if (!headers.has(ACTOR_HEADER_NAME)) {
-    headers.set(ACTOR_HEADER_NAME, DEFAULT_ACTOR_ID);
-  }
-  return headers;
-}
-
-function appendQuery(path: string, query: string): string {
-  if (query.length === 0) {
-    return path;
-  }
-  return `${path}?${query}`;
-}
+export type ListFacilitiesParams = NonNullable<ListFacilitiesData['query']>;
+export type ListClinicalAreasParams = NonNullable<
+  ListClinicalAreasData['query']
+>;
 
 export async function listFacilities(
   params: ListFacilitiesParams = {},
 ): Promise<FacilityListResponse> {
-  const search = new URLSearchParams();
-  if (params.includeRetired !== undefined) {
-    search.set('includeRetired', params.includeRetired ? 'true' : 'false');
-  }
-  return apiRequest<FacilityListResponse>(
-    appendQuery('/api/facilities', search.toString()),
-    { headers: taxonomyHeaders() },
-  );
+  const { data } = await sdkListFacilities({
+    query: params,
+    headers: contractHeaders(),
+  });
+  return {
+    ...data,
+    facilities: (data.facilities ?? []).map(requireDto),
+  };
 }
 
 export async function listClinicalAreas(
   params: ListClinicalAreasParams = {},
 ): Promise<ClinicalAreaListResponse> {
-  const search = new URLSearchParams();
-  if (params.facilityId) {
-    search.set('facilityId', params.facilityId);
-  }
-  if (params.includeRetired !== undefined) {
-    search.set('includeRetired', params.includeRetired ? 'true' : 'false');
-  }
-  return apiRequest<ClinicalAreaListResponse>(
-    appendQuery('/api/clinicalAreas', search.toString()),
-    { headers: taxonomyHeaders() },
-  );
+  const { data } = await sdkListClinicalAreas({
+    query: params,
+    headers: contractHeaders(),
+  });
+  return {
+    ...data,
+    clinicalAreas: (data.clinicalAreas ?? []).map(requireDto),
+  };
 }

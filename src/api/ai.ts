@@ -1,5 +1,15 @@
-import { apiRequest } from '@/api/client.ts';
-import { jsonApiGetResource, jsonApiPatchResource } from '@/api/json-api.ts';
+import { contractHeaders } from '@/api/client-runtime.ts';
+import { ApiError } from '@/api/client.ts';
+import {
+  getAiProviderSetting,
+  getFormAiStatus as sdkGetFormAiStatus,
+  patchAiProviderSetting,
+  type AttributesInUpdateAiProviderSettingRequest,
+  type DataInAiProviderSettingResponse,
+  type FormAiStatusResponse,
+  type PatchAiProviderSettingResponses,
+  type PrimaryAiProviderSettingResponseDocument,
+} from '@/api/generated';
 
 export interface AiEndpointSuggestion {
   id: string;
@@ -9,16 +19,11 @@ export interface AiEndpointSuggestion {
   jsonObject: boolean;
 }
 
-export interface FormAiStatus {
-  configured: boolean;
-  model: string | null;
-  baseUrl: string | null;
-  apiKeyConfigured: boolean;
-  apiKeyMasked: string | null;
-  jsonObject: boolean;
-  source: 'database' | 'env' | 'none';
-  baseUrlConfigured: boolean;
-}
+/**
+ * AI configuration status. Re-exported from the generated client so the shape
+ * stays aligned with the OpenAPI contract.
+ */
+export type FormAiStatus = FormAiStatusResponse;
 
 export interface FormAiSettings extends FormAiStatus {
   suggestions: AiEndpointSuggestion[];
@@ -32,56 +37,92 @@ export interface FormAiSettingsUpdate {
   jsonObject?: boolean | null;
 }
 
-interface AiProviderSettingsAttributes {
-  configured?: boolean;
-  model?: string | null;
-  baseUrl?: string | null;
-  hasApiKey?: boolean;
-  apiKeyMasked?: string | null;
-  jsonObject?: boolean | null;
-  source?: string | null;
-  baseUrlConfigured?: boolean;
-  suggestions?: AiEndpointSuggestion[] | null;
+/**
+ * The contract models `suggestions` as `unknown[]` (no item schema). The API
+ * returns the endpoint suggestions below; the guard keeps the mapping honest
+ * without an unchecked cast.
+ */
+function isAiEndpointSuggestion(value: unknown): value is AiEndpointSuggestion {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.id === 'string' &&
+    typeof record.label === 'string' &&
+    typeof record.baseUrl === 'string' &&
+    typeof record.defaultModel === 'string' &&
+    typeof record.jsonObject === 'boolean'
+  );
 }
 
-const AI_PROVIDER_SETTINGS_ID = 'default';
-const AI_PROVIDER_SETTINGS_TYPE = 'aiProviderSettings';
+/**
+ * Attributes of the AI provider setting resource as the API returns them.
+ * The `openapi:discriminator` metadata is documentation-only; `mapSettings`
+ * reads the projected fields below.
+ */
+type AiProviderSettingAttributes = NonNullable<
+  DataInAiProviderSettingResponse['attributes']
+>;
 
-function mapSettings(attributes: AiProviderSettingsAttributes): FormAiSettings {
-  const { source } = attributes;
+function mapSettings(
+  attributes: AiProviderSettingAttributes | undefined,
+): FormAiSettings {
+  const attrs: AiProviderSettingAttributes = attributes ?? {
+    'openapi:discriminator': 'dataInAiProviderSettingResponse',
+  };
+  const { source } = attrs;
   const normalizedSource =
     source === 'database' || source === 'env' || source === 'none'
       ? source
       : 'none';
 
   return {
-    configured: attributes.configured === true,
-    model: attributes.model ?? null,
-    baseUrl: attributes.baseUrl ?? null,
-    apiKeyConfigured: attributes.hasApiKey === true,
-    apiKeyMasked: attributes.apiKeyMasked ?? null,
-    jsonObject: attributes.jsonObject ?? true,
+    configured: attrs.configured === true,
+    model: attrs.model ?? null,
+    baseUrl: attrs.baseUrl ?? null,
+    apiKeyConfigured: attrs.hasApiKey === true,
+    apiKeyMasked: attrs.apiKeyMasked ?? null,
+    jsonObject: attrs.jsonObject ?? true,
     source: normalizedSource,
-    baseUrlConfigured: attributes.baseUrlConfigured === true,
-    suggestions: attributes.suggestions ?? [],
+    baseUrlConfigured: attrs.baseUrlConfigured === true,
+    suggestions: (attrs.suggestions ?? []).filter(isAiEndpointSuggestion),
   };
 }
 
+const AI_PROVIDER_SETTINGS_ID = 'default';
+
+/** Attributes the API accepts on PATCH, without the `openapi:discriminator` metadata. */
+type AiProviderSettingsUpdateAttributes = Omit<
+  AttributesInUpdateAiProviderSettingRequest,
+  'openapi:discriminator'
+>;
+
 export async function getFormAiStatus(): Promise<FormAiStatus> {
-  return apiRequest<FormAiStatus>('/api/ai/status');
+  const { data } = await sdkGetFormAiStatus({
+    headers: contractHeaders(),
+  });
+  return data;
 }
 
 export async function getAiSettings(): Promise<FormAiSettings> {
-  const resource = await jsonApiGetResource<AiProviderSettingsAttributes>(
-    `/api/${AI_PROVIDER_SETTINGS_TYPE}/${AI_PROVIDER_SETTINGS_ID}`,
-  );
-  return mapSettings(resource.attributes);
+  const { data } = await getAiProviderSetting({
+    path: { id: AI_PROVIDER_SETTINGS_ID },
+    headers: contractHeaders(),
+  });
+  return mapSettings(data.data.attributes);
 }
 
+/**
+ * CYN-55: the generated request document requires `openapi:discriminator`
+ * metadata fields that are documentation-only and must not be serialized. The
+ * body below matches the wire contract the API accepts; the narrow cast bridges
+ * the generated typing.
+ */
 export async function updateAiSettings(
   input: FormAiSettingsUpdate,
 ): Promise<FormAiSettings> {
-  const attributes: Record<string, unknown> = {};
+  const attributes: AiProviderSettingsUpdateAttributes = {};
   if (input.baseUrl !== undefined) {
     attributes.baseUrl = input.baseUrl;
   }
@@ -102,10 +143,31 @@ export async function updateAiSettings(
     attributes.clearApiKey = true;
   }
 
-  const resource = await jsonApiPatchResource<AiProviderSettingsAttributes>(
-    AI_PROVIDER_SETTINGS_TYPE,
-    AI_PROVIDER_SETTINGS_ID,
-    attributes,
+  const { data } = await patchAiProviderSetting({
+    path: { id: AI_PROVIDER_SETTINGS_ID },
+    headers: contractHeaders(),
+    body: {
+      data: {
+        id: AI_PROVIDER_SETTINGS_ID,
+        type: 'aiProviderSettings',
+        attributes,
+      },
+    },
+  } as never);
+
+  const document = requireSettingsDocument(data);
+  return mapSettings(document.data.attributes);
+}
+
+function requireSettingsDocument(
+  data: PatchAiProviderSettingResponses[keyof PatchAiProviderSettingResponses],
+): PrimaryAiProviderSettingResponseDocument {
+  if (typeof data === 'object' && data !== null && 'data' in data) {
+    return data;
+  }
+  throw new ApiError(
+    500,
+    'Invalid API response',
+    'Expected a JSON:API resource.',
   );
-  return mapSettings(resource.attributes);
 }

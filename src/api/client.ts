@@ -9,6 +9,7 @@ export const HOSPITAL_HEADER_NAME = 'X-Hospital-Code';
 
 export const ACTOR_HEADER_NAME = 'X-Actor-Id';
 export const DEFAULT_ACTOR_ID = 'designer-user';
+export const JSON_API_MEDIA = 'application/vnd.api+json';
 
 const TENANT_FALLBACK = 'default';
 
@@ -63,7 +64,7 @@ interface ProblemDetails {
   instance?: string;
 }
 
-function summarizeErrorBody(status: number, bodyText: string): string {
+export function summarizeErrorBody(status: number, bodyText: string): string {
   const trimmed = bodyText.trimStart();
   if (
     trimmed.startsWith('<!DOCTYPE') ||
@@ -75,7 +76,7 @@ function summarizeErrorBody(status: number, bodyText: string): string {
   return bodyText;
 }
 
-function describeNetworkError(error: unknown): {
+export function describeNetworkError(error: unknown): {
   status: number;
   title: string;
 } {
@@ -117,7 +118,7 @@ function buildLogDetail(
   return { status: 0, title: 'Unexpected error', message };
 }
 
-function logApiError(
+export function logApiError(
   phase: 'http' | 'parse' | 'network',
   context: {
     path: string;
@@ -137,11 +138,17 @@ function logApiError(
     original: error instanceof Error ? undefined : error,
   };
   // Browser-native reporting avoids console.* (forbidden by lint) while still
-  // Surfacing failures to DevTools / error reporters.
-  reportError(reported);
+  // Surfacing failures to DevTools / error reporters. The guard keeps the
+  // Isomorphic path safe on the server, where `reportError` does not exist.
+  if (typeof reportError === 'function') {
+    reportError(reported);
+  }
 }
 
-function buildErrorFromJsonApi(status: number, bodyText: string): ApiError {
+export function buildErrorFromJsonApi(
+  status: number,
+  bodyText: string,
+): ApiError {
   if (bodyText) {
     try {
       const document = JSON.parse(bodyText) as JsonApiErrorDocument;
@@ -164,7 +171,10 @@ function buildErrorFromJsonApi(status: number, bodyText: string): ApiError {
   return buildErrorFromProblem(status, bodyText);
 }
 
-function buildErrorFromProblem(status: number, bodyText: string): ApiError {
+export function buildErrorFromProblem(
+  status: number,
+  bodyText: string,
+): ApiError {
   if (bodyText) {
     try {
       const problem = JSON.parse(bodyText) as ProblemDetails;
@@ -187,52 +197,15 @@ function buildErrorFromProblem(status: number, bodyText: string): ApiError {
   );
 }
 
-async function parseJsonResponse<T>(response: Response): Promise<T> {
-  const bodyText = await response.text();
-
-  try {
-    return JSON.parse(bodyText) as T;
-  } catch {
-    throw new ApiError(
-      response.status,
-      'Invalid API response',
-      summarizeErrorBody(response.status, bodyText),
-    );
-  }
-}
-
-function buildDefaultHeaders(init?: RequestInit): Headers {
-  const headers = new Headers(init?.headers);
-  if (!headers.has('Accept')) {
-    headers.set('Accept', 'application/json');
-  }
-  if (!headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
-  }
-  if (!headers.has(HOSPITAL_HEADER_NAME)) {
-    headers.set(HOSPITAL_HEADER_NAME, resolveTenantCode());
-  }
-  if (!headers.has(ACTOR_HEADER_NAME)) {
-    headers.set(ACTOR_HEADER_NAME, DEFAULT_ACTOR_ID);
-  }
-  return headers;
-}
-
 export const resolveApiUrl = createIsomorphicFn()
   .client((path: string) => buildApiUrl(path))
   .server((path: string) => buildApiUrl(path));
 
-export interface ApiRequestInit extends RequestInit {
-  etag?: string | null;
-}
-
-interface RequestContext {
+export interface RequestContext {
   readonly path: string;
   readonly method: string;
   url: string;
 }
-
-export type { RequestContext };
 
 export async function performRequest(
   path: string,
@@ -245,43 +218,6 @@ export async function performRequest(
     return await fetch(url, fetchInit);
   } catch (error) {
     logApiError('network', context, error);
-    throw error;
-  }
-}
-
-export async function apiRequest<T>(
-  path: string,
-  init?: ApiRequestInit,
-): Promise<T> {
-  const { etag, ...requestInit } = init ?? {};
-  const headers = buildDefaultHeaders(requestInit);
-  if (etag) {
-    headers.set('If-None-Match', etag);
-  }
-
-  const method = (requestInit.method ?? 'GET').toUpperCase();
-  const context: RequestContext = { path, method, url: '' };
-  const response = await performRequest(path, context, {
-    ...requestInit,
-    headers,
-  });
-  context.url = response.url || context.url;
-
-  if (!response.ok) {
-    const bodyText = await response.text();
-    const apiError = buildErrorFromJsonApi(response.status, bodyText);
-    logApiError('http', context, apiError);
-    throw apiError;
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  try {
-    return await parseJsonResponse<T>(response);
-  } catch (error) {
-    logApiError('parse', context, error);
     throw error;
   }
 }

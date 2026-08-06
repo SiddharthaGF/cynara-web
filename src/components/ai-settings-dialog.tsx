@@ -65,7 +65,7 @@ function aiSettingsFormReducer(
         baseUrl: action.data.baseUrl ?? '',
         model: action.data.model ?? '',
         apiKey: '',
-        jsonObject: action.data.jsonObject,
+        jsonObject: action.data.jsonObject ?? true,
         formError: null,
       };
     }

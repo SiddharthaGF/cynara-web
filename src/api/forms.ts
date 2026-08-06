@@ -1,44 +1,38 @@
+import { contractHeaders } from '@/api/client-runtime.ts';
 import { ApiError } from '@/api/client.ts';
 import {
+  getFormDefinition as sdkGetFormDefinition,
+  getFormDefinitionCollection as sdkGetFormDefinitionCollection,
+  getFormVersion as sdkGetFormVersion,
+  patchFormVersion as sdkPatchFormVersion,
+  postFormDefinition as sdkPostFormDefinition,
+  type AttributesInUpdateFormVersionRequest,
+  type DataInFormDefinitionResponse,
+  type DataInFormVersionResponse,
+  type FormVersionStatus,
+  type ResourceInResponse,
+} from '@/api/generated';
+import {
   buildPaginatedQuery,
-  jsonApiGet,
-  jsonApiGetCollection,
-  jsonApiPatchResource,
-  jsonApiPostResource,
-  attrNumber,
-  attrString,
-  includedOfType,
-  relatedIds,
-  type JsonApiResource,
-} from '@/api/json-api.ts';
+  includedResources,
+  relationshipId,
+  relationshipIds,
+} from '@/api/json-api-utils.ts';
 import type { FormSummary, FormVersion } from '@/features/forms/types.ts';
-
-interface FormDefinitionAttributes {
-  code?: string;
-  name?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-interface FormVersionAttributes {
-  version?: string | null;
-  status?: string;
-  clinicalSchemaJson?: string;
-  uiSchemaJson?: string | null;
-  rulesSchemaJson?: string | null;
-  contentHash?: string | null;
-  dependencyMetadataJson?: string | null;
-  rowVersion?: number;
-  createdAt?: string;
-  submittedForReviewAt?: string | null;
-  publishedAt?: string | null;
-  retiredAt?: string | null;
-}
 
 const FORM_DEFINITIONS = 'formDefinitions';
 const FORM_VERSIONS = 'formVersions';
 
-function listFormsQuery(): string {
+type FormDefinitionResource = Pick<
+  DataInFormDefinitionResponse,
+  'id' | 'attributes' | 'relationships'
+>;
+type FormVersionResource = Pick<
+  DataInFormVersionResponse,
+  'id' | 'attributes' | 'relationships'
+>;
+
+function listFormsQuery(): Record<string, string> {
   return buildPaginatedQuery({
     include: ['versions'],
     pageSize: 100,
@@ -46,27 +40,30 @@ function listFormsQuery(): string {
   });
 }
 
-function isEditableStatus(status: string | null): boolean {
+function isEditableStatus(
+  status: FormVersionStatus | null | undefined,
+): boolean {
   return status === 'draft' || status === 'review';
 }
 
 function versionById(
-  included: JsonApiResource[],
-): Map<string, JsonApiResource<FormVersionAttributes>> {
-  const map = new Map<string, JsonApiResource<FormVersionAttributes>>();
-  for (const item of includedOfType(included, FORM_VERSIONS)) {
+  included: readonly ResourceInResponse[],
+): Map<string, FormVersionResource> {
+  const map = new Map<string, FormVersionResource>();
+  for (const item of includedResources<DataInFormVersionResponse>(
+    included,
+    FORM_VERSIONS,
+  )) {
     map.set(item.id, item);
   }
   return map;
 }
 
 function requireDefinition(
-  data: JsonApiResource<FormDefinitionAttributes> | JsonApiResource[],
-): JsonApiResource<FormDefinitionAttributes> {
+  data: FormDefinitionResource | FormDefinitionResource[],
+): FormDefinitionResource {
   if (Array.isArray(data)) {
-    const first = data[0] as
-      | JsonApiResource<FormDefinitionAttributes>
-      | undefined;
+    const [first] = data;
     if (!first) {
       throw new ApiError(404, 'Not Found', 'Form definition was not found.');
     }
@@ -76,25 +73,22 @@ function requireDefinition(
 }
 
 function mapSummary(
-  definition: JsonApiResource<FormDefinitionAttributes>,
-  versions: Map<string, JsonApiResource<FormVersionAttributes>>,
+  definition: FormDefinitionResource,
+  versions: Map<string, FormVersionResource>,
 ): FormSummary {
   const attrs = definition.attributes;
-  const related = relatedIds(definition, 'versions')
+  const related = relationshipIds(definition.relationships?.versions)
     .map((id) => versions.get(id))
-    .filter(
-      (item): item is JsonApiResource<FormVersionAttributes> =>
-        item !== undefined,
-    );
+    .filter((item): item is FormVersionResource => item !== undefined);
 
   const editable = related.find((item) =>
-    isEditableStatus(attrString(item.attributes, 'status')),
+    isEditableStatus(item.attributes?.status),
   );
   const publishedVersions: string[] = [];
   for (const item of related) {
-    if (attrString(item.attributes, 'status') === 'published') {
-      const value = attrString(item.attributes, 'version');
-      if (value !== null && value.length > 0) {
+    if (item.attributes?.status === 'published') {
+      const value = item.attributes?.version;
+      if (value !== null && value !== undefined && value.length > 0) {
         publishedVersions.push(value);
       }
     }
@@ -102,71 +96,70 @@ function mapSummary(
   publishedVersions.sort();
 
   return {
-    code: attrString(attrs, 'code') ?? '',
-    name: attrString(attrs, 'name') ?? '',
-    createdAt: attrString(attrs, 'createdAt') ?? '',
-    updatedAt: attrString(attrs, 'updatedAt') ?? '',
+    code: attrs?.code ?? '',
+    name: attrs?.name ?? '',
+    createdAt: attrs?.createdAt ?? '',
+    updatedAt: attrs?.updatedAt ?? '',
     editableVersionId: editable?.id ?? null,
-    editableStatus: editable ? attrString(editable.attributes, 'status') : null,
+    editableStatus: editable ? (editable.attributes?.status ?? null) : null,
     editableRowVersion: editable
-      ? attrNumber(editable.attributes, 'rowVersion')
+      ? (editable.attributes?.rowVersion ?? null)
       : null,
     publishedVersions,
   };
 }
 
-function mapVersion(
-  version: JsonApiResource<FormVersionAttributes>,
-  code: string,
-): FormVersion {
+function mapVersion(version: FormVersionResource, code: string): FormVersion {
   const attrs = version.attributes;
   return {
     id: version.id,
     code,
-    version: attrString(attrs, 'version'),
-    status: attrString(attrs, 'status') ?? '',
-    clinicalSchemaJson: attrString(attrs, 'clinicalSchemaJson') ?? '',
-    uiSchemaJson: attrString(attrs, 'uiSchemaJson'),
-    rulesSchemaJson: attrString(attrs, 'rulesSchemaJson'),
-    contentHash: attrString(attrs, 'contentHash'),
-    dependencyMetadataJson: attrString(attrs, 'dependencyMetadataJson'),
-    rowVersion: attrNumber(attrs, 'rowVersion') ?? 0,
-    createdAt: attrString(attrs, 'createdAt') ?? '',
-    submittedForReviewAt: attrString(attrs, 'submittedForReviewAt'),
-    publishedAt: attrString(attrs, 'publishedAt'),
-    retiredAt: attrString(attrs, 'retiredAt'),
+    version: attrs?.version ?? null,
+    status: attrs?.status ?? '',
+    clinicalSchemaJson: attrs?.clinicalSchemaJson ?? '',
+    uiSchemaJson: attrs?.uiSchemaJson ?? null,
+    rulesSchemaJson: attrs?.rulesSchemaJson ?? null,
+    contentHash: attrs?.contentHash ?? null,
+    dependencyMetadataJson: attrs?.dependencyMetadataJson ?? null,
+    rowVersion: attrs?.rowVersion ?? 0,
+    createdAt: attrs?.createdAt ?? '',
+    submittedForReviewAt: attrs?.submittedForReviewAt ?? null,
+    publishedAt: attrs?.publishedAt ?? null,
+    retiredAt: attrs?.retiredAt ?? null,
   };
 }
 
-async function fetchDefinitionDocument(path: string): Promise<{
-  definition: JsonApiResource<FormDefinitionAttributes>;
-  versions: Map<string, JsonApiResource<FormVersionAttributes>>;
+async function fetchDefinitionDocument(id: string): Promise<{
+  definition: FormDefinitionResource;
+  versions: Map<string, FormVersionResource>;
 }> {
-  const document = await jsonApiGet(path);
-  const definition = requireDefinition(document.data);
+  const { data } = await sdkGetFormDefinition({
+    path: { id },
+    headers: contractHeaders(),
+    query: { query: buildPaginatedQuery({ include: ['versions'] }) },
+  });
+  const definition = requireDefinition(data.data);
   return {
     definition,
-    versions: versionById(document.included ?? []),
+    versions: versionById(data.included ?? []),
   };
 }
 
 async function getDefinitionByCode(code: string): Promise<{
-  definition: JsonApiResource<FormDefinitionAttributes>;
-  versions: Map<string, JsonApiResource<FormVersionAttributes>>;
+  definition: FormDefinitionResource;
+  versions: Map<string, FormVersionResource>;
 }> {
-  const { data, included } =
-    await jsonApiGetCollection<FormDefinitionAttributes>(
-      `/api/${FORM_DEFINITIONS}?${listFormsQuery()}`,
-    );
-  const definition = data.find(
-    (item) => attrString(item.attributes, 'code') === code,
-  );
+  const { data } = await sdkGetFormDefinitionCollection({
+    headers: contractHeaders(),
+    query: { query: listFormsQuery() },
+  });
+  const definition = data.data.find((item) => item.attributes?.code === code);
   if (!definition) {
     throw new ApiError(404, 'Not Found', `Form '${code}' was not found.`);
   }
   return {
     definition,
-    versions: versionById(included),
+    versions: versionById(data.included ?? []),
   };
 }
 
@@ -174,26 +167,23 @@ export async function getFormVersion(
   versionId: string,
   expectedCode?: string,
 ): Promise<FormVersion> {
-  const query = buildPaginatedQuery({ include: ['formDefinition'] });
-  const document = await jsonApiGet(
-    `/api/${FORM_VERSIONS}/${versionId}?${query}`,
+  const { data } = await sdkGetFormVersion({
+    path: { id: versionId },
+    headers: contractHeaders(),
+    query: { query: buildPaginatedQuery({ include: ['formDefinition'] }) },
+  });
+  const version: FormVersionResource = data.data;
+  const definitions = includedResources<DataInFormDefinitionResponse>(
+    data.included ?? [],
+    FORM_DEFINITIONS,
   );
-  if (Array.isArray(document.data) || !document.data) {
-    throw new ApiError(
-      404,
-      'Not Found',
-      `Form version '${versionId}' was not found.`,
-    );
-  }
-  const version = document.data as JsonApiResource<FormVersionAttributes>;
-  const definitions = includedOfType(document.included ?? [], FORM_DEFINITIONS);
-  const [relatedDefinitionId] = relatedIds(version, 'formDefinition');
+  const relatedDefinitionId = relationshipId(
+    version.relationships?.formDefinition,
+  );
   const definition =
     definitions.find((item) => item.id === relatedDefinitionId) ??
     definitions[0];
-  const code = definition
-    ? (attrString(definition.attributes, 'code') ?? '')
-    : '';
+  const code = definition?.attributes?.code ?? '';
   if (expectedCode && code !== expectedCode) {
     throw new ApiError(
       404,
@@ -201,7 +191,7 @@ export async function getFormVersion(
       `Form version '${versionId}' does not belong to '${expectedCode}'.`,
     );
   }
-  if (!isEditableStatus(attrString(version.attributes, 'status'))) {
+  if (!isEditableStatus(version.attributes?.status)) {
     throw new ApiError(
       409,
       'Conflict',
@@ -212,12 +202,12 @@ export async function getFormVersion(
 }
 
 export async function listForms(): Promise<FormSummary[]> {
-  const { data, included } =
-    await jsonApiGetCollection<FormDefinitionAttributes>(
-      `/api/${FORM_DEFINITIONS}?${listFormsQuery()}`,
-    );
-  const versions = versionById(included);
-  return data.map((definition) => mapSummary(definition, versions));
+  const { data } = await sdkGetFormDefinitionCollection({
+    headers: contractHeaders(),
+    query: { query: listFormsQuery() },
+  });
+  const versions = versionById(data.included ?? []);
+  return data.data.map((definition) => mapSummary(definition, versions));
 }
 
 export async function createForm(input: {
@@ -227,23 +217,35 @@ export async function createForm(input: {
   uiSchemaJson?: string | null;
   rulesSchemaJson?: string | null;
 }): Promise<FormSummary> {
-  const created = await jsonApiPostResource<FormDefinitionAttributes>(
-    FORM_DEFINITIONS,
-    {
-      code: input.code,
-      name: input.name,
-      initialClinicalSchemaJson: input.clinicalSchemaJson,
-      ...(input.uiSchemaJson
-        ? { initialUiSchemaJson: input.uiSchemaJson }
-        : {}),
-      ...(input.rulesSchemaJson
-        ? { initialRulesSchemaJson: input.rulesSchemaJson }
-        : {}),
-    },
-  );
-  const { definition, versions } = await fetchDefinitionDocument(
-    `/api/${FORM_DEFINITIONS}/${created.id}?include=versions`,
-  );
+  // CYN-55: generated `data.type` is the document discriminator, but the API expects the resource type on the wire; the narrow cast bridges the mismatch.
+  const { data } = await sdkPostFormDefinition({
+    headers: contractHeaders(),
+    body: {
+      data: {
+        type: FORM_DEFINITIONS,
+        attributes: {
+          code: input.code,
+          name: input.name,
+          initialClinicalSchemaJson: input.clinicalSchemaJson,
+          ...(input.uiSchemaJson
+            ? { initialUiSchemaJson: input.uiSchemaJson }
+            : {}),
+          ...(input.rulesSchemaJson
+            ? { initialRulesSchemaJson: input.rulesSchemaJson }
+            : {}),
+        },
+      },
+    } as never,
+  });
+  const createdId = data?.data?.id;
+  if (!createdId) {
+    throw new ApiError(
+      500,
+      'Invalid API response',
+      'Created form definition did not return an identifier.',
+    );
+  }
+  const { definition, versions } = await fetchDefinitionDocument(createdId);
   return mapSummary(definition, versions);
 }
 
@@ -256,29 +258,43 @@ async function patchFormVersion(
     rowVersion: number;
   },
 ): Promise<FormVersion> {
-  const resource = await jsonApiPatchResource<FormVersionAttributes>(
-    FORM_VERSIONS,
-    versionId,
-    {
-      clinicalSchemaJson: input.clinicalSchemaJson,
-      uiSchemaJson: input.uiSchemaJson,
-      rulesSchemaJson: input.rulesSchemaJson,
-      rowVersion: input.rowVersion,
-    },
-  );
-  return mapVersion(resource, '');
+  // CYN-55: same `data.type` discriminator mismatch as `createForm`.
+  const { data } = await sdkPatchFormVersion({
+    path: { id: versionId },
+    headers: contractHeaders(),
+    body: {
+      data: {
+        id: versionId,
+        type: FORM_VERSIONS,
+        attributes: {
+          clinicalSchemaJson: input.clinicalSchemaJson,
+          uiSchemaJson: input.uiSchemaJson,
+          rulesSchemaJson: input.rulesSchemaJson,
+          rowVersion: input.rowVersion,
+        } satisfies Omit<
+          AttributesInUpdateFormVersionRequest,
+          'openapi:discriminator'
+        >,
+      },
+    } as never,
+  });
+  if (!data) {
+    throw new ApiError(
+      500,
+      'Invalid API response',
+      'Form version update did not return the updated resource.',
+    );
+  }
+  return mapVersion(data.data, '');
 }
 
 export async function getFormDraft(code: string): Promise<FormVersion> {
   const { definition, versions } = await getDefinitionByCode(code);
-  const related = relatedIds(definition, 'versions')
+  const related = relationshipIds(definition.relationships?.versions)
     .map((id) => versions.get(id))
-    .filter(
-      (item): item is JsonApiResource<FormVersionAttributes> =>
-        item !== undefined,
-    );
+    .filter((item): item is FormVersionResource => item !== undefined);
   const editable = related.find((item) =>
-    isEditableStatus(attrString(item.attributes, 'status')),
+    isEditableStatus(item.attributes?.status),
   );
   if (!editable) {
     throw new ApiError(
@@ -287,10 +303,7 @@ export async function getFormDraft(code: string): Promise<FormVersion> {
       `Form '${code}' has no editable draft.`,
     );
   }
-  return mapVersion(
-    editable,
-    attrString(definition.attributes, 'code') ?? code,
-  );
+  return mapVersion(editable, definition.attributes?.code ?? code);
 }
 
 export async function updateFormDraft(

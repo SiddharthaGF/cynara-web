@@ -1,38 +1,21 @@
+import { contractHeaders, requireDto } from '@/api/client-runtime.ts';
+import { ApiError } from '@/api/client.ts';
 import {
-  ACTOR_HEADER_NAME,
-  ApiError,
-  DEFAULT_ACTOR_ID,
-  HOSPITAL_HEADER_NAME,
-  apiRequest,
-  resolveHospitalCode,
-} from '@/api/client.ts';
-import { JSON_API_MEDIA } from '@/api/json-api.ts';
+  getMyCapabilities,
+  type MeCapabilitiesResponse as MeCapabilitiesResponseContract,
+} from '@/api/generated';
 
-/** Effective capability set for the current actor within the resolved hospital. */
-export interface EffectiveCapabilitiesDto {
-  actorId: string | null;
-  capabilities: string[];
-}
-
-function capabilitiesHeaders(init?: HeadersInit): Headers {
-  const headers = new Headers(init);
-  headers.set('Accept', JSON_API_MEDIA);
-  if (!headers.has('Content-Type')) {
-    headers.set('Content-Type', JSON_API_MEDIA);
-  }
-  if (!headers.has(HOSPITAL_HEADER_NAME)) {
-    headers.set(HOSPITAL_HEADER_NAME, resolveHospitalCode());
-  }
-  if (!headers.has(ACTOR_HEADER_NAME)) {
-    headers.set(ACTOR_HEADER_NAME, DEFAULT_ACTOR_ID);
-  }
-  return headers;
-}
+/**
+ * Effective capability set for the current actor within the resolved hospital.
+ * Derived from the generated contract type with fields promoted to required.
+ */
+export type EffectiveCapabilitiesDto = Required<MeCapabilitiesResponseContract>;
 
 export async function getEffectiveCapabilities(): Promise<EffectiveCapabilitiesDto> {
-  return apiRequest<EffectiveCapabilitiesDto>('/api/me/capabilities', {
-    headers: capabilitiesHeaders(),
+  const { data } = await getMyCapabilities({
+    headers: contractHeaders(),
   });
+  return requireDto(data);
 }
 
 export function isCapabilitiesForbiddenError(error: unknown): boolean {

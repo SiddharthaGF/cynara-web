@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "api:generate": "pnpm --filter @cynara/api-client exec openapi-ts",
+    "api:check": "pnpm api:generate && git diff --exit-code -- src/api/generated && test -z \"$(git ls-files --others --exclude-standard src/api/generated)\"",
     "build": "vite build",
     "cf-typegen": "wrangler types",
     "deploy": "pnpm build && wrangler deploy",
@@ -17,6 +19,7 @@
     "precommit": "pnpm lint:check && pnpm typecheck",
     "prepare": "husky",
     "preview": "vite preview",
+    "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "typecheck": "tsc -b --noEmit"
@@ -69,6 +72,7 @@
     "shadcn": "^4.13.1",
     "typescript": "^7.0.2",
     "vite": "^8.1.5",
+    "vitest": "^4.1.10",
     "wrangler": "^4.113.0"
   },
   "packageManager": "pnpm@11.8.0"

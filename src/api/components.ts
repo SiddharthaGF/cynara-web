@@ -1,37 +1,29 @@
+import { contractHeaders } from '@/api/client-runtime.ts';
+import {
+  getComponentDefinitionCollection as sdkGetComponentDefinitionCollection,
+  type DataInComponentDefinitionResponse,
+  type DataInComponentVersionResponse,
+  type ResourceInResponse,
+} from '@/api/generated';
 import {
   buildPaginatedQuery,
-  jsonApiGetCollection,
-  attrNumber,
-  attrString,
-  includedOfType,
-  relatedIds,
-  type JsonApiResource,
-} from '@/api/json-api.ts';
+  includedResources,
+  relationshipIds,
+} from '@/api/json-api-utils.ts';
 import type { ComponentSummary } from '@/features/forms/types.ts';
 
-interface ComponentDefinitionAttributes {
-  code?: string;
-  name?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-interface ComponentVersionAttributes {
-  version?: string | null;
-  status?: string;
-  clinicalSchemaJson?: string;
-  uiSchemaJson?: string | null;
-  contentHash?: string | null;
-  rowVersion?: number;
-  createdAt?: string;
-  publishedAt?: string | null;
-  retiredAt?: string | null;
-}
-
-const COMPONENT_DEFINITIONS = 'componentDefinitions';
 const COMPONENT_VERSIONS = 'componentVersions';
 
-function listComponentsQuery(): string {
+type ComponentDefinitionResource = Pick<
+  DataInComponentDefinitionResponse,
+  'id' | 'attributes' | 'relationships'
+>;
+type ComponentVersionResource = Pick<
+  DataInComponentVersionResponse,
+  'id' | 'attributes' | 'relationships'
+>;
+
+function listComponentsQuery(): Record<string, string> {
   return buildPaginatedQuery({
     include: ['versions'],
     pageSize: 100,
@@ -40,35 +32,33 @@ function listComponentsQuery(): string {
 }
 
 function versionById(
-  included: JsonApiResource[],
-): Map<string, JsonApiResource<ComponentVersionAttributes>> {
-  const map = new Map<string, JsonApiResource<ComponentVersionAttributes>>();
-  for (const item of includedOfType(included, COMPONENT_VERSIONS)) {
+  included: readonly ResourceInResponse[],
+): Map<string, ComponentVersionResource> {
+  const map = new Map<string, ComponentVersionResource>();
+  for (const item of includedResources<DataInComponentVersionResponse>(
+    included,
+    COMPONENT_VERSIONS,
+  )) {
     map.set(item.id, item);
   }
   return map;
 }
 
 function mapSummary(
-  definition: JsonApiResource<ComponentDefinitionAttributes>,
-  versions: Map<string, JsonApiResource<ComponentVersionAttributes>>,
+  definition: ComponentDefinitionResource,
+  versions: Map<string, ComponentVersionResource>,
 ): ComponentSummary {
   const attrs = definition.attributes;
-  const related = relatedIds(definition, 'versions')
+  const related = relationshipIds(definition.relationships?.versions)
     .map((id) => versions.get(id))
-    .filter(
-      (item): item is JsonApiResource<ComponentVersionAttributes> =>
-        item !== undefined,
-    );
+    .filter((item): item is ComponentVersionResource => item !== undefined);
 
-  const draft = related.find(
-    (item) => attrString(item.attributes, 'status') === 'draft',
-  );
+  const draft = related.find((item) => item.attributes?.status === 'draft');
   const publishedVersions: string[] = [];
   for (const item of related) {
-    if (attrString(item.attributes, 'status') === 'published') {
-      const value = attrString(item.attributes, 'version');
-      if (value !== null && value.length > 0) {
+    if (item.attributes?.status === 'published') {
+      const value = item.attributes?.version;
+      if (value !== null && value !== undefined && value.length > 0) {
         publishedVersions.push(value);
       }
     }
@@ -76,21 +66,21 @@ function mapSummary(
   publishedVersions.sort();
 
   return {
-    code: attrString(attrs, 'code') ?? '',
-    name: attrString(attrs, 'name') ?? '',
-    createdAt: attrString(attrs, 'createdAt') ?? '',
-    updatedAt: attrString(attrs, 'updatedAt') ?? '',
+    code: attrs?.code ?? '',
+    name: attrs?.name ?? '',
+    createdAt: attrs?.createdAt ?? '',
+    updatedAt: attrs?.updatedAt ?? '',
     draftVersionId: draft?.id ?? null,
-    draftRowVersion: draft ? attrNumber(draft.attributes, 'rowVersion') : null,
+    draftRowVersion: draft ? (draft.attributes?.rowVersion ?? null) : null,
     publishedVersions,
   };
 }
 
 export async function listComponents(): Promise<ComponentSummary[]> {
-  const { data, included } =
-    await jsonApiGetCollection<ComponentDefinitionAttributes>(
-      `/api/${COMPONENT_DEFINITIONS}?${listComponentsQuery()}`,
-    );
-  const versions = versionById(included);
-  return data.map((definition) => mapSummary(definition, versions));
+  const { data } = await sdkGetComponentDefinitionCollection({
+    headers: contractHeaders(),
+    query: { query: listComponentsQuery() },
+  });
+  const versions = versionById(data.included ?? []);
+  return data.data.map((definition) => mapSummary(definition, versions));
 }

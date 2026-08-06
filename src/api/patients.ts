@@ -1,50 +1,33 @@
+import { contractHeaders, requireDto } from '@/api/client-runtime.ts';
+import { ApiError } from '@/api/client.ts';
 import {
-  ACTOR_HEADER_NAME,
-  ApiError,
-  DEFAULT_ACTOR_ID,
-  HOSPITAL_HEADER_NAME,
-  apiRequest,
-  resolveHospitalCode,
-} from '@/api/client.ts';
-import { JSON_API_MEDIA } from '@/api/json-api.ts';
+  createPatient as sdkCreatePatient,
+  getPatient as sdkGetPatient,
+  patchPatient as sdkPatchPatient,
+  searchPatients as sdkSearchPatients,
+  softDeletePatient as sdkSoftDeletePatient,
+  type PatientDto as PatientDtoContract,
+  type PatientListResponse as PatientListResponseContract,
+  type SearchPatientsData,
+} from '@/api/generated';
 
-/** Sex values accepted by cynara-api (`female` | `male` | `unknown`). */
-export type PatientSex = 'female' | 'male' | 'unknown';
-
-/** Lifecycle status returned by the registry (`active` | `retired`). */
-export type PatientStatus = 'active' | 'retired';
-
-export interface PatientDto {
-  id: string;
-  mrn: string;
-  nationalId: string | null;
-  givenName: string;
-  familyName: string;
-  birthDate: string;
-  sex: string;
-  status: string;
-  rowVersion: number;
-  deletedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PatientListResponse {
+/**
+ * Read model for the patient registry. Derived from the generated contract
+ * type with the fields the app relies on as always-present promoted to
+ * required.
+ */
+export type PatientDto = Required<PatientDtoContract>;
+export type PatientListResponse = PatientListResponseContract & {
   patients: PatientDto[];
-  page: number;
-  pageSize: number;
-  totalCount: number;
-}
+};
 
-export interface ListPatientsParams {
-  mrn?: string;
-  nationalId?: string;
-  givenName?: string;
-  familyName?: string;
-  includeDeleted?: boolean;
-  page?: number;
-  pageSize?: number;
-}
+/** Sex values accepted by cynara-api. */
+export type PatientSex = NonNullable<PatientDtoContract['sex']>;
+
+/** Lifecycle status returned by the registry. */
+export type PatientStatus = NonNullable<PatientDtoContract['status']>;
+
+export type ListPatientsParams = NonNullable<SearchPatientsData['query']>;
 
 export interface CreatePatientInput {
   mrn: string;
@@ -64,69 +47,32 @@ export interface PatchPatientInput {
   rowVersion: number;
 }
 
-function patientHeaders(init?: HeadersInit): Headers {
-  const headers = new Headers(init);
-  headers.set('Accept', JSON_API_MEDIA);
-  if (!headers.has('Content-Type')) {
-    headers.set('Content-Type', JSON_API_MEDIA);
-  }
-  if (!headers.has(HOSPITAL_HEADER_NAME)) {
-    headers.set(HOSPITAL_HEADER_NAME, resolveHospitalCode());
-  }
-  if (!headers.has(ACTOR_HEADER_NAME)) {
-    headers.set(ACTOR_HEADER_NAME, DEFAULT_ACTOR_ID);
-  }
-  return headers;
-}
-
-function buildListQuery(params: ListPatientsParams): string {
-  const search = new URLSearchParams();
-  if (params.mrn) {
-    search.set('mrn', params.mrn);
-  }
-  if (params.nationalId) {
-    search.set('nationalId', params.nationalId);
-  }
-  if (params.givenName) {
-    search.set('givenName', params.givenName);
-  }
-  if (params.familyName) {
-    search.set('familyName', params.familyName);
-  }
-  if (params.includeDeleted !== undefined) {
-    search.set('includeDeleted', params.includeDeleted ? 'true' : 'false');
-  }
-  if (params.page !== undefined) {
-    search.set('page', String(params.page));
-  }
-  if (params.pageSize !== undefined) {
-    search.set('pageSize', String(params.pageSize));
-  }
-  return search.toString();
-}
-
-function appendQuery(path: string, query: string): string {
-  if (query.length === 0) {
-    return path;
-  }
-  return `${path}?${query}`;
-}
-
 export async function listPatients(
   params: ListPatientsParams = {},
 ): Promise<PatientListResponse> {
-  const query = buildListQuery(params);
-  return apiRequest<PatientListResponse>(appendQuery('/api/patients', query), {
-    headers: patientHeaders(),
+  const { data } = await sdkSearchPatients({
+    query: params,
+    headers: contractHeaders(),
   });
+  return {
+    ...data,
+    patients: data.patients.map(requireDto),
+  };
 }
 
 export async function getPatient(id: string): Promise<PatientDto> {
-  return apiRequest<PatientDto>(`/api/patients/${id}`, {
-    headers: patientHeaders(),
+  const { data } = await sdkGetPatient({
+    path: { id },
+    headers: contractHeaders(),
   });
+  return requireDto(data);
 }
 
+/**
+ * CYN-55: the contract omits `requestBody` for `POST /api/patients`, so the
+ * generated SDK types its options `body` as `never` while the API accepts the
+ * documented payload below.
+ */
 export async function createPatient(
   input: CreatePatientInput,
 ): Promise<PatientDto> {
@@ -140,13 +86,14 @@ export async function createPatient(
   if (input.nationalId !== undefined) {
     body.nationalId = input.nationalId;
   }
-  return apiRequest<PatientDto>('/api/patients', {
-    method: 'POST',
-    headers: patientHeaders(),
-    body: JSON.stringify(body),
-  });
+  const { data } = await sdkCreatePatient({
+    headers: contractHeaders(),
+    body,
+  } as never);
+  return requireDto(data);
 }
 
+/** CYN-55: same `requestBody` gap as `createPatient` for `PATCH /api/patients/{id}`. */
 export async function patchPatient(
   id: string,
   input: PatchPatientInput,
@@ -161,22 +108,25 @@ export async function patchPatient(
   if (input.nationalId !== undefined) {
     body.nationalId = input.nationalId;
   }
-  return apiRequest<PatientDto>(`/api/patients/${id}`, {
-    method: 'PATCH',
-    headers: patientHeaders(),
-    body: JSON.stringify(body),
-  });
+  const { data } = await sdkPatchPatient({
+    path: { id },
+    headers: contractHeaders(),
+    body,
+  } as never);
+  return requireDto(data);
 }
 
+/** CYN-55: same `requestBody` gap as `createPatient` for the soft-delete endpoint. */
 export async function softDeletePatient(
   id: string,
   rowVersion: number,
 ): Promise<PatientDto> {
-  return apiRequest<PatientDto>(`/api/patients/${id}/soft-delete`, {
-    method: 'POST',
-    headers: patientHeaders(),
-    body: JSON.stringify({ rowVersion }),
-  });
+  const { data } = await sdkSoftDeletePatient({
+    path: { id },
+    headers: contractHeaders(),
+    body: { rowVersion },
+  } as never);
+  return requireDto(data);
 }
 
 export function isDuplicateMrnError(error: unknown): boolean {
