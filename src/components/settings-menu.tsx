@@ -29,6 +29,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip.tsx';
+import { useCapabilities } from '@/hooks/use-capabilities.ts';
 import { useLocale } from '@/hooks/use-locale.ts';
 import { useTheme } from '@/hooks/use-theme.ts';
 import type { AppLocale } from '@/lib/locale.ts';
@@ -59,7 +60,10 @@ export function SettingsMenu({
   const { t } = useTranslation('common');
   const { locale, setLocale } = useLocale();
   const { preference, setPreference, theme } = useTheme();
+  const { can } = useCapabilities();
   const [aiOpen, setAiOpen] = useState(false);
+
+  const canManageAi = can('read', 'Workspace');
 
   const localeLabel = locale === 'es' ? t('locale.es') : t('locale.en');
 
@@ -180,14 +184,16 @@ export function SettingsMenu({
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem
-            onClick={() => {
-              setAiOpen(true);
-            }}
-          >
-            <Sparkles className='size-4' />
-            {t('settings.ai.menu')}
-          </DropdownMenuItem>
+          {canManageAi ? (
+            <DropdownMenuItem
+              onClick={() => {
+                setAiOpen(true);
+              }}
+            >
+              <Sparkles className='size-4' />
+              {t('settings.ai.menu')}
+            </DropdownMenuItem>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
 

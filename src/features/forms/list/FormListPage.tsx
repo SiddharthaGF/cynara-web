@@ -2,12 +2,14 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AppShell } from '@/components/app-shell.tsx';
+import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
 import { FormListContent } from './FormListContent.tsx';
 import { useFormsCatalog } from './useFormsCatalog.ts';
 
 export function FormListPage(): JSX.Element {
   const { t } = useTranslation('forms');
+  const { can } = useCapabilities();
   const { forms, error, isCreating, isLoading, createForm } = useFormsCatalog();
 
   async function handleCreate(values: {
@@ -61,6 +63,7 @@ export function FormListPage(): JSX.Element {
         error={error}
         isCreating={isCreating}
         isLoading={isLoading}
+        canCreate={can('write', 'Form')}
         onCreate={handleCreate}
       />
     </AppShell>

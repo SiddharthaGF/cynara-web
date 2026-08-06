@@ -13,6 +13,7 @@ interface FormListContentProps {
   error: string | null;
   isCreating: boolean;
   isLoading: boolean;
+  canCreate: boolean;
   onCreate: (values: { code: string; name: string }) => Promise<void>;
 }
 
@@ -21,6 +22,7 @@ export function FormListContent({
   error,
   isCreating,
   isLoading,
+  canCreate,
   onCreate,
 }: FormListContentProps): JSX.Element {
   const { t } = useTranslation('forms');
@@ -28,7 +30,10 @@ export function FormListContent({
 
   return (
     <LazyMotion features={domAnimation}>
-      <div className='mx-auto max-w-4xl px-6 py-10 pb-20'>
+      <div
+        className='mx-auto max-w-4xl px-6 py-10 pb-20'
+        data-testid='form-list-content'
+      >
         <m.header
           initial={reduceMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -75,11 +80,13 @@ export function FormListContent({
         ) : null}
 
         <div className='grid gap-6 lg:grid-cols-[1fr_1.2fr]'>
-          <CreateFormCard
-            isCreating={isCreating}
-            reduceMotion={reduceMotion}
-            onSubmit={onCreate}
-          />
+          {canCreate ? (
+            <CreateFormCard
+              isCreating={isCreating}
+              reduceMotion={reduceMotion}
+              onSubmit={onCreate}
+            />
+          ) : null}
           <FormsCatalogCard
             forms={forms}
             isLoading={isLoading}

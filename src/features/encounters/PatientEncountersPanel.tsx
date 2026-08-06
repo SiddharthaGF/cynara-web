@@ -31,21 +31,21 @@ import {
   formatEncounterType,
 } from '@/features/encounters/encounterForm.ts';
 import { usePatientEncounters } from '@/features/encounters/useEncountersCatalog.ts';
+import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
 interface PatientEncountersPanelProps {
   patientId: string;
   locale: string;
-  canMutate: boolean;
   onForbidden: (message: string) => void;
 }
 
 export function PatientEncountersPanel({
   patientId,
   locale,
-  canMutate,
   onForbidden,
 }: PatientEncountersPanelProps): JSX.Element {
   const { t, i18n } = useTranslation(['encounters', 'api']);
+  const { can } = useCapabilities();
   const { encounters, isLoading, error, isForbidden } =
     usePatientEncounters(patientId);
   const [createOpen, setCreateOpen] = useState(false);
@@ -68,7 +68,7 @@ export function PatientEncountersPanel({
             {t('list.subtitle')}
           </CardDescription>
         </div>
-        {canMutate && !isForbidden ? (
+        {!isForbidden && can('write', 'Encounter') ? (
           <Button
             size='sm'
             data-testid='encounter-create-open'

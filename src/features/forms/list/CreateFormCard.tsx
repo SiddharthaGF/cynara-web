@@ -82,6 +82,7 @@ export function CreateFormCard({
               ease: [0.22, 1, 0.36, 1],
             }
       }
+      data-testid='create-form-card'
     >
       <Card className='border-primary/10 shadow-sm'>
         <CardHeader>
