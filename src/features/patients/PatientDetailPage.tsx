@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/empty.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
+import { PatientEncountersPanel } from '@/features/encounters/PatientEncountersPanel.tsx';
 import { PatientEditForm } from '@/features/patients/PatientEditForm.tsx';
 import { PatientView } from '@/features/patients/PatientView.tsx';
 import {
@@ -220,6 +221,15 @@ export function PatientDetailPage(): JSX.Element {
               </CardContent>
             </Card>
           </m.div>
+
+          <PatientEncountersPanel
+            patientId={patient.id}
+            locale={locale}
+            canMutate={canMutate}
+            onForbidden={() => {
+              setMutationForbidden(true);
+            }}
+          />
 
           {showDeleteConfirm ? (
             <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50'>
