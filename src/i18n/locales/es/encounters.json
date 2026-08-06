@@ -1,0 +1,104 @@
+{
+  "list": {
+    "eyebrow": "Encuentros clínicos",
+    "title": "Encuentros",
+    "subtitle": "Visitas abiertas e históricas de este paciente.",
+    "create": "Nuevo encuentro",
+    "emptyTitle": "Aún no hay encuentros",
+    "emptyDescription": "Crea un encuentro para empezar a documentar esta visita.",
+    "loadError": "No se pudieron cargar los encuentros.",
+    "forbidden": "No tienes permiso para ver los encuentros de este paciente.",
+    "viewDetail": "Abrir",
+    "historicalHint": "Histórico",
+    "columns": {
+      "type": "Tipo",
+      "status": "Estado",
+      "startedAt": "Inicio",
+      "endedAt": "Fin",
+      "professional": "Responsable"
+    }
+  },
+  "create": {
+    "title": "Crear encuentro",
+    "description": "Abre un nuevo encuentro clínico para este paciente.",
+    "submit": "Crear encuentro",
+    "submitting": "Creando…",
+    "cancel": "Cancelar",
+    "success": "Encuentro creado.",
+    "fields": {
+      "facility": "Instalación",
+      "facilityPlaceholder": "Seleccionar instalación",
+      "clinicalArea": "Área clínica",
+      "clinicalAreaPlaceholder": "Seleccionar área clínica",
+      "type": "Tipo de encuentro",
+      "typePlaceholder": "Seleccionar tipo",
+      "professional": "Profesional responsable",
+      "professionalPlaceholder": "ej. id-clinico"
+    },
+    "errors": {
+      "facilityRequired": "La instalación es obligatoria.",
+      "clinicalAreaRequired": "El área clínica es obligatoria.",
+      "typeRequired": "El tipo de encuentro es obligatorio.",
+      "typeInvalid": "Elige un tipo de encuentro válido.",
+      "professionalRequired": "El profesional responsable es obligatorio.",
+      "professionalTooLong": "El profesional responsable debe tener 128 caracteres o menos.",
+      "taxonomyEmpty": "No hay instalaciones activas. Pide a un administrador que configure la taxonomía clínica.",
+      "createFailed": "No se pudo crear el encuentro."
+    }
+  },
+  "detail": {
+    "eyebrow": "Encuentro",
+    "title": "Detalle del encuentro",
+    "backToPatient": "Volver al paciente",
+    "loadError": "No se pudo cargar el detalle del encuentro.",
+    "notFound": "No se encontró el encuentro.",
+    "forbidden": "No tienes permiso para ver este encuentro.",
+    "forbiddenMutate": "No tienes permiso para modificar este encuentro.",
+    "stale": "Este encuentro cambió mientras trabajabas. Recarga la versión más reciente antes de continuar.",
+    "reload": "Recargar",
+    "historicalBanner": "Este encuentro está cerrado. Permanece legible en el historial clínico.",
+    "actions": {
+      "complete": "Completar",
+      "cancel": "Cancelar encuentro",
+      "enterInError": "Registrado por error"
+    },
+    "confirm": {
+      "completeTitle": "¿Completar este encuentro?",
+      "completeBody": "El encuentro pasará a completado y ya no podrá transicionarse.",
+      "cancelTitle": "¿Cancelar este encuentro?",
+      "cancelBody": "El encuentro se marcará como cancelado y seguirá visible históricamente.",
+      "enterInErrorTitle": "¿Marcar como registrado por error?",
+      "enterInErrorBody": "Úsalo cuando el encuentro se abrió por equivocación. El registro sigue siendo consultable.",
+      "confirm": "Confirmar",
+      "dismiss": "Mantener abierto"
+    },
+    "fields": {
+      "type": "Tipo",
+      "status": "Estado",
+      "professional": "Profesional responsable",
+      "facilityId": "Instalación",
+      "clinicalAreaId": "Área clínica",
+      "startedAt": "Inicio",
+      "endedAt": "Fin",
+      "createdAt": "Creado",
+      "updatedAt": "Actualizado",
+      "rowVersion": "Versión"
+    }
+  },
+  "permissions": {
+    "forbiddenTitle": "Acceso denegado"
+  },
+  "types": {
+    "ambulatory": "Ambulatorio",
+    "emergency": "Urgencias",
+    "inpatient": "Hospitalización",
+    "observation": "Observación",
+    "virtual": "Virtual"
+  },
+  "status": {
+    "open": "Abierto",
+    "completed": "Completado",
+    "canceled": "Cancelado",
+    "enteredInError": "Registrado por error"
+  }
+}
