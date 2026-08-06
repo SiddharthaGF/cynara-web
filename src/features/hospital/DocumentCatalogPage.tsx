@@ -253,30 +253,32 @@ export function DocumentCatalogPage(): JSX.Element {
             </div>
 
             <Card className='border-border/70 shadow-sm'>
-              <CardContent className='p-0'>
-                <ScrollArea className='w-full rounded-lg [&_[data-slot=scroll-area-viewport]]:max-h-[min(36rem,70vh)]'>
-                  <DocumentCatalogTable
-                    items={visibleItems}
-                    isLoading={list.isLoading}
-                    canWrite={canWrite}
-                    locale={locale}
-                    formNameById={formNameById}
-                    formVersionLabelById={formVersionLabelById}
-                    scopeLabel={scopeLabel}
-                    onEdit={(item) => {
-                      patch.reset();
-                      setEditing(item);
-                    }}
-                    onRetire={(item) => {
-                      retire.reset();
-                      setRetiring(item);
-                    }}
-                    onAddFirst={() => {
-                      create.reset();
-                      setCreateOpen(true);
-                    }}
-                  />
-                </ScrollArea>
+              <CardContent>
+                <div className='mt-6'>
+                  <ScrollArea className='w-full rounded-lg border border-border/60 [&_[data-slot=scroll-area-viewport]]:max-h-[min(36rem,70vh)]'>
+                    <DocumentCatalogTable
+                      items={visibleItems}
+                      isLoading={list.isLoading}
+                      canWrite={canWrite}
+                      locale={locale}
+                      formNameById={formNameById}
+                      formVersionLabelById={formVersionLabelById}
+                      scopeLabel={scopeLabel}
+                      onEdit={(item) => {
+                        patch.reset();
+                        setEditing(item);
+                      }}
+                      onRetire={(item) => {
+                        retire.reset();
+                        setRetiring(item);
+                      }}
+                      onAddFirst={() => {
+                        create.reset();
+                        setCreateOpen(true);
+                      }}
+                    />
+                  </ScrollArea>
+                </div>
               </CardContent>
             </Card>
           </div>

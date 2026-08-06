@@ -1,5 +1,6 @@
 import type {
   ListClinicalAreasData,
+  ListClinicalDocumentsData,
   ListDisciplinesData,
   ListEncountersData,
   ListFacilitiesData,
@@ -29,6 +30,11 @@ export type PatientListParams = NonNullable<SearchPatientsData['query']>;
 
 /** Query params modeled by the OpenAPI contract for the encounter listing. */
 export type EncounterListParams = NonNullable<ListEncountersData['query']>;
+
+/** Query params modeled by the OpenAPI contract for document listings. */
+export type ClinicalDocumentListParams = NonNullable<
+  ListClinicalDocumentsData['query']
+>;
 
 /** Query params modeled by the OpenAPI contract for taxonomy listings. */
 export type FacilityListParams = NonNullable<ListFacilitiesData['query']>;
@@ -78,6 +84,7 @@ const FORM_RESPONSE_REVISIONS_ALL = ['formResponseRevisions'];
 const AUDIT_EVENTS_ALL = ['auditEvents'];
 const PATIENTS_ALL = ['patients'];
 const ENCOUNTERS_ALL = ['encounters'];
+const CLINICAL_DOCUMENTS_ALL = ['clinicalDocuments'];
 const CAPABILITIES_ALL = ['capabilities'];
 const AI_ALL = ['ai'];
 
@@ -167,6 +174,12 @@ export const queryKeys = {
     list: (params: EncounterListParams = {}) =>
       key('encounters', 'list', params),
     detail: (id: string) => key('encounters', 'detail', id),
+  },
+  clinicalDocuments: {
+    all: CLINICAL_DOCUMENTS_ALL,
+    list: (params: ClinicalDocumentListParams = {}) =>
+      key('clinicalDocuments', 'list', params),
+    detail: (id: string) => key('clinicalDocuments', 'detail', id),
   },
   capabilities: {
     all: CAPABILITIES_ALL,

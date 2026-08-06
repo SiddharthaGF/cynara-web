@@ -106,6 +106,9 @@ export const ROUTE_CAPABILITY_REQUIREMENTS: Readonly<
   '/$locale/patients/$id_/encounters/$encounterId': [
     { action: 'read', subject: 'Encounter' },
   ],
+  '/$locale/patients/$id_/encounters/$encounterId_/documents/$documentId': [
+    { action: 'read', subject: 'ClinicalDocument' },
+  ],
   '/$locale/forms/': [{ action: 'read', subject: 'Catalog' }],
   '/$locale/forms/$code/designer/': [{ action: 'write', subject: 'Catalog' }],
   '/$locale/forms/$code/designer/$draftId': [

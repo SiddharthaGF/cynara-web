@@ -212,29 +212,31 @@ export function AdminTaxonomyScreen({
           </div>
 
           <Card className='border-border/70 shadow-sm'>
-            <CardContent className='p-0'>
-              <ScrollArea className='w-full rounded-lg [&_[data-slot=scroll-area-viewport]]:max-h-[min(36rem,70vh)]'>
-                <TaxonomyTable
-                  resource={resource}
-                  items={visibleItems}
-                  isLoading={isLoading}
-                  canWrite={canWrite}
-                  locale={locale}
-                  parentNameById={parentNameById}
-                  onEdit={(item) => {
-                    mutations.patch.reset();
-                    setEditing(item);
-                  }}
-                  onRetire={(item) => {
-                    mutations.retire.reset();
-                    setRetiring(item);
-                  }}
-                  onAddFirst={() => {
-                    mutations.create.reset();
-                    setCreateOpen(true);
-                  }}
-                />
-              </ScrollArea>
+            <CardContent>
+              <div className='mt-6'>
+                <ScrollArea className='w-full rounded-lg border border-border/60 [&_[data-slot=scroll-area-viewport]]:max-h-[min(36rem,70vh)]'>
+                  <TaxonomyTable
+                    resource={resource}
+                    items={visibleItems}
+                    isLoading={isLoading}
+                    canWrite={canWrite}
+                    locale={locale}
+                    parentNameById={parentNameById}
+                    onEdit={(item) => {
+                      mutations.patch.reset();
+                      setEditing(item);
+                    }}
+                    onRetire={(item) => {
+                      mutations.retire.reset();
+                      setRetiring(item);
+                    }}
+                    onAddFirst={() => {
+                      mutations.create.reset();
+                      setCreateOpen(true);
+                    }}
+                  />
+                </ScrollArea>
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -25,6 +25,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
 import { InsufficientPermissionNotice } from '@/features/access-control/InsufficientPermissionNotice.tsx';
+import { PatientDocumentsTimeline } from '@/features/documents/PatientDocumentsTimeline.tsx';
 import { PatientEncountersPanel } from '@/features/encounters/PatientEncountersPanel.tsx';
 import { PatientEditForm } from '@/features/patients/PatientEditForm.tsx';
 import { PatientView } from '@/features/patients/PatientView.tsx';
@@ -236,6 +237,11 @@ export function PatientDetailPage(): JSX.Element {
             onForbidden={() => {
               setMutationForbidden(true);
             }}
+          />
+
+          <PatientDocumentsTimeline
+            patientId={patient.id}
+            locale={locale}
           />
 
           {showDeleteConfirm ? (

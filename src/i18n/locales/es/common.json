@@ -66,6 +66,7 @@
     "insufficientTitle": "Solo lectura",
     "patientsWriteMissing": "Podés ver este registro, pero no tenés permiso para modificarlo.",
     "encountersWriteMissing": "Podés ver este encuentro, pero no tenés permiso para modificarlo.",
+    "documentsWriteMissing": "Podés ver este documento, pero no tenés permiso para modificarlo.",
     "loadFailedTitle": "No se pudo cargar esta página"
   },
   "yes": "Sí",

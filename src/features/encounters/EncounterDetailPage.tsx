@@ -29,6 +29,7 @@ import {
   CardTitle,
 } from '@/components/ui/card.tsx';
 import { InsufficientPermissionNotice } from '@/features/access-control/InsufficientPermissionNotice.tsx';
+import { EncounterDocumentsPanel } from '@/features/documents/EncounterDocumentsPanel.tsx';
 import {
   EncounterDetailLoading,
   EncounterDetailShell,
@@ -370,6 +371,15 @@ export function EncounterDetailPage(): JSX.Element {
             if (pendingAction) {
               void runTransition(pendingAction);
             }
+          }}
+        />
+
+        <EncounterDocumentsPanel
+          encounter={encounter}
+          locale={locale}
+          patientId={patientId}
+          onForbidden={() => {
+            setMutationForbidden(true);
           }}
         />
       </LazyMotion>

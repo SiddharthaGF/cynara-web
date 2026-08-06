@@ -1,0 +1,98 @@
+{
+  "list": {
+    "eyebrow": "Clinical documents",
+    "title": "Documents",
+    "subtitle": "Clinical documents started within this encounter.",
+    "create": "New document",
+    "emptyTitle": "No documents yet",
+    "emptyDescription": "Start a document to capture clinical findings for this encounter.",
+    "loadError": "Failed to load documents.",
+    "forbidden": "You do not have permission to view documents for this encounter.",
+    "viewDetail": "Open",
+    "documentName": "Clinical document",
+    "inProgressHint": "In progress",
+    "unknownAuthor": "Unknown",
+    "columns": {
+      "createdAt": "Started",
+      "author": "Author",
+      "encounter": "Encounter"
+    }
+  },
+  "start": {
+    "title": "Start document",
+    "description": "Choose the clinical document to start for this encounter.",
+    "submit": "Start document",
+    "submitting": "Starting…",
+    "cancel": "Cancel",
+    "emptyTitle": "No documents available",
+    "emptyDescription": "Ask an administrator to publish a document template for this facility and clinical area.",
+    "fields": {
+      "definition": "Document type",
+      "definitionPlaceholder": "Select a document type"
+    },
+    "errors": {
+      "definitionRequired": "Choose a document type to continue."
+    }
+  },
+  "timeline": {
+    "eyebrow": "Document history",
+    "title": "Documents",
+    "subtitle": "All clinical documents across this patient's encounters.",
+    "emptyTitle": "No documents yet",
+    "emptyDescription": "Documents will appear here once they are started within an encounter."
+  },
+  "detail": {
+    "eyebrow": "Clinical document",
+    "backToEncounter": "Back to encounter",
+    "loadError": "Failed to load the document.",
+    "draftLoadError": "Failed to load the document answers.",
+    "draftUnavailable": "Document answers are unavailable.",
+    "notFound": "Document was not found.",
+    "forbidden": "You do not have permission to view this document.",
+    "forbiddenMutate": "You do not have permission to change this document.",
+    "stale": "This document changed while you were working. Reload the latest version before continuing.",
+    "reload": "Reload",
+    "validationErrors": "Fix the highlighted validation issues before saving or completing.",
+    "unknownAuthor": "Unknown",
+    "terminalBanner": "This document is closed. Its contents remain part of the clinical record.",
+    "actions": {
+      "save": "Save draft",
+      "saving": "Saving…",
+      "complete": "Complete",
+      "cancel": "Cancel document",
+      "enterInError": "Entered in error"
+    },
+    "confirm": {
+      "completeTitle": "Complete this document?",
+      "completeBody": "The document will be completed, validated, and become part of the permanent clinical record.",
+      "cancelTitle": "Cancel this document?",
+      "cancelBody": "The document will be marked canceled and remain historically visible.",
+      "enterInErrorTitle": "Mark as entered in error?",
+      "enterInErrorBody": "Use this when the document was created by mistake. The record stays queryable.",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "Explain why this document is invalid",
+      "reasonRequired": "A reason is required.",
+      "enteredInErrorReason": "Entered in error reason",
+      "confirm": "Confirm",
+      "dismiss": "Keep open"
+    },
+    "fields": {
+      "formVersion": "Form version",
+      "status": "Status",
+      "author": "Author",
+      "createdAt": "Started",
+      "updatedAt": "Updated",
+      "completedAt": "Completed",
+      "rowVersion": "Version"
+    }
+  },
+  "permissions": {
+    "forbiddenTitle": "Access denied"
+  },
+  "status": {
+    "inProgress": "In progress",
+    "completed": "Completed",
+    "canceled": "Canceled",
+    "enteredInError": "Entered in error"
+  }
+}
