@@ -52,6 +52,13 @@ export interface PatientListParams {
   pageSize?: number;
 }
 
+export interface EncounterListParams {
+  patientId?: string;
+  facilityId?: string;
+  clinicalAreaId?: string;
+  status?: string;
+}
+
 function key(...segments: readonly unknown[]): readonly unknown[] {
   return [...segments];
 }
@@ -71,6 +78,7 @@ const FORM_RESPONSES_ALL = ['formResponses'];
 const FORM_RESPONSE_REVISIONS_ALL = ['formResponseRevisions'];
 const AUDIT_EVENTS_ALL = ['auditEvents'];
 const PATIENTS_ALL = ['patients'];
+const ENCOUNTERS_ALL = ['encounters'];
 const AI_ALL = ['ai'];
 
 export const queryKeys = {
@@ -151,6 +159,12 @@ export const queryKeys = {
     all: PATIENTS_ALL,
     list: (params: PatientListParams = {}) => key('patients', 'list', params),
     detail: (id: string) => key('patients', 'detail', id),
+  },
+  encounters: {
+    all: ENCOUNTERS_ALL,
+    list: (params: EncounterListParams = {}) =>
+      key('encounters', 'list', params),
+    detail: (id: string) => key('encounters', 'detail', id),
   },
   ai: {
     all: AI_ALL,
