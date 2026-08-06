@@ -1,0 +1,138 @@
+# Browser E2E coverage for the clinical workspace (CYN-58)
+#
+# Runs the Stage 2 journey through cynara-web against a real cynara-api
+# instance. The workflow boots a Postgres service, seeds the demo database
+# with `Cynara.Seed`, starts the API, and runs the Playwright suite against
+# the Vite dev server. On failure it uploads the HTML report, traces,
+# screenshots/videos, and the API log so the run is reproducible without a
+# local replay.
+#
+# `API_REF` is intentionally a branch: the E2E suite exercises the latest
+# backend contract, and the pinned `API client drift` workflow guards the
+# generated client against that branch separately.
+
+name: E2E clinical workspace
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+  workflow_dispatch:
+
+env:
+  API_REPO: SiddharthaGF/cynara-api
+  API_REF: develop
+  CONNECTION_STRING: >-
+    Host=127.0.0.1;Port=5432;Database=postgres;Username=postgres;Password=postgres
+
+concurrency:
+  group: e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  clinical-workspace-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 10s
+          --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: cynara-web
+
+      - uses: actions/checkout@v5
+        with:
+          repository: ${{ env.API_REPO }}
+          ref: ${{ env.API_REF }}
+          path: cynara-api
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.8.0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: cynara-web/pnpm-lock.yaml
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Seed the demo database
+        working-directory: cynara-api
+        env:
+          CONNECTION_STRING: ${{ env.CONNECTION_STRING }}
+        run: >-
+          dotnet run --project tools/Cynara.Seed -- --connection
+          "$CONNECTION_STRING"
+
+      - name: Start cynara-api
+        working-directory: cynara-api
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://127.0.0.1:5000
+          ConnectionStrings__Default: ${{ env.CONNECTION_STRING }}
+        run: |
+          nohup dotnet run --project src/Cynara.Api > /tmp/cynara-api.log 2>&1 &
+          for attempt in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:5000/health; then
+              echo 'cynara-api is ready'
+              exit 0
+            fi
+            sleep 2
+          done
+          echo 'cynara-api failed to start' >&2
+          tail -n 200 /tmp/cynara-api.log >&2
+          exit 1
+
+      - name: Install web dependencies
+        working-directory: cynara-web
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: cynara-web
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        working-directory: cynara-web
+        env:
+          VITE_API_ORIGIN: http://127.0.0.1:5000
+          VITE_HOSPITAL_CODE: default
+          CI: 'true'
+        run: pnpm test:e2e
+
+      - name: Upload Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: cynara-web/playwright-report
+          retention-days: 14
+
+      - name: Upload Playwright traces, screenshots, and videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: cynara-web/test-results
+          retention-days: 14
+
+      - name: Upload cynara-api logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cynara-api-log
+          path: /tmp/cynara-api.log
+          retention-days: 14

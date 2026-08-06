@@ -66,6 +66,7 @@
     "insufficientTitle": "Read-only view",
     "patientsWriteMissing": "You can view this record, but you do not have permission to change it.",
     "encountersWriteMissing": "You can view this encounter, but you do not have permission to modify it.",
+    "documentsWriteMissing": "You can view this document, but you do not have permission to modify it.",
     "loadFailedTitle": "This page could not be loaded"
   },
   "yes": "Yes",

@@ -1,0 +1,98 @@
+{
+  "list": {
+    "eyebrow": "Documentos clínicos",
+    "title": "Documentos",
+    "subtitle": "Documentos clínicos iniciados en este encuentro.",
+    "create": "Nuevo documento",
+    "emptyTitle": "Aún no hay documentos",
+    "emptyDescription": "Inicia un documento para registrar los hallazgos clínicos de este encuentro.",
+    "loadError": "No se pudieron cargar los documentos.",
+    "forbidden": "No tienes permiso para ver los documentos de este encuentro.",
+    "viewDetail": "Abrir",
+    "documentName": "Documento clínico",
+    "inProgressHint": "En curso",
+    "unknownAuthor": "Desconocido",
+    "columns": {
+      "createdAt": "Inicio",
+      "author": "Autor",
+      "encounter": "Encuentro"
+    }
+  },
+  "start": {
+    "title": "Iniciar documento",
+    "description": "Elige el documento clínico que deseas iniciar para este encuentro.",
+    "submit": "Iniciar documento",
+    "submitting": "Iniciando…",
+    "cancel": "Cancelar",
+    "emptyTitle": "No hay documentos disponibles",
+    "emptyDescription": "Pide a un administrador que publique una plantilla de documento para esta instalación y área clínica.",
+    "fields": {
+      "definition": "Tipo de documento",
+      "definitionPlaceholder": "Seleccionar un tipo de documento"
+    },
+    "errors": {
+      "definitionRequired": "Elige un tipo de documento para continuar."
+    }
+  },
+  "timeline": {
+    "eyebrow": "Historial de documentos",
+    "title": "Documentos",
+    "subtitle": "Todos los documentos clínicos de los encuentros de este paciente.",
+    "emptyTitle": "Aún no hay documentos",
+    "emptyDescription": "Los documentos aparecerán aquí cuando se inicien dentro de un encuentro."
+  },
+  "detail": {
+    "eyebrow": "Documento clínico",
+    "backToEncounter": "Volver al encuentro",
+    "loadError": "No se pudo cargar el documento.",
+    "draftLoadError": "No se pudieron cargar las respuestas del documento.",
+    "draftUnavailable": "Las respuestas del documento no están disponibles.",
+    "notFound": "No se encontró el documento.",
+    "forbidden": "No tienes permiso para ver este documento.",
+    "forbiddenMutate": "No tienes permiso para modificar este documento.",
+    "stale": "Este documento cambió mientras trabajabas. Recarga la versión más reciente antes de continuar.",
+    "reload": "Recargar",
+    "validationErrors": "Corrige los errores de validación señalados antes de guardar o completar.",
+    "unknownAuthor": "Desconocido",
+    "terminalBanner": "Este documento está cerrado. Su contenido permanece en el registro clínico.",
+    "actions": {
+      "save": "Guardar borrador",
+      "saving": "Guardando…",
+      "complete": "Completar",
+      "cancel": "Cancelar documento",
+      "enterInError": "Registrado por error"
+    },
+    "confirm": {
+      "completeTitle": "¿Completar este documento?",
+      "completeBody": "El documento se completará, se validará y pasará a formar parte del registro clínico permanente.",
+      "cancelTitle": "¿Cancelar este documento?",
+      "cancelBody": "El documento se marcará como cancelado y seguirá visible históricamente.",
+      "enterInErrorTitle": "¿Marcar como registrado por error?",
+      "enterInErrorBody": "Úsalo cuando el documento se creó por equivocación. El registro sigue siendo consultable.",
+      "reasonLabel": "Motivo",
+      "reasonPlaceholder": "Explica por qué este documento no es válido",
+      "reasonRequired": "El motivo es obligatorio.",
+      "enteredInErrorReason": "Motivo de registro por error",
+      "confirm": "Confirmar",
+      "dismiss": "Mantener abierto"
+    },
+    "fields": {
+      "formVersion": "Versión del formulario",
+      "status": "Estado",
+      "author": "Autor",
+      "createdAt": "Inicio",
+      "updatedAt": "Actualizado",
+      "completedAt": "Completado",
+      "rowVersion": "Versión"
+    }
+  },
+  "permissions": {
+    "forbiddenTitle": "Acceso denegado"
+  },
+  "status": {
+    "inProgress": "En curso",
+    "completed": "Completado",
+    "canceled": "Cancelado",
+    "enteredInError": "Registrado por error"
+  }
+}

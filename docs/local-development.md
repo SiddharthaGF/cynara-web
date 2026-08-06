@@ -116,11 +116,34 @@ database, seed, and migration behavior.
 | E2E tests (Playwright)         | `pnpm test:e2e` (requires API on `:5000`)                 |
 | E2E tests with UI runner       | `pnpm test:e2e:ui`                                        |
 | Unit tests (Vitest)            | `pnpm test` (transport + SDK façade tests in `src/api/`)  |
-| Regenerate Cloudflare types    | `pnpm cf-typegen` (writes `worker-configuration.d.ts`)    |
-| Regenerate the API client      | `pnpm api:generate` (writes `src/api/generated/`)         |
-| Check API client drift         | `pnpm api:check` (regenerates, fails on stale output)     |
-| Deploy to Cloudflare           | `pnpm deploy`                                             |
-| Deploy preserving vars         | `pnpm deploy:keep-vars`                                   |
+
+### E2E preconditions
+
+`pnpm test:e2e` runs every spec in `e2e/`, including the AI-chat specs
+(`ai-chat-draft-sync.spec.ts`, `formai-stream.spec.ts`). They mock the chat
+stream but still read the real AI provider settings from the API. If the
+provider is unconfigured, the chat panel renders its "Configure AI" empty state
+and those specs wait until the test timeout — they do not fail fast.
+
+Seed the database with `Cynara.Seed` (it upserts AI settings) or configure the
+provider through the API first, e.g.:
+
+```bash
+curl -s -X PATCH http://localhost:5000/api/aiProviderSettings/default \
+  -H 'X-Hospital-Code: default' \
+  -H 'X-Actor-Id: designer-user' \
+  -H 'Accept: application/vnd.api+json; ext="https://www.jsonapi.net/ext/openapi"' \
+  -H 'Content-Type: application/vnd.api+json; ext="https://www.jsonapi.net/ext/openapi"' \
+  -d '{"data":{"id":"default","type":"aiProviderSettings","attributes":{"baseUrl":"https://api.openai.com/v1","model":"gpt-4o-mini","apiKey":"dev-only-key"}}}'
+```
+
+`GET /api/ai/status` should then report `"configured": true`. The CI E2E
+workflow seeds with `Cynara.Seed`, which already upserts AI settings. |
+Regenerate Cloudflare types | `pnpm cf-typegen` (writes
+`worker-configuration.d.ts`) | | Regenerate the API client | `pnpm api:generate`
+(writes `src/api/generated/`) | | Check API client drift | `pnpm api:check`
+(regenerates, fails on stale output) | | Deploy to Cloudflare | `pnpm deploy` |
+| Deploy preserving vars | `pnpm deploy:keep-vars` |
 
 ### What `pnpm dev` actually does
 

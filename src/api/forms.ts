@@ -167,6 +167,27 @@ export async function getFormVersion(
   versionId: string,
   expectedCode?: string,
 ): Promise<FormVersion> {
+  const version = await getFormVersionSnapshot(versionId, expectedCode);
+  if (!isEditableStatus(version.status as FormVersionStatus)) {
+    throw new ApiError(
+      409,
+      'Conflict',
+      `Form version '${versionId}' is not an editable draft.`,
+    );
+  }
+  return version;
+}
+
+/**
+ * Fetches any form version by id (draft, review, published, or retired) and
+ * maps it to the app-facing `FormVersion`. Used by document workspaces, which
+ * must render the exact published snapshot a document was started on even
+ * after the form moved on.
+ */
+export async function getFormVersionSnapshot(
+  versionId: string,
+  expectedCode?: string,
+): Promise<FormVersion> {
   const { data } = await sdkGetFormVersion({
     path: { id: versionId },
     headers: contractHeaders(),
@@ -189,13 +210,6 @@ export async function getFormVersion(
       404,
       'Not Found',
       `Form version '${versionId}' does not belong to '${expectedCode}'.`,
-    );
-  }
-  if (!isEditableStatus(version.attributes?.status)) {
-    throw new ApiError(
-      409,
-      'Conflict',
-      `Form version '${versionId}' is not an editable draft.`,
     );
   }
   return mapVersion(version, code || (expectedCode ?? ''));

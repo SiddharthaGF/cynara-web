@@ -7,6 +7,7 @@ import type { AppLocale } from '@/lib/locale.ts';
 import apiEn from './locales/en/api.json';
 import commonEn from './locales/en/common.json';
 import designerEn from './locales/en/designer.json';
+import documentsEn from './locales/en/documents.json';
 import encountersEn from './locales/en/encounters.json';
 import formsEn from './locales/en/forms.json';
 import hospitalEn from './locales/en/hospital.json';
@@ -15,6 +16,7 @@ import validationEn from './locales/en/validation.json';
 import apiEs from './locales/es/api.json';
 import commonEs from './locales/es/common.json';
 import designerEs from './locales/es/designer.json';
+import documentsEs from './locales/es/documents.json';
 import encountersEs from './locales/es/encounters.json';
 import formsEs from './locales/es/forms.json';
 import hospitalEs from './locales/es/hospital.json';
@@ -27,6 +29,7 @@ const resources = {
     common: commonEn,
     forms: formsEn,
     designer: designerEn,
+    documents: documentsEn,
     encounters: encountersEn,
     hospital: hospitalEn,
     patients: patientsEn,
@@ -37,6 +40,7 @@ const resources = {
     common: commonEs,
     forms: formsEs,
     designer: designerEs,
+    documents: documentsEs,
     encounters: encountersEs,
     hospital: hospitalEs,
     patients: patientsEs,
@@ -59,6 +63,7 @@ export function createI18n(
       'common',
       'forms',
       'designer',
+      'documents',
       'encounters',
       'patients',
       'hospital',
