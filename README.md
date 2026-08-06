@@ -43,26 +43,31 @@ and SSE streams work the same way they do against the production API.
 For the full first-time-from-clean-checkout walkthrough — proxy and CORS
 interaction with `cynara-api`, environment variables, troubleshooting, and
 Cloudflare preview builds — see
-[`docs/local-development.md`](docs/local-development.md).
+[`docs/local-development.md`](docs/local-development.md). For the generated API
+client (regeneration, contract edits, CI pinning), see
+[`docs/api-client.md`](docs/api-client.md).
 
 ## Scripts
 
-| Command                 | Description                                          |
-| ----------------------- | ---------------------------------------------------- |
-| `pnpm dev`              | TanStack Start dev server (Vite + Cloudflare plugin) |
-| `pnpm build`            | Client + SSR production build (`vite build`)         |
-| `pnpm preview`          | Preview the production build via Vite                |
-| `pnpm typecheck`        | TypeScript check (`tsc -b --noEmit`)                 |
-| `pnpm lint:check`       | oxlint (no fixes)                                    |
-| `pnpm lint:fix`         | oxlint with autofixes                                |
-| `pnpm fmt:check`        | oxfmt format check                                   |
-| `pnpm fmt`              | oxfmt format write                                   |
-| `pnpm doctor`           | React Doctor static analysis                         |
-| `pnpm test:e2e`         | Playwright end-to-end tests (need API on :5000)      |
-| `pnpm test:e2e:ui`      | Playwright tests with the UI runner                  |
-| `pnpm cf-typegen`       | Regenerate `worker-configuration.d.ts` (gitignored)  |
-| `pnpm deploy`           | `pnpm build` + `wrangler deploy`                     |
-| `pnpm deploy:keep-vars` | `pnpm build` + `wrangler deploy --keep-vars`         |
+| Command                 | Description                                               |
+| ----------------------- | --------------------------------------------------------- |
+| `pnpm dev`              | TanStack Start dev server (Vite + Cloudflare plugin)      |
+| `pnpm build`            | Client + SSR production build (`vite build`)              |
+| `pnpm preview`          | Preview the production build via Vite                     |
+| `pnpm typecheck`        | TypeScript check (`tsc -b --noEmit`)                      |
+| `pnpm lint:check`       | oxlint (no fixes)                                         |
+| `pnpm lint:fix`         | oxlint with autofixes                                     |
+| `pnpm fmt:check`        | oxfmt format check                                        |
+| `pnpm fmt`              | oxfmt format write                                        |
+| `pnpm doctor`           | React Doctor static analysis                              |
+| `pnpm test`             | Vitest unit tests (transport + API façade tests)          |
+| `pnpm test:e2e`         | Playwright end-to-end tests (need API on :5000)           |
+| `pnpm test:e2e:ui`      | Playwright tests with the UI runner                       |
+| `pnpm api:generate`     | Regenerate `src/api/generated/` from the OpenAPI contract |
+| `pnpm api:check`        | Regenerate + fail on stale generated output               |
+| `pnpm cf-typegen`       | Regenerate `worker-configuration.d.ts` (gitignored)       |
+| `pnpm deploy`           | `pnpm build` + `wrangler deploy`                          |
+| `pnpm deploy:keep-vars` | `pnpm build` + `wrangler deploy --keep-vars`              |
 
 ## Project structure
 

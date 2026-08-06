@@ -66,13 +66,14 @@ export interface CreatedForm {
   definitionId: string;
 }
 
-/** Create a unique draft form against the real API (through the Vite proxy). */
+/** Create a unique draft form against the real API. */
 export async function createFormViaApi(
   request: APIRequestContext,
   baseURL: string,
 ): Promise<CreatedForm> {
+  const apiOrigin = process.env.VITE_API_ORIGIN?.replace(/\/$/u, '') || baseURL;
   const code = `e2e-ai-${Date.now()}`;
-  const response = await request.post(`${baseURL}/api/formDefinitions`, {
+  const response = await request.post(`${apiOrigin}/api/formDefinitions`, {
     data: {
       data: {
         attributes: {
@@ -89,6 +90,7 @@ export async function createFormViaApi(
       'Accept': JSON_API,
       'Content-Type': JSON_API,
       'X-Actor-Id': ACTOR,
+      'X-Hospital-Code': process.env.VITE_HOSPITAL_CODE ?? 'default',
     },
   });
 

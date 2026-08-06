@@ -1,53 +1,33 @@
+import { contractHeaders, requireDto } from '@/api/client-runtime.ts';
+import { ApiError } from '@/api/client.ts';
 import {
-  ACTOR_HEADER_NAME,
-  ApiError,
-  DEFAULT_ACTOR_ID,
-  HOSPITAL_HEADER_NAME,
-  apiRequest,
-  resolveHospitalCode,
-} from '@/api/client.ts';
-import { JSON_API_MEDIA } from '@/api/json-api.ts';
+  cancelEncounter as sdkCancelEncounter,
+  completeEncounter as sdkCompleteEncounter,
+  createEncounter as sdkCreateEncounter,
+  enterEncounterInError as sdkEnterEncounterInError,
+  getEncounter as sdkGetEncounter,
+  listEncounters as sdkListEncounters,
+  type EncounterDto as EncounterDtoContract,
+  type EncounterListResponse as EncounterListResponseContract,
+  type ListEncountersData,
+} from '@/api/generated';
+
+/**
+ * Read model for encounter listings. Derived from the generated contract type
+ * with the fields the app relies on as always-present promoted to required.
+ */
+export type EncounterDto = Required<EncounterDtoContract>;
+export type EncounterListResponse = EncounterListResponseContract & {
+  encounters: EncounterDto[];
+};
 
 /** Encounter type values accepted by cynara-api. */
-export type EncounterType =
-  | 'ambulatory'
-  | 'emergency'
-  | 'inpatient'
-  | 'observation'
-  | 'virtual';
+export type EncounterType = NonNullable<EncounterDtoContract['type']>;
 
 /** Lifecycle status returned by the encounter API. */
-export type EncounterStatus =
-  | 'open'
-  | 'completed'
-  | 'canceled'
-  | 'enteredInError';
+export type EncounterStatus = NonNullable<EncounterDtoContract['status']>;
 
-export interface EncounterDto {
-  id: string;
-  patientId: string;
-  facilityId: string;
-  clinicalAreaId: string;
-  type: string;
-  responsibleProfessionalId: string;
-  status: string;
-  startedAt: string;
-  endedAt: string | null;
-  rowVersion: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface EncounterListResponse {
-  encounters: EncounterDto[];
-}
-
-export interface ListEncountersParams {
-  patientId?: string;
-  facilityId?: string;
-  clinicalAreaId?: string;
-  status?: string;
-}
+export type ListEncountersParams = NonNullable<ListEncountersData['query']>;
 
 export interface CreateEncounterInput {
   patientId: string;
@@ -63,61 +43,33 @@ export interface TransitionEncounterInput {
   endedAt?: string | null;
 }
 
-function encounterHeaders(init?: HeadersInit): Headers {
-  const headers = new Headers(init);
-  headers.set('Accept', JSON_API_MEDIA);
-  if (!headers.has('Content-Type')) {
-    headers.set('Content-Type', JSON_API_MEDIA);
-  }
-  if (!headers.has(HOSPITAL_HEADER_NAME)) {
-    headers.set(HOSPITAL_HEADER_NAME, resolveHospitalCode());
-  }
-  if (!headers.has(ACTOR_HEADER_NAME)) {
-    headers.set(ACTOR_HEADER_NAME, DEFAULT_ACTOR_ID);
-  }
-  return headers;
-}
-
-function buildListQuery(params: ListEncountersParams): string {
-  const search = new URLSearchParams();
-  if (params.patientId) {
-    search.set('patientId', params.patientId);
-  }
-  if (params.facilityId) {
-    search.set('facilityId', params.facilityId);
-  }
-  if (params.clinicalAreaId) {
-    search.set('clinicalAreaId', params.clinicalAreaId);
-  }
-  if (params.status) {
-    search.set('status', params.status);
-  }
-  return search.toString();
-}
-
-function appendQuery(path: string, query: string): string {
-  if (query.length === 0) {
-    return path;
-  }
-  return `${path}?${query}`;
-}
-
 export async function listEncounters(
   params: ListEncountersParams = {},
 ): Promise<EncounterListResponse> {
-  const query = buildListQuery(params);
-  return apiRequest<EncounterListResponse>(
-    appendQuery('/api/encounters', query),
-    { headers: encounterHeaders() },
-  );
+  const { data } = await sdkListEncounters({
+    query: params,
+    headers: contractHeaders(),
+  });
+  return {
+    ...data,
+    encounters: (data.encounters ?? []).map(requireDto),
+  };
 }
 
 export async function getEncounter(id: string): Promise<EncounterDto> {
-  return apiRequest<EncounterDto>(`/api/encounters/${id}`, {
-    headers: encounterHeaders(),
+  const { data } = await sdkGetEncounter({
+    path: { id },
+    headers: contractHeaders(),
   });
+  return requireDto(data);
 }
 
+/**
+ * CYN-55: the contract omits `requestBody` for `POST /api/encounters`, so the
+ * generated SDK types its options `body` as `never` while the API accepts the
+ * documented payload below. The narrow cast is the bridge until the backend
+ * contract models the request schema.
+ */
 export async function createEncounter(
   input: CreateEncounterInput,
 ): Promise<EncounterDto> {
@@ -131,37 +83,41 @@ export async function createEncounter(
   if (input.startedAt !== undefined) {
     body.startedAt = input.startedAt;
   }
-  return apiRequest<EncounterDto>('/api/encounters', {
-    method: 'POST',
-    headers: encounterHeaders(),
-    body: JSON.stringify(body),
-  });
+  const { data } = await sdkCreateEncounter({
+    headers: contractHeaders(),
+    body,
+  } as never);
+  return requireDto(data);
 }
 
 export async function completeEncounter(
   id: string,
   input: TransitionEncounterInput,
 ): Promise<EncounterDto> {
-  return transitionEncounter(id, 'complete', input);
+  return transitionEncounter(id, sdkCompleteEncounter, input);
 }
 
 export async function cancelEncounter(
   id: string,
   input: TransitionEncounterInput,
 ): Promise<EncounterDto> {
-  return transitionEncounter(id, 'cancel', input);
+  return transitionEncounter(id, sdkCancelEncounter, input);
 }
 
 export async function enterEncounterInError(
   id: string,
   input: TransitionEncounterInput,
 ): Promise<EncounterDto> {
-  return transitionEncounter(id, 'enter-in-error', input);
+  return transitionEncounter(id, sdkEnterEncounterInError, input);
 }
 
+/**
+ * CYN-55: same `requestBody` gap as `createEncounter` for the transition
+ * endpoints (`/complete`, `/cancel`, `/enter-in-error`).
+ */
 async function transitionEncounter(
   id: string,
-  action: 'complete' | 'cancel' | 'enter-in-error',
+  sdk: typeof sdkCompleteEncounter,
   input: TransitionEncounterInput,
 ): Promise<EncounterDto> {
   const body: Record<string, unknown> = {
@@ -170,11 +126,12 @@ async function transitionEncounter(
   if (input.endedAt !== undefined) {
     body.endedAt = input.endedAt;
   }
-  return apiRequest<EncounterDto>(`/api/encounters/${id}/${action}`, {
-    method: 'POST',
-    headers: encounterHeaders(),
-    body: JSON.stringify(body),
-  });
+  const { data } = await sdk({
+    path: { id },
+    headers: contractHeaders(),
+    body,
+  } as never);
+  return requireDto(data);
 }
 
 export function isForbiddenEncounterError(error: unknown): boolean {
@@ -187,11 +144,13 @@ export function isStaleEncounterError(error: unknown): boolean {
   return error instanceof ApiError && error.status === 409;
 }
 
-export function isOpenEncounter(status: string): boolean {
+export function isOpenEncounter(status: EncounterStatus | undefined): boolean {
   return status === 'open';
 }
 
-export function isHistoricalEncounter(status: string): boolean {
+export function isHistoricalEncounter(
+  status: EncounterStatus | undefined,
+): boolean {
   return (
     status === 'completed' ||
     status === 'canceled' ||

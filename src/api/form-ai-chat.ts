@@ -1,18 +1,30 @@
+import { contractHeaders } from '@/api/client-runtime.ts';
 import { ApiError, performRequest } from '@/api/client.ts';
 import { resolveFormDefinitionId } from '@/api/forms.ts';
+import { postFormAiChat as sdkPostFormAiChat } from '@/api/generated';
+import type { FormAiChatResponse } from '@/api/generated';
 
 export interface FormAiChatMessage {
   role: 'user' | 'assistant';
   content: string;
 }
 
-export interface FormAiChatResult {
-  summary: string;
-  assistantMessage: string;
-  thinking: string | null;
-  clinicalSchemaJson: string;
-  uiSchemaJson: string;
-  rulesSchemaJson: string;
+/**
+ * Non-stream chat result. Field names mirror the generated
+ * `formAiChatResponse` schema; the contract models them as optional, so the
+ * app-facing shape promotes them to required like the other DTOs.
+ */
+export type FormAiChatResult = Required<
+  Pick<
+    FormAiChatResponse,
+    | 'summary'
+    | 'assistantMessage'
+    | 'thinking'
+    | 'clinicalSchemaJson'
+    | 'uiSchemaJson'
+    | 'rulesSchemaJson'
+  >
+> & {
   /**
    * Diagnostic metadata emitted by the backend. The only field we currently
    * care about is `fallback.outcome` (the honesty-net layer from B3 surfaces
@@ -25,7 +37,7 @@ export interface FormAiChatResult {
       droppedLayers?: readonly string[];
     };
   };
-}
+};
 
 export interface FormAiChatInput {
   messages: FormAiChatMessage[];
@@ -58,6 +70,33 @@ export interface StreamFormDraftAiByCodeOptions {
   code: string;
   input: FormAiChatInput;
   options?: StreamFormDraftAiOptions;
+}
+
+/**
+ * Non-streaming chat completion over the SDK. The contract omits `requestBody`
+ * for `POST /api/ai/forms/{formDefinitionId}/chat` (CYN-55), so the generated
+ * SDK types the body as `never`; the payload below matches what the streaming
+ * endpoint accepts, and the narrow cast bridges the typing. The chat endpoint
+ * is non-resource RPC (application/json), so it overrides the JSON:API default
+ * content type the transport configures for JSON:API mutations.
+ */
+export async function postFormAiChat(
+  formDefinitionId: string,
+  input: FormAiChatInput,
+): Promise<FormAiChatResult> {
+  const { data } = await sdkPostFormAiChat({
+    path: { formDefinitionId },
+    headers: { ...contractHeaders(), 'Content-Type': 'application/json' },
+    body: input,
+  } as never);
+  return {
+    summary: data.summary ?? '',
+    assistantMessage: data.assistantMessage ?? '',
+    thinking: data.thinking ?? null,
+    clinicalSchemaJson: data.clinicalSchemaJson ?? '',
+    uiSchemaJson: data.uiSchemaJson ?? '',
+    rulesSchemaJson: data.rulesSchemaJson ?? '',
+  };
 }
 
 function isStreamOptions(
