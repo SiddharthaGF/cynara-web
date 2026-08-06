@@ -31,6 +31,10 @@ const config = defineConfig({
   },
   resolve: {
     tsconfigPaths: true,
+    dedupe: ['react', 'react-dom'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   plugins: [
     cloudflare({
