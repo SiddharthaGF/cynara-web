@@ -32,11 +32,13 @@ import {
   usePatientSearch,
   type ListPatientsParams,
 } from '@/features/patients/usePatientsCatalog.ts';
+import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
 export function PatientListPage(): JSX.Element {
   const { t } = useTranslation('patients');
   const { locale } = useParams({ from: '/$locale' });
   const reduceMotion = useReducedMotion();
+  const { can } = useCapabilities();
   const [searchParams, setSearchParams] = useState<ListPatientsParams>({
     page: 1,
     pageSize: DEFAULT_PATIENT_PAGE_SIZE,
@@ -76,7 +78,7 @@ export function PatientListPage(): JSX.Element {
     }));
   }, []);
 
-  const canRegister = !isForbidden;
+  const canRegister = !isForbidden && can('write', 'Patient');
   const showSearchError = !isForbidden && error !== null && error !== '';
 
   return (

@@ -54,6 +54,19 @@
     "close": "Close",
     "forms": "Forms"
   },
+  "access": {
+    "checking": "Checking your access…",
+    "deniedTitle": "Access denied",
+    "deniedDescription": "Your account does not have permission to view this area. Ask an administrator to grant the required capability.",
+    "unavailableTitle": "Could not verify access",
+    "unavailableDescription": "Cynara could not confirm your access rights. Try again, or ask an administrator if the issue persists.",
+    "retry": "Try again",
+    "backToStart": "Back to start",
+    "insufficientTitle": "Read-only view",
+    "patientsWriteMissing": "You can view this record, but you do not have permission to change it.",
+    "encountersWriteMissing": "You can view this encounter, but you do not have permission to modify it.",
+    "loadFailedTitle": "This page could not be loaded"
+  },
   "yes": "Yes",
   "no": "No",
   "placeholders": {

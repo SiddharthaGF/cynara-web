@@ -3,6 +3,10 @@ import type { Locator, Page } from '@playwright/test';
 
 import { createFormViaApi, mockAiChatStream } from './fixtures/ai-chat-mock.ts';
 import {
+  FULL_CAPABILITIES,
+  grantCapabilities,
+} from './fixtures/capabilities.ts';
+import {
   APPLIED_FIELD_ORDER,
   APPLIED_LABELS,
   ASSISTANT_MESSAGE,
@@ -88,6 +92,7 @@ async function expectLabelsInOrder(
 test.describe('AI chat draft sync (real app, mocked stream)', () => {
   test.beforeEach(async ({ page }) => {
     await mockAiChatStream(page);
+    grantCapabilities(page, FULL_CAPABILITIES);
   });
 
   test('applies chat schema to designer and preview in designer order', async ({

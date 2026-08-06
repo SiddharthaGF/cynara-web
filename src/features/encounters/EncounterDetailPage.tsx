@@ -28,6 +28,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card.tsx';
+import { InsufficientPermissionNotice } from '@/features/access-control/InsufficientPermissionNotice.tsx';
 import {
   EncounterDetailLoading,
   EncounterDetailShell,
@@ -48,9 +49,11 @@ import {
   useEncounterDetail,
   useEncounterTransitions,
 } from '@/features/encounters/useEncountersCatalog.ts';
+import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
 export function EncounterDetailPage(): JSX.Element {
   const { t, i18n } = useTranslation(['encounters', 'api']);
+  const { can } = useCapabilities();
   const {
     locale,
     id: patientId,
@@ -143,7 +146,9 @@ export function EncounterDetailPage(): JSX.Element {
     );
   }
 
-  const canAct = isOpenEncounter(encounter.status) && !mutationForbidden;
+  const canWrite = can('write', 'Encounter');
+  const canAct =
+    isOpenEncounter(encounter.status) && !mutationForbidden && canWrite;
   const historical = isHistoricalEncounter(encounter.status);
 
   return (
@@ -197,6 +202,10 @@ export function EncounterDetailPage(): JSX.Element {
           >
             <AlertDescription>{t('detail.forbiddenMutate')}</AlertDescription>
           </Alert>
+        ) : null}
+
+        {!canWrite && !mutationForbidden ? (
+          <InsufficientPermissionNotice descriptionKey='access.encountersWriteMissing' />
         ) : null}
 
         {staleError ? (

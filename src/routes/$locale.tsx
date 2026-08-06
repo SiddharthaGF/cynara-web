@@ -2,6 +2,7 @@ import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 import type { JSX } from 'react';
 import { useLayoutEffect } from 'react';
 
+import { CapabilityRouteGuard } from '@/features/access-control/CapabilityRouteGuard.tsx';
 import { i18nInstance } from '@/i18n/index.ts';
 import { getDocumentMeta } from '@/lib/document-meta.ts';
 import {
@@ -61,5 +62,9 @@ function LocaleLayout(): JSX.Element {
     persistLocale(locale);
   }, [locale]);
 
-  return <Outlet />;
+  return (
+    <CapabilityRouteGuard>
+      <Outlet />
+    </CapabilityRouteGuard>
+  );
 }

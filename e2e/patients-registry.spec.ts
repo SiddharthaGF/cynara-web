@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
+import {
+  FULL_CAPABILITIES,
+  grantCapabilities,
+} from './fixtures/capabilities.ts';
 import { createPatientViaApi, uniqueMrn } from './fixtures/patients.ts';
 
 async function openPatientList(page: Page): Promise<void> {
@@ -66,6 +70,10 @@ async function registerPatientInUi(
 }
 
 test.describe('patient registration and search (CYN-50)', () => {
+  test.beforeEach(async ({ page }) => {
+    grantCapabilities(page, FULL_CAPABILITIES);
+  });
+
   test('registers, searches by MRN, and opens patient detail', async ({
     page,
     request,

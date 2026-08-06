@@ -2,11 +2,13 @@ import { createFileRoute } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
 import { getFormVersion } from '@/api/forms.ts';
+import { RouteAccessError } from '@/features/access-control/RouteAccessError.tsx';
 import { FormDesignerPage } from '@/features/forms/designer/FormDesignerPage';
 
 export const Route = createFileRoute('/$locale/forms/$code/designer/$draftId')({
   // The designer is an authenticated editor; send loader data but render the canvas on the client.
   ssr: 'data-only',
+  errorComponent: RouteAccessError,
   loader: async ({ params }) => {
     const draft = await getFormVersion(params.draftId, params.code);
     return draft;

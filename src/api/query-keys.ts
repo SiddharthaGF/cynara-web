@@ -79,6 +79,7 @@ const FORM_RESPONSE_REVISIONS_ALL = ['formResponseRevisions'];
 const AUDIT_EVENTS_ALL = ['auditEvents'];
 const PATIENTS_ALL = ['patients'];
 const ENCOUNTERS_ALL = ['encounters'];
+const CAPABILITIES_ALL = ['capabilities'];
 const AI_ALL = ['ai'];
 
 export const queryKeys = {
@@ -165,6 +166,10 @@ export const queryKeys = {
     list: (params: EncounterListParams = {}) =>
       key('encounters', 'list', params),
     detail: (id: string) => key('encounters', 'detail', id),
+  },
+  capabilities: {
+    all: CAPABILITIES_ALL,
+    current: () => key('capabilities', 'current'),
   },
   ai: {
     all: AI_ALL,

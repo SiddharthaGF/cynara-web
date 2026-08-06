@@ -22,6 +22,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import type { FormSummary } from '@/features/forms/types.ts';
+import { useCapabilities } from '@/hooks/use-capabilities.ts';
 import { cn } from '@/lib/utils.ts';
 
 interface FormsCatalogCardProps {
@@ -37,6 +38,8 @@ export function FormsCatalogCard({
 }: FormsCatalogCardProps): JSX.Element {
   const { t } = useTranslation('forms');
   const { locale } = useParams({ from: '/$locale' });
+  const { can } = useCapabilities();
+  const canDesign = can('write', 'Form');
 
   function renderCatalogBody(): JSX.Element {
     if (isLoading) {
@@ -91,7 +94,8 @@ export function FormsCatalogCard({
                   {form.editableVersionId !== null &&
                   form.editableVersionId !== '' &&
                   form.editableStatus !== null &&
-                  form.editableStatus !== '' ? (
+                  form.editableStatus !== '' &&
+                  canDesign ? (
                     <Link
                       to='/$locale/forms/$code/designer/$draftId'
                       params={{

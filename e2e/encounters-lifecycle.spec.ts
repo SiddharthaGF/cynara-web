@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
 
 import {
+  FULL_CAPABILITIES,
+  grantCapabilities,
+} from './fixtures/capabilities.ts';
+import {
   completeEncounterViaApi,
   createEncounterViaApi,
   seedEncounterTaxonomy,
@@ -8,6 +12,10 @@ import {
 import { createPatientViaApi, uniqueMrn } from './fixtures/patients.ts';
 
 test.describe('encounter views and lifecycle (CYN-52)', () => {
+  test.beforeEach(async ({ page }) => {
+    grantCapabilities(page, FULL_CAPABILITIES);
+  });
+
   test('creates an encounter from the patient chart and opens detail', async ({
     page,
     request,

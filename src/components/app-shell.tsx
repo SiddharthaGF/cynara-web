@@ -23,6 +23,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar.tsx';
+import { useCapabilities } from '@/hooks/use-capabilities.ts';
 import { cn } from '@/lib/utils.ts';
 
 interface AppShellProps {
@@ -35,12 +36,40 @@ interface NavEntry {
   to: '/$locale/forms' | '/$locale/patients';
   labelKey: string;
   icon: typeof ClipboardList;
+  action: 'read';
+  subject: 'Form' | 'Patient';
 }
 
 const NAV_ENTRIES: readonly NavEntry[] = [
-  { to: '/$locale/forms', labelKey: 'nav.forms', icon: ClipboardList },
-  { to: '/$locale/patients', labelKey: 'nav.patients', icon: Users },
+  {
+    to: '/$locale/forms',
+    labelKey: 'nav.forms',
+    icon: ClipboardList,
+    action: 'read',
+    subject: 'Form',
+  },
+  {
+    to: '/$locale/patients',
+    labelKey: 'nav.patients',
+    icon: Users,
+    action: 'read',
+    subject: 'Patient',
+  },
 ];
+
+function useAccessibleNav(): {
+  entries: NavEntry[];
+  homeTarget: NavEntry['to'];
+} {
+  const { can, isLoading } = useCapabilities();
+  const entries = NAV_ENTRIES.filter(
+    (entry) => !isLoading && can(entry.action, entry.subject),
+  );
+  return {
+    entries,
+    homeTarget: entries[0]?.to ?? '/$locale/forms',
+  };
+}
 
 export function AppShell({
   children,
@@ -82,6 +111,7 @@ function AppShellContent({
   const { locale } = useParams({ from: '/$locale' });
   const location = useLocation();
   const { state } = useSidebar();
+  const { entries, homeTarget } = useAccessibleNav();
 
   const isOnForms = location.pathname.startsWith(`/${locale}/forms`);
   const isOnPatients = location.pathname.startsWith(`/${locale}/patients`);
@@ -98,7 +128,7 @@ function AppShellContent({
       >
         <SidebarHeader>
           <Link
-            to='/$locale/forms'
+            to={homeTarget}
             params={{ locale }}
             aria-label={t('appName')}
             className={cn(
@@ -111,37 +141,39 @@ function AppShellContent({
         </SidebarHeader>
 
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>{t('nav.modules')}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {NAV_ENTRIES.map((entry) => {
-                  const Icon = entry.icon;
-                  return (
-                    <SidebarMenuItem key={entry.to}>
-                      <SidebarMenuButton
-                        render={
-                          <Link
-                            to={entry.to}
-                            params={{ locale }}
-                          />
-                        }
-                        isActive={
-                          entry.to === '/$locale/forms'
-                            ? isOnForms
-                            : isOnPatients
-                        }
-                        tooltip={t(entry.labelKey)}
-                      >
-                        <Icon />
-                        <span>{t(entry.labelKey)}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {entries.length > 0 ? (
+            <SidebarGroup>
+              <SidebarGroupLabel>{t('nav.modules')}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {entries.map((entry) => {
+                    const Icon = entry.icon;
+                    return (
+                      <SidebarMenuItem key={entry.to}>
+                        <SidebarMenuButton
+                          render={
+                            <Link
+                              to={entry.to}
+                              params={{ locale }}
+                            />
+                          }
+                          isActive={
+                            entry.to === '/$locale/forms'
+                              ? isOnForms
+                              : isOnPatients
+                          }
+                          tooltip={t(entry.labelKey)}
+                        >
+                          <Icon />
+                          <span>{t(entry.labelKey)}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ) : null}
         </SidebarContent>
 
         <SidebarFooter

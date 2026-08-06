@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/empty.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
+import { InsufficientPermissionNotice } from '@/features/access-control/InsufficientPermissionNotice.tsx';
 import { PatientEncountersPanel } from '@/features/encounters/PatientEncountersPanel.tsx';
 import { PatientEditForm } from '@/features/patients/PatientEditForm.tsx';
 import { PatientView } from '@/features/patients/PatientView.tsx';
@@ -31,6 +32,7 @@ import {
   usePatientDetail,
   useDeletePatient,
 } from '@/features/patients/usePatientsCatalog.ts';
+import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
 export function PatientDetailPage(): JSX.Element {
   const { t } = useTranslation(['patients', 'api']);
@@ -39,6 +41,7 @@ export function PatientDetailPage(): JSX.Element {
   });
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
+  const { can } = useCapabilities();
 
   const { patient, isLoading, error: loadError } = usePatientDetail(id);
   const {
@@ -112,7 +115,8 @@ export function PatientDetailPage(): JSX.Element {
     );
   }
 
-  const canMutate = !mutationForbidden;
+  const canWrite = can('write', 'Patient');
+  const canMutate = !mutationForbidden && canWrite;
 
   return (
     <AppShell variant='catalog'>
@@ -160,6 +164,10 @@ export function PatientDetailPage(): JSX.Element {
                 {t('permissions.forbiddenMutate')}
               </AlertDescription>
             </Alert>
+          ) : null}
+
+          {!canWrite && !mutationForbidden ? (
+            <InsufficientPermissionNotice descriptionKey='access.patientsWriteMissing' />
           ) : null}
 
           {(deleteError || deleteSuccess) && (
@@ -225,7 +233,6 @@ export function PatientDetailPage(): JSX.Element {
           <PatientEncountersPanel
             patientId={patient.id}
             locale={locale}
-            canMutate={canMutate}
             onForbidden={() => {
               setMutationForbidden(true);
             }}

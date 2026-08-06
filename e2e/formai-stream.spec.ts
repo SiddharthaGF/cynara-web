@@ -6,6 +6,10 @@ import {
   createFormViaApi,
   mockAiChatStream,
 } from './fixtures/ai-chat-mock.ts';
+import {
+  FULL_CAPABILITIES,
+  grantCapabilities,
+} from './fixtures/capabilities.ts';
 import { ASSISTANT_MESSAGE } from './fixtures/form-schemas.ts';
 
 async function openDesigner(page: Page, formCode: string): Promise<void> {
@@ -50,6 +54,7 @@ async function sendPromptAndExpectApplied(
 test.describe('FormAi stream hardening (real app, mocked stream)', () => {
   test.beforeEach(async ({ page }) => {
     await mockAiChatStream(page);
+    grantCapabilities(page, FULL_CAPABILITIES);
   });
 
   test('short prompt completes within 60s and applies the draft', async ({
