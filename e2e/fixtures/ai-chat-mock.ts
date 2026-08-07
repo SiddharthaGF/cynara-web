@@ -43,6 +43,31 @@ export function buildMockAiChatSse(): string {
  * still hit the real cynara-api via the Vite proxy.
  */
 export async function mockAiChatStream(page: Page): Promise<void> {
+  // The chat composer is gated on `GET /api/ai/status` reporting the provider
+  // as configured. The seeded API deliberately has no API key, so stub the
+  // status to keep the flow deterministic (the stream itself is already
+  // mocked below).
+  await page.route('**/api/ai/status', async (route) => {
+    if (route.request().method() !== 'GET') {
+      await route.continue();
+      return;
+    }
+    await route.fulfill({
+      body: JSON.stringify({
+        apiKeyConfigured: true,
+        apiKeyMasked: '****',
+        baseUrl: 'https://api.openai.com/v1',
+        baseUrlConfigured: true,
+        configured: true,
+        jsonObject: true,
+        model: 'gpt-4o-mini',
+        source: 'database',
+      }),
+      headers: { 'Content-Type': 'application/json' },
+      status: 200,
+    });
+  });
+
   const body = buildMockAiChatSse();
   await page.route('**/api/ai/forms/*/chat/stream', async (route) => {
     if (route.request().method() !== 'POST') {
