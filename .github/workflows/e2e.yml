@@ -7,9 +7,16 @@
 # screenshots/videos, and the API log so the run is reproducible without a
 # local replay.
 #
-# `API_REF` is intentionally a branch: the E2E suite exercises the latest
-# backend contract, and the pinned `API client drift` workflow guards the
-# generated client against that branch separately.
+# `API_REF` points at the API's default branch so the E2E suite exercises the
+# latest backend contract; the `API client drift` workflow guards the generated
+# client against a pinned API contract SHA separately.
+#
+# The Cloudflare Vite plugin runs the SSR bundle inside workerd, whose
+# environment comes from `.dev.vars` / `.env` / `wrangler.jsonc [vars]` — the
+# step's `VITE_API_ORIGIN` env var only reaches the browser bundle. Without a
+# checked-out `.dev.vars` the SSR falls back to the production origin and
+# freshly created E2E forms are never found, so the workflow writes one that
+# points the SSR runtime at the locally booted API.
 
 name: E2E clinical workspace
 
@@ -21,7 +28,7 @@ on:
 
 env:
   API_REPO: SiddharthaGF/cynara-api
-  API_REF: develop
+  API_REF: main
   CONNECTION_STRING: >-
     Host=127.0.0.1;Port=5432;Database=postgres;Username=postgres;Password=postgres
 
@@ -104,6 +111,12 @@ jobs:
       - name: Install Playwright browsers
         working-directory: cynara-web
         run: pnpm exec playwright install --with-deps chromium
+
+      - name: Point dev-server SSR at the local API
+        working-directory: cynara-web
+        run: |
+          printf 'VITE_API_ORIGIN=http://127.0.0.1:5000\nVITE_HOSPITAL_CODE=default\n' > .dev.vars
+          test -s .dev.vars
 
       - name: Run E2E tests
         working-directory: cynara-web

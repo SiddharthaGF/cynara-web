@@ -25,6 +25,28 @@ export interface FormVersionListParams {
   sort?: string;
 }
 
+export interface WorkflowListParams {
+  include?: string;
+  status?: string;
+  sort?: string;
+}
+
+export interface WorkflowVersionListParams {
+  include?: string;
+  workflowDefinitionId?: string;
+  sort?: string;
+}
+
+export interface JourneyListParams {
+  patientId?: string;
+  status?: string;
+}
+
+export interface TaskListParams {
+  assigneeId?: string;
+  status?: string;
+}
+
 /** Query params modeled by the OpenAPI contract for the patient search. */
 export type PatientListParams = NonNullable<SearchPatientsData['query']>;
 
@@ -81,6 +103,10 @@ const COMPONENT_VERSIONS_ALL = ['componentVersions'];
 const DOCUMENT_DEFINITIONS_ALL = ['documentDefinitions'];
 const FORM_RESPONSES_ALL = ['formResponses'];
 const FORM_RESPONSE_REVISIONS_ALL = ['formResponseRevisions'];
+const WORKFLOW_DEFINITIONS_ALL = ['workflowDefinitions'];
+const WORKFLOW_VERSIONS_ALL = ['workflowVersions'];
+const JOURNEYS_ALL = ['journeys'];
+const TASKS_ALL = ['tasks'];
 const AUDIT_EVENTS_ALL = ['auditEvents'];
 const PATIENTS_ALL = ['patients'];
 const ENCOUNTERS_ALL = ['encounters'];
@@ -154,6 +180,31 @@ export const queryKeys = {
       key('formResponses', 'list', params),
     detail: (id: string) => key('formResponses', 'detail', id),
     revisions: (id: string) => key('formResponses', 'revisions', id),
+  },
+  workflowDefinitions: {
+    all: WORKFLOW_DEFINITIONS_ALL,
+    list: (params: WorkflowListParams = {}) =>
+      key('workflowDefinitions', 'list', params),
+    detail: (id: string) => key('workflowDefinitions', 'detail', id),
+    versions: (id: string) => key('workflowDefinitions', 'versions', id),
+    /** The editable draft workflow version for a definition code. */
+    draft: (code: string) => key('workflowDefinitions', 'draft', code),
+  },
+  workflowVersions: {
+    all: WORKFLOW_VERSIONS_ALL,
+    list: (params: WorkflowVersionListParams = {}) =>
+      key('workflowVersions', 'list', params),
+    detail: (id: string) => key('workflowVersions', 'detail', id),
+  },
+  journeys: {
+    all: JOURNEYS_ALL,
+    list: (params: JourneyListParams = {}) => key('journeys', 'list', params),
+    detail: (id: string) => key('journeys', 'detail', id),
+  },
+  tasks: {
+    all: TASKS_ALL,
+    list: (params: TaskListParams = {}) => key('tasks', 'list', params),
+    detail: (id: string) => key('tasks', 'detail', id),
   },
   formResponseRevisions: {
     all: FORM_RESPONSE_REVISIONS_ALL,

@@ -48,6 +48,25 @@ export type AttributesInAuditEventResponse = Omit<AttributesInResponse, 'openapi
     resourceId?: string;
     action?: string;
     actorId?: string | null;
+    /**
+     * Patient the audited activity belongs to, when the resource is patient
+     * or pipeline scoped. Stamped by the audit writer so reviewers can query
+     * events by patient without reading metadata JSON.
+     */
+    patientId?: string | null;
+    /**
+     * Encounter the audited activity belongs to, when the resource is
+     * encounter or pipeline scoped. Stamped by the audit writer so reviewers
+     * can query events by encounter without reading metadata JSON.
+     */
+    encounterId?: string | null;
+    /**
+     * Workflow definition the audited activity belongs to, for workflow
+     * configuration, pipeline, and task events. Stamped by the audit writer
+     * so reviewers can query all events for a workflow definition without
+     * reading metadata JSON.
+     */
+    workflowDefinitionId?: string | null;
     occurredAt?: string;
     metadataJson?: string | null;
     'openapi:discriminator': 'auditEvents';
@@ -224,6 +243,35 @@ export type AttributesInCreateFormVersionRequest = Omit<AttributesInCreateReques
 
 export type AttributesInCreateRequest = {
     'openapi:discriminator': ResourceType;
+};
+
+export type AttributesInCreateWorkflowDefinitionRequest = Omit<AttributesInCreateRequest, 'openapi:discriminator'> & {
+    /**
+     * Stable business code used by clients and URLs historically.
+     */
+    code: string;
+    /**
+     * Human-readable workflow title.
+     */
+    name: string;
+    /**
+     * Write-only create helper used to seed the first draft workflow graph.
+     * Not persisted on the definition row.
+     */
+    initialWorkflowSchemaJson?: string | null;
+    'openapi:discriminator': 'workflowDefinitions';
+};
+
+export type AttributesInCreateWorkflowVersionRequest = Omit<AttributesInCreateRequest, 'openapi:discriminator'> & {
+    /**
+     * Workflow graph schema document (JSON string).
+     */
+    workflowSchemaJson: string;
+    /**
+     * Optimistic concurrency token for draft/review mutations.
+     */
+    rowVersion?: number;
+    'openapi:discriminator': 'workflowVersions';
 };
 
 export type AttributesInDisciplineResponse = Omit<AttributesInResponse, 'openapi:discriminator'> & {
@@ -549,6 +597,82 @@ export type AttributesInUpdateRequest = {
     'openapi:discriminator': ResourceType;
 };
 
+export type AttributesInUpdateWorkflowDefinitionRequest = Omit<AttributesInUpdateRequest, 'openapi:discriminator'> & {
+    /**
+     * Stable business code used by clients and URLs historically.
+     */
+    code?: string;
+    /**
+     * Human-readable workflow title.
+     */
+    name?: string;
+    'openapi:discriminator': 'workflowDefinitions';
+};
+
+export type AttributesInUpdateWorkflowVersionRequest = Omit<AttributesInUpdateRequest, 'openapi:discriminator'> & {
+    /**
+     * Workflow graph schema document (JSON string).
+     */
+    workflowSchemaJson?: string;
+    /**
+     * Optimistic concurrency token for draft/review mutations.
+     */
+    rowVersion?: number;
+    'openapi:discriminator': 'workflowVersions';
+};
+
+export type AttributesInWorkflowDefinitionResponse = Omit<AttributesInResponse, 'openapi:discriminator'> & {
+    /**
+     * Stable business code used by clients and URLs historically.
+     */
+    code?: string;
+    /**
+     * Human-readable workflow title.
+     */
+    name?: string;
+    /**
+     * UTC timestamp when the definition was created.
+     */
+    createdAt?: string;
+    /**
+     * UTC timestamp of the last definition metadata change.
+     */
+    updatedAt?: string;
+    'openapi:discriminator': 'workflowDefinitions';
+};
+
+export type AttributesInWorkflowVersionResponse = Omit<AttributesInResponse, 'openapi:discriminator'> & {
+    /**
+     * Semver label assigned at publish; null while draft/review.
+     */
+    version?: string | null;
+    /**
+     * Lifecycle status: draft, review, published, or retired.
+     */
+    status?: WorkflowVersionStatus;
+    /**
+     * Workflow graph schema document (JSON string).
+     */
+    workflowSchemaJson?: string;
+    /**
+     * Content hash computed at publish time.
+     */
+    contentHash?: string | null;
+    /**
+     * Optimistic concurrency token for draft/review mutations.
+     */
+    rowVersion?: number;
+    createdAt?: string;
+    submittedForReviewAt?: string | null;
+    publishedAt?: string | null;
+    retiredAt?: string | null;
+    publishedSchemaVersion?: string | null;
+    lastReviewComment?: string | null;
+    lastReviewDecision?: string | null;
+    lastReviewedAt?: string | null;
+    'openapi:discriminator': 'workflowVersions';
+};
+
 export type AuditEventCollectionResponseDocument = {
     links: ResourceCollectionTopLevelLinks;
     data: Array<DataInAuditEventResponse>;
@@ -791,6 +915,20 @@ export type CreateFormVersionRequestDocument = {
     meta?: Meta;
 };
 
+export type CreateWorkflowDefinitionRequestDocument = {
+    data: Omit<DataInCreateWorkflowDefinitionRequest, 'type'> & {
+        type: 'createWorkflowDefinitionRequestDocument';
+    };
+    meta?: Meta;
+};
+
+export type CreateWorkflowVersionRequestDocument = {
+    data: Omit<DataInCreateWorkflowVersionRequest, 'type'> & {
+        type: 'createWorkflowVersionRequestDocument';
+    };
+    meta?: Meta;
+};
+
 /**
  * Per-hospital AI provider configuration. The composite key
  * (`HospitalId`, `Id`) keeps landlord AI config isolated by
@@ -981,6 +1119,36 @@ export type DataInCreateFormVersionRequest = Omit<ResourceInCreateRequest, 'type
         'openapi:discriminator': 'dataInCreateFormVersionRequest';
     };
     type: 'formVersions';
+};
+
+/**
+ * Clinical workflow catalog entry identified by a stable business Cynara.Domain.Workflows.WorkflowDefinition.Code.
+ * Soft-deleted definitions are hidden from queries; drafts live on related versions.
+ */
+export type DataInCreateWorkflowDefinitionRequest = Omit<ResourceInCreateRequest, 'type'> & {
+    attributes?: Omit<AttributesInCreateWorkflowDefinitionRequest, 'openapi:discriminator'> & {
+        'openapi:discriminator': 'dataInCreateWorkflowDefinitionRequest';
+    };
+    relationships?: Omit<RelationshipsInCreateWorkflowDefinitionRequest, 'openapi:discriminator'> & {
+        'openapi:discriminator': 'dataInCreateWorkflowDefinitionRequest';
+    };
+    type: 'workflowDefinitions';
+};
+
+/**
+ * Immutable-published clinical workflow version with draft/review lifecycle.
+ * The workflow graph JSON payload is validated before review and publish
+ * transitions; published snapshots are immutable and remain readable after
+ * retirement.
+ */
+export type DataInCreateWorkflowVersionRequest = Omit<ResourceInCreateRequest, 'type'> & {
+    attributes?: Omit<AttributesInCreateWorkflowVersionRequest, 'openapi:discriminator'> & {
+        'openapi:discriminator': 'dataInCreateWorkflowVersionRequest';
+    };
+    relationships?: Omit<RelationshipsInCreateWorkflowVersionRequest, 'openapi:discriminator'> & {
+        'openapi:discriminator': 'dataInCreateWorkflowVersionRequest';
+    };
+    type: 'workflowVersions';
 };
 
 /**
@@ -1222,6 +1390,72 @@ export type DataInUpdateFormVersionRequest = Omit<ResourceInUpdateRequest, 'type
         'openapi:discriminator': 'dataInUpdateFormVersionRequest';
     };
     type: 'formVersions';
+};
+
+/**
+ * Clinical workflow catalog entry identified by a stable business Cynara.Domain.Workflows.WorkflowDefinition.Code.
+ * Soft-deleted definitions are hidden from queries; drafts live on related versions.
+ */
+export type DataInUpdateWorkflowDefinitionRequest = Omit<ResourceInUpdateRequest, 'type'> & {
+    id: string;
+    attributes?: Omit<AttributesInUpdateWorkflowDefinitionRequest, 'openapi:discriminator'> & {
+        'openapi:discriminator': 'dataInUpdateWorkflowDefinitionRequest';
+    };
+    relationships?: Omit<RelationshipsInUpdateWorkflowDefinitionRequest, 'openapi:discriminator'> & {
+        'openapi:discriminator': 'dataInUpdateWorkflowDefinitionRequest';
+    };
+    type: 'workflowDefinitions';
+};
+
+/**
+ * Immutable-published clinical workflow version with draft/review lifecycle.
+ * The workflow graph JSON payload is validated before review and publish
+ * transitions; published snapshots are immutable and remain readable after
+ * retirement.
+ */
+export type DataInUpdateWorkflowVersionRequest = Omit<ResourceInUpdateRequest, 'type'> & {
+    id: string;
+    attributes?: Omit<AttributesInUpdateWorkflowVersionRequest, 'openapi:discriminator'> & {
+        'openapi:discriminator': 'dataInUpdateWorkflowVersionRequest';
+    };
+    relationships?: Omit<RelationshipsInUpdateWorkflowVersionRequest, 'openapi:discriminator'> & {
+        'openapi:discriminator': 'dataInUpdateWorkflowVersionRequest';
+    };
+    type: 'workflowVersions';
+};
+
+/**
+ * Clinical workflow catalog entry identified by a stable business Cynara.Domain.Workflows.WorkflowDefinition.Code.
+ * Soft-deleted definitions are hidden from queries; drafts live on related versions.
+ */
+export type DataInWorkflowDefinitionResponse = Omit<ResourceInResponse, 'type'> & {
+    id: string;
+    attributes?: Omit<AttributesInWorkflowDefinitionResponse, 'openapi:discriminator'> & {
+        'openapi:discriminator': 'dataInWorkflowDefinitionResponse';
+    };
+    relationships?: Omit<RelationshipsInWorkflowDefinitionResponse, 'openapi:discriminator'> & {
+        'openapi:discriminator': 'dataInWorkflowDefinitionResponse';
+    };
+    links?: ResourceLinks;
+    type: 'workflowDefinitions';
+};
+
+/**
+ * Immutable-published clinical workflow version with draft/review lifecycle.
+ * The workflow graph JSON payload is validated before review and publish
+ * transitions; published snapshots are immutable and remain readable after
+ * retirement.
+ */
+export type DataInWorkflowVersionResponse = Omit<ResourceInResponse, 'type'> & {
+    id: string;
+    attributes?: Omit<AttributesInWorkflowVersionResponse, 'openapi:discriminator'> & {
+        'openapi:discriminator': 'dataInWorkflowVersionResponse';
+    };
+    relationships?: Omit<RelationshipsInWorkflowVersionResponse, 'openapi:discriminator'> & {
+        'openapi:discriminator': 'dataInWorkflowVersionResponse';
+    };
+    links?: ResourceLinks;
+    type: 'workflowVersions';
 };
 
 /**
@@ -1790,6 +2024,24 @@ export type PrimaryFormVersionResponseDocument = {
     meta?: Meta;
 };
 
+export type PrimaryWorkflowDefinitionResponseDocument = {
+    links: ResourceTopLevelLinks;
+    data: Omit<DataInWorkflowDefinitionResponse, 'type'> & {
+        type: 'primaryWorkflowDefinitionResponseDocument';
+    };
+    included?: Array<ResourceInResponse>;
+    meta?: Meta;
+};
+
+export type PrimaryWorkflowVersionResponseDocument = {
+    links: ResourceTopLevelLinks;
+    data: Omit<DataInWorkflowVersionResponse, 'type'> & {
+        type: 'primaryWorkflowVersionResponseDocument';
+    };
+    included?: Array<ResourceInResponse>;
+    meta?: Meta;
+};
+
 export type ProblemDetails = {
     type?: string | null;
     title?: string | null;
@@ -1895,6 +2147,22 @@ export type RelationshipsInCreateFormVersionRequest = Omit<RelationshipsInCreate
 
 export type RelationshipsInCreateRequest = {
     'openapi:discriminator': ResourceType;
+};
+
+export type RelationshipsInCreateWorkflowDefinitionRequest = Omit<RelationshipsInCreateRequest, 'openapi:discriminator'> & {
+    /**
+     * All versions belonging to this definition.
+     */
+    versions?: ToManyWorkflowVersionInRequest;
+    'openapi:discriminator': 'workflowDefinitions';
+};
+
+export type RelationshipsInCreateWorkflowVersionRequest = Omit<RelationshipsInCreateRequest, 'openapi:discriminator'> & {
+    /**
+     * Owning workflow definition.
+     */
+    workflowDefinition: ToOneWorkflowDefinitionInRequest;
+    'openapi:discriminator': 'workflowVersions';
 };
 
 export type RelationshipsInDisciplineResponse = Omit<RelationshipsInResponse, 'openapi:discriminator'> & {
@@ -2049,6 +2317,38 @@ export type RelationshipsInUpdateRequest = {
     'openapi:discriminator': ResourceType;
 };
 
+export type RelationshipsInUpdateWorkflowDefinitionRequest = Omit<RelationshipsInUpdateRequest, 'openapi:discriminator'> & {
+    /**
+     * All versions belonging to this definition.
+     */
+    versions?: ToManyWorkflowVersionInRequest;
+    'openapi:discriminator': 'workflowDefinitions';
+};
+
+export type RelationshipsInUpdateWorkflowVersionRequest = Omit<RelationshipsInUpdateRequest, 'openapi:discriminator'> & {
+    /**
+     * Owning workflow definition.
+     */
+    workflowDefinition?: ToOneWorkflowDefinitionInRequest;
+    'openapi:discriminator': 'workflowVersions';
+};
+
+export type RelationshipsInWorkflowDefinitionResponse = Omit<RelationshipsInResponse, 'openapi:discriminator'> & {
+    /**
+     * All versions belonging to this definition.
+     */
+    versions?: ToManyWorkflowVersionInResponse;
+    'openapi:discriminator': 'workflowDefinitions';
+};
+
+export type RelationshipsInWorkflowVersionResponse = Omit<RelationshipsInResponse, 'openapi:discriminator'> & {
+    /**
+     * Owning workflow definition.
+     */
+    workflowDefinition?: ToOneWorkflowDefinitionInResponse;
+    'openapi:discriminator': 'workflowVersions';
+};
+
 export type ResourceCollectionTopLevelLinks = {
     self?: string;
     describedby?: string;
@@ -2098,7 +2398,7 @@ export type ResourceTopLevelLinks = {
     describedby?: string;
 };
 
-export type ResourceType = 'aiProviderSettings' | 'auditEvents' | 'clinicalAreas' | 'componentDefinitions' | 'componentVersions' | 'disciplines' | 'documentDefinitions' | 'facilities' | 'formDefinitions' | 'formResponseRevisions' | 'formResponses' | 'formVersions';
+export type ResourceType = 'aiProviderSettings' | 'auditEvents' | 'clinicalAreas' | 'componentDefinitions' | 'componentVersions' | 'disciplines' | 'documentDefinitions' | 'facilities' | 'formDefinitions' | 'formResponseRevisions' | 'formResponses' | 'formVersions' | 'workflowDefinitions' | 'workflowVersions';
 
 export type SecondaryClinicalAreaResponseDocument = {
     links: ResourceTopLevelLinks;
@@ -2163,6 +2463,15 @@ export type SecondaryFormVersionResponseDocument = {
     meta?: Meta;
 };
 
+export type SecondaryWorkflowDefinitionResponseDocument = {
+    links: ResourceTopLevelLinks;
+    data: Omit<DataInWorkflowDefinitionResponse, 'type'> & {
+        type: 'secondaryWorkflowDefinitionResponseDocument';
+    };
+    included?: Array<ResourceInResponse>;
+    meta?: Meta;
+};
+
 export type ToManyClinicalAreaInResponse = {
     links?: RelationshipLinks;
     data?: Array<ClinicalAreaIdentifierInResponse>;
@@ -2205,6 +2514,17 @@ export type ToManyFormVersionInRequest = {
 export type ToManyFormVersionInResponse = {
     links?: RelationshipLinks;
     data?: Array<FormVersionIdentifierInResponse>;
+    meta?: Meta;
+};
+
+export type ToManyWorkflowVersionInRequest = {
+    data: Array<WorkflowVersionIdentifierInRequest>;
+    meta?: Meta;
+};
+
+export type ToManyWorkflowVersionInResponse = {
+    links?: RelationshipLinks;
+    data?: Array<WorkflowVersionIdentifierInResponse>;
     meta?: Meta;
 };
 
@@ -2299,6 +2619,19 @@ export type ToOneFormVersionInResponse = {
     meta?: Meta;
 };
 
+export type ToOneWorkflowDefinitionInRequest = {
+    data: Omit<WorkflowDefinitionIdentifierInRequest, 'type'> & {
+        type: 'toOneWorkflowDefinitionInRequest';
+    };
+    meta?: Meta;
+};
+
+export type ToOneWorkflowDefinitionInResponse = {
+    links?: RelationshipLinks;
+    data?: WorkflowDefinitionIdentifierInResponse;
+    meta?: Meta;
+};
+
 export type UpdateAiProviderSettingRequestDocument = {
     data: Omit<DataInUpdateAiProviderSettingRequest, 'type'> & {
         type: 'updateAiProviderSettingRequestDocument';
@@ -2379,6 +2712,94 @@ export type UpdateHospitalWorkspaceRequest = {
      */
     rowVersion: number;
 };
+
+export type UpdateWorkflowDefinitionRequestDocument = {
+    data: Omit<DataInUpdateWorkflowDefinitionRequest, 'type'> & {
+        type: 'updateWorkflowDefinitionRequestDocument';
+    };
+    meta?: Meta;
+};
+
+export type UpdateWorkflowVersionRequestDocument = {
+    data: Omit<DataInUpdateWorkflowVersionRequest, 'type'> & {
+        type: 'updateWorkflowVersionRequestDocument';
+    };
+    meta?: Meta;
+};
+
+export type WorkflowDefinitionCollectionResponseDocument = {
+    links: ResourceCollectionTopLevelLinks;
+    data: Array<DataInWorkflowDefinitionResponse>;
+    included?: Array<ResourceInResponse>;
+    meta?: Meta;
+};
+
+/**
+ * Clinical workflow catalog entry identified by a stable business Cynara.Domain.Workflows.WorkflowDefinition.Code.
+ * Soft-deleted definitions are hidden from queries; drafts live on related versions.
+ */
+export type WorkflowDefinitionIdentifierInRequest = Omit<IdentifierInRequest, 'type'> & {
+    id: string;
+    type: 'workflowDefinitions';
+};
+
+/**
+ * Clinical workflow catalog entry identified by a stable business Cynara.Domain.Workflows.WorkflowDefinition.Code.
+ * Soft-deleted definitions are hidden from queries; drafts live on related versions.
+ */
+export type WorkflowDefinitionIdentifierInResponse = {
+    type: WorkflowDefinitionResourceType;
+    id: string;
+    meta?: Meta;
+};
+
+export type WorkflowDefinitionIdentifierResponseDocument = {
+    links: ResourceIdentifierTopLevelLinks;
+    data: WorkflowDefinitionIdentifierInResponse;
+    meta?: Meta;
+};
+
+export type WorkflowDefinitionResourceType = 'workflowDefinitions';
+
+export type WorkflowVersionCollectionResponseDocument = {
+    links: ResourceCollectionTopLevelLinks;
+    data: Array<DataInWorkflowVersionResponse>;
+    included?: Array<ResourceInResponse>;
+    meta?: Meta;
+};
+
+export type WorkflowVersionIdentifierCollectionResponseDocument = {
+    links: ResourceIdentifierCollectionTopLevelLinks;
+    data: Array<WorkflowVersionIdentifierInResponse>;
+    meta?: Meta;
+};
+
+/**
+ * Immutable-published clinical workflow version with draft/review lifecycle.
+ * The workflow graph JSON payload is validated before review and publish
+ * transitions; published snapshots are immutable and remain readable after
+ * retirement.
+ */
+export type WorkflowVersionIdentifierInRequest = Omit<IdentifierInRequest, 'type'> & {
+    id: string;
+    type: 'workflowVersions';
+};
+
+/**
+ * Immutable-published clinical workflow version with draft/review lifecycle.
+ * The workflow graph JSON payload is validated before review and publish
+ * transitions; published snapshots are immutable and remain readable after
+ * retirement.
+ */
+export type WorkflowVersionIdentifierInResponse = {
+    type: WorkflowVersionResourceType;
+    id: string;
+    meta?: Meta;
+};
+
+export type WorkflowVersionResourceType = 'workflowVersions';
+
+export type WorkflowVersionStatus = 'draft' | 'review' | 'published' | 'retired';
 
 /**
  * One persisted capability assignment for the resolved hospital workspace.
@@ -11383,6 +11804,1684 @@ export type SoftDeletePatientResponses = {
 };
 
 export type SoftDeletePatientResponse = SoftDeletePatientResponses[keyof SoftDeletePatientResponses];
+
+export type GetWorkflowDefinitionCollectionData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`filter`](https://www.jsonapi.net/usage/reading/filtering.html)/[`sort`](https://www.jsonapi.net/usage/reading/sorting.html)/[`page`](https://www.jsonapi.net/usage/reading/pagination.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowDefinitions';
+};
+
+export type GetWorkflowDefinitionCollectionErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: ErrorResponseDocument;
+};
+
+export type GetWorkflowDefinitionCollectionError = GetWorkflowDefinitionCollectionErrors[keyof GetWorkflowDefinitionCollectionErrors];
+
+export type GetWorkflowDefinitionCollectionResponses = {
+    /**
+     * Successfully returns the found workflowDefinitions, or an empty array if none were found.
+     */
+    200: WorkflowDefinitionCollectionResponseDocument;
+};
+
+export type GetWorkflowDefinitionCollectionResponse = GetWorkflowDefinitionCollectionResponses[keyof GetWorkflowDefinitionCollectionResponses];
+
+export type HeadWorkflowDefinitionCollectionData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`filter`](https://www.jsonapi.net/usage/reading/filtering.html)/[`sort`](https://www.jsonapi.net/usage/reading/sorting.html)/[`page`](https://www.jsonapi.net/usage/reading/pagination.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowDefinitions';
+};
+
+export type HeadWorkflowDefinitionCollectionErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: JsonApiErrorDocument;
+};
+
+export type HeadWorkflowDefinitionCollectionError = HeadWorkflowDefinitionCollectionErrors[keyof HeadWorkflowDefinitionCollectionErrors];
+
+export type HeadWorkflowDefinitionCollectionResponses = {
+    /**
+     * The operation completed successfully.
+     */
+    200: unknown;
+};
+
+export type PostWorkflowDefinitionData = {
+    /**
+     * The attributes and relationships of the workflowDefinition to create.
+     */
+    body?: CreateWorkflowDefinitionRequestDocument;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowDefinitions';
+};
+
+export type PostWorkflowDefinitionErrors = {
+    /**
+     * The query string is invalid or the request body is missing or malformed.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * Client-generated IDs cannot be used at this endpoint.
+     */
+    403: ErrorResponseDocument;
+    /**
+     * A related resource does not exist.
+     */
+    404: ErrorResponseDocument;
+    /**
+     * The request body contains conflicting information or another resource with the same ID already exists.
+     */
+    409: ErrorResponseDocument;
+    /**
+     * Validation of the request body failed.
+     */
+    422: ErrorResponseDocument;
+};
+
+export type PostWorkflowDefinitionError = PostWorkflowDefinitionErrors[keyof PostWorkflowDefinitionErrors];
+
+export type PostWorkflowDefinitionResponses = {
+    /**
+     * The workflowDefinition was successfully created, which resulted in additional changes. The newly created workflowDefinition is returned.
+     */
+    201: PrimaryWorkflowDefinitionResponseDocument;
+    /**
+     * The workflowDefinition was successfully created, which did not result in additional changes.
+     */
+    204: void;
+};
+
+export type PostWorkflowDefinitionResponse = PostWorkflowDefinitionResponses[keyof PostWorkflowDefinitionResponses];
+
+export type DeleteWorkflowDefinitionData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowDefinition to delete.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/workflowDefinitions/{id}';
+};
+
+export type DeleteWorkflowDefinitionErrors = {
+    /**
+     * The workflowDefinition does not exist.
+     */
+    404: ErrorResponseDocument;
+};
+
+export type DeleteWorkflowDefinitionError = DeleteWorkflowDefinitionErrors[keyof DeleteWorkflowDefinitionErrors];
+
+export type DeleteWorkflowDefinitionResponses = {
+    /**
+     * The workflowDefinition was successfully deleted.
+     */
+    204: void;
+};
+
+export type DeleteWorkflowDefinitionResponse = DeleteWorkflowDefinitionResponses[keyof DeleteWorkflowDefinitionResponses];
+
+export type GetWorkflowDefinitionData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowDefinition to retrieve.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowDefinitions/{id}';
+};
+
+export type GetWorkflowDefinitionErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * The workflowDefinition does not exist.
+     */
+    404: ErrorResponseDocument;
+};
+
+export type GetWorkflowDefinitionError = GetWorkflowDefinitionErrors[keyof GetWorkflowDefinitionErrors];
+
+export type GetWorkflowDefinitionResponses = {
+    /**
+     * Successfully returns the found workflowDefinition.
+     */
+    200: PrimaryWorkflowDefinitionResponseDocument;
+};
+
+export type GetWorkflowDefinitionResponse = GetWorkflowDefinitionResponses[keyof GetWorkflowDefinitionResponses];
+
+export type HeadWorkflowDefinitionData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowDefinition to retrieve.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowDefinitions/{id}';
+};
+
+export type HeadWorkflowDefinitionErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * The workflowDefinition does not exist.
+     */
+    404: JsonApiErrorDocument;
+};
+
+export type HeadWorkflowDefinitionError = HeadWorkflowDefinitionErrors[keyof HeadWorkflowDefinitionErrors];
+
+export type HeadWorkflowDefinitionResponses = {
+    /**
+     * The operation completed successfully.
+     */
+    200: unknown;
+};
+
+export type PatchWorkflowDefinitionData = {
+    /**
+     * The attributes and relationships of the workflowDefinition to update. Omitted fields are left unchanged.
+     */
+    body?: UpdateWorkflowDefinitionRequestDocument;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowDefinition to update.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowDefinitions/{id}';
+};
+
+export type PatchWorkflowDefinitionErrors = {
+    /**
+     * The query string is invalid or the request body is missing or malformed.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * The workflowDefinition or a related resource does not exist.
+     */
+    404: ErrorResponseDocument;
+    /**
+     * A resource type or identifier in the request body is incompatible.
+     */
+    409: ErrorResponseDocument;
+    /**
+     * Validation of the request body failed.
+     */
+    422: ErrorResponseDocument;
+};
+
+export type PatchWorkflowDefinitionError = PatchWorkflowDefinitionErrors[keyof PatchWorkflowDefinitionErrors];
+
+export type PatchWorkflowDefinitionResponses = {
+    /**
+     * The workflowDefinition was successfully updated, which resulted in additional changes. The updated workflowDefinition is returned.
+     */
+    200: PrimaryWorkflowDefinitionResponseDocument;
+    /**
+     * The workflowDefinition was successfully updated, which did not result in additional changes.
+     */
+    204: void;
+};
+
+export type PatchWorkflowDefinitionResponse = PatchWorkflowDefinitionResponses[keyof PatchWorkflowDefinitionResponses];
+
+export type CreateWorkflowDraftData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/workflowDefinitions/{id}/create-draft';
+};
+
+export type CreateWorkflowDraftErrors = {
+    /**
+     * Not Found
+     */
+    404: ErrorResponseDocument;
+    /**
+     * Conflict
+     */
+    409: ErrorResponseDocument;
+};
+
+export type CreateWorkflowDraftError = CreateWorkflowDraftErrors[keyof CreateWorkflowDraftErrors];
+
+export type CreateWorkflowDraftResponses = {
+    /**
+     * Created
+     */
+    201: unknown;
+};
+
+export type SoftDeleteWorkflowDraftData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/workflowDefinitions/{id}/soft-delete-draft';
+};
+
+export type SoftDeleteWorkflowDraftErrors = {
+    /**
+     * Not Found
+     */
+    404: ErrorResponseDocument;
+    /**
+     * Conflict
+     */
+    409: ErrorResponseDocument;
+};
+
+export type SoftDeleteWorkflowDraftError = SoftDeleteWorkflowDraftErrors[keyof SoftDeleteWorkflowDraftErrors];
+
+export type SoftDeleteWorkflowDraftResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type SoftDeleteWorkflowDraftResponse = SoftDeleteWorkflowDraftResponses[keyof SoftDeleteWorkflowDraftResponses];
+
+export type GetWorkflowDefinitionVersionsData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowDefinition whose related workflowVersions to retrieve.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`filter`](https://www.jsonapi.net/usage/reading/filtering.html)/[`sort`](https://www.jsonapi.net/usage/reading/sorting.html)/[`page`](https://www.jsonapi.net/usage/reading/pagination.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowDefinitions/{id}/versions';
+};
+
+export type GetWorkflowDefinitionVersionsErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * The workflowDefinition does not exist.
+     */
+    404: ErrorResponseDocument;
+};
+
+export type GetWorkflowDefinitionVersionsError = GetWorkflowDefinitionVersionsErrors[keyof GetWorkflowDefinitionVersionsErrors];
+
+export type GetWorkflowDefinitionVersionsResponses = {
+    /**
+     * Successfully returns the found workflowVersions, or an empty array if none were found.
+     */
+    200: WorkflowVersionCollectionResponseDocument;
+};
+
+export type GetWorkflowDefinitionVersionsResponse = GetWorkflowDefinitionVersionsResponses[keyof GetWorkflowDefinitionVersionsResponses];
+
+export type HeadWorkflowDefinitionVersionsData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowDefinition whose related workflowVersions to retrieve.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`filter`](https://www.jsonapi.net/usage/reading/filtering.html)/[`sort`](https://www.jsonapi.net/usage/reading/sorting.html)/[`page`](https://www.jsonapi.net/usage/reading/pagination.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowDefinitions/{id}/versions';
+};
+
+export type HeadWorkflowDefinitionVersionsErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * The workflowDefinition does not exist.
+     */
+    404: JsonApiErrorDocument;
+};
+
+export type HeadWorkflowDefinitionVersionsError = HeadWorkflowDefinitionVersionsErrors[keyof HeadWorkflowDefinitionVersionsErrors];
+
+export type HeadWorkflowDefinitionVersionsResponses = {
+    /**
+     * The operation completed successfully.
+     */
+    200: unknown;
+};
+
+export type DeleteWorkflowDefinitionVersionsRelationshipData = {
+    /**
+     * The identities of the workflowVersions to remove from the versions relationship.
+     */
+    body: ToManyWorkflowVersionInRequest;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowDefinition to remove workflowVersions from.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/workflowDefinitions/{id}/relationships/versions';
+};
+
+export type DeleteWorkflowDefinitionVersionsRelationshipErrors = {
+    /**
+     * The request body is missing or malformed.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * The workflowDefinition or a related resource does not exist.
+     */
+    404: ErrorResponseDocument;
+    /**
+     * The request body contains conflicting information or another resource with the same ID already exists.
+     */
+    409: ErrorResponseDocument;
+    /**
+     * Validation of the request body failed.
+     */
+    422: ErrorResponseDocument;
+};
+
+export type DeleteWorkflowDefinitionVersionsRelationshipError = DeleteWorkflowDefinitionVersionsRelationshipErrors[keyof DeleteWorkflowDefinitionVersionsRelationshipErrors];
+
+export type DeleteWorkflowDefinitionVersionsRelationshipResponses = {
+    /**
+     * The workflowVersions were successfully removed, which did not result in additional changes.
+     */
+    204: void;
+};
+
+export type DeleteWorkflowDefinitionVersionsRelationshipResponse = DeleteWorkflowDefinitionVersionsRelationshipResponses[keyof DeleteWorkflowDefinitionVersionsRelationshipResponses];
+
+export type GetWorkflowDefinitionVersionsRelationshipData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowDefinition whose related workflowVersion identities to retrieve.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`filter`](https://www.jsonapi.net/usage/reading/filtering.html)/[`sort`](https://www.jsonapi.net/usage/reading/sorting.html)/[`page`](https://www.jsonapi.net/usage/reading/pagination.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowDefinitions/{id}/relationships/versions';
+};
+
+export type GetWorkflowDefinitionVersionsRelationshipErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * The workflowDefinition does not exist.
+     */
+    404: ErrorResponseDocument;
+};
+
+export type GetWorkflowDefinitionVersionsRelationshipError = GetWorkflowDefinitionVersionsRelationshipErrors[keyof GetWorkflowDefinitionVersionsRelationshipErrors];
+
+export type GetWorkflowDefinitionVersionsRelationshipResponses = {
+    /**
+     * Successfully returns the found workflowVersion identities, or an empty array if none were found.
+     */
+    200: WorkflowVersionIdentifierCollectionResponseDocument;
+};
+
+export type GetWorkflowDefinitionVersionsRelationshipResponse = GetWorkflowDefinitionVersionsRelationshipResponses[keyof GetWorkflowDefinitionVersionsRelationshipResponses];
+
+export type HeadWorkflowDefinitionVersionsRelationshipData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowDefinition whose related workflowVersion identities to retrieve.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`filter`](https://www.jsonapi.net/usage/reading/filtering.html)/[`sort`](https://www.jsonapi.net/usage/reading/sorting.html)/[`page`](https://www.jsonapi.net/usage/reading/pagination.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowDefinitions/{id}/relationships/versions';
+};
+
+export type HeadWorkflowDefinitionVersionsRelationshipErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * The workflowDefinition does not exist.
+     */
+    404: JsonApiErrorDocument;
+};
+
+export type HeadWorkflowDefinitionVersionsRelationshipError = HeadWorkflowDefinitionVersionsRelationshipErrors[keyof HeadWorkflowDefinitionVersionsRelationshipErrors];
+
+export type HeadWorkflowDefinitionVersionsRelationshipResponses = {
+    /**
+     * The operation completed successfully.
+     */
+    200: unknown;
+};
+
+export type PatchWorkflowDefinitionVersionsRelationshipData = {
+    /**
+     * The identities of the workflowVersions to assign to the versions relationship, or an empty array to clear the relationship.
+     */
+    body: ToManyWorkflowVersionInRequest;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowDefinition whose versions relationship to assign.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/workflowDefinitions/{id}/relationships/versions';
+};
+
+export type PatchWorkflowDefinitionVersionsRelationshipErrors = {
+    /**
+     * The request body is missing or malformed.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * The workflowDefinition or a related resource does not exist.
+     */
+    404: ErrorResponseDocument;
+    /**
+     * The request body contains conflicting information or another resource with the same ID already exists.
+     */
+    409: ErrorResponseDocument;
+    /**
+     * Validation of the request body failed.
+     */
+    422: ErrorResponseDocument;
+};
+
+export type PatchWorkflowDefinitionVersionsRelationshipError = PatchWorkflowDefinitionVersionsRelationshipErrors[keyof PatchWorkflowDefinitionVersionsRelationshipErrors];
+
+export type PatchWorkflowDefinitionVersionsRelationshipResponses = {
+    /**
+     * The versions relationship was successfully updated, which did not result in additional changes.
+     */
+    204: void;
+};
+
+export type PatchWorkflowDefinitionVersionsRelationshipResponse = PatchWorkflowDefinitionVersionsRelationshipResponses[keyof PatchWorkflowDefinitionVersionsRelationshipResponses];
+
+export type PostWorkflowDefinitionVersionsRelationshipData = {
+    /**
+     * The identities of the workflowVersions to add to the versions relationship.
+     */
+    body: ToManyWorkflowVersionInRequest;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowDefinition to add workflowVersions to.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/workflowDefinitions/{id}/relationships/versions';
+};
+
+export type PostWorkflowDefinitionVersionsRelationshipErrors = {
+    /**
+     * The request body is missing or malformed.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * The workflowDefinition or a related resource does not exist.
+     */
+    404: ErrorResponseDocument;
+    /**
+     * The request body contains conflicting information or another resource with the same ID already exists.
+     */
+    409: ErrorResponseDocument;
+    /**
+     * Validation of the request body failed.
+     */
+    422: ErrorResponseDocument;
+};
+
+export type PostWorkflowDefinitionVersionsRelationshipError = PostWorkflowDefinitionVersionsRelationshipErrors[keyof PostWorkflowDefinitionVersionsRelationshipErrors];
+
+export type PostWorkflowDefinitionVersionsRelationshipResponses = {
+    /**
+     * The workflowVersions were successfully added, which did not result in additional changes.
+     */
+    204: void;
+};
+
+export type PostWorkflowDefinitionVersionsRelationshipResponse = PostWorkflowDefinitionVersionsRelationshipResponses[keyof PostWorkflowDefinitionVersionsRelationshipResponses];
+
+export type GetWorkflowVersionCollectionData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`filter`](https://www.jsonapi.net/usage/reading/filtering.html)/[`sort`](https://www.jsonapi.net/usage/reading/sorting.html)/[`page`](https://www.jsonapi.net/usage/reading/pagination.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowVersions';
+};
+
+export type GetWorkflowVersionCollectionErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: ErrorResponseDocument;
+};
+
+export type GetWorkflowVersionCollectionError = GetWorkflowVersionCollectionErrors[keyof GetWorkflowVersionCollectionErrors];
+
+export type GetWorkflowVersionCollectionResponses = {
+    /**
+     * Successfully returns the found workflowVersions, or an empty array if none were found.
+     */
+    200: WorkflowVersionCollectionResponseDocument;
+};
+
+export type GetWorkflowVersionCollectionResponse = GetWorkflowVersionCollectionResponses[keyof GetWorkflowVersionCollectionResponses];
+
+export type HeadWorkflowVersionCollectionData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`filter`](https://www.jsonapi.net/usage/reading/filtering.html)/[`sort`](https://www.jsonapi.net/usage/reading/sorting.html)/[`page`](https://www.jsonapi.net/usage/reading/pagination.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowVersions';
+};
+
+export type HeadWorkflowVersionCollectionErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: JsonApiErrorDocument;
+};
+
+export type HeadWorkflowVersionCollectionError = HeadWorkflowVersionCollectionErrors[keyof HeadWorkflowVersionCollectionErrors];
+
+export type HeadWorkflowVersionCollectionResponses = {
+    /**
+     * The operation completed successfully.
+     */
+    200: unknown;
+};
+
+export type PostWorkflowVersionData = {
+    /**
+     * The attributes and relationships of the workflowVersion to create.
+     */
+    body?: CreateWorkflowVersionRequestDocument;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowVersions';
+};
+
+export type PostWorkflowVersionErrors = {
+    /**
+     * The query string is invalid or the request body is missing or malformed.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * Client-generated IDs cannot be used at this endpoint.
+     */
+    403: ErrorResponseDocument;
+    /**
+     * A related resource does not exist.
+     */
+    404: ErrorResponseDocument;
+    /**
+     * The request body contains conflicting information or another resource with the same ID already exists.
+     */
+    409: ErrorResponseDocument;
+    /**
+     * Validation of the request body failed.
+     */
+    422: ErrorResponseDocument;
+};
+
+export type PostWorkflowVersionError = PostWorkflowVersionErrors[keyof PostWorkflowVersionErrors];
+
+export type PostWorkflowVersionResponses = {
+    /**
+     * The workflowVersion was successfully created, which resulted in additional changes. The newly created workflowVersion is returned.
+     */
+    201: PrimaryWorkflowVersionResponseDocument;
+    /**
+     * The workflowVersion was successfully created, which did not result in additional changes.
+     */
+    204: void;
+};
+
+export type PostWorkflowVersionResponse = PostWorkflowVersionResponses[keyof PostWorkflowVersionResponses];
+
+export type DeleteWorkflowVersionData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowVersion to delete.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/workflowVersions/{id}';
+};
+
+export type DeleteWorkflowVersionErrors = {
+    /**
+     * The workflowVersion does not exist.
+     */
+    404: ErrorResponseDocument;
+};
+
+export type DeleteWorkflowVersionError = DeleteWorkflowVersionErrors[keyof DeleteWorkflowVersionErrors];
+
+export type DeleteWorkflowVersionResponses = {
+    /**
+     * The workflowVersion was successfully deleted.
+     */
+    204: void;
+};
+
+export type DeleteWorkflowVersionResponse = DeleteWorkflowVersionResponses[keyof DeleteWorkflowVersionResponses];
+
+export type GetWorkflowVersionData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowVersion to retrieve.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowVersions/{id}';
+};
+
+export type GetWorkflowVersionErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * The workflowVersion does not exist.
+     */
+    404: ErrorResponseDocument;
+};
+
+export type GetWorkflowVersionError = GetWorkflowVersionErrors[keyof GetWorkflowVersionErrors];
+
+export type GetWorkflowVersionResponses = {
+    /**
+     * Successfully returns the found workflowVersion.
+     */
+    200: PrimaryWorkflowVersionResponseDocument;
+};
+
+export type GetWorkflowVersionResponse = GetWorkflowVersionResponses[keyof GetWorkflowVersionResponses];
+
+export type HeadWorkflowVersionData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowVersion to retrieve.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowVersions/{id}';
+};
+
+export type HeadWorkflowVersionErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * The workflowVersion does not exist.
+     */
+    404: JsonApiErrorDocument;
+};
+
+export type HeadWorkflowVersionError = HeadWorkflowVersionErrors[keyof HeadWorkflowVersionErrors];
+
+export type HeadWorkflowVersionResponses = {
+    /**
+     * The operation completed successfully.
+     */
+    200: unknown;
+};
+
+export type PatchWorkflowVersionData = {
+    /**
+     * The attributes and relationships of the workflowVersion to update. Omitted fields are left unchanged.
+     */
+    body?: UpdateWorkflowVersionRequestDocument;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowVersion to update.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowVersions/{id}';
+};
+
+export type PatchWorkflowVersionErrors = {
+    /**
+     * The query string is invalid or the request body is missing or malformed.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * The workflowVersion or a related resource does not exist.
+     */
+    404: ErrorResponseDocument;
+    /**
+     * A resource type or identifier in the request body is incompatible.
+     */
+    409: ErrorResponseDocument;
+    /**
+     * Validation of the request body failed.
+     */
+    422: ErrorResponseDocument;
+};
+
+export type PatchWorkflowVersionError = PatchWorkflowVersionErrors[keyof PatchWorkflowVersionErrors];
+
+export type PatchWorkflowVersionResponses = {
+    /**
+     * The workflowVersion was successfully updated, which resulted in additional changes. The updated workflowVersion is returned.
+     */
+    200: PrimaryWorkflowVersionResponseDocument;
+    /**
+     * The workflowVersion was successfully updated, which did not result in additional changes.
+     */
+    204: void;
+};
+
+export type PatchWorkflowVersionResponse = PatchWorkflowVersionResponses[keyof PatchWorkflowVersionResponses];
+
+export type PublishWorkflowVersionData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: {
+        rowVersion?: number;
+    };
+    url: '/api/workflowVersions/{id}/publish';
+};
+
+export type PublishWorkflowVersionErrors = {
+    /**
+     * Not Found
+     */
+    404: ErrorResponseDocument;
+    /**
+     * Conflict
+     */
+    409: ErrorResponseDocument;
+};
+
+export type PublishWorkflowVersionError = PublishWorkflowVersionErrors[keyof PublishWorkflowVersionErrors];
+
+export type PublishWorkflowVersionResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type RejectWorkflowReviewData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: {
+        comment?: string;
+        rowVersion?: number;
+    };
+    url: '/api/workflowVersions/{id}/reject-review';
+};
+
+export type RejectWorkflowReviewErrors = {
+    /**
+     * Bad Request
+     */
+    400: ErrorResponseDocument;
+    /**
+     * Not Found
+     */
+    404: ErrorResponseDocument;
+    /**
+     * Conflict
+     */
+    409: ErrorResponseDocument;
+};
+
+export type RejectWorkflowReviewError = RejectWorkflowReviewErrors[keyof RejectWorkflowReviewErrors];
+
+export type RejectWorkflowReviewResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type RetireWorkflowVersionData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/workflowVersions/{id}/retire';
+};
+
+export type RetireWorkflowVersionErrors = {
+    /**
+     * Not Found
+     */
+    404: ErrorResponseDocument;
+    /**
+     * Conflict
+     */
+    409: ErrorResponseDocument;
+};
+
+export type RetireWorkflowVersionError = RetireWorkflowVersionErrors[keyof RetireWorkflowVersionErrors];
+
+export type RetireWorkflowVersionResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type SubmitWorkflowReviewData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: {
+        rowVersion?: number;
+    };
+    url: '/api/workflowVersions/{id}/submit-review';
+};
+
+export type SubmitWorkflowReviewErrors = {
+    /**
+     * Not Found
+     */
+    404: ErrorResponseDocument;
+    /**
+     * Conflict
+     */
+    409: ErrorResponseDocument;
+};
+
+export type SubmitWorkflowReviewError = SubmitWorkflowReviewErrors[keyof SubmitWorkflowReviewErrors];
+
+export type SubmitWorkflowReviewResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type WithdrawWorkflowReviewData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: {
+        rowVersion?: number;
+    };
+    url: '/api/workflowVersions/{id}/withdraw-review';
+};
+
+export type WithdrawWorkflowReviewErrors = {
+    /**
+     * Not Found
+     */
+    404: ErrorResponseDocument;
+    /**
+     * Conflict
+     */
+    409: ErrorResponseDocument;
+};
+
+export type WithdrawWorkflowReviewError = WithdrawWorkflowReviewErrors[keyof WithdrawWorkflowReviewErrors];
+
+export type WithdrawWorkflowReviewResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type GetWorkflowVersionWorkflowDefinitionData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowVersion whose related workflowDefinition to retrieve.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowVersions/{id}/workflowDefinition';
+};
+
+export type GetWorkflowVersionWorkflowDefinitionErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * The workflowVersion does not exist.
+     */
+    404: ErrorResponseDocument;
+};
+
+export type GetWorkflowVersionWorkflowDefinitionError = GetWorkflowVersionWorkflowDefinitionErrors[keyof GetWorkflowVersionWorkflowDefinitionErrors];
+
+export type GetWorkflowVersionWorkflowDefinitionResponses = {
+    /**
+     * Successfully returns the found workflowDefinition, or `null` if it was not found.
+     */
+    200: SecondaryWorkflowDefinitionResponseDocument;
+};
+
+export type GetWorkflowVersionWorkflowDefinitionResponse = GetWorkflowVersionWorkflowDefinitionResponses[keyof GetWorkflowVersionWorkflowDefinitionResponses];
+
+export type HeadWorkflowVersionWorkflowDefinitionData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowVersion whose related workflowDefinition to retrieve.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`include`](https://www.jsonapi.net/usage/reading/including-relationships.html)/[`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameters.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowVersions/{id}/workflowDefinition';
+};
+
+export type HeadWorkflowVersionWorkflowDefinitionErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * The workflowVersion does not exist.
+     */
+    404: JsonApiErrorDocument;
+};
+
+export type HeadWorkflowVersionWorkflowDefinitionError = HeadWorkflowVersionWorkflowDefinitionErrors[keyof HeadWorkflowVersionWorkflowDefinitionErrors];
+
+export type HeadWorkflowVersionWorkflowDefinitionResponses = {
+    /**
+     * The operation completed successfully.
+     */
+    200: unknown;
+};
+
+export type GetWorkflowVersionWorkflowDefinitionRelationshipData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowVersion whose related workflowDefinition identity to retrieve.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameter.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowVersions/{id}/relationships/workflowDefinition';
+};
+
+export type GetWorkflowVersionWorkflowDefinitionRelationshipErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * The workflowVersion does not exist.
+     */
+    404: ErrorResponseDocument;
+};
+
+export type GetWorkflowVersionWorkflowDefinitionRelationshipError = GetWorkflowVersionWorkflowDefinitionRelationshipErrors[keyof GetWorkflowVersionWorkflowDefinitionRelationshipErrors];
+
+export type GetWorkflowVersionWorkflowDefinitionRelationshipResponses = {
+    /**
+     * Successfully returns the found workflowDefinition identity, or `null` if it was not found.
+     */
+    200: WorkflowDefinitionIdentifierResponseDocument;
+};
+
+export type GetWorkflowVersionWorkflowDefinitionRelationshipResponse = GetWorkflowVersionWorkflowDefinitionRelationshipResponses[keyof GetWorkflowVersionWorkflowDefinitionRelationshipResponses];
+
+export type HeadWorkflowVersionWorkflowDefinitionRelationshipData = {
+    body?: never;
+    headers: {
+        /**
+         * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
+         */
+        'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowVersion whose related workflowDefinition identity to retrieve.
+         */
+        id: string;
+    };
+    query?: {
+        /**
+         * For syntax, see the documentation for the [`fields`](https://www.jsonapi.net/usage/reading/sparse-fieldset-selection.html) query string parameter.
+         */
+        query?: {
+            [key: string]: string | null;
+        };
+    };
+    url: '/api/workflowVersions/{id}/relationships/workflowDefinition';
+};
+
+export type HeadWorkflowVersionWorkflowDefinitionRelationshipErrors = {
+    /**
+     * The query string is invalid.
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * The workflowVersion does not exist.
+     */
+    404: JsonApiErrorDocument;
+};
+
+export type HeadWorkflowVersionWorkflowDefinitionRelationshipError = HeadWorkflowVersionWorkflowDefinitionRelationshipErrors[keyof HeadWorkflowVersionWorkflowDefinitionRelationshipErrors];
+
+export type HeadWorkflowVersionWorkflowDefinitionRelationshipResponses = {
+    /**
+     * The operation completed successfully.
+     */
+    200: unknown;
+};
+
+export type PatchWorkflowVersionWorkflowDefinitionRelationshipData = {
+    /**
+     * The identity of the workflowDefinition to assign to the workflowDefinition relationship.
+     */
+    body: ToOneWorkflowDefinitionInRequest;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        /**
+         * The identifier of the workflowVersion whose workflowDefinition relationship to assign.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/workflowVersions/{id}/relationships/workflowDefinition';
+};
+
+export type PatchWorkflowVersionWorkflowDefinitionRelationshipErrors = {
+    /**
+     * The request body is missing or malformed.
+     */
+    400: ErrorResponseDocument;
+    /**
+     * The workflowVersion or a related resource does not exist.
+     */
+    404: ErrorResponseDocument;
+    /**
+     * The request body contains conflicting information or another resource with the same ID already exists.
+     */
+    409: ErrorResponseDocument;
+    /**
+     * Validation of the request body failed.
+     */
+    422: ErrorResponseDocument;
+};
+
+export type PatchWorkflowVersionWorkflowDefinitionRelationshipError = PatchWorkflowVersionWorkflowDefinitionRelationshipErrors[keyof PatchWorkflowVersionWorkflowDefinitionRelationshipErrors];
+
+export type PatchWorkflowVersionWorkflowDefinitionRelationshipResponses = {
+    /**
+     * The workflowDefinition relationship was successfully updated, which did not result in additional changes.
+     */
+    204: void;
+};
+
+export type PatchWorkflowVersionWorkflowDefinitionRelationshipResponse = PatchWorkflowVersionWorkflowDefinitionRelationshipResponses[keyof PatchWorkflowVersionWorkflowDefinitionRelationshipResponses];
 
 export type GetWorkspaceData = {
     body?: never;
