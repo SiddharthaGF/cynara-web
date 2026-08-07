@@ -37,7 +37,7 @@ interface NavEntry {
   labelKey: string;
   icon: typeof ClipboardList;
   /** Any one of these subjects (with the read action) reveals the entry. */
-  subjects: readonly ('Catalog' | 'Patient' | 'Workspace')[];
+  subjects: readonly ('Catalog' | 'Patient' | 'Workflow' | 'Workspace')[];
 }
 
 const NAV_ENTRIES: readonly NavEntry[] = [

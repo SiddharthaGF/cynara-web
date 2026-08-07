@@ -16,6 +16,12 @@ export const CAPABILITY_CODES = [
   'audit.read',
   'catalog.read',
   'catalog.write',
+  'workflows.read',
+  'workflows.write',
+  'pipelines.read',
+  'pipelines.write',
+  'tasks.read',
+  'tasks.write',
   'workspace.read',
   'workspace.write',
   'capabilities.read',
@@ -43,6 +49,9 @@ export type CapabilitySubject =
   | 'FormResponse'
   | 'AuditEvent'
   | 'Catalog'
+  | 'Workflow'
+  | 'Pipeline'
+  | 'ClinicalTask'
   | 'Workspace'
   | 'CapabilityAssignment';
 
@@ -72,6 +81,12 @@ export const CAPABILITY_RULE_MAP: Readonly<
   'audit.read': { action: 'read', subject: 'AuditEvent' },
   'catalog.read': { action: 'read', subject: 'Catalog' },
   'catalog.write': { action: 'write', subject: 'Catalog' },
+  'workflows.read': { action: 'read', subject: 'Workflow' },
+  'workflows.write': { action: 'write', subject: 'Workflow' },
+  'pipelines.read': { action: 'read', subject: 'Pipeline' },
+  'pipelines.write': { action: 'write', subject: 'Pipeline' },
+  'tasks.read': { action: 'read', subject: 'ClinicalTask' },
+  'tasks.write': { action: 'write', subject: 'ClinicalTask' },
   'workspace.read': { action: 'read', subject: 'Workspace' },
   'workspace.write': { action: 'write', subject: 'Workspace' },
   'capabilities.read': { action: 'read', subject: 'CapabilityAssignment' },
@@ -113,6 +128,15 @@ export const ROUTE_CAPABILITY_REQUIREMENTS: Readonly<
   '/$locale/forms/$code/designer/': [{ action: 'write', subject: 'Catalog' }],
   '/$locale/forms/$code/designer/$draftId': [
     { action: 'write', subject: 'Catalog' },
+  ],
+  // Workflow screens (catalog + designer) are built in CYN-71; the guards are
+  // Registered now so the routes are capability-aware from the first commit.
+  '/$locale/workflows/': [{ action: 'read', subject: 'Workflow' }],
+  '/$locale/workflows/$code/designer/': [
+    { action: 'write', subject: 'Workflow' },
+  ],
+  '/$locale/workflows/$code/designer/$draftId': [
+    { action: 'write', subject: 'Workflow' },
   ],
   '/$locale/admin/': [
     // The admin hub mixes workspace and catalog sections, so either read capability grants access; each section enforces its own write capability.
