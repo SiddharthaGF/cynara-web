@@ -61,5 +61,11 @@ jobs:
             env.API_CONTRACT_REF }}/contracts/openapi.json
         run: pnpm api:check
 
+      - name: Generate the route tree
+        # `routeTree.gen.ts` is gitignored and produced by the Vite plugin during
+        # dev/build, so a fresh checkout has no copy. Build first to write it
+        # before typechecking.
+        run: pnpm build
+
       - name: Typecheck the regenerated client
         run: pnpm typecheck
