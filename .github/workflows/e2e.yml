@@ -7,9 +7,9 @@
 # screenshots/videos, and the API log so the run is reproducible without a
 # local replay.
 #
-# `API_REF` is intentionally a branch: the E2E suite exercises the latest
-# backend contract, and the pinned `API client drift` workflow guards the
-# generated client against that branch separately.
+# `API_REF` points at the API's default branch so the E2E suite exercises the
+# latest backend contract; the `API client drift` workflow guards the generated
+# client against a pinned API contract SHA separately.
 
 name: E2E clinical workspace
 
@@ -21,7 +21,7 @@ on:
 
 env:
   API_REPO: SiddharthaGF/cynara-api
-  API_REF: develop
+  API_REF: main
   CONNECTION_STRING: >-
     Host=127.0.0.1;Port=5432;Database=postgres;Username=postgres;Password=postgres
 

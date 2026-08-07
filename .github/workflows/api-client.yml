@@ -6,10 +6,10 @@
 # run after the pin is advanced.
 #
 # Pinning: keep `API_CONTRACT_REF` default at a known-good SHA (short or full)
-# rather than a branch. A branch default (`develop`) regenerates on the latest
-# API state, which makes this workflow nondeterministic and forces every
-# consumer to absorb upstream churn. Advance the pin deliberately, regenerate,
-# and commit the new output in the same change.
+# rather than a branch. A branch default regenerates on the latest API state,
+# which makes this workflow nondeterministic and forces every consumer to
+# absorb upstream churn. Advance the pin deliberately, regenerate, and commit
+# the new output in the same change.
 #
 # Docs: docs/api-client.md
 
@@ -30,7 +30,9 @@ on:
 
 env:
   # Pinned cynara-api contract ref (SHA recommended — see header comment).
-  API_CONTRACT_REF: ${{ github.event.inputs.contract-ref || 'develop' }}
+  # `27bce5d` is the cynara-api main HEAD whose contract the committed
+  # src/api/generated output was generated against.
+  API_CONTRACT_REF: ${{ github.event.inputs.contract-ref || '27bce5d7503bfb1500e9f26f2606c482a9ccf318' }}
 
 concurrency:
   group: api-client-${{ github.event.pull_request.number || github.ref }}
@@ -54,11 +56,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Fetch the pinned OpenAPI contract
+        # Download the contract to a local file and feed it through
+        # OPENAPI_SPEC instead of OPENAPI_SPEC_URL: openapi-ts derives the
+        # generated client's `baseUrl` from a URL input, which would produce a
+        # spurious diff against the committed output (generated from a local
+        # file).
+        env:
+          API_CONTRACT_REF: ${{ env.API_CONTRACT_REF }}
+        run: >-
+          curl -fsSL
+          "https://raw.githubusercontent.com/SiddharthaGF/cynara-api/${API_CONTRACT_REF}/contracts/openapi.json"
+          -o /tmp/openapi-contract.json
+
       - name: Regenerate client and fail on stale output
         env:
-          OPENAPI_SPEC_URL:
-            https://raw.githubusercontent.com/SiddharthaGF/cynara-api/${{
-            env.API_CONTRACT_REF }}/contracts/openapi.json
+          OPENAPI_SPEC: /tmp/openapi-contract.json
         run: pnpm api:check
 
       - name: Generate the route tree
