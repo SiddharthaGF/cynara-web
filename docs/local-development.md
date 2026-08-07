@@ -57,19 +57,27 @@ one-off bypass.
 
 ### Configure the API origin
 
-The web app talks to `cynara-api` through `VITE_API_ORIGIN`. The value is
-resolved in this order:
+The web app talks to `cynara-api` through `VITE_API_ORIGIN`. The **client
+bundle** resolves it in this order:
 
 1. `process.env.VITE_API_ORIGIN` (shell / CI)
 2. The `.env` file in the repo root (gitignored)
-3. The `[vars] VITE_API_ORIGIN` block in `wrangler.toml` (production only —
-   `vite.config.ts` does not read `wrangler.toml` for local dev)
+3. Empty — the client surfaces `ApiOriginUnavailableError` with remediation
 
-If none of these resolve, the Vite config throws a startup error that points at
-this doc (search for `LOCAL_MISSING_API_ORIGIN_ERROR` in `vite.config.ts`). The
-runtime API client throws `ApiOriginUnavailableError` with the same remediation
-steps if the config slips past the build but the value is still unset at
-runtime.
+The **SSR runtime** is different. It runs inside workerd through the Cloudflare
+Vite plugin, whose environment comes from `.dev.vars` / `.env` /
+`wrangler.jsonc [vars]` — `process.env` is **not** consulted there. The SSR
+resolution order is:
+
+1. `.dev.vars` in the repo root (highest precedence)
+2. The `.env` file in the repo root
+3. The `[vars] VITE_API_ORIGIN` block in `wrangler.jsonc` (production fallback)
+
+That asymmetry matters for CI: the E2E workflow sets `VITE_API_ORIGIN` as a step
+env var, which reaches only the browser bundle. Without a `.dev.vars` file the
+SSR falls back to the production origin, so the locally created E2E forms are
+never found. The workflow therefore writes a `.dev.vars` that points the SSR
+runtime at the locally booted API before running Playwright.
 
 `.env.example` ships `VITE_API_ORIGIN=http://localhost:5000`. To override, copy
 it to `.env` and edit:
@@ -78,9 +86,6 @@ it to `.env` and edit:
 cp .env.example .env
 $EDITOR .env
 ```
-
-The same variable also flows to the SSR worker through the Cloudflare Vite
-plugin, so the client bundle and the SSR runtime stay in sync.
 
 ### Start the API
 
