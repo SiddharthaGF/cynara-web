@@ -32,7 +32,7 @@ import {
 
 export type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'conflict';
 
-interface UseWorkflowDraftResult {
+export interface UseWorkflowDraftResult {
   graph: WorkflowGraph;
   rowVersion: number;
   saveState: SaveState;
@@ -84,8 +84,6 @@ export function useWorkflowDraft(
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isReadOnly, setIsReadOnly] = useState(initial.isReadOnly);
   const [isDirty, setIsDirty] = useState(false);
-  const [appliedDraft, setAppliedDraft] =
-    useState<WorkflowVersion>(initialDraft);
   const graphRef = useRef(graph);
   const rowVersionRef = useRef(rowVersion);
   const timerRef = useRef<number | null>(null);
@@ -108,24 +106,6 @@ export function useWorkflowDraft(
     rowVersionRef.current = rowVersion;
   }, [graph, rowVersion]);
 
-  // Adopt draft data that changed outside local edits (a reload or a newer
-  // Cached version). This must not run during render: a changing query
-  // Snapshot would re-enter the guard every pass and trigger an update-depth
-  // Crash, so the sync lives in an effect that settles after one pass.
-  useEffect(() => {
-    if (
-      !isDirty &&
-      draftQuery.data !== undefined &&
-      draftQuery.data !== appliedDraft
-    ) {
-      const next = draftSnapshot(draftQuery.data);
-      setAppliedDraft(draftQuery.data);
-      dispatchHistory({ type: 'reset', present: next.graph });
-      setRowVersion(next.rowVersion);
-      setIsReadOnly(next.isReadOnly);
-    }
-  }, [appliedDraft, draftQuery.data, isDirty]);
-
   const saveMutation = useMutation({
     mutationFn: async (input: {
       workflowSchemaJson: string;
@@ -134,15 +114,11 @@ export function useWorkflowDraft(
       const saved = await updateWorkflowDraft(code, input);
       return saved;
     },
-  });
-
-  const commitSaved = useCallback(
-    (saved: WorkflowVersion): void => {
+    onSuccess: (saved: WorkflowVersion) => {
       queryClient.setQueryData(
         queryKeys.workflowDefinitions.draft(code),
         saved,
       );
-      setAppliedDraft(saved);
       setRowVersion(saved.rowVersion);
       rowVersionRef.current = saved.rowVersion;
       setIsReadOnly(saved.status !== 'draft');
@@ -152,8 +128,7 @@ export function useWorkflowDraft(
       setSaveState('saved');
       setSaveError(null);
     },
-    [code, queryClient],
-  );
+  });
 
   const failSave = useCallback((error: unknown): void => {
     if (error instanceof ApiError && error.status === 409) {
@@ -197,11 +172,10 @@ export function useWorkflowDraft(
       saveInFlightRef.current = true;
 
       try {
-        const saved = await saveMutation.mutateAsync({
+        await saveMutation.mutateAsync({
           workflowSchemaJson: serializeWorkflowGraph(current),
           rowVersion: rowVersionRef.current,
         });
-        commitSaved(saved);
       } catch (error) {
         if (error instanceof ApiError && error.status === 409) {
           failSave(error);
@@ -219,7 +193,7 @@ export function useWorkflowDraft(
         saveInFlightRef.current = false;
       }
     },
-    [commitSaved, failSave, saveMutation],
+    [failSave, saveMutation],
   );
 
   const validationIssues = useMemo(() => validateWorkflowGraph(graph), [graph]);
@@ -231,6 +205,15 @@ export function useWorkflowDraft(
     await queryClient.invalidateQueries({
       queryKey: queryKeys.workflowDefinitions.draft(code),
     });
+    const next = queryClient.getQueryData<WorkflowVersion>(
+      queryKeys.workflowDefinitions.draft(code),
+    );
+    if (next !== undefined) {
+      const snapshot = draftSnapshot(next);
+      dispatchHistory({ type: 'reset', present: snapshot.graph });
+      setRowVersion(snapshot.rowVersion);
+      setIsReadOnly(snapshot.isReadOnly);
+    }
   }, [code, queryClient]);
 
   const saveNow = useCallback(async (): Promise<void> => {

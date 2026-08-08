@@ -124,7 +124,7 @@ function WorkflowCanvasInner({
     const id = requestAnimationFrame(() => {
       void fitView({ padding: 0.2, duration: 300 });
     });
-    return () => cancelAnimationFrame(id);
+    return (): void => cancelAnimationFrame(id);
   }, [nodesInitialized, fitView]);
 
   // Refit after the user triggers an auto layout.
@@ -196,7 +196,7 @@ function WorkflowCanvasInner({
       ? (graph.nodes.find((node) => node.id === contextMenu.nodeId)?.type ??
         null)
       : null;
-  const contextMenuCanAddStepAfter = (() => {
+  const contextMenuCanAddStepAfter = ((): boolean => {
     if (contextMenu?.kind !== 'node') {
       return false;
     }

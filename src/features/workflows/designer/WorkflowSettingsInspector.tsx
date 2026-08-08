@@ -1,4 +1,5 @@
 import { Plus, X } from 'lucide-react';
+import { useState } from 'react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -22,6 +23,27 @@ export function WorkflowSettingsInspector({
   onUpdateInput,
 }: WorkflowSettingsInspectorProps): JSX.Element {
   const { t } = useTranslation('workflows');
+
+  // Input rows carry no id of their own, so each row gets a stable id on the
+  // First render and the list is reconciled in the add/remove handlers. This
+  // Keeps editing a value from remounting the input (focus loss) and keeps
+  // Keys stable even when a middle row is removed.
+  const [rowIds, setRowIds] = useState<number[]>(() =>
+    inputs.map((_, index) => index),
+  );
+
+  function handleAddInput(): void {
+    setRowIds((current) => [
+      ...current,
+      current.length === 0 ? 0 : Math.max(...current) + 1,
+    ]);
+    onAddInput();
+  }
+
+  function handleRemoveInput(index: number): void {
+    setRowIds((current) => current.filter((_, i) => i !== index));
+    onRemoveInput(index);
+  }
 
   return (
     <div className='grid gap-4'>
@@ -49,7 +71,7 @@ export function WorkflowSettingsInspector({
         <ul className='grid gap-2'>
           {inputs.map((input, index) => (
             <li
-              key={index}
+              key={rowIds[index]}
               className='flex items-center gap-2'
             >
               <Field className='min-w-0 flex-1'>
@@ -74,7 +96,7 @@ export function WorkflowSettingsInspector({
                         className='rounded p-1 text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring'
                         aria-label={t('inspector.settings.removeInput')}
                         onClick={() => {
-                          onRemoveInput(index);
+                          handleRemoveInput(index);
                         }}
                       >
                         <X className='size-3.5' />
@@ -94,7 +116,7 @@ export function WorkflowSettingsInspector({
           variant='outline'
           size='sm'
           className='w-fit'
-          onClick={onAddInput}
+          onClick={handleAddInput}
         >
           <Plus className='size-3.5' />
           {t('inspector.settings.addInput')}

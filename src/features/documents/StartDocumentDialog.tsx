@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -73,14 +73,6 @@ export function StartDocumentDialog({
   const [documentDefinitionId, setDocumentDefinitionId] = useState('');
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open) {
-      setDocumentDefinitionId('');
-      setFieldError(null);
-      setServerError(null);
-    }
-  }, [open]);
 
   const emptyCatalog =
     !list.isLoading && list.error === null && definitions.length === 0;
@@ -158,6 +150,9 @@ export function StartDocumentDialog({
         ) : null}
 
         {!list.isLoading && !emptyCatalog && definitions.length > 0 ? (
+          // Client-only SPA form: preventDefault keeps the browser from
+          // Navigating/reloading; the submission runs through React Query.
+          // react-doctor-disable-next-line react-doctor/no-prevent-default
           <form
             className='grid gap-4'
             data-testid='start-document-form'

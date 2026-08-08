@@ -162,6 +162,8 @@ export function DocumentFormDialog({
           error={error}
         />
 
+        {/* Client-only SPA form; preventDefault avoids a native submit reload. */}
+        {/* react-doctor-disable-next-line react-doctor/no-prevent-default */}
         <form
           onSubmit={(event) => {
             event.preventDefault();

@@ -39,7 +39,7 @@ export function WorkflowCanvasStatus({
   // A raw error mentioning a listed issue code duplicates that issue.
   // It is therefore neither shown verbatim nor counted as an extra error.
   const saveErrorCovered =
-    hasSaveError && issues.some((issue) => saveError.includes(issue.code));
+    hasSaveError && coversAnyIssueCode(saveError, issues);
   const errors = issues.filter((issue) => issue.severity === 'error');
   const warnings = issues.filter((issue) => issue.severity === 'warning');
   const errorCount =
@@ -51,7 +51,7 @@ export function WorkflowCanvasStatus({
   }
 
   const hasErrors = errorCount > 0;
-  const summary = (() => {
+  const summary = ((): string => {
     const errorsLabel = t('panel.errors', { count: errorCount });
     const warningsLabel = t('panel.warnings', { count: warningCount });
     if (hasErrors && warningCount > 0) {
@@ -104,6 +104,25 @@ export function WorkflowCanvasStatus({
       ) : null}
     </StatusPill>
   );
+}
+
+function escapeRegExp(text: string): string {
+  return text.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+}
+
+function coversAnyIssueCode(
+  message: string,
+  issues: readonly WorkflowValidationIssue[],
+): boolean {
+  const codes = new Set(issues.map((issue) => issue.code));
+  if (codes.size === 0) {
+    return false;
+  }
+  const pattern = new RegExp(
+    [...codes].map((code) => escapeRegExp(code)).join('|'),
+    'u',
+  );
+  return pattern.test(message);
 }
 
 function IssueRow({

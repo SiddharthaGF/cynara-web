@@ -1,8 +1,8 @@
 import { MarkerType } from '@xyflow/react';
 import type { Edge, Node } from '@xyflow/react';
 
+import { describeExpression } from '@/features/workflows/model/workflowExpression.ts';
 import {
-  describeExpression,
   edgeKey,
   outgoingEdges,
 } from '@/features/workflows/model/workflowGraph.ts';

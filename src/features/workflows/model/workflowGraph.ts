@@ -1,5 +1,4 @@
 import type {
-  WorkflowComparisonOp,
   WorkflowEdge,
   WorkflowExpression,
   WorkflowGraph,
@@ -59,11 +58,6 @@ export function createDefaultWorkflowGraph(): WorkflowGraph {
   };
 }
 
-/** The empty draft graph used when creating a brand-new workflow. */
-export function createInitialWorkflowGraph(): WorkflowGraph {
-  return createDefaultWorkflowGraph();
-}
-
 let generatedIdCounter = 0;
 
 const TYPE_SLUGS: Record<WorkflowNodeType, string> = {
@@ -101,10 +95,6 @@ const NODE_FACTORIES: Record<WorkflowNodeType, (id: string) => WorkflowNode> = {
 
 export function createNode(type: WorkflowNodeType, id: string): WorkflowNode {
   return NODE_FACTORIES[type](id);
-}
-
-export function nodeTypeOf(node: WorkflowNode): WorkflowNodeType {
-  return node.type;
 }
 
 export function outgoingEdges(
@@ -384,61 +374,4 @@ function typeOfNodeAt(
 
 function replaceNode(graph: WorkflowGraph, next: WorkflowNode): WorkflowNode[] {
   return graph.nodes.map((node) => (node.id === next.id ? next : node));
-}
-
-/** Node kind labels used by the editor UI. */
-export const NODE_TYPE_LABELS: Record<WorkflowNodeType, string> = {
-  start: 'node.start',
-  end: 'node.end',
-  task: 'node.task',
-  decision: 'node.decision',
-};
-
-const COMPARISON_OPERATORS: readonly WorkflowComparisonOp[] = [
-  'eq',
-  'neq',
-  'gt',
-  'gte',
-  'lt',
-  'lte',
-];
-
-export function isComparisonOperator(
-  value: string,
-): value is WorkflowComparisonOp {
-  return (COMPARISON_OPERATORS as readonly string[]).includes(value);
-}
-
-/** True when a comparison (or nested expression) still lacks a field or value. */
-export function isIncompleteExpression(
-  expression: WorkflowExpression,
-): boolean {
-  if ('op' in expression && expression.op && expression.args) {
-    if (expression.args.length === 2) {
-      const [left, right] = expression.args;
-      if (left && right && 'ref' in left && 'lit' in right) {
-        return !left.ref || right.lit === null || right.lit === '';
-      }
-    }
-    return expression.args.some(isIncompleteExpression);
-  }
-  return false;
-}
-
-/** Best-effort human-readable rendering of a transition condition. */
-export function describeExpression(expression: WorkflowExpression): string {
-  if ('ref' in expression && expression.ref) {
-    return expression.ref;
-  }
-  if ('lit' in expression) {
-    return String(expression.lit);
-  }
-  if ('op' in expression && expression.op) {
-    if (isIncompleteExpression(expression)) {
-      return '';
-    }
-    const parts = expression.args.map((arg) => describeExpression(arg));
-    return parts.join(` ${expression.op} `);
-  }
-  return '';
 }

@@ -1,4 +1,4 @@
-import { isComparisonOperator } from '@/features/workflows/model/workflowGraph.ts';
+import { isComparisonOperator } from '@/features/workflows/model/workflowExpression.ts';
 import type {
   WorkflowBooleanOp,
   WorkflowComparisonOp,
@@ -6,6 +6,7 @@ import type {
 } from '@/features/workflows/types.ts';
 
 export interface EditableComparison {
+  id: string;
   kind: 'comparison';
   ref: string;
   op: WorkflowComparisonOp;
@@ -13,12 +14,14 @@ export interface EditableComparison {
 }
 
 export interface EditableGroup {
+  id: string;
   kind: 'group';
   combinator: 'and' | 'or';
   items: EditableCondition[];
 }
 
 export interface EditableNot {
+  id: string;
   kind: 'not';
   item: EditableCondition;
 }
@@ -30,19 +33,32 @@ export type EditableCondition =
 
 export const DEFAULT_COMPARISON_OP: WorkflowComparisonOp = 'eq';
 
+let conditionIdCounter = 0;
+
+/**
+ * Stable per-node key for the editable condition tree. The ids are transient:
+ * `editableToExpression` never copies them into the serialized AST, so they
+ * only serve React reconciliation inside the editor.
+ */
+export function nextConditionId(): string {
+  conditionIdCounter += 1;
+  return `condition-${conditionIdCounter}`;
+}
+
 export function createComparison(
   ref = '',
   op: WorkflowComparisonOp = DEFAULT_COMPARISON_OP,
 ): EditableComparison {
-  return { kind: 'comparison', ref, op, value: '' };
+  return { id: nextConditionId(), kind: 'comparison', ref, op, value: '' };
 }
 
 export function createGroup(combinator: 'and' | 'or' = 'and'): EditableGroup {
-  return { kind: 'group', combinator, items: [createComparison()] };
-}
-
-export function createNot(): EditableNot {
-  return { kind: 'not', item: createComparison() };
+  return {
+    id: nextConditionId(),
+    kind: 'group',
+    combinator,
+    items: [createComparison()],
+  };
 }
 
 function stringifyLiteral(expression: WorkflowExpression): string {
@@ -83,7 +99,13 @@ export function expressionToEditable(
     // A bare boolean-valued ref reads as a boolean. The editor cannot express
     // That succinctly, so model it as an explicit comparison to keep the AST
     // Round-trippable.
-    return { kind: 'comparison', ref: expression.ref, op: 'eq', value: 'true' };
+    return {
+      id: nextConditionId(),
+      kind: 'comparison',
+      ref: expression.ref,
+      op: 'eq',
+      value: 'true',
+    };
   }
   if (
     'lit' in expression &&
@@ -91,6 +113,7 @@ export function expressionToEditable(
     typeof expression.lit === 'boolean'
   ) {
     return {
+      id: nextConditionId(),
       kind: 'comparison',
       ref: '',
       op: 'eq',
@@ -103,6 +126,7 @@ export function expressionToEditable(
     expression.args.length === 1
   ) {
     return {
+      id: nextConditionId(),
       kind: 'not',
       item: expressionToEditable(expression.args[0] ?? { lit: true }),
     };
@@ -112,6 +136,7 @@ export function expressionToEditable(
     (expression.op === 'and' || expression.op === 'or')
   ) {
     return {
+      id: nextConditionId(),
       kind: 'group',
       combinator: expression.op,
       items: expression.args.map((arg) => expressionToEditable(arg)),
@@ -120,6 +145,7 @@ export function expressionToEditable(
   if ('op' in expression && isComparisonOperator(expression.op)) {
     const [left, right] = expression.args;
     return {
+      id: nextConditionId(),
       kind: 'comparison',
       ref: left ? refOf(left) : '',
       op: expression.op,

@@ -167,6 +167,7 @@ export function EncounterDocumentsPanel({
       </CardContent>
 
       <StartDocumentDialog
+        key={startOpen ? 'open' : 'closed'}
         encounterId={encounter.id}
         facilityId={encounter.facilityId}
         clinicalAreaId={encounter.clinicalAreaId}

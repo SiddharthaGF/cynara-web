@@ -40,6 +40,11 @@
     "no-console": "error",
     "eqeqeq": "error",
     "curly": "error",
+    "capitalized-comments": [
+      "error",
+      "always",
+      { "ignorePattern": "react-doctor-" }
+    ],
     "typescript/no-explicit-any": "error",
     "typescript/explicit-function-return-type": "error",
     "typescript/explicit-module-boundary-types": "error",

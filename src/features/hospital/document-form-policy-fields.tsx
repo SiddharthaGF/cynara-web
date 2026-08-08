@@ -66,7 +66,7 @@ export function DocumentPolicyFields({
   );
 }
 
-export function ToggleField({
+function ToggleField({
   id,
   label,
   help,

@@ -1,36 +1,22 @@
 import { Workflow } from 'lucide-react';
 import { LazyMotion, domAnimation, m, useReducedMotion } from 'motion/react';
-import type { JSX } from 'react';
+import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { WorkflowSummary } from '@/features/workflows/types.ts';
 
-import {
-  CreateWorkflowCard,
-  CreateWorkflowErrorAlert,
-} from './CreateWorkflowCard.tsx';
-import { WorkflowsCatalogCard } from './WorkflowsCatalogCard.tsx';
+import { CreateWorkflowErrorAlert } from './CreateWorkflowCard.tsx';
 
 interface WorkflowListContentProps {
   workflows: WorkflowSummary[];
   error: string | null;
-  isCreating: boolean;
-  isCreatingDraft: boolean;
-  isLoading: boolean;
-  canCreate: boolean;
-  onCreate: (values: { code: string; name: string }) => Promise<void>;
-  onCreateDraft: (code: string) => void;
+  children: ReactNode;
 }
 
 export function WorkflowListContent({
   workflows,
   error,
-  isCreating,
-  isCreatingDraft,
-  isLoading,
-  canCreate,
-  onCreate,
-  onCreateDraft,
+  children,
 }: WorkflowListContentProps): JSX.Element {
   const { t } = useTranslation('workflows');
   const reduceMotion = useReducedMotion();
@@ -86,22 +72,7 @@ export function WorkflowListContent({
           </m.div>
         ) : null}
 
-        <div className='grid gap-6 lg:grid-cols-[1fr_1.2fr]'>
-          {canCreate ? (
-            <CreateWorkflowCard
-              isCreating={isCreating}
-              reduceMotion={reduceMotion}
-              onSubmit={onCreate}
-            />
-          ) : null}
-          <WorkflowsCatalogCard
-            workflows={workflows}
-            isLoading={isLoading}
-            isCreatingDraft={isCreatingDraft}
-            reduceMotion={reduceMotion}
-            onCreateDraft={onCreateDraft}
-          />
-        </div>
+        <div className='grid gap-6 lg:grid-cols-[1fr_1.2fr]'>{children}</div>
       </div>
     </LazyMotion>
   );

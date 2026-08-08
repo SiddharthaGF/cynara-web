@@ -18,10 +18,11 @@ import {
   editableToExpression,
   expressionToEditable,
   isComparisonComplete,
+  nextConditionId,
   type EditableCondition,
   type EditableGroup,
 } from '@/features/workflows/model/conditionModel.ts';
-import { isComparisonOperator } from '@/features/workflows/model/workflowGraph.ts';
+import { isComparisonOperator } from '@/features/workflows/model/workflowExpression.ts';
 import type {
   WorkflowComparisonOp,
   WorkflowExpression,
@@ -80,12 +81,14 @@ export function ConditionEditor({
           onClick={() => {
             if (draft.kind === 'group') {
               commit({
+                id: draft.id,
                 kind: 'group',
                 combinator: draft.combinator,
                 items: [...draft.items, createComparison()],
               });
             } else {
               commit({
+                id: nextConditionId(),
                 kind: 'group',
                 combinator: 'and',
                 items: [draft, createComparison()],
@@ -175,7 +178,7 @@ function ConditionNode({
           inputs={inputs}
           readOnly={readOnly}
           onChange={(next) => {
-            onChange({ kind: 'not', item: next });
+            onChange({ id: condition.id, kind: 'not', item: next });
           }}
         />
       </div>
@@ -239,6 +242,7 @@ function GroupEditor({
             aria-label={t('condition.remove')}
             onClick={() => {
               onChange({
+                id: group.id,
                 kind: 'group',
                 combinator: 'and',
                 items: [createComparison()],
@@ -252,7 +256,7 @@ function GroupEditor({
       <div className='grid gap-2'>
         {group.items.map((item, index) => (
           <div
-            key={index}
+            key={item.id}
             className='grid gap-2'
           >
             <ConditionNode

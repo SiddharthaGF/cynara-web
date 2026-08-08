@@ -1,16 +1,20 @@
 import { useNavigate, useParams } from '@tanstack/react-router';
+import { useReducedMotion } from 'motion/react';
 import type { JSX } from 'react';
 
 import { AppShell } from '@/components/app-shell.tsx';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
+import { CreateWorkflowCard } from './CreateWorkflowCard.tsx';
 import { useWorkflowsCatalog } from './useWorkflowsCatalog.ts';
 import { WorkflowListContent } from './WorkflowListContent.tsx';
+import { WorkflowsCatalogCard } from './WorkflowsCatalogCard.tsx';
 
 export function WorkflowListPage(): JSX.Element {
   const navigate = useNavigate();
   const { locale } = useParams({ from: '/$locale' });
   const { can } = useCapabilities();
+  const reduceMotion = useReducedMotion();
   const {
     workflows,
     error,
@@ -53,13 +57,22 @@ export function WorkflowListPage(): JSX.Element {
       <WorkflowListContent
         workflows={workflows}
         error={error}
-        isCreating={isCreating}
-        isCreatingDraft={isCreatingDraft}
-        isLoading={isLoading}
-        canCreate={can('write', 'Catalog')}
-        onCreate={handleCreate}
-        onCreateDraft={handleCreateDraft}
-      />
+      >
+        {can('write', 'Catalog') ? (
+          <CreateWorkflowCard
+            isCreating={isCreating}
+            reduceMotion={reduceMotion}
+            onSubmit={handleCreate}
+          />
+        ) : null}
+        <WorkflowsCatalogCard
+          workflows={workflows}
+          isLoading={isLoading}
+          isCreatingDraft={isCreatingDraft}
+          reduceMotion={reduceMotion}
+          onCreateDraft={handleCreateDraft}
+        />
+      </WorkflowListContent>
     </AppShell>
   );
 }

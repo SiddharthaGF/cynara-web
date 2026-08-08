@@ -1,5 +1,3 @@
-import { Link, useParams } from '@tanstack/react-router';
-import { ArrowLeft, Redo2, Settings2, Undo2 } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,24 +5,15 @@ import { AppShell } from '@/components/app-shell.tsx';
 import { StatusState } from '@/components/status-state.tsx';
 import { DocumentMeta } from '@/components/theme-toggle.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
-import { Button } from '@/components/ui/button.tsx';
-import { TooltipIconButton } from '@/components/ui/tooltip-button.tsx';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip.tsx';
 import type { WorkflowVersion } from '@/features/workflows/types.ts';
 import { useIsMobile } from '@/hooks/use-mobile.ts';
-import { cn } from '@/lib/utils.ts';
 
 import { useWorkflowDesignerLayout } from './useWorkflowDesignerLayout.ts';
 import { WorkflowCanvas } from './WorkflowCanvas.tsx';
 import { WorkflowCanvasStatus } from './WorkflowCanvasStatus.tsx';
+import { WorkflowDesignerToolbar } from './WorkflowDesignerToolbar.tsx';
 import { WorkflowInspector, type InspectorMode } from './WorkflowInspector.tsx';
 import { WorkflowNodeTypeBadge } from './WorkflowNodeTypeBadge.tsx';
-import { WorkflowSaveButton } from './WorkflowSaveButton.tsx';
-import { WorkflowSaveStatusBanner } from './WorkflowSaveStatusBanner.tsx';
 
 interface WorkflowDesignerLayoutProps {
   code: string;
@@ -36,7 +25,6 @@ export function WorkflowDesignerLayout({
   initialDraft,
 }: WorkflowDesignerLayoutProps): JSX.Element {
   const { t } = useTranslation('workflows');
-  const { locale } = useParams({ from: '/$locale' });
   const layout = useWorkflowDesignerLayout(code, initialDraft);
   const isMobile = useIsMobile();
   const { draft } = layout;
@@ -90,7 +78,7 @@ export function WorkflowDesignerLayout({
       layout.selectedNode !== null ||
       layout.selectedEdge !== null);
 
-  const nodeTitle = (() => {
+  const nodeTitle = ((): string => {
     const name = layout.selectedNode?.name?.trim();
     if (name) {
       return name;
@@ -101,7 +89,7 @@ export function WorkflowDesignerLayout({
   const edgeTitle =
     layout.selectedEdge?.edge.label?.trim() || t('inspector.transitions');
 
-  const inspectorTitle = (() => {
+  const inspectorTitle = ((): string => {
     if (inspectorMode === 'edge') {
       return edgeTitle;
     }
@@ -111,7 +99,7 @@ export function WorkflowDesignerLayout({
     return t('inspector.workflowSettings');
   })();
 
-  const inspectorSubtitle = (() => {
+  const inspectorSubtitle = ((): string | null => {
     if (inspectorMode === 'node' && layout.selectedNode) {
       return layout.selectedNode.id;
     }
@@ -294,7 +282,7 @@ export function WorkflowDesignerLayout({
     );
   }
 
-  const headerSubtitle = (() => {
+  const headerSubtitle = ((): string => {
     if (draft.isLoading) {
       return t('loading.title');
     }
@@ -311,103 +299,14 @@ export function WorkflowDesignerLayout({
     <AppShell variant='minimal'>
       <DocumentMeta />
       <div className='flex h-[calc(100svh-3.5rem)] min-h-0 flex-col overflow-hidden bg-background'>
-        <div className='flex h-12 shrink-0 items-center gap-2 border-b border-border/60 bg-card/70 px-3 backdrop-blur-md md:gap-3 md:px-4'>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Link
-                  to='/$locale/workflows'
-                  params={{ locale }}
-                  aria-label={t('toolbar.workflows')}
-                  className='inline-flex h-7 shrink-0 items-center justify-center gap-1.5 rounded-[min(var(--radius-md),12px)] border border-transparent px-2 text-[0.8rem] font-medium whitespace-nowrap transition-colors outline-none select-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
-                >
-                  <ArrowLeft className='size-4' />
-                  <span className='hidden sm:inline'>
-                    {t('toolbar.workflows')}
-                  </span>
-                </Link>
-              }
-            />
-            <TooltipContent side='bottom'>
-              {t('toolbar.workflows')}
-            </TooltipContent>
-          </Tooltip>
-
-          <div className='min-w-0 flex-1 sm:border-l sm:border-border/50 sm:pl-3'>
-            <p className='truncate font-heading text-sm font-medium'>{code}</p>
-            <p className='hidden truncate text-xs text-muted-foreground sm:block'>
-              {headerSubtitle}
-            </p>
-          </div>
-
-          {isBootstrapping ? null : (
-            <>
-              <TooltipIconButton
-                type='button'
-                variant='ghost'
-                size='sm'
-                aria-label={t('toolbar.undo')}
-                label={t('toolbar.undoHint')}
-                disabled={draft.isReadOnly || !draft.canUndo}
-                onClick={() => {
-                  draft.undo();
-                }}
-                className='shrink-0'
-              >
-                <Undo2 className='size-3.5' />
-              </TooltipIconButton>
-              <TooltipIconButton
-                type='button'
-                variant='ghost'
-                size='sm'
-                aria-label={t('toolbar.redo')}
-                label={t('toolbar.redoHint')}
-                disabled={draft.isReadOnly || !draft.canRedo}
-                onClick={() => {
-                  draft.redo();
-                }}
-                className='shrink-0'
-              >
-                <Redo2 className='size-3.5' />
-              </TooltipIconButton>
-              <Button
-                type='button'
-                variant='ghost'
-                size='sm'
-                disabled={draft.isReadOnly && !isMobile}
-                onClick={handleOpenSettings}
-                className={cn('shrink-0 gap-1.5')}
-              >
-                <Settings2 className='size-3.5' />
-                <span className='hidden sm:inline'>
-                  {t('toolbar.settings')}
-                </span>
-              </Button>
-              <WorkflowSaveButton
-                state={draft.saveState}
-                disabled={draft.isReadOnly}
-                hint={t('toolbar.saveHint')}
-                onClick={() => {
-                  void draft.saveNow();
-                }}
-              />
-            </>
-          )}
-        </div>
-
-        {draft.saveState === 'conflict' ? (
-          <div className='shrink-0 border-b bg-card px-4 py-2'>
-            <WorkflowSaveStatusBanner
-              state={draft.saveState}
-              error={draft.saveError}
-              defaultConcurrencyMessage={t('concurrency.defaultMessage')}
-              onReload={() => {
-                void draft.reloadDraft();
-              }}
-              onDismissConflict={draft.dismissConflict}
-            />
-          </div>
-        ) : null}
+        <WorkflowDesignerToolbar
+          code={code}
+          subtitle={headerSubtitle}
+          isBootstrapping={isBootstrapping}
+          draft={draft}
+          isMobile={isMobile}
+          onOpenSettings={handleOpenSettings}
+        />
 
         {renderMain()}
       </div>

@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select.tsx';
-import { describeExpression } from '@/features/workflows/model/workflowGraph.ts';
+import { describeExpression } from '@/features/workflows/model/workflowExpression.ts';
 import type {
   WorkflowEdge,
   WorkflowGraph,
