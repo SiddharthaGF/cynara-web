@@ -1,6 +1,5 @@
 import { useForm } from '@tanstack/react-form';
 import { Plus } from 'lucide-react';
-import { m } from 'motion/react';
 import type { JSX } from 'react';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -35,7 +34,6 @@ interface CreateFormValues {
 
 interface CreateFormCardProps {
   isCreating: boolean;
-  reduceMotion: boolean | null;
   onSubmit: (values: CreateFormValues) => Promise<void>;
 }
 
@@ -56,7 +54,6 @@ export function CreateFormErrorAlert({
 
 export function CreateFormCard({
   isCreating,
-  reduceMotion,
   onSubmit,
 }: CreateFormCardProps): JSX.Element {
   const { t } = useTranslation('forms');
@@ -99,20 +96,7 @@ export function CreateFormCard({
   }
 
   return (
-    <m.div
-      initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={
-        reduceMotion
-          ? { duration: 0 }
-          : {
-              duration: 0.45,
-              delay: 0.08,
-              ease: [0.22, 1, 0.36, 1],
-            }
-      }
-      data-testid='create-form-card'
-    >
+    <div data-testid='create-form-card'>
       <Card className='border-primary/10 shadow-sm'>
         <CardHeader>
           <CardTitle className='flex items-center gap-2 font-heading text-lg'>
@@ -221,6 +205,6 @@ export function CreateFormCard({
           </form>
         </CardContent>
       </Card>
-    </m.div>
+    </div>
   );
 }

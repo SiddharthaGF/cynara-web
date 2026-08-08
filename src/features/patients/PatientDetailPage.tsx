@@ -5,7 +5,6 @@ import {
   useSearch,
 } from '@tanstack/react-router';
 import { ArrowLeft, Pencil, Plus, Trash2, UserCircle } from 'lucide-react';
-import { LazyMotion, domAnimation, m, useReducedMotion } from 'motion/react';
 import type { JSX } from 'react';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -66,7 +65,6 @@ export function PatientDetailPage(): JSX.Element {
     from: '/$locale/patients/$id',
   });
   const navigate = useNavigate();
-  const reduceMotion = useReducedMotion();
   const { can } = useCapabilities();
   const { tab } = useSearch({ from: '/$locale/patients/$id' });
 
@@ -115,7 +113,7 @@ export function PatientDetailPage(): JSX.Element {
   if (isLoading) {
     return (
       <AppShell variant='catalog'>
-        <div className='mx-auto max-w-3xl px-6 py-10 pb-20'>
+        <div className='mx-auto max-w-3xl px-6 py-6'>
           <Skeleton className='mb-4 h-8 w-48' />
           <Skeleton className='mb-2 h-6 w-96' />
           <Skeleton className='h-64 w-full' />
@@ -127,7 +125,7 @@ export function PatientDetailPage(): JSX.Element {
   if (loadError || !patient) {
     return (
       <AppShell variant='catalog'>
-        <div className='mx-auto max-w-3xl px-6 py-10 pb-20'>
+        <div className='mx-auto max-w-3xl px-6 py-6'>
           <Empty className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
             <EmptyHeader>
               <EmptyTitle className='text-lg'>
@@ -167,298 +165,257 @@ export function PatientDetailPage(): JSX.Element {
 
   return (
     <AppShell variant='catalog'>
-      <LazyMotion features={domAnimation}>
-        <div className='mx-auto max-w-3xl px-6 py-10 pb-20'>
-          <m.header
-            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              reduceMotion
-                ? { duration: 0 }
-                : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }
-            }
-            className='mb-8'
-          >
-            <PageBreadcrumbs
-              className='mb-4'
-              items={[
-                {
-                  label: t('common:breadcrumb.patients'),
-                  link: (
-                    <Link
-                      to='/$locale/patients'
-                      params={{ locale }}
-                    />
-                  ),
-                },
-                { label: `${patient.givenName} ${patient.familyName}` },
-              ]}
-            />
-            <div className='flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
-              <div className='min-w-0'>
-                <p className='mb-3 inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
-                  <UserCircle className='size-3' />
-                  {t('detail.eyebrow')}
-                </p>
-                <h1 className='font-display text-balance text-3xl font-semibold tracking-tight md:text-4xl'>
-                  {patient.givenName} {patient.familyName}
-                </h1>
-                <p className='mt-2 text-sm text-muted-foreground'>
-                  {t('detail.fields.mrn')}:{' '}
-                  <code className='text-foreground'>{patient.mrn}</code>
-                </p>
-              </div>
-              <div className='flex flex-wrap items-center gap-2'>
-                {canCreateEncounter ? (
-                  <Button
-                    data-testid='hc-new-encounter'
-                    onClick={openNewEncounter}
-                  >
-                    <Plus className='size-4' />
-                    {t('detail.newEncounter')}
-                  </Button>
-                ) : null}
-                {canMutate ? (
-                  <>
-                    <Button
-                      variant='outline'
-                      data-testid='patient-detail-edit'
-                      onClick={() => setIsEditing(true)}
-                    >
-                      <Pencil className='size-4' />
-                      {t('detail.edit')}
-                    </Button>
-                    <Button
-                      variant='destructive'
-                      data-testid='patient-detail-delete'
-                      onClick={() => setShowDeleteConfirm(true)}
-                      disabled={isDeleting}
-                    >
-                      {isDeleting ? <Spinner data-icon='inline-start' /> : null}
-                      <Trash2 className='size-4' />
-                      {t('detail.delete')}
-                    </Button>
-                  </>
-                ) : null}
-              </div>
-            </div>
-          </m.header>
-
-          {mutationForbidden ? (
-            <Alert
-              variant='destructive'
-              className='mb-6'
-              data-testid='patient-detail-forbidden'
-            >
-              <AlertDescription>
-                {t('permissions.forbiddenMutate')}
-              </AlertDescription>
-            </Alert>
-          ) : null}
-
-          {!canWrite && !mutationForbidden ? (
-            <InsufficientPermissionNotice descriptionKey='access.patientsWriteMissing' />
-          ) : null}
-
-          {(deleteError || deleteSuccess) && (
-            <m.div
-              initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={reduceMotion ? { duration: 0 } : undefined}
-            >
-              <Alert
-                variant={deleteSuccess ? 'default' : 'destructive'}
-                className='mb-6'
-              >
-                <AlertDescription>
-                  {deleteSuccess ? t('detail.deleteSuccess') : deleteError}
-                </AlertDescription>
-              </Alert>
-            </m.div>
-          )}
-
-          {isEditing && canMutate ? (
-            <m.div
-              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : { duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }
-              }
-            >
-              <Card className='border-border/70 shadow-sm'>
-                <CardHeader>
-                  <CardTitle className='flex items-center gap-2 font-heading text-lg'>
-                    <UserCircle className='size-4 text-muted-foreground' />
-                    {t('detail.editTitle')}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <PatientEditForm
-                    patient={patient}
-                    onCancel={() => setIsEditing(false)}
-                    onSaved={() => setIsEditing(false)}
+      <div className='mx-auto max-w-3xl px-6 py-6 pb-12'>
+        <header className='mb-6'>
+          <PageBreadcrumbs
+            className='mb-4'
+            items={[
+              {
+                label: t('common:breadcrumb.patients'),
+                link: (
+                  <Link
+                    to='/$locale/patients'
+                    params={{ locale }}
                   />
-                </CardContent>
-              </Card>
-            </m.div>
-          ) : (
-            <m.div
-              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : { duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }
-              }
-            >
-              <Tabs
-                value={tab}
-                onValueChange={(value) => {
-                  selectTab(value as PatientDetailTab);
-                }}
-              >
-                <TabsList>
-                  <TabsTrigger
-                    value='overview'
-                    data-testid='hc-tab-overview'
-                  >
-                    {t('detail.tabs.overview')}
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value='encounters'
-                    data-testid='hc-tab-encounters'
-                  >
-                    {t('detail.tabs.encounters')}
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value='documents'
-                    data-testid='hc-tab-documents'
-                  >
-                    {t('detail.tabs.documents')}
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value='journeys'
-                    data-testid='hc-tab-journeys'
-                  >
-                    {t('detail.tabs.journeys')}
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent
-                  value='overview'
-                  className='mt-6'
-                >
-                  <PatientView patient={patient} />
-                  <PatientOverview
-                    patientId={patient.id}
-                    locale={locale}
-                    onNewEncounter={openNewEncounter}
-                    onShowAllEncounters={() => selectTab('encounters')}
-                    onShowAllDocuments={() => selectTab('documents')}
-                  />
-                </TabsContent>
-
-                <TabsContent
-                  value='encounters'
-                  className='mt-6'
-                >
-                  <PatientEncountersPanel
-                    patientId={patient.id}
-                    locale={locale}
-                    onNewEncounter={openNewEncounter}
-                  />
-                </TabsContent>
-
-                <TabsContent
-                  value='documents'
-                  className='mt-6'
-                >
-                  <PatientDocumentsTimeline
-                    patientId={patient.id}
-                    locale={locale}
-                    onNewEncounter={
-                      canCreateEncounter ? openNewEncounter : undefined
-                    }
-                  />
-                </TabsContent>
-
-                <TabsContent
-                  value='journeys'
-                  className='mt-6'
-                >
-                  <PatientJourneyPanel
-                    patientId={patient.id}
-                    locale={locale}
-                    onNewEncounter={openNewEncounter}
-                  />
-                </TabsContent>
-              </Tabs>
-            </m.div>
-          )}
-
-          <AlertDialog
-            open={showDeleteConfirm}
-            onOpenChange={setShowDeleteConfirm}
-          >
-            <AlertDialogContent
-              data-testid='patient-delete-confirm'
-              aria-label={t('detail.deleteConfirmTitle')}
-            >
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {t('detail.deleteConfirmTitle')}
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t('detail.deleteConfirmBody')}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              {deleteError ? (
-                <Alert
-                  variant='destructive'
-                  className='mt-2'
-                >
-                  <AlertDescription>{deleteError}</AlertDescription>
-                </Alert>
-              ) : null}
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={isDeleting}>
-                  {t('detail.cancel')}
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  variant='destructive'
-                  data-testid='patient-delete-confirm-submit'
-                  onClick={() => {
-                    void handleDelete();
-                  }}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? <Spinner data-icon='inline-start' /> : null}
-                  {t('detail.delete')}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          <EncounterCreateDialog
-            key={createOpen ? 'open' : 'closed'}
-            patientId={patient.id}
-            open={createOpen}
-            onOpenChange={setCreateOpen}
-            onForbidden={() => {
-              setMutationForbidden(true);
-            }}
-            onCreated={(encounterId) => {
-              setCreateOpen(false);
-              void navigate({
-                to: '/$locale/patients/$id/encounters/$encounterId',
-                params: { locale, id: patient.id, encounterId },
-              });
-            }}
+                ),
+              },
+              { label: `${patient.givenName} ${patient.familyName}` },
+            ]}
           />
-        </div>
-      </LazyMotion>
+          <div className='flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
+            <div className='min-w-0'>
+              <h1 className='font-display text-balance text-2xl font-semibold tracking-tight md:text-3xl'>
+                {patient.givenName} {patient.familyName}
+              </h1>
+              <p className='mt-1.5 text-sm text-muted-foreground'>
+                {t('detail.fields.mrn')}:{' '}
+                <code className='text-foreground'>{patient.mrn}</code>
+              </p>
+            </div>
+            <div className='flex flex-wrap items-center gap-2'>
+              {canCreateEncounter ? (
+                <Button
+                  data-testid='hc-new-encounter'
+                  onClick={openNewEncounter}
+                >
+                  <Plus className='size-4' />
+                  {t('detail.newEncounter')}
+                </Button>
+              ) : null}
+              {canMutate ? (
+                <>
+                  <Button
+                    variant='outline'
+                    data-testid='patient-detail-edit'
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <Pencil className='size-4' />
+                    {t('detail.edit')}
+                  </Button>
+                  <Button
+                    variant='destructive'
+                    data-testid='patient-detail-delete'
+                    onClick={() => setShowDeleteConfirm(true)}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? <Spinner data-icon='inline-start' /> : null}
+                    <Trash2 className='size-4' />
+                    {t('detail.delete')}
+                  </Button>
+                </>
+              ) : null}
+            </div>
+          </div>
+        </header>
+
+        {mutationForbidden ? (
+          <Alert
+            variant='destructive'
+            className='mb-6'
+            data-testid='patient-detail-forbidden'
+          >
+            <AlertDescription>
+              {t('permissions.forbiddenMutate')}
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
+        {!canWrite && !mutationForbidden ? (
+          <InsufficientPermissionNotice descriptionKey='access.patientsWriteMissing' />
+        ) : null}
+
+        {(deleteError || deleteSuccess) && (
+          <Alert
+            variant={deleteSuccess ? 'default' : 'destructive'}
+            className='mb-6'
+          >
+            <AlertDescription>
+              {deleteSuccess ? t('detail.deleteSuccess') : deleteError}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {isEditing && canMutate ? (
+          <Card className='border-border/70 shadow-sm'>
+            <CardHeader>
+              <CardTitle className='flex items-center gap-2 font-heading text-lg'>
+                <UserCircle className='size-4 text-muted-foreground' />
+                {t('detail.editTitle')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PatientEditForm
+                patient={patient}
+                onCancel={() => setIsEditing(false)}
+                onSaved={() => setIsEditing(false)}
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <Tabs
+            value={tab}
+            onValueChange={(value) => {
+              selectTab(value as PatientDetailTab);
+            }}
+          >
+            <TabsList>
+              <TabsTrigger
+                value='overview'
+                data-testid='hc-tab-overview'
+              >
+                {t('detail.tabs.overview')}
+              </TabsTrigger>
+              <TabsTrigger
+                value='encounters'
+                data-testid='hc-tab-encounters'
+              >
+                {t('detail.tabs.encounters')}
+              </TabsTrigger>
+              <TabsTrigger
+                value='documents'
+                data-testid='hc-tab-documents'
+              >
+                {t('detail.tabs.documents')}
+              </TabsTrigger>
+              <TabsTrigger
+                value='journeys'
+                data-testid='hc-tab-journeys'
+              >
+                {t('detail.tabs.journeys')}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent
+              value='overview'
+              className='mt-6'
+            >
+              <PatientView patient={patient} />
+              <PatientOverview
+                patientId={patient.id}
+                locale={locale}
+                onNewEncounter={openNewEncounter}
+                onShowAllEncounters={() => selectTab('encounters')}
+                onShowAllDocuments={() => selectTab('documents')}
+              />
+            </TabsContent>
+
+            <TabsContent
+              value='encounters'
+              className='mt-6'
+            >
+              <PatientEncountersPanel
+                patientId={patient.id}
+                locale={locale}
+                onNewEncounter={openNewEncounter}
+              />
+            </TabsContent>
+
+            <TabsContent
+              value='documents'
+              className='mt-6'
+            >
+              <PatientDocumentsTimeline
+                patientId={patient.id}
+                locale={locale}
+                onNewEncounter={
+                  canCreateEncounter ? openNewEncounter : undefined
+                }
+              />
+            </TabsContent>
+
+            <TabsContent
+              value='journeys'
+              className='mt-6'
+            >
+              <PatientJourneyPanel
+                patientId={patient.id}
+                locale={locale}
+                onNewEncounter={openNewEncounter}
+              />
+            </TabsContent>
+          </Tabs>
+        )}
+
+        <AlertDialog
+          open={showDeleteConfirm}
+          onOpenChange={setShowDeleteConfirm}
+        >
+          <AlertDialogContent
+            data-testid='patient-delete-confirm'
+            aria-label={t('detail.deleteConfirmTitle')}
+          >
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t('detail.deleteConfirmTitle')}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('detail.deleteConfirmBody')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            {deleteError ? (
+              <Alert
+                variant='destructive'
+                className='mt-2'
+              >
+                <AlertDescription>{deleteError}</AlertDescription>
+              </Alert>
+            ) : null}
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>
+                {t('detail.cancel')}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                variant='destructive'
+                data-testid='patient-delete-confirm-submit'
+                onClick={() => {
+                  void handleDelete();
+                }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? <Spinner data-icon='inline-start' /> : null}
+                {t('detail.delete')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <EncounterCreateDialog
+          key={createOpen ? 'open' : 'closed'}
+          patientId={patient.id}
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          onForbidden={() => {
+            setMutationForbidden(true);
+          }}
+          onCreated={(encounterId) => {
+            setCreateOpen(false);
+            void navigate({
+              to: '/$locale/patients/$id/encounters/$encounterId',
+              params: { locale, id: patient.id, encounterId },
+            });
+          }}
+        />
+      </div>
     </AppShell>
   );
 }

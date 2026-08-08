@@ -4,12 +4,13 @@ import {
   useParams,
   useSearch,
 } from '@tanstack/react-router';
-import { Search, UserPlus, Users } from 'lucide-react';
-import { m, useReducedMotion } from 'motion/react';
+import { Search, UserPlus } from 'lucide-react';
 import type { JSX } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PageBreadcrumbs } from '@/components/page-breadcrumbs.tsx';
+import { PageHeader } from '@/components/page-header.tsx';
 import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -43,12 +44,9 @@ import { useCapabilities } from '@/hooks/use-capabilities.ts';
 export type PatientSearchRoute = '/$locale/patients';
 
 export interface PatientSearchFraming {
-  eyebrowKey: string;
   titleKey: string;
-  titleAccentKey?: string;
   subtitleKey: string;
   cardTitleKey: string;
-  icon: typeof Users;
 }
 
 interface PatientSearchWorkspaceProps {
@@ -69,9 +67,8 @@ export function PatientSearchWorkspace({
   framing,
   register = false,
 }: PatientSearchWorkspaceProps): JSX.Element {
-  const { t } = useTranslation(['patients', 'encounters']);
+  const { t } = useTranslation(['patients', 'encounters', 'common']);
   const { locale } = useParams({ from: '/$locale' });
-  const reduceMotion = useReducedMotion();
   const { can } = useCapabilities();
   const search = useSearch({ strict: false });
   const navigate = useNavigate();
@@ -154,7 +151,6 @@ export function PatientSearchWorkspace({
 
   const canRegister = !isForbidden && can('write', 'Patient');
   const showSearchError = !isForbidden && error !== null && error !== '';
-  const Icon = framing.icon;
 
   const searchFormValues = useMemo(
     () => ({
@@ -176,50 +172,46 @@ export function PatientSearchWorkspace({
     .join('|');
 
   return (
-    <div className='mx-auto max-w-5xl px-6 py-10 pb-20'>
-      <m.header
-        initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={
-          reduceMotion
-            ? { duration: 0 }
-            : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }
+    <div className='mx-auto max-w-5xl px-6 py-6 pb-12'>
+      <PageBreadcrumbs
+        className='mb-4'
+        items={[
+          {
+            label: t('common:nav.home'),
+            link: (
+              <Link
+                to='/$locale'
+                params={{ locale }}
+              />
+            ),
+          },
+          { label: t(framing.titleKey) },
+        ]}
+      />
+      <PageHeader
+        className='mb-6'
+        title={t(framing.titleKey)}
+        subtitle={t(framing.subtitleKey)}
+        actions={
+          register && canRegister ? (
+            <div className='hidden md:block'>
+              <Button
+                nativeButton={false}
+                data-testid='patient-register-open'
+                render={
+                  <Link
+                    to='/$locale/patients/register'
+                    params={{ locale }}
+                  />
+                }
+              >
+                <UserPlus className='size-4' />
+                {t('search.registerPatient')}
+              </Button>
+            </div>
+          ) : undefined
         }
-        className='mb-10 grid gap-6 md:grid-cols-[1fr_auto] md:items-end'
-      >
-        <div>
-          <p className='mb-3 inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
-            <Icon className='size-3' />
-            {t(framing.eyebrowKey)}
-          </p>
-          <h1 className='font-display text-balance text-4xl font-semibold tracking-tight md:text-5xl'>
-            {t(framing.titleKey)}
-            {framing.titleAccentKey ? (
-              <span className='text-primary'>{t(framing.titleAccentKey)}</span>
-            ) : null}
-          </h1>
-          <p className='mt-3 max-w-lg text-base leading-relaxed text-muted-foreground'>
-            {t(framing.subtitleKey)}
-          </p>
-        </div>
-        {register && canRegister ? (
-          <div className='hidden md:block'>
-            <Button
-              nativeButton={false}
-              data-testid='patient-register-open'
-              render={
-                <Link
-                  to='/$locale/patients/register'
-                  params={{ locale }}
-                />
-              }
-            >
-              <UserPlus className='size-4' />
-              {t('search.registerPatient')}
-            </Button>
-          </div>
-        ) : null}
-      </m.header>
+      />
 
       {isForbidden ? (
         <Empty
@@ -238,77 +230,61 @@ export function PatientSearchWorkspace({
       ) : null}
 
       {showSearchError ? (
-        <m.div
-          initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={reduceMotion ? { duration: 0 } : undefined}
+        <Alert
+          variant='destructive'
+          className='mb-6'
+          data-testid='patient-search-error'
         >
-          <Alert
-            variant='destructive'
-            className='mb-6'
-            data-testid='patient-search-error'
-          >
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        </m.div>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : null}
 
       {isForbidden ? null : (
-        <m.div
-          initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={
-            reduceMotion
-              ? { duration: 0 }
-              : { duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }
-          }
-        >
-          <Card className='border-border/70 shadow-sm'>
-            <CardHeader>
-              <CardTitle className='flex items-center gap-2 font-heading text-lg'>
-                <Search className='size-4 text-muted-foreground' />
-                {t(framing.cardTitleKey)}
-              </CardTitle>
-              <CardDescription>
-                {formatPatientResultDescription(isLoading, totalCount, t)}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PatientSearchForm
-                key={searchFormKey}
-                initialValues={searchFormValues}
-                onSearch={handleSearch}
-                onClear={handleClear}
-                isSearching={isFetching}
+        <Card className='border-border/70 shadow-sm'>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2 font-heading text-lg'>
+              <Search className='size-4 text-muted-foreground' />
+              {t(framing.cardTitleKey)}
+            </CardTitle>
+            <CardDescription>
+              {formatPatientResultDescription(isLoading, totalCount, t)}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PatientSearchForm
+              key={searchFormKey}
+              initialValues={searchFormValues}
+              onSearch={handleSearch}
+              onClear={handleClear}
+              isSearching={isFetching}
+            />
+            <div className='mt-6'>
+              {createForbidden ? (
+                <Alert
+                  variant='destructive'
+                  className='mb-4'
+                  data-testid='patient-search-create-forbidden'
+                >
+                  <AlertDescription>{createForbidden}</AlertDescription>
+                </Alert>
+              ) : null}
+              <PatientResultsTable
+                patients={patients}
+                isLoading={isLoading}
+                locale={locale}
+                onNewEncounter={setCreatePatient}
+                register={register}
+                canRegister={canRegister}
               />
-              <div className='mt-6'>
-                {createForbidden ? (
-                  <Alert
-                    variant='destructive'
-                    className='mb-4'
-                    data-testid='patient-search-create-forbidden'
-                  >
-                    <AlertDescription>{createForbidden}</AlertDescription>
-                  </Alert>
-                ) : null}
-                <PatientResultsTable
-                  patients={patients}
-                  isLoading={isLoading}
-                  locale={locale}
-                  onNewEncounter={setCreatePatient}
-                  register={register}
-                  canRegister={canRegister}
-                />
-                <PatientSearchPagination
-                  page={page}
-                  pageSize={pageSize}
-                  totalCount={totalCount}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </m.div>
+              <PatientSearchPagination
+                page={page}
+                pageSize={pageSize}
+                totalCount={totalCount}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {register && canRegister ? (

@@ -10,9 +10,28 @@
     "administration": "Administración",
     "sidebar": "Navegación principal"
   },
+  "search": {
+    "trigger": "Buscar"
+  },
+  "user": {
+    "menuLabel": "Cuenta",
+    "signedInAs": "Sesión iniciada como {{actorId}}",
+    "workspaceSettings": "Configuración del espacio de trabajo"
+  },
+  "commandPalette": {
+    "title": "Paleta de comandos",
+    "description": "Buscá una página o un paciente",
+    "placeholder": "Buscar o ir a…",
+    "goTo": "Ir a",
+    "patients": "Buscar pacientes",
+    "noResults": "No se encontraron resultados.",
+    "minQuery": "Escribí al menos 2 caracteres para buscar pacientes.",
+    "noPatientResults": "No hay pacientes que coincidan con la búsqueda.",
+    "patientError": "La búsqueda de pacientes no está disponible en este momento."
+  },
   "meta": {
-    "title": "Cynara — Formularios clínicos",
-    "description": "Diseña formularios clínicos de ingreso y evaluación para hospitales — visualmente, con autoguardado y validación."
+    "title": "Cynara",
+    "description": "Espacio de trabajo clínico para registros de pacientes, consultas, formularios clínicos y flujos de atención."
   },
   "theme": {
     "light": "Claro",

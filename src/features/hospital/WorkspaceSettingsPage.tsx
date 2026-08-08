@@ -80,9 +80,9 @@ export function WorkspaceSettingsPage(): JSX.Element {
   if (isLoading) {
     return (
       <AppShell variant='catalog'>
-        <div className='mx-auto max-w-3xl px-6 py-10'>
+        <div className='mx-auto max-w-3xl px-6 py-6'>
           <Skeleton className='h-4 w-40' />
-          <div className='mt-10 space-y-4'>
+          <div className='mt-6 space-y-4'>
             <Skeleton className='h-10 w-1/2' />
             <Skeleton className='h-32 w-full' />
           </div>
@@ -94,7 +94,7 @@ export function WorkspaceSettingsPage(): JSX.Element {
   if (!workspace) {
     return (
       <AppShell variant='catalog'>
-        <div className='mx-auto max-w-3xl px-6 py-10'>
+        <div className='mx-auto max-w-3xl px-6 py-6'>
           <AdminErrorAlert message={error ?? t('workspace.loadFailed')} />
           <Button
             variant='outline'
@@ -109,17 +109,14 @@ export function WorkspaceSettingsPage(): JSX.Element {
 
   return (
     <AppShell variant='catalog'>
-      <div className='mx-auto max-w-3xl px-6 py-10 pb-20'>
+      <div className='mx-auto max-w-3xl px-6 py-6 pb-12'>
         <AdminBackLink locale={locale} />
 
-        <header className='mb-10'>
-          <p className='mb-3 inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
-            {t('workspace.title')}
-          </p>
-          <h1 className='font-display text-balance text-4xl font-semibold tracking-tight'>
+        <header className='mb-6'>
+          <h1 className='font-display text-balance text-2xl font-semibold tracking-tight md:text-3xl'>
             {workspace.name}
           </h1>
-          <p className='mt-3 max-w-lg text-base leading-relaxed text-muted-foreground'>
+          <p className='mt-1.5 max-w-xl text-sm leading-relaxed text-muted-foreground'>
             {t('workspace.subtitle')}
           </p>
         </header>

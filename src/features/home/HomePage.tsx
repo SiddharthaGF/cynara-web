@@ -8,13 +8,12 @@ import {
   Workflow,
   type LucideIcon,
 } from 'lucide-react';
-import { LazyMotion, domAnimation, m, useReducedMotion } from 'motion/react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AppShell } from '@/components/app-shell.tsx';
+import { PageHeader } from '@/components/page-header.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { Card, CardContent } from '@/components/ui/card.tsx';
 import {
   Empty,
   EmptyDescription,
@@ -22,6 +21,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
+import { HomeDashboard } from '@/features/home/HomeDashboard.tsx';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
 import type {
   CapabilityAction,
@@ -116,7 +116,6 @@ export function HomePage(): JSX.Element {
   const { t } = useTranslation('home');
   const { locale } = useParams({ from: '/$locale' });
   const { can, hasData } = useCapabilities();
-  const reduceMotion = useReducedMotion();
 
   const quickActions = QUICK_ACTIONS.filter((action) =>
     action.requires.some((requirement) =>
@@ -131,154 +130,105 @@ export function HomePage(): JSX.Element {
   const hasAnyAction = quickActions.length > 0 || browseEntries.length > 0;
 
   const loadingState = (
-    <div className='grid gap-4 sm:grid-cols-2'>
-      <Skeleton className='h-28 w-full' />
-      <Skeleton className='h-28 w-full' />
-      <Skeleton className='h-28 w-full' />
-      <Skeleton className='h-28 w-full' />
+    <div className='grid gap-3'>
+      <Skeleton className='h-10 w-full' />
+      <Skeleton className='h-10 w-full' />
+      <Skeleton className='h-10 w-full' />
+      <Skeleton className='h-10 w-full' />
     </div>
   );
 
   const emptyState = (
-    <m.div
-      initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={reduceMotion ? { duration: 0 } : undefined}
+    <Empty
+      className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'
+      data-testid='home-empty'
     >
-      <Empty
-        className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'
-        data-testid='home-empty'
-      >
-        <EmptyHeader>
-          <EmptyTitle className='text-lg'>{t('emptyTitle')}</EmptyTitle>
-          <EmptyDescription>{t('emptyDescription')}</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    </m.div>
+      <EmptyHeader>
+        <EmptyTitle className='text-lg'>{t('emptyTitle')}</EmptyTitle>
+        <EmptyDescription>{t('emptyDescription')}</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
   );
-
-  const quickActionsSection =
-    quickActions.length > 0 ? (
-      <m.section
-        initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={
-          reduceMotion
-            ? { duration: 0 }
-            : { duration: 0.45, delay: 0.06, ease: [0.22, 1, 0.36, 1] }
-        }
-        className='mb-10'
-      >
-        <h2 className='mb-4 font-heading text-sm font-medium tracking-widest text-muted-foreground uppercase'>
-          {t('startSection')}
-        </h2>
-        <div className='grid gap-4 sm:grid-cols-2'>
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <Link
-                key={action.key}
-                to={action.to}
-                params={{ locale }}
-                data-testid={`home-action-${action.key}`}
-              >
-                <Card className='group h-full border-border/70 shadow-sm transition-colors hover:border-primary/40 hover:bg-accent/40'>
-                  <CardContent className='flex items-start gap-4 p-5'>
-                    <span className='rounded-lg border border-border/60 bg-background p-2.5 text-primary'>
-                      <Icon className='size-5' />
-                    </span>
-                    <div>
-                      <h3 className='font-heading text-base font-medium'>
-                        {t(`actions.${action.key}.title`)}
-                      </h3>
-                      <p className='mt-1 text-sm leading-relaxed text-muted-foreground'>
-                        {t(`actions.${action.key}.description`)}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
-      </m.section>
-    ) : null;
-
-  const browseSection =
-    browseEntries.length > 0 ? (
-      <m.section
-        initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={
-          reduceMotion
-            ? { duration: 0 }
-            : { duration: 0.45, delay: 0.12, ease: [0.22, 1, 0.36, 1] }
-        }
-      >
-        <h2 className='mb-4 font-heading text-sm font-medium tracking-widest text-muted-foreground uppercase'>
-          {t('browseSection')}
-        </h2>
-        <div className='flex flex-wrap gap-2'>
-          {browseEntries.map((entry) => {
-            const Icon = entry.icon;
-            return (
-              <Button
-                key={entry.key}
-                variant='outline'
-                nativeButton={false}
-                data-testid={`home-browse-${entry.key}`}
-                render={
-                  <Link
-                    to={entry.to}
-                    params={{ locale }}
-                  />
-                }
-              >
-                <Icon className='size-4' />
-                {t(`browse.${entry.key}`)}
-              </Button>
-            );
-          })}
-        </div>
-      </m.section>
-    ) : null;
 
   return (
     <AppShell variant='catalog'>
-      <LazyMotion features={domAnimation}>
-        <div className='mx-auto max-w-5xl px-6 py-10 pb-20'>
-          <m.header
-            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              reduceMotion
-                ? { duration: 0 }
-                : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }
-            }
-            className='mb-10'
-          >
-            <p className='mb-3 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
-              {t('eyebrow')}
-            </p>
-            <h1 className='font-display text-balance text-4xl font-semibold tracking-tight md:text-5xl'>
-              {t('title')}
-            </h1>
-            <p className='mt-3 max-w-lg text-base leading-relaxed text-muted-foreground'>
-              {t('subtitle')}
-            </p>
-          </m.header>
+      <div className='mx-auto max-w-5xl px-6 py-6 pb-12'>
+        <PageHeader
+          className='mb-6'
+          title={t('title')}
+          subtitle={t('subtitle')}
+        />
 
-          {hasData ? (
-            <>
-              {quickActionsSection}
-              {browseSection}
-              {hasAnyAction ? null : emptyState}
-            </>
-          ) : (
-            loadingState
-          )}
-        </div>
-      </LazyMotion>
+        {hasData ? (
+          <>
+            {quickActions.length > 0 ? (
+              <section className='mb-6'>
+                <h2 className='mb-3 font-heading text-xs font-medium tracking-widest text-muted-foreground uppercase'>
+                  {t('startSection')}
+                </h2>
+                <div className='grid gap-2 sm:grid-cols-2'>
+                  {quickActions.map((action) => {
+                    const Icon = action.icon;
+                    return (
+                      <Link
+                        key={action.key}
+                        to={action.to}
+                        params={{ locale }}
+                        data-testid={`home-action-${action.key}`}
+                        className='group flex items-center gap-3 rounded-lg border border-border/60 px-3 py-2.5 text-sm font-medium transition-colors hover:border-primary/35 hover:bg-muted/40'
+                      >
+                        <Icon className='size-4 shrink-0 text-muted-foreground' />
+                        {t(`actions.${action.key}.title`)}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : null}
+
+            {hasAnyAction ? (
+              <div className='mb-8'>
+                <HomeDashboard />
+              </div>
+            ) : (
+              emptyState
+            )}
+
+            {browseEntries.length > 0 ? (
+              <section>
+                <h2 className='mb-3 font-heading text-xs font-medium tracking-widest text-muted-foreground uppercase'>
+                  {t('browseSection')}
+                </h2>
+                <div className='flex flex-wrap gap-2'>
+                  {browseEntries.map((entry) => {
+                    const Icon = entry.icon;
+                    return (
+                      <Button
+                        key={entry.key}
+                        variant='ghost'
+                        size='sm'
+                        nativeButton={false}
+                        data-testid={`home-browse-${entry.key}`}
+                        render={
+                          <Link
+                            to={entry.to}
+                            params={{ locale }}
+                          />
+                        }
+                      >
+                        <Icon className='size-4' />
+                        {t(`browse.${entry.key}`)}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : null}
+          </>
+        ) : (
+          loadingState
+        )}
+      </div>
     </AppShell>
   );
 }

@@ -1,9 +1,17 @@
 {
   "eyebrow": "Home",
   "title": "What do you want to do today?",
-  "subtitle": "Start from the task — Cynara will take you to the right place.",
+  "subtitle": "Pick up where you left off or start something new.",
   "startSection": "Start something new",
   "browseSection": "Go to",
+  "recent": {
+    "forms": "Recent forms",
+    "workflows": "Recent workflows",
+    "encounters": "Active consultations",
+    "emptyForms": "No forms yet. Create one to get started.",
+    "emptyWorkflows": "No workflows yet. Create one to get started.",
+    "emptyEncounters": "No open consultations right now."
+  },
   "actions": {
     "registerPatient": {
       "title": "Register a patient",

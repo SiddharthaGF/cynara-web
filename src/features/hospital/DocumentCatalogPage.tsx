@@ -189,7 +189,7 @@ export function DocumentCatalogPage(): JSX.Element {
 
   return (
     <AppShell variant='catalog'>
-      <div className='mx-auto max-w-5xl px-6 py-10 pb-20'>
+      <div className='mx-auto max-w-5xl px-6 py-6 pb-12'>
         <AdminBackLink locale={locale} />
 
         <AdminPageHeader

@@ -1,17 +1,37 @@
+import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation, useParams } from '@tanstack/react-router';
 import {
   ClipboardList,
   Hospital,
   LayoutDashboard,
+  Search,
   Users,
   Workflow,
 } from 'lucide-react';
 import type { JSX, ReactNode } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { queryKeys } from '@/api/query-keys.ts';
+import { getWorkspace } from '@/api/workspace.ts';
+import { CommandPalette } from '@/components/command-palette.tsx';
 import { CynaraMark } from '@/components/cynara-mark.tsx';
 import { SettingsMenu } from '@/components/settings-menu.tsx';
 import { DocumentMeta } from '@/components/theme-toggle.tsx';
+import {
+  Avatar,
+  AvatarFallback,
+} from '@/components/ui/avatar.tsx';
+import { Button } from '@/components/ui/button.tsx';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu.tsx';
 import {
   Sidebar,
   SidebarContent,
@@ -118,6 +138,14 @@ function useAccessibleNav(): {
   return { groups, homeTarget: '/$locale' };
 }
 
+function actorInitials(actorId: string | null): string {
+  if (!actorId) {
+    return '?';
+  }
+  const first = actorId.trim().charAt(0).toUpperCase();
+  return first || '?';
+}
+
 export function AppShell({
   children,
   variant = 'catalog',
@@ -131,7 +159,7 @@ export function AppShell({
   return (
     <SidebarProvider
       defaultOpen={defaultOpen}
-      className='grain ambient-bg relative min-h-svh'
+      className='ambient-bg relative min-h-svh'
     >
       <AppShellContent
         variant={variant}
@@ -151,14 +179,23 @@ interface AppShellContentProps {
 
 function AppShellContent({
   children,
-  variant,
   className,
 }: AppShellContentProps): JSX.Element {
   const { t } = useTranslation('common');
   const { locale } = useParams({ from: '/$locale' });
   const location = useLocation();
   const { state } = useSidebar();
+  const { can, actorId } = useCapabilities();
   const { groups, homeTarget } = useAccessibleNav();
+  const [commandOpen, setCommandOpen] = useState(false);
+
+  const canReadWorkspace = can('read', 'Workspace');
+  const workspaceQuery = useQuery({
+    queryKey: queryKeys.workspace.detail(),
+    queryFn: getWorkspace,
+    enabled: canReadWorkspace,
+  });
+  const workspaceName = workspaceQuery.data?.name ?? null;
 
   const isOnHome =
     location.pathname === `/${locale}` || location.pathname === `/${locale}/`;
@@ -283,14 +320,72 @@ function AppShellContent({
       <SidebarInset className={cn('relative z-10', className)}>
         <div className='flex items-center gap-2 border-b border-border/60 bg-card/70 px-3 py-2 backdrop-blur-md md:gap-3 md:px-4'>
           <SidebarTrigger className='text-muted-foreground' />
-          {variant === 'catalog' ? (
-            <span className='hidden text-xs font-medium tracking-widest text-muted-foreground uppercase sm:inline'>
-              {currentSectionLabel()}
-            </span>
-          ) : null}
+          <span className='hidden min-w-0 truncate text-sm font-medium text-foreground/90 sm:block'>
+            {workspaceName ?? currentSectionLabel() ?? t('appName')}
+          </span>
+          <div className='ml-auto flex items-center gap-1'>
+            <Button
+              type='button'
+              variant='ghost'
+              size='sm'
+              onClick={() => {
+                setCommandOpen(true);
+              }}
+              aria-label={t('search.trigger')}
+              data-testid='global-search-trigger'
+              className='text-muted-foreground'
+            >
+              <Search className='size-4' />
+              <span className='hidden text-sm md:inline'>
+                {t('search.trigger')}
+              </span>
+              <kbd className='pointer-events-none inline-flex h-5 items-center gap-1 rounded border border-border/60 bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground'>
+                ⌘K
+              </kbd>
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                aria-label={t('user.menuLabel')}
+                data-testid='user-menu-trigger'
+                className='focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
+              >
+                <Avatar className='size-7'>
+                  <AvatarFallback className='bg-primary/10 text-xs font-semibold text-primary'>
+                    {actorInitials(actorId)}
+                  </AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end'>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>
+                    {t('user.signedInAs', { actorId: actorId ?? t('appName') })}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {canReadWorkspace ? (
+                    <DropdownMenuItem
+                      render={
+                        <Link
+                          to='/$locale/admin/workspace'
+                          params={{ locale }}
+                        />
+                      }
+                      data-testid='user-menu-workspace-settings'
+                    >
+                      {t('user.workspaceSettings')}
+                    </DropdownMenuItem>
+                  ) : null}
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         <div className='relative z-10 min-w-0'>{children}</div>
       </SidebarInset>
+
+      <CommandPalette
+        open={commandOpen}
+        onOpenChange={setCommandOpen}
+      />
     </>
   );
 }

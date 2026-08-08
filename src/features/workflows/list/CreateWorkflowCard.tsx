@@ -1,6 +1,5 @@
 import { useForm } from '@tanstack/react-form';
 import { Workflow } from 'lucide-react';
-import { m } from 'motion/react';
 import type { JSX } from 'react';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -35,7 +34,6 @@ interface CreateWorkflowValues {
 
 interface CreateWorkflowCardProps {
   isCreating: boolean;
-  reduceMotion: boolean | null;
   onSubmit: (values: CreateWorkflowValues) => Promise<void>;
 }
 
@@ -56,7 +54,6 @@ export function CreateWorkflowErrorAlert({
 
 export function CreateWorkflowCard({
   isCreating,
-  reduceMotion,
   onSubmit,
 }: CreateWorkflowCardProps): JSX.Element {
   const { t } = useTranslation('workflows');
@@ -99,20 +96,7 @@ export function CreateWorkflowCard({
   }
 
   return (
-    <m.div
-      initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={
-        reduceMotion
-          ? { duration: 0 }
-          : {
-              duration: 0.45,
-              delay: 0.08,
-              ease: [0.22, 1, 0.36, 1],
-            }
-      }
-      data-testid='create-workflow-card'
-    >
+    <div data-testid='create-workflow-card'>
       <Card className='border-primary/10 shadow-sm'>
         <CardHeader>
           <CardTitle className='flex items-center gap-2 font-heading text-lg'>
@@ -221,6 +205,6 @@ export function CreateWorkflowCard({
           </form>
         </CardContent>
       </Card>
-    </m.div>
+    </div>
   );
 }

@@ -1,6 +1,5 @@
 import { Link } from '@tanstack/react-router';
 import { ClipboardPlus, UserCircle, UserPlus } from 'lucide-react';
-import { m, useReducedMotion } from 'motion/react';
 import type { JSX } from 'react';
 import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +14,6 @@ import {
 } from '@/components/ui/empty.tsx';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
 import {
@@ -179,7 +177,6 @@ export function PatientResultsTable({
 }: PatientResultsTableProps): JSX.Element {
   const { t } = useTranslation(['patients', 'encounters']);
   const { can } = useCapabilities();
-  const reduceMotion = useReducedMotion();
   const canCreateEncounter = can('write', 'Encounter');
 
   if (isLoading) {
@@ -226,8 +223,8 @@ export function PatientResultsTable({
   }
 
   return (
-    <ScrollArea
-      className='w-full rounded-lg border border-border/60 [&_[data-slot=scroll-area-viewport]]:max-h-80'
+    <div
+      className='w-full overflow-hidden rounded-lg border border-border/60'
       data-testid='patient-search-results'
     >
       <table
@@ -247,22 +244,11 @@ export function PatientResultsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {patients.map((patient, index) => (
-            <m.tr
+          {patients.map((patient) => (
+            <TableRow
               key={patient.id}
               data-testid='patient-search-row'
               data-patient-id={patient.id}
-              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : {
-                      duration: 0.3,
-                      delay: 0.04 * index,
-                      ease: [0.22, 1, 0.36, 1],
-                    }
-              }
             >
               <TableCell>
                 <code className='text-sm font-medium'>{patient.mrn}</code>
@@ -316,10 +302,10 @@ export function PatientResultsTable({
                   </Button>
                 </div>
               </TableCell>
-            </m.tr>
+            </TableRow>
           ))}
         </TableBody>
       </table>
-    </ScrollArea>
+    </div>
   );
 }

@@ -10,9 +10,28 @@
     "administration": "Administration",
     "sidebar": "Primary navigation"
   },
+  "search": {
+    "trigger": "Search"
+  },
+  "user": {
+    "menuLabel": "Account",
+    "signedInAs": "Signed in as {{actorId}}",
+    "workspaceSettings": "Workspace settings"
+  },
+  "commandPalette": {
+    "title": "Command palette",
+    "description": "Search for a page or patient",
+    "placeholder": "Search or jump to…",
+    "goTo": "Go to",
+    "patients": "Search patients",
+    "noResults": "No results found.",
+    "minQuery": "Type at least 2 characters to search patients.",
+    "noPatientResults": "No patients match that search.",
+    "patientError": "Patient search is unavailable right now."
+  },
   "meta": {
-    "title": "Cynara — Clinical Forms",
-    "description": "Design clinical intake and assessment forms for hospitals — visually, with autosave and validation."
+    "title": "Cynara",
+    "description": "Clinical workspace for patient records, consultations, clinical forms, and care workflows."
   },
   "theme": {
     "light": "Light",

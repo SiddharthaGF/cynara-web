@@ -1,25 +1,18 @@
 import { Link, useParams } from '@tanstack/react-router';
 import {
-  ArrowUpRight,
   Building2,
+  ChevronRight,
   ClipboardList,
   Hospital,
   Layers,
   ListTree,
 } from 'lucide-react';
-import { LazyMotion, domAnimation, m, useReducedMotion } from 'motion/react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AppShell } from '@/components/app-shell.tsx';
-import { Button } from '@/components/ui/button.tsx';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card.tsx';
+import { PageBreadcrumbs } from '@/components/page-breadcrumbs.tsx';
+import { PageHeader } from '@/components/page-header.tsx';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
 interface HubSection {
@@ -32,7 +25,6 @@ interface HubSection {
   icon: typeof Hospital;
   titleKey: string;
   descriptionKey: string;
-  actionKey: string;
 }
 
 const HUB_SECTIONS: readonly HubSection[] = [
@@ -41,42 +33,36 @@ const HUB_SECTIONS: readonly HubSection[] = [
     icon: Hospital,
     titleKey: 'hub.sections.workspace.title',
     descriptionKey: 'hub.sections.workspace.description',
-    actionKey: 'hub.sections.workspace.action',
   },
   {
     to: '/$locale/admin/facilities',
     icon: Building2,
     titleKey: 'hub.sections.facilities.title',
     descriptionKey: 'hub.sections.facilities.description',
-    actionKey: 'hub.sections.facilities.action',
   },
   {
     to: '/$locale/admin/clinical-areas',
     icon: Layers,
     titleKey: 'hub.sections.clinicalAreas.title',
     descriptionKey: 'hub.sections.clinicalAreas.description',
-    actionKey: 'hub.sections.clinicalAreas.action',
   },
   {
     to: '/$locale/admin/disciplines',
     icon: ListTree,
     titleKey: 'hub.sections.disciplines.title',
     descriptionKey: 'hub.sections.disciplines.description',
-    actionKey: 'hub.sections.disciplines.action',
   },
   {
     to: '/$locale/admin/documents',
     icon: ClipboardList,
     titleKey: 'hub.sections.documents.title',
     descriptionKey: 'hub.sections.documents.description',
-    actionKey: 'hub.sections.documents.action',
   },
 ];
 
 export function AdminHubPage(): JSX.Element {
-  const { t } = useTranslation('hospital');
+  const { t } = useTranslation(['hospital', 'common']);
   const { locale } = useParams({ from: '/$locale' });
-  const reduceMotion = useReducedMotion();
   const { can } = useCapabilities();
 
   const canReadWorkspace = can('read', 'Workspace');
@@ -90,85 +76,54 @@ export function AdminHubPage(): JSX.Element {
 
   return (
     <AppShell variant='catalog'>
-      <LazyMotion features={domAnimation}>
-        <div className='mx-auto max-w-5xl px-6 py-10 pb-20'>
-          <m.header
-            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              reduceMotion
-                ? { duration: 0 }
-                : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }
-            }
-            className='mb-10'
-          >
-            <p className='mb-3 inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
-              <Hospital className='size-3' />
-              {t('hub.eyebrow')}
-            </p>
-            <h1 className='font-display text-balance text-4xl font-semibold tracking-tight md:text-5xl'>
-              {t('hub.title')}
-              {t('hub.titleAccent') ? (
-                <span className='text-primary'>{t('hub.titleAccent')}</span>
-              ) : null}
-            </h1>
-            <p className='mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground'>
-              {t('hub.subtitle')}
-            </p>
-          </m.header>
-
-          <m.div
-            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              reduceMotion
-                ? { duration: 0 }
-                : { duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }
-            }
-            className='grid gap-4 sm:grid-cols-2'
-          >
-            {sections.map((section) => {
-              const Icon = section.icon;
-              return (
+      <div className='mx-auto max-w-3xl px-6 py-6 pb-12'>
+        <PageBreadcrumbs
+          className='mb-4'
+          items={[
+            {
+              label: t('common:nav.home'),
+              link: (
                 <Link
-                  key={section.to}
+                  to='/$locale'
+                  params={{ locale }}
+                />
+              ),
+            },
+            { label: t('hub.title') },
+          ]}
+        />
+        <PageHeader
+          className='mb-6'
+          title={t('hub.title')}
+          subtitle={t('hub.subtitle')}
+        />
+
+        <ul className='divide-y divide-border rounded-lg border border-border/60 bg-card/60'>
+          {sections.map((section) => {
+            const Icon = section.icon;
+            return (
+              <li key={section.to}>
+                <Link
                   to={section.to}
                   params={{ locale }}
-                  className='group rounded-2xl border border-border/70 bg-card/60 shadow-sm transition-colors hover:border-primary/40 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
+                  className='group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring'
                 >
-                  <Card className='h-full border-0 bg-transparent shadow-none'>
-                    <CardHeader>
-                      <div className='mb-2 flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground'>
-                        <Icon className='size-5' />
-                      </div>
-                      <CardTitle className='font-heading text-lg'>
-                        {t(section.titleKey)}
-                      </CardTitle>
-                      <CardDescription>
-                        {t(section.descriptionKey)}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        nativeButton={false}
-                        className='px-0 text-primary'
-                        render={
-                          <span className='inline-flex items-center gap-1.5'>
-                            {t(section.actionKey)}
-                            <ArrowUpRight className='size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5' />
-                          </span>
-                        }
-                      />
-                    </CardContent>
-                  </Card>
+                  <Icon className='size-4 shrink-0 text-muted-foreground' />
+                  <span className='min-w-0 flex-1'>
+                    <span className='block font-medium'>
+                      {t(section.titleKey)}
+                    </span>
+                    <span className='block text-sm text-muted-foreground'>
+                      {t(section.descriptionKey)}
+                    </span>
+                  </span>
+                  <ChevronRight className='size-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5' />
                 </Link>
-              );
-            })}
-          </m.div>
-        </div>
-      </LazyMotion>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </AppShell>
   );
 }

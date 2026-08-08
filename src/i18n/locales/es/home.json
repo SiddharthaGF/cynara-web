@@ -1,9 +1,17 @@
 {
   "eyebrow": "Inicio",
   "title": "¿Qué querés hacer hoy?",
-  "subtitle": "Empezá por la tarea — Cynara te lleva al lugar indicado.",
+  "subtitle": "Retomá donde lo dejaste o empezá algo nuevo.",
   "startSection": "Empezar algo nuevo",
   "browseSection": "Ir a",
+  "recent": {
+    "forms": "Formularios recientes",
+    "workflows": "Flujos recientes",
+    "encounters": "Consultas activas",
+    "emptyForms": "Todavía no hay formularios. Creá uno para empezar.",
+    "emptyWorkflows": "Todavía no hay flujos. Creá uno para empezar.",
+    "emptyEncounters": "No hay consultas abiertas en este momento."
+  },
   "actions": {
     "registerPatient": {
       "title": "Registrar un paciente",

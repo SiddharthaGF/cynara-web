@@ -171,37 +171,17 @@
     text-wrap: balance;
   }
 
-  /* Subtle paper grain overlay */
-  .grain {
-    position: relative;
-  }
-
-  .grain::before {
-    content: '';
-    pointer-events: none;
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    opacity: 0.035;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 128px 128px;
-  }
-
-  .dark .grain::before {
-    opacity: 0.06;
-  }
-
   /* Ambient radial wash behind content */
   .ambient-bg {
     background-image:
       radial-gradient(
         ellipse 80% 50% at 20% -10%,
-        oklch(0.62 0.105 148 / 8%),
+        oklch(0.62 0.105 148 / 6%),
         transparent 60%
       ),
       radial-gradient(
         ellipse 60% 40% at 90% 100%,
-        oklch(0.36 0.065 168 / 6%),
+        oklch(0.36 0.065 168 / 4%),
         transparent 55%
       );
   }
@@ -210,12 +190,12 @@
     background-image:
       radial-gradient(
         ellipse 80% 50% at 20% -10%,
-        oklch(0.62 0.09 148 / 12%),
+        oklch(0.62 0.09 148 / 8%),
         transparent 60%
       ),
       radial-gradient(
         ellipse 60% 40% at 90% 100%,
-        oklch(0.36 0.065 168 / 10%),
+        oklch(0.36 0.065 168 / 6%),
         transparent 55%
       );
   }

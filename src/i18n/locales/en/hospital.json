@@ -3,7 +3,7 @@
     "eyebrow": "Hospital configuration",
     "title": "Administration",
     "titleAccent": "",
-    "subtitle": "Manage your hospital workspace, clinical structure, and the clinical documents your teams can create.",
+    "subtitle": "Workspace, facilities, clinical areas, disciplines, and the clinical document catalog.",
     "sections": {
       "workspace": {
         "title": "Hospital workspace",
