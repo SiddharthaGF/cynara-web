@@ -1,5 +1,5 @@
 import type { HandleProps } from '@xyflow/react';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, JSX } from 'react';
 
 import { BaseHandle } from '@/components/base-handle';
 import { cn } from '@/lib/utils';
@@ -23,7 +23,7 @@ export function LabeledHandle({
     title: string;
     handleClassName?: string;
     labelClassName?: string;
-  }) {
+  }): JSX.Element {
   const { ref, ...handleProps } = props;
 
   return (
@@ -41,9 +41,9 @@ export function LabeledHandle({
         className={handleClassName}
         {...handleProps}
       />
-      <label className={cn('text-foreground px-3', labelClassName)}>
+      <span className={cn('text-foreground px-3', labelClassName)}>
         {title}
-      </label>
+      </span>
     </div>
   );
 }

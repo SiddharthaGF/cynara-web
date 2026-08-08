@@ -32,7 +32,7 @@ import type {
   WorkflowNodeType,
 } from '@/features/workflows/types.ts';
 
-import { nodeTypeColor, nodeTypeIcon } from './flow/FlowNode.tsx';
+import { nodeTypeColor, nodeTypeIcon } from './flow/nodeVisuals.ts';
 
 interface WorkflowNodeSettingsProps {
   node: WorkflowNode;

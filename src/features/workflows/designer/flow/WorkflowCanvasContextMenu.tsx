@@ -87,32 +87,38 @@ export function WorkflowCanvasContextMenu({
     };
   }, [onClose]);
 
-  const left = Math.max(
-    8,
-    Math.min(target.x, window.innerWidth - MENU_WIDTH - 8),
-  );
-  const top = Math.max(
-    8,
-    Math.min(target.y, window.innerHeight - MENU_MAX_HEIGHT - 8),
-  );
+  const left =
+    typeof window === 'undefined'
+      ? 0
+      : Math.max(8, Math.min(target.x, window.innerWidth - MENU_WIDTH - 8));
+  const top =
+    typeof window === 'undefined'
+      ? 0
+      : Math.max(
+          8,
+          Math.min(target.y, window.innerHeight - MENU_MAX_HEIGHT - 8),
+        );
 
   return (
-    <div
-      className='fixed inset-0 z-50'
-      onClick={onClose}
-      onContextMenu={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-    >
+    <>
+      <div
+        className='fixed inset-0 z-40'
+        aria-hidden='true'
+        onPointerDown={(event) => {
+          if (event.target === event.currentTarget) {
+            onClose();
+          }
+        }}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          onClose();
+        }}
+      />
       <div
         role='menu'
         aria-label={t('canvas.contextMenu')}
-        className='absolute max-h-[360px] w-56 overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10'
+        className='fixed z-50 max-h-[360px] w-56 overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10'
         style={{ left, top }}
-        onClick={(event) => {
-          event.stopPropagation();
-        }}
       >
         {items.map((item) =>
           item === 'separator' ? (
@@ -129,7 +135,7 @@ export function WorkflowCanvasContextMenu({
           ),
         )}
       </div>
-    </div>
+    </>
   );
 }
 

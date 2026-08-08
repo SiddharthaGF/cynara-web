@@ -111,6 +111,18 @@ export function useWorkflowFlow(
   const nodesInitialized = useNodesInitialized();
   const { getNodes } = useReactFlow<WorkflowFlowNode, WorkflowFlowEdge>();
 
+  const measureNodes = useCallback((): Map<string, FlowNodeSize> => {
+    const sizes = new Map<string, FlowNodeSize>();
+    for (const node of getNodes()) {
+      const width = node.measured?.width;
+      const height = node.measured?.height;
+      if (width !== undefined && height !== undefined) {
+        sizes.set(node.id, { width, height });
+      }
+    }
+    return sizes;
+  }, [getNodes]);
+
   // Callbacks are forwarded through refs so the projection stays stable
   // Across parent re-renders (e.g. autosave state changes) without
   // Clobbering a live drag.
@@ -124,26 +136,19 @@ export function useWorkflowFlow(
     onRemoveEdge,
     measureNodes: (): Map<string, FlowNodeSize> => new Map(),
   });
-  callbacksRef.current = {
-    onSelectNode,
-    onSelectEdge,
-    onAddStep,
-    onOpenSettings,
-    onConnectNodes,
-    onRemoveNode,
-    onRemoveEdge,
-    measureNodes: (): Map<string, FlowNodeSize> => {
-      const sizes = new Map<string, FlowNodeSize>();
-      for (const node of getNodes()) {
-        const width = node.measured?.width;
-        const height = node.measured?.height;
-        if (width !== undefined && height !== undefined) {
-          sizes.set(node.id, { width, height });
-        }
-      }
-      return sizes;
-    },
-  };
+  // Ref writes happen after commit so render stays pure.
+  useEffect(() => {
+    callbacksRef.current = {
+      onSelectNode,
+      onSelectEdge,
+      onAddStep,
+      onOpenSettings,
+      onConnectNodes,
+      onRemoveNode,
+      onRemoveEdge,
+      measureNodes,
+    };
+  });
 
   const stableAddStep = useCallback(
     (nodeId: string) => callbacksRef.current.onAddStep(nodeId),
