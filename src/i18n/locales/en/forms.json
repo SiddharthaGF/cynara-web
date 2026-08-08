@@ -28,7 +28,7 @@
     "columnPublished": "Published",
     "columnUpdated": "Updated",
     "columnActions": "Actions",
-    "noDraft": "no draft",
+    "noDraft": "No draft",
     "published": "Published: {{versions}}",
     "status": {
       "draft": "Draft",

@@ -18,10 +18,7 @@ import { CommandPalette } from '@/components/command-palette.tsx';
 import { CynaraMark } from '@/components/cynara-mark.tsx';
 import { SettingsMenu } from '@/components/settings-menu.tsx';
 import { DocumentMeta } from '@/components/theme-toggle.tsx';
-import {
-  Avatar,
-  AvatarFallback,
-} from '@/components/ui/avatar.tsx';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
   DropdownMenu,

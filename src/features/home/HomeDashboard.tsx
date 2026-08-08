@@ -284,7 +284,9 @@ function ActiveEncounters(): JSX.Element | null {
             >
               <span className='min-w-0 flex-1'>
                 <span className='block truncate text-sm font-medium'>
-                  {formatEncounterType(encounter.type, t)}
+                  {formatEncounterType(encounter.type, (key) =>
+                    t(key, { ns: 'encounters' }),
+                  )}
                 </span>
                 <span className='block truncate text-xs text-muted-foreground'>
                   {formatEncounterDateTime(encounter.startedAt, locale)}

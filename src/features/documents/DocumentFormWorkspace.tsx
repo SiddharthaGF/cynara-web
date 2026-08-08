@@ -35,10 +35,12 @@ import {
   useUpdateFormResponse,
 } from '@/features/documents/useClinicalDocumentsCatalog.ts';
 import { useDocumentAutosave } from '@/features/documents/useDocumentAutosave.ts';
-import { parseDraft } from '@/features/forms/model/formDraft.ts';
+import { iterateFields, parseDraft } from '@/features/forms/model/formDraft.ts';
 import { useFormRenderer } from '@/features/forms/renderer/FormRenderer.tsx';
 import { createInitialValues } from '@/features/forms/renderer/formValues.ts';
+import { humanizeFieldLabel } from '@/features/forms/renderer/labelFallback.ts';
 import type { FormValues } from '@/features/forms/renderer/types.ts';
+import { stripLegacyCalculatedLabelSuffix } from '@/features/forms/stripLegacyCalculatedLabelSuffix.ts';
 import { usePatientDetail } from '@/features/patients/usePatientsCatalog.ts';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
@@ -143,6 +145,7 @@ export function DocumentFormWorkspace({
 
   const { isDirty, markSaved, markDiscarding } = useDocumentAutosave({
     editable,
+    paused: staleError,
     valuesJson: JSON.stringify(renderer.values),
     save: async (answersJson: string): Promise<boolean> => {
       resetSave();
@@ -235,13 +238,52 @@ export function DocumentFormWorkspace({
     }
   };
 
+  const runValidationFeedback = (): boolean => {
+    renderer.triggerValidation();
+    if (!renderer.hasValidationErrors) {
+      return false;
+    }
+    const labels = new Map<string, string>();
+    for (const field of iterateFields(model.clinical.fields)) {
+      labels.set(
+        field.id,
+        stripLegacyCalculatedLabelSuffix(
+          model.ui.fields[field.id]?.label ?? humanizeFieldLabel(field.id),
+        ),
+      );
+    }
+    const missing = [
+      ...new Set(
+        Object.keys(renderer.fieldErrors).map((key) => key.split('::')[0]),
+      ),
+    ]
+      .map((fieldId) => labels.get(fieldId))
+      .filter((label): label is string => Boolean(label));
+    setActionError(
+      missing.length > 0
+        ? t('detail.validationSummary', {
+            count: missing.length,
+            fields: missing.slice(0, 5).join(', '),
+          })
+        : t('detail.validationErrors'),
+    );
+    requestAnimationFrame(() => {
+      const firstInvalid = globalThis.document.querySelector(
+        '[data-field-id][data-invalid="true"]',
+      );
+      if (firstInvalid instanceof HTMLElement) {
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstInvalid.focus({ preventScroll: true });
+      }
+    });
+    return true;
+  };
+
   const handleSave = async (): Promise<void> => {
     setActionError(null);
     setStaleError(false);
     resetSave();
-    renderer.triggerValidation();
-    if (renderer.hasValidationErrors) {
-      setActionError(t('detail.validationErrors'));
+    if (runValidationFeedback()) {
       return;
     }
     try {
@@ -262,9 +304,7 @@ export function DocumentFormWorkspace({
   };
 
   const handleCompleteClick = (): void => {
-    renderer.triggerValidation();
-    if (renderer.hasValidationErrors) {
-      setActionError(t('detail.validationErrors'));
+    if (runValidationFeedback()) {
       return;
     }
     setPendingAction('complete');

@@ -1,7 +1,9 @@
 import { format, isValid, parse } from 'date-fns';
 import { enUS, es } from 'date-fns/locale';
+import type { TFunction } from 'i18next';
 import { CalendarIcon } from 'lucide-react';
-import { useState, type JSX } from 'react';
+import { useMemo, useState, type JSX } from 'react';
+import type { Labels } from 'react-day-picker';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
@@ -49,6 +51,12 @@ export function DatePickerInput({
   const [pendingDate, setPendingDate] = useState<Date | undefined>();
   const [pendingTime, setPendingTime] = useState('');
   const locale = i18n.language.startsWith('es') ? es : enUS;
+  // Calendar ARIA labels follow the active language instead of the default
+  // English strings shipped by react-day-picker.
+  const labels = useMemo(
+    () => localizedCalendarLabels(i18n.language, t),
+    [i18n.language, t],
+  );
   const storedDate = parseStoredDate(value, fieldType);
   const storedTime = fieldType === 'datetime' ? extractTimeValue(value) : '';
   const isValueEmpty = value === '' || value === undefined || value === null;
@@ -168,6 +176,7 @@ export function DatePickerInput({
                 mode='single'
                 selected={displayDate}
                 locale={locale}
+                labels={labels}
                 onSelect={handleDateSelect}
               />
             </PopoverContent>
@@ -230,6 +239,7 @@ export function DatePickerInput({
           mode='single'
           selected={displayDate}
           locale={locale}
+          labels={labels}
           captionLayout='dropdown'
           startMonth={new Date(1900, 0)}
           endMonth={new Date(2100, 11)}
@@ -239,6 +249,39 @@ export function DatePickerInput({
       </PopoverContent>
     </Popover>
   );
+}
+
+/**
+ * ARIA labels for the day-picker in the active language. Only Spanish needs
+ * overrides — react-day-picker's defaults are already English.
+ */
+function localizedCalendarLabels(
+  language: string,
+  t: TFunction,
+): Partial<Labels> | undefined {
+  if (!language.toLowerCase().startsWith('es')) {
+    return undefined;
+  }
+  return {
+    labelPrevious: () => t('calendar.goToPreviousMonth'),
+    labelNext: () => t('calendar.goToNextMonth'),
+    labelMonthDropdown: () => t('calendar.chooseMonth'),
+    labelYearDropdown: () => t('calendar.chooseYear'),
+    labelNav: () => t('calendar.navigation'),
+    labelGrid: (date) =>
+      t('calendar.monthGrid', {
+        month: new Intl.DateTimeFormat('es', {
+          month: 'long',
+          year: 'numeric',
+        }).format(date),
+      }),
+    labelWeekday: (date) =>
+      t('calendar.weekday', {
+        weekday: new Intl.DateTimeFormat('es', { weekday: 'long' }).format(
+          date,
+        ),
+      }),
+  };
 }
 
 function parseStoredDate(

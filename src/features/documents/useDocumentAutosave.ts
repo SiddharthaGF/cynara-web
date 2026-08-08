@@ -5,7 +5,9 @@ const AUTOSAVE_MS = 1500;
 export interface UseDocumentAutosaveOptions {
   /** Autosave and dirty tracking are disabled while the document is read-only. */
   editable: boolean;
-  /** Serialized current form values; the dirty state derives from changes to this string. */
+  /**
+   * Serialized current form values; the dirty state derives from changes to this string.
+   */
   valuesJson: string;
   /**
    * Persists the given answers (used for autosave and the final flush before
@@ -13,6 +15,12 @@ export interface UseDocumentAutosaveOptions {
    * dirty snapshot can advance; stale or failed saves resolve with `false`.
    */
   save: (answersJson: string) => Promise<boolean>;
+  /**
+   * While true the autosave timer is paused. Used after a concurrent-edit
+   * conflict so the workspace stops hammering the API with failing saves and
+   * waits for the user to reload the latest version.
+   */
+  paused?: boolean;
 }
 
 export interface UseDocumentAutosaveResult {
@@ -33,6 +41,7 @@ export function useDocumentAutosave({
   editable,
   valuesJson,
   save,
+  paused = false,
 }: UseDocumentAutosaveOptions): UseDocumentAutosaveResult {
   const [savedSnapshot, setSavedSnapshot] = useState(valuesJson);
   const isDirty = editable && valuesJson !== savedSnapshot;
@@ -40,11 +49,13 @@ export function useDocumentAutosave({
   const valuesRef = useRef(valuesJson);
   const snapshotRef = useRef(savedSnapshot);
   const editableRef = useRef(editable);
+  const pausedRef = useRef(paused);
   const discardingRef = useRef(false);
   const timerRef = useRef<number | null>(null);
   valuesRef.current = valuesJson;
   snapshotRef.current = savedSnapshot;
   editableRef.current = editable;
+  pausedRef.current = paused;
 
   const saveRef = useRef(save);
   saveRef.current = save;
@@ -66,7 +77,7 @@ export function useDocumentAutosave({
   );
 
   useEffect(() => {
-    if (editable && isDirty) {
+    if (editable && !paused && isDirty) {
       if (timerRef.current) {
         window.clearTimeout(timerRef.current);
       }
@@ -81,7 +92,7 @@ export function useDocumentAutosave({
       }
       timerRef.current = null;
     };
-  }, [editable, isDirty, persist, valuesJson]);
+  }, [editable, isDirty, paused, persist, valuesJson]);
 
   useEffect(
     () => (): void => {
@@ -91,6 +102,7 @@ export function useDocumentAutosave({
       }
       if (
         editableRef.current &&
+        !pausedRef.current &&
         !discardingRef.current &&
         snapshotRef.current !== valuesRef.current
       ) {

@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/page-header.tsx';
 import type { FormSummary } from '@/features/forms/types.ts';
 
 import { CreateFormCard, CreateFormErrorAlert } from './CreateFormCard.tsx';
+import type { FormFilterStatus } from './formListSearch.ts';
 import { FormsCatalogTable } from './FormsCatalogTable.tsx';
 
 interface FormListContentProps {
@@ -18,7 +19,11 @@ interface FormListContentProps {
   isCreating: boolean;
   isLoading: boolean;
   canCreate: boolean;
+  query: string;
+  status: FormFilterStatus;
   onPageChange: (page: number) => void;
+  onQueryChange: (query: string) => void;
+  onStatusChange: (status: FormFilterStatus) => void;
   onCreate: (values: { code: string; name: string }) => Promise<void>;
 }
 
@@ -31,7 +36,11 @@ export function FormListContent({
   isCreating,
   isLoading,
   canCreate,
+  query,
+  status,
   onPageChange,
+  onQueryChange,
+  onStatusChange,
   onCreate,
 }: FormListContentProps): JSX.Element {
   const { t } = useTranslation(['forms', 'common']);
@@ -85,6 +94,10 @@ export function FormListContent({
           page={page}
           pageSize={pageSize}
           isLoading={isLoading}
+          query={query}
+          status={status}
+          onQueryChange={onQueryChange}
+          onStatusChange={onStatusChange}
           onPageChange={onPageChange}
         />
       </div>

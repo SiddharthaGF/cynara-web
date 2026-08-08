@@ -246,12 +246,19 @@ export async function getWorkflowVersionSnapshot(
 }
 
 export async function listWorkflows(): Promise<WorkflowSummary[]> {
-  const { data } = await sdkGetWorkflowDefinitionCollection({
-    headers: contractHeaders(),
-    query: { query: listWorkflowsQuery() },
-  });
-  const versions = versionById(data.included ?? []);
-  return data.data.map((definition) => mapSummary(definition, versions));
+  const collection = await fetchAllCollectionPages(
+    listWorkflowsQuery(),
+    DEFINITIONS_COLLECTION_PAGE_SIZE,
+    async (query) => {
+      const { data } = await sdkGetWorkflowDefinitionCollection({
+        headers: contractHeaders(),
+        query: { query },
+      });
+      return data;
+    },
+  );
+  const versions = versionById(collection.included ?? []);
+  return collection.data.map((definition) => mapSummary(definition, versions));
 }
 
 // Public API client for listing a definition's version history. Kept as a

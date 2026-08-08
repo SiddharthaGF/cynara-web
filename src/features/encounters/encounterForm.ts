@@ -48,14 +48,20 @@ export function validateEncounterCreate(
   return errors;
 }
 
-export function formatEncounterType(type: string, t: TFunction): string {
+export function formatEncounterType(
+  type: string,
+  t: (key: string, options?: Record<string, unknown>) => string,
+): string {
   if (ENCOUNTER_TYPES.includes(type as EncounterType)) {
     return t(`types.${type as EncounterType}`);
   }
   return type;
 }
 
-export function formatEncounterStatus(status: string, t: TFunction): string {
+export function formatEncounterStatus(
+  status: string,
+  t: (key: string, options?: Record<string, unknown>) => string,
+): string {
   if (ENCOUNTER_STATUSES.includes(status as EncounterStatus)) {
     return t(`status.${status as EncounterStatus}`);
   }

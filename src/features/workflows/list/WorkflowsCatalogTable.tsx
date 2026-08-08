@@ -102,6 +102,13 @@ export function WorkflowsCatalogTable({
 
   const hasFilters = query.trim() !== '' || status !== 'all';
 
+  const statusItems = [
+    { value: 'all' as const, label: t('list.filterAll') },
+    { value: 'draft' as const, label: t('list.status.draft') },
+    { value: 'review' as const, label: t('list.status.review') },
+    { value: 'published' as const, label: t('list.status.published') },
+  ];
+
   const visibleWorkflows = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!hasFilters) {
@@ -155,6 +162,7 @@ export function WorkflowsCatalogTable({
           />
         </div>
         <Select
+          items={statusItems}
           value={status}
           onValueChange={(value) => {
             setStatus(value ?? 'all');
@@ -254,7 +262,9 @@ export function WorkflowsCatalogTable({
                       </TableCell>
                       <TableCell className='text-xs text-muted-foreground'>
                         {workflow.publishedVersions.length > 0
-                          ? workflow.publishedVersions.join(', ')
+                          ? workflow.publishedVersions
+                              .map((version) => `v${version}`)
+                              .join(' · ')
                           : '—'}
                       </TableCell>
                       <TableCell className='text-xs text-muted-foreground'>

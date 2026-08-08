@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils.ts';
 
 import { renderFieldInput } from './FormFieldInputs.tsx';
 import { getRepeaterChildValue, getScalarValue } from './formValues.ts';
+import { humanizeFieldLabel } from './labelFallback.ts';
 import { widthClass } from './layoutUtils.ts';
 import type { FormRendererContext } from './types.ts';
 
@@ -61,7 +62,7 @@ export function FormFieldControl({
     ] ?? [];
   const invalid = context.showValidation && errors.length > 0;
   const label = stripLegacyCalculatedLabelSuffix(
-    presentation?.label ?? field.id,
+    presentation?.label ?? humanizeFieldLabel(field.id),
   );
   const isCalculated = Boolean(context.model.rules.fields[field.id]?.calculate);
   const helpText = presentation?.helpText;

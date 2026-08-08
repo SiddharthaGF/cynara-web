@@ -7,6 +7,7 @@ import { AppShell } from '@/components/app-shell.tsx';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
 import { FormListContent } from './FormListContent.tsx';
+import type { FormFilterStatus } from './formListSearch.ts';
 import { useFormsCatalog } from './useFormsCatalog.ts';
 
 export function FormListPage(): JSX.Element {
@@ -26,6 +27,8 @@ export function FormListPage(): JSX.Element {
   } = useFormsCatalog({
     page: search.page,
     pageSize: search.pageSize,
+    query: search.query,
+    status: search.status,
   });
 
   const handlePageChange = useCallback(
@@ -34,6 +37,36 @@ export function FormListPage(): JSX.Element {
         to: '/$locale/forms',
         params: { locale },
         search: (prev) => ({ ...prev, page: nextPage }),
+        replace: true,
+      });
+    },
+    [locale, navigate],
+  );
+
+  const handleQueryChange = useCallback(
+    (query: string) => {
+      void navigate({
+        to: '/$locale/forms',
+        params: { locale },
+        search: (prev) => ({
+          ...prev,
+          query: query.trim() === '' ? undefined : query.trim(),
+        }),
+        replace: true,
+      });
+    },
+    [locale, navigate],
+  );
+
+  const handleStatusChange = useCallback(
+    (status: FormFilterStatus) => {
+      void navigate({
+        to: '/$locale/forms',
+        params: { locale },
+        search: (prev) => ({
+          ...prev,
+          status: status === 'all' ? undefined : status,
+        }),
         replace: true,
       });
     },
@@ -101,7 +134,11 @@ export function FormListPage(): JSX.Element {
         isCreating={isCreating}
         isLoading={isLoading}
         canCreate={can('write', 'Catalog')}
+        query={search.query ?? ''}
+        status={search.status ?? 'all'}
         onPageChange={handlePageChange}
+        onQueryChange={handleQueryChange}
+        onStatusChange={handleStatusChange}
         onCreate={handleCreate}
       />
     </AppShell>

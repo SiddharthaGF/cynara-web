@@ -104,5 +104,14 @@
     "presets": {
       "now": "Now"
     }
+  },
+  "calendar": {
+    "goToPreviousMonth": "Go to the previous month",
+    "goToNextMonth": "Go to the next month",
+    "chooseMonth": "Choose the month",
+    "chooseYear": "Choose the year",
+    "navigation": "Calendar navigation",
+    "monthGrid": "Calendar for {{month}}",
+    "weekday": "{{weekday}}"
   }
 }

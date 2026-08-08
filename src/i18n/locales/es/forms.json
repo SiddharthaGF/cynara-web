@@ -28,7 +28,7 @@
     "columnPublished": "Publicado",
     "columnUpdated": "Actualizado",
     "columnActions": "Acciones",
-    "noDraft": "sin borrador",
+    "noDraft": "Sin borrador",
     "published": "Publicado: {{versions}}",
     "status": {
       "draft": "Borrador",

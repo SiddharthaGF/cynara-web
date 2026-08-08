@@ -2,7 +2,6 @@ import { Link, useParams } from '@tanstack/react-router';
 import type { TFunction } from 'i18next';
 import { Search } from 'lucide-react';
 import type { JSX } from 'react';
-import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge.tsx';
@@ -35,6 +34,7 @@ import { useCapabilities } from '@/hooks/use-capabilities.ts';
 import { cn } from '@/lib/utils.ts';
 
 import { FormListPagination } from './FormListPagination.tsx';
+import type { FormFilterStatus } from './formListSearch.ts';
 
 /** Maps the raw server status enum to a localized label. */
 function formatFormEditableStatus(status: string | null, t: TFunction): string {
@@ -57,15 +57,6 @@ function formatFormEditableStatus(status: string | null, t: TFunction): string {
   }
 }
 
-type FormFilterStatus = 'all' | 'draft' | 'review' | 'published';
-
-function effectiveStatus(form: FormSummary): FormFilterStatus {
-  if (form.editableStatus === 'draft' || form.editableStatus === 'review') {
-    return form.editableStatus;
-  }
-  return form.publishedVersions.length > 0 ? 'published' : 'all';
-}
-
 function formatUpdatedAt(iso: string, locale: string): string {
   if (!iso) {
     return '—';
@@ -80,6 +71,10 @@ interface FormsCatalogTableProps {
   page: number;
   pageSize: number;
   isLoading: boolean;
+  query: string;
+  status: FormFilterStatus;
+  onQueryChange: (query: string) => void;
+  onStatusChange: (status: FormFilterStatus) => void;
   onPageChange: (page: number) => void;
 }
 
@@ -89,6 +84,10 @@ export function FormsCatalogTable({
   page,
   pageSize,
   isLoading,
+  query,
+  status,
+  onQueryChange,
+  onStatusChange,
   onPageChange,
 }: FormsCatalogTableProps): JSX.Element {
   const { t } = useTranslation('forms');
@@ -96,26 +95,14 @@ export function FormsCatalogTable({
   const { can } = useCapabilities();
   const canDesign = can('write', 'Catalog');
 
-  const [query, setQuery] = useState('');
-  const [status, setStatus] = useState<FormFilterStatus>('all');
-
   const hasFilters = query.trim() !== '' || status !== 'all';
 
-  const visibleForms = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!hasFilters) {
-      return forms;
-    }
-    return forms.filter((form) => {
-      const matchesQuery =
-        normalized === '' ||
-        form.name.toLowerCase().includes(normalized) ||
-        form.code.toLowerCase().includes(normalized);
-      const matchesStatus =
-        status === 'all' || effectiveStatus(form) === status;
-      return matchesQuery && matchesStatus;
-    });
-  }, [forms, hasFilters, query, status]);
+  const statusItems = [
+    { value: 'all' as const, label: t('list.filterAll') },
+    { value: 'draft' as const, label: t('list.status.draft') },
+    { value: 'review' as const, label: t('list.status.review') },
+    { value: 'published' as const, label: t('list.status.published') },
+  ];
 
   if (isLoading) {
     return (
@@ -146,7 +133,7 @@ export function FormsCatalogTable({
             type='search'
             value={query}
             onChange={(event) => {
-              setQuery(event.target.value);
+              onQueryChange(event.target.value);
             }}
             placeholder={t('list.searchPlaceholder')}
             aria-label={t('list.searchPlaceholder')}
@@ -154,9 +141,10 @@ export function FormsCatalogTable({
           />
         </div>
         <Select
+          items={statusItems}
           value={status}
           onValueChange={(value) => {
-            setStatus(value ?? 'all');
+            onStatusChange(value ?? 'all');
           }}
         >
           <SelectTrigger
@@ -176,7 +164,7 @@ export function FormsCatalogTable({
         </Select>
       </div>
 
-      {forms.length === 0 ? (
+      {forms.length === 0 && !hasFilters ? (
         <Empty className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
           <EmptyHeader>
             <EmptyTitle className='text-lg'>{t('list.emptyTitle')}</EmptyTitle>
@@ -185,7 +173,7 @@ export function FormsCatalogTable({
         </Empty>
       ) : null}
 
-      {forms.length > 0 && visibleForms.length === 0 ? (
+      {forms.length === 0 && hasFilters ? (
         <Empty className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
           <EmptyHeader>
             <EmptyTitle className='text-lg'>
@@ -198,7 +186,7 @@ export function FormsCatalogTable({
         </Empty>
       ) : null}
 
-      {forms.length > 0 && visibleForms.length > 0 ? (
+      {forms.length > 0 ? (
         <>
           <div className='overflow-hidden rounded-lg border border-border/60'>
             <Table className='min-w-[42rem]'>
@@ -215,60 +203,67 @@ export function FormsCatalogTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {visibleForms.map((form) => (
-                  <TableRow
-                    key={form.code}
-                    data-testid='forms-catalog-row'
-                    data-form-code={form.code}
-                  >
-                    <TableCell className='font-medium'>{form.name}</TableCell>
-                    <TableCell>
-                      <code className='text-xs text-muted-foreground'>
-                        {form.code}
-                      </code>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant='secondary'
-                        className={cn(
-                          form.editableStatus === 'published' &&
-                            'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-                          form.editableStatus === 'review' &&
-                            'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-                        )}
-                      >
-                        {formatFormEditableStatus(form.editableStatus, t)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className='text-xs text-muted-foreground'>
-                      {form.publishedVersions.length > 0
-                        ? form.publishedVersions.join(', ')
-                        : '—'}
-                    </TableCell>
-                    <TableCell className='text-xs text-muted-foreground'>
-                      {formatUpdatedAt(form.updatedAt, locale)}
-                    </TableCell>
-                    <TableCell className='text-right'>
-                      {form.editableVersionId !== null &&
-                      form.editableVersionId !== '' &&
-                      form.editableStatus !== null &&
-                      form.editableStatus !== '' &&
-                      canDesign ? (
-                        <Link
-                          to='/$locale/forms/$code/designer/$draftId'
-                          params={{
-                            locale,
-                            code: form.code,
-                            draftId: form.editableVersionId,
-                          }}
-                          className={buttonVariants({ size: 'sm' })}
+                {forms.map((form) => {
+                  const formStatus =
+                    form.editableStatus ??
+                    (form.publishedVersions.length > 0 ? 'published' : null);
+                  return (
+                    <TableRow
+                      key={form.code}
+                      data-testid='forms-catalog-row'
+                      data-form-code={form.code}
+                    >
+                      <TableCell className='font-medium'>{form.name}</TableCell>
+                      <TableCell>
+                        <code className='text-xs text-muted-foreground'>
+                          {form.code}
+                        </code>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant='secondary'
+                          className={cn(
+                            formStatus === 'published' &&
+                              'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+                            formStatus === 'review' &&
+                              'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+                          )}
                         >
-                          {t('list.openDesigner')}
-                        </Link>
-                      ) : null}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                          {formatFormEditableStatus(formStatus, t)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className='text-xs text-muted-foreground'>
+                        {form.publishedVersions.length > 0
+                          ? form.publishedVersions
+                              .map((version) => `v${version}`)
+                              .join(' · ')
+                          : '—'}
+                      </TableCell>
+                      <TableCell className='text-xs text-muted-foreground'>
+                        {formatUpdatedAt(form.updatedAt, locale)}
+                      </TableCell>
+                      <TableCell className='text-right'>
+                        {form.editableVersionId !== null &&
+                        form.editableVersionId !== '' &&
+                        form.editableStatus !== null &&
+                        form.editableStatus !== '' &&
+                        canDesign ? (
+                          <Link
+                            to='/$locale/forms/$code/designer/$draftId'
+                            params={{
+                              locale,
+                              code: form.code,
+                              draftId: form.editableVersionId,
+                            }}
+                            className={buttonVariants({ size: 'sm' })}
+                          >
+                            {t('list.openDesigner')}
+                          </Link>
+                        ) : null}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>
@@ -276,8 +271,8 @@ export function FormsCatalogTable({
           {hasFilters ? (
             <p className='text-sm text-muted-foreground'>
               {t('list.filteredCount', {
-                count: visibleForms.length,
-                total: forms.length,
+                count: forms.length,
+                total: totalCount,
               })}
             </p>
           ) : (

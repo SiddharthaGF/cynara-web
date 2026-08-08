@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils.ts';
 
 import { FormFieldControl } from './FormFieldControl.tsx';
 import { getRepeaterRows } from './formValues.ts';
+import { humanizeFieldLabel } from './labelFallback.ts';
 import { widthClass } from './layoutUtils.ts';
 import type { FormRendererContext } from './types.ts';
 
@@ -155,7 +156,9 @@ function GroupLayoutControl({
 
   return (
     <FieldSet className={cn('col-span-full', widthClass(presentation?.width))}>
-      <FieldLegend>{presentation?.label ?? field.id}</FieldLegend>
+      <FieldLegend>
+        {presentation?.label ?? humanizeFieldLabel(field.id)}
+      </FieldLegend>
       {presentation?.helpText ? (
         <FieldDescription>{presentation.helpText}</FieldDescription>
       ) : null}
@@ -195,7 +198,9 @@ function RepeaterLayoutControl({
   return (
     <FieldSet className={cn('col-span-full', widthClass(presentation?.width))}>
       <div className='flex items-center justify-between gap-3'>
-        <FieldLegend>{presentation?.label ?? field.id}</FieldLegend>
+        <FieldLegend>
+          {presentation?.label ?? humanizeFieldLabel(field.id)}
+        </FieldLegend>
         {canAdd ? (
           <Button
             type='button'

@@ -29,7 +29,7 @@
     "columnUpdated": "Updated",
     "columnActions": "Actions",
     "newDraftAction": "New draft",
-    "noDraft": "no draft",
+    "noDraft": "No draft",
     "published": "Published: {{versions}}",
     "status": {
       "draft": "Draft",

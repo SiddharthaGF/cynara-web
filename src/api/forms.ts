@@ -282,6 +282,27 @@ export async function listForms(
   };
 }
 
+/**
+ * Unbounded catalog read over every page. Used by the catalog search, which
+ * must match against the full catalog instead of the single paginated page
+ * the list view holds in memory.
+ */
+export async function listAllForms(): Promise<FormSummary[]> {
+  const collection = await fetchAllCollectionPages(
+    listAllFormDefinitionsQuery(),
+    DEFINITIONS_COLLECTION_PAGE_SIZE,
+    async (query) => {
+      const { data } = await sdkGetFormDefinitionCollection({
+        headers: contractHeaders(),
+        query: { query },
+      });
+      return data;
+    },
+  );
+  const versions = versionById(collection.included ?? []);
+  return collection.data.map((definition) => mapSummary(definition, versions));
+}
+
 export async function createForm(input: {
   code: string;
   name: string;
