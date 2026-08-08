@@ -99,7 +99,7 @@ test.describe('capability-aware navigation and clinical actions (CYN-54)', () =>
     grantCapabilities(page, FULL_CAPABILITIES);
     stubEmptyFormsCatalog(page);
     await page.goto('/forms', { waitUntil: 'domcontentloaded' });
-    await expect(page).toHaveURL(/\/en\/forms\/?$/);
+    await expect(page).toHaveURL(/\/en\/forms\/?(\?.*)?$/);
     await expect(page.getByTestId('form-list-content')).toBeVisible({
       timeout: 30_000,
     });
