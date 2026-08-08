@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { FileText } from 'lucide-react';
+import { FileText, Plus } from 'lucide-react';
 import type { JSX } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -37,13 +37,16 @@ import { useDocumentDefinitions } from '@/features/hospital/useDocumentCatalogAd
 interface PatientDocumentsTimelineProps {
   patientId: string;
   locale: string;
+  /** Opens the "New consultation" flow; documents only start inside an encounter. */
+  onNewEncounter?: () => void;
 }
 
 export function PatientDocumentsTimeline({
   patientId,
   locale,
+  onNewEncounter,
 }: PatientDocumentsTimelineProps): JSX.Element {
-  const { t, i18n } = useTranslation(['documents', 'api']);
+  const { t, i18n } = useTranslation(['documents', 'api', 'encounters']);
   const { documents, isLoading, error, isForbidden } =
     usePatientDocuments(patientId);
   const definitionLookup = useDocumentDefinitions({ includeRetired: true });
@@ -113,6 +116,16 @@ export function PatientDocumentsTimeline({
                 {t('timeline.emptyDescription')}
               </EmptyDescription>
             </EmptyHeader>
+            {onNewEncounter ? (
+              <Button
+                variant='outline'
+                data-testid='patient-documents-empty-new-encounter'
+                onClick={onNewEncounter}
+              >
+                <Plus className='size-4' />
+                {t('encounters:list.create')}
+              </Button>
+            ) : null}
           </Empty>
         ) : null}
 
@@ -182,9 +195,6 @@ function TimelineRow({
         <p className='text-sm text-muted-foreground'>
           {t('list.columns.createdAt')}:{' '}
           {formatClinicalDocumentDateTime(document.createdAt, language)}
-        </p>
-        <p className='truncate text-sm text-muted-foreground'>
-          {t('list.columns.encounter')}: {document.encounterId}
         </p>
       </div>
       <Link

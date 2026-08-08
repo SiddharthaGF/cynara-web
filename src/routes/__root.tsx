@@ -3,6 +3,7 @@ import {
   Outlet,
   Scripts,
   createRootRoute,
+  useRouterState,
 } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
@@ -10,7 +11,7 @@ import { I18nProvider } from '@/components/i18n-provider.tsx';
 import { QueryProvider } from '@/components/query-provider.tsx';
 import { Toaster } from '@/components/ui/sonner.tsx';
 import { TooltipProvider } from '@/components/ui/tooltip.tsx';
-import { localeInitScript } from '@/lib/locale.ts';
+import { DEFAULT_LOCALE, isAppLocale, localeInitScript } from '@/lib/locale.ts';
 import { themeInitScript } from '@/lib/theme.ts';
 
 import appCss from '@/index.css?url';
@@ -40,9 +41,16 @@ function RootComponent(): ReactNode {
 function RootDocument({
   children,
 }: Readonly<{ children: ReactNode }>): ReactNode {
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
+  const localeMatch = /^\/(?<locale>en|es)(?=\/|$)/.exec(pathname);
+  const lang = localeMatch?.groups?.locale;
+  const htmlLang = isAppLocale(lang) ? lang : DEFAULT_LOCALE;
+
   return (
     <html
-      lang='en'
+      lang={htmlLang}
       suppressHydrationWarning
     >
       <head>

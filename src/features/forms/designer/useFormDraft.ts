@@ -23,9 +23,14 @@ interface UseFormDraftResult {
   isLoading: boolean;
   loadError: string | null;
   isReadOnly: boolean;
+  /** Lifecycle status of the applied draft (`draft` | `review` | …). */
+  versionStatus: string;
+  /** Semver label of the applied draft, when the backend has assigned one. */
+  versionLabel: string | null;
   setModel: (updater: (current: FormDraftModel) => FormDraftModel) => void;
   reloadDraft: () => Promise<void>;
-  saveNow: () => Promise<void>;
+  /** Flushes pending edits. Resolves `true` when the draft was persisted. */
+  saveNow: () => Promise<boolean>;
   dismissConflict: () => void;
 }
 
@@ -145,7 +150,7 @@ export function useFormDraft(
     });
   }, [formCode, queryClient]);
 
-  const saveNow = useCallback(async (): Promise<void> => {
+  const saveNow = useCallback(async (): Promise<boolean> => {
     if (timerRef.current) {
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -156,7 +161,7 @@ export function useFormDraft(
     if (issues.length > 0) {
       setSaveState('error');
       setSaveError('Fix validation issues before saving.');
-      return;
+      return false;
     }
 
     const synced: FormDraftModel = {
@@ -178,8 +183,10 @@ export function useFormDraft(
         ...payload,
         rowVersion: rowVersionRef.current,
       });
+      return true;
     } catch {
       // The mutation error handler exposes the failure in the editor state.
+      return false;
     }
   }, [saveMutation]);
 
@@ -239,6 +246,8 @@ export function useFormDraft(
       (draftQuery.isFetching && !isDirty && draftQuery.data === undefined),
     loadError,
     isReadOnly,
+    versionStatus: appliedDraft.status,
+    versionLabel: appliedDraft.version,
     setModel,
     reloadDraft,
     saveNow,

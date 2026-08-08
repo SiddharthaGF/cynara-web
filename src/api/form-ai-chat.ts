@@ -1,5 +1,12 @@
 import { contractHeaders } from '@/api/client-runtime.ts';
-import { ApiError, performRequest } from '@/api/client.ts';
+import {
+  ACTOR_HEADER_NAME,
+  ApiError,
+  DEFAULT_ACTOR_ID,
+  HOSPITAL_HEADER_NAME,
+  performRequest,
+  resolveHospitalCode,
+} from '@/api/client.ts';
 import { parseFormAiStreamEvent } from '@/api/formAiStreamParser.ts';
 import { resolveFormDefinitionId } from '@/api/forms.ts';
 import { postFormAiChat as sdkPostFormAiChat } from '@/api/generated';
@@ -166,6 +173,8 @@ async function* streamFromId(
   const headers = new Headers();
   headers.set('Content-Type', 'application/json');
   headers.set('Accept', 'text/event-stream');
+  headers.set(HOSPITAL_HEADER_NAME, resolveHospitalCode());
+  headers.set(ACTOR_HEADER_NAME, DEFAULT_ACTOR_ID);
 
   const path = `/api/ai/forms/${formDefinitionId}/chat/stream`;
   const context = { path, method: 'POST', url: '' };

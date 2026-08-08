@@ -1,28 +1,25 @@
 {
   "appName": "Cynara",
-  "clinicalForms": "Clinical Forms",
   "nav": {
-    "modules": "Modules",
+    "home": "Home",
+    "care": "Care",
     "forms": "Forms",
     "workflows": "Workflows",
     "patients": "Patients",
-    "design": "Designer",
-    "settings": "Settings",
-    "administration": "Administration"
+    "configuration": "Configuration",
+    "administration": "Administration",
+    "sidebar": "Primary navigation"
   },
   "meta": {
     "title": "Cynara — Clinical Forms",
     "description": "Design clinical intake and assessment forms for hospitals — visually, with autosave and validation."
   },
   "theme": {
-    "switchToLight": "Switch to light mode",
-    "switchToDark": "Switch to dark mode",
     "light": "Light",
     "dark": "Dark",
     "system": "System"
   },
   "locale": {
-    "switch": "Change language",
     "en": "English",
     "es": "Español"
   },
@@ -52,9 +49,13 @@
   },
   "actions": {
     "save": "Save",
-    "back": "Back",
     "close": "Close",
     "forms": "Forms"
+  },
+  "breadcrumb": {
+    "patients": "Patients",
+    "clinicalRecord": "Clinical record",
+    "encounter": "Consultation"
   },
   "access": {
     "checking": "Checking your access…",
@@ -73,8 +74,7 @@
   "yes": "Yes",
   "no": "No",
   "placeholders": {
-    "selectDate": "Select date…",
-    "selectDateTime": "Select date & time…"
+    "selectDate": "Select date…"
   },
   "numberInput": {
     "increase": "Increase value",
@@ -82,10 +82,6 @@
   },
   "timeInput": {
     "openPicker": "Open time picker",
-    "selectTime": "Select time",
-    "hours": "Hours",
-    "minutes": "Minutes",
-    "seconds": "Seconds",
     "presets": {
       "now": "Now"
     }

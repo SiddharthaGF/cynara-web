@@ -28,6 +28,8 @@ export interface WorkflowInspectorBodyProps {
   onChangeNode: (patch: Partial<WorkflowNode>) => void;
   onChangeNodeType: (type: WorkflowNodeType) => void;
   onRemoveNode: () => void;
+  /** Re-ids the selected node from its name when a name edit commits. */
+  onCommitNodeName: (nodeId: string, name: string) => void;
   outgoing: WorkflowEdge[];
   incoming: WorkflowEdge[];
   availableTargets: WorkflowNode[];
@@ -56,6 +58,7 @@ export function WorkflowInspectorBody({
   onChangeNode,
   onChangeNodeType,
   onRemoveNode,
+  onCommitNodeName,
   outgoing,
   incoming,
   availableTargets,
@@ -151,6 +154,9 @@ export function WorkflowInspectorBody({
                   onChangeNode={onChangeNode}
                   onChangeNodeType={onChangeNodeType}
                   onRemoveNode={onRemoveNode}
+                  onCommitName={(name) => {
+                    onCommitNodeName(selectedNode.id, name);
+                  }}
                 />
               ) : (
                 <WorkflowTransitionsSection

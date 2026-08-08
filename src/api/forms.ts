@@ -5,6 +5,10 @@ import {
   getFormDefinitionCollection as sdkGetFormDefinitionCollection,
   getFormVersion as sdkGetFormVersion,
   patchFormVersion as sdkPatchFormVersion,
+  postApiFormDefinitionsByIdCreateDraft as sdkPostFormDefinitionCreateDraft,
+  postApiFormVersionsByIdPublish as sdkPostFormVersionPublish,
+  postApiFormVersionsByIdSubmitReview as sdkPostFormVersionSubmitReview,
+  postApiFormVersionsByIdWithdrawReview as sdkPostFormVersionWithdrawReview,
   postFormDefinition as sdkPostFormDefinition,
   type AttributesInUpdateFormVersionRequest,
   type DataInFormDefinitionResponse,
@@ -15,6 +19,7 @@ import {
 } from '@/api/generated';
 import {
   buildPaginatedQuery,
+  fetchAllCollectionPages,
   includedResources,
   relationshipId,
   relationshipIds,
@@ -23,6 +28,8 @@ import type { FormSummary, FormVersion } from '@/features/forms/types.ts';
 
 const FORM_DEFINITIONS = 'formDefinitions';
 const FORM_VERSIONS = 'formVersions';
+/** Page size for full-catalog reads; code lookups flatten every page. */
+const DEFINITIONS_COLLECTION_PAGE_SIZE = 100;
 
 type FormDefinitionResource = Pick<
   DataInFormDefinitionResponse,
@@ -65,7 +72,7 @@ function listFormsQuery(params: ListFormsParams): Record<string, string> {
 export function listAllFormDefinitionsQuery(): Record<string, string> {
   return buildPaginatedQuery({
     include: ['versions'],
-    pageSize: 100,
+    pageSize: DEFINITIONS_COLLECTION_PAGE_SIZE,
     sort: 'code',
   });
 }
@@ -184,17 +191,26 @@ async function getDefinitionByCode(code: string): Promise<{
   definition: FormDefinitionResource;
   versions: Map<string, FormVersionResource>;
 }> {
-  const { data } = await sdkGetFormDefinitionCollection({
-    headers: contractHeaders(),
-    query: { query: listAllFormDefinitionsQuery() },
-  });
-  const definition = data.data.find((item) => item.attributes?.code === code);
+  const collection = await fetchAllCollectionPages(
+    listAllFormDefinitionsQuery(),
+    DEFINITIONS_COLLECTION_PAGE_SIZE,
+    async (query) => {
+      const { data } = await sdkGetFormDefinitionCollection({
+        headers: contractHeaders(),
+        query: { query },
+      });
+      return data;
+    },
+  );
+  const definition = collection.data.find(
+    (item) => item.attributes?.code === code,
+  );
   if (!definition) {
     throw new ApiError(404, 'Not Found', `Form '${code}' was not found.`);
   }
   return {
     definition,
-    versions: versionById(data.included ?? []),
+    versions: versionById(collection.included ?? []),
   };
 }
 
@@ -379,4 +395,75 @@ export async function updateFormDraft(
 export async function resolveFormDefinitionId(code: string): Promise<string> {
   const { definition } = await getDefinitionByCode(code);
   return definition.id;
+}
+
+type LifecycleTransition = 'submit-review' | 'withdraw-review' | 'publish';
+
+async function transitionFormVersion(
+  versionId: string,
+  rowVersion: number,
+  transition: LifecycleTransition,
+): Promise<FormVersion> {
+  const headers = contractHeaders();
+  const query = { rowVersion };
+  if (transition === 'submit-review') {
+    await sdkPostFormVersionSubmitReview({
+      path: { id: versionId },
+      headers,
+      query,
+    });
+  } else if (transition === 'withdraw-review') {
+    await sdkPostFormVersionWithdrawReview({
+      path: { id: versionId },
+      headers,
+      query,
+    });
+  } else {
+    await sdkPostFormVersionPublish({
+      path: { id: versionId },
+      headers,
+      query,
+    });
+  }
+  return getFormVersionSnapshot(versionId);
+}
+
+/**
+ * Moves an editable draft to the review state. The schema locks and the draft
+ * becomes read-only until it is published or withdrawn.
+ */
+export async function submitFormReview(
+  versionId: string,
+  rowVersion: number,
+): Promise<FormVersion> {
+  return transitionFormVersion(versionId, rowVersion, 'submit-review');
+}
+
+/** Returns a review-state version to an editable draft. */
+export async function withdrawFormReview(
+  versionId: string,
+  rowVersion: number,
+): Promise<FormVersion> {
+  return transitionFormVersion(versionId, rowVersion, 'withdraw-review');
+}
+
+/** Publishes a reviewed version, making it available to consultations. */
+export async function publishFormVersion(
+  versionId: string,
+  rowVersion: number,
+): Promise<FormVersion> {
+  return transitionFormVersion(versionId, rowVersion, 'publish');
+}
+
+/**
+ * Creates a new editable draft from the latest published version, allowing a
+ * designer to keep iterating on the next version after publishing.
+ */
+export async function createFormDraft(code: string): Promise<FormVersion> {
+  const definitionId = await resolveFormDefinitionId(code);
+  await sdkPostFormDefinitionCreateDraft({
+    path: { id: definitionId },
+    headers: contractHeaders(),
+  });
+  return getFormDraft(code);
 }

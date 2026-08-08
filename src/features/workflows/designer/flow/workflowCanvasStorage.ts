@@ -121,3 +121,28 @@ export function saveWorkflowPositions(
     // Quota exceeded or storage disabled: drop silently, the layout still works.
   }
 }
+
+/**
+ * Moves a saved position from `fromId` to `toId` so a renamed node keeps its
+ * spot on the canvas. No-op when the source has no stored position.
+ */
+export function migrateWorkflowPositions(
+  key: string,
+  fromId: string,
+  toId: string,
+): void {
+  const positions = loadWorkflowPositions(key);
+  if (positions === null) {
+    return;
+  }
+  const position = positions.get(fromId);
+  if (position === undefined) {
+    return;
+  }
+  const next = new Map<string, WorkflowCanvasPosition>([
+    ...positions,
+    [toId, position],
+  ]);
+  next.delete(fromId);
+  saveWorkflowPositions(key, next);
+}

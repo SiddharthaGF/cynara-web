@@ -49,15 +49,19 @@ export function DocumentDetailUnavailable({
           </EmptyHeader>
         </Empty>
         <div className='mt-4'>
-          <Link
-            to='/$locale/patients/$id/encounters/$encounterId'
-            params={{ locale, id: patientId, encounterId }}
+          <Button
+            variant='ghost'
+            nativeButton={false}
+            render={
+              <Link
+                to='/$locale/patients/$id/encounters/$encounterId'
+                params={{ locale, id: patientId, encounterId }}
+              />
+            }
           >
-            <Button variant='ghost'>
-              <ArrowLeft className='size-4' />
-              {t('detail.backToEncounter')}
-            </Button>
-          </Link>
+            <ArrowLeft className='size-4' />
+            {t('detail.backToEncounter')}
+          </Button>
         </div>
       </div>
     </AppShell>

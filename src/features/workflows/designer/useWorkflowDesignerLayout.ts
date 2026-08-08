@@ -16,9 +16,11 @@ import {
   edgeKey,
   incomingEdges,
   insertNodeBetween,
+  nodeIdFromName,
   outgoingEdges,
   removeEdgeByKey,
   removeNode,
+  renameNode,
   updateEdge,
   updateEdgeCondition,
   updateInputs,
@@ -32,6 +34,8 @@ import type {
   WorkflowNodeType,
   WorkflowVersion,
 } from '@/features/workflows/types.ts';
+
+import { migrateWorkflowPositions } from './flow/workflowCanvasStorage.ts';
 
 const OPEN_OVERLAY_SELECTOR =
   '[data-slot="select-content"][data-open], [data-slot="dropdown-menu-content"][data-open], [data-slot="popover-content"][data-open], [data-slot="dialog-content"]';
@@ -59,6 +63,8 @@ export interface WorkflowDesignerLayout {
   handleAddNode: (type: WorkflowNodeType) => void;
   handleDuplicateNode: (nodeId: string) => void;
   handleUpdateNode: (nodeId: string, patch: Partial<WorkflowNode>) => void;
+  /** Re-ids a task/decision node from its name (called when a name edit commits). */
+  handleCommitNodeName: (nodeId: string, name: string) => void;
   handleChangeNodeType: (nodeId: string, type: WorkflowNodeType) => void;
   handleRemoveNode: (nodeId: string) => void;
   handleAddEdge: (from: string, to: string) => void;
@@ -250,6 +256,32 @@ export function useWorkflowDesignerLayout(
     draft.setGraph((current) => updateNode(current, nodeId, patch));
   }
 
+  function handleCommitNodeName(nodeId: string, name: string): void {
+    if (draft.isReadOnly) {
+      return;
+    }
+    const nextId = nodeIdFromName(draft.graph, nodeId, name);
+    if (nextId === null) {
+      return;
+    }
+    draft.setGraph((current) => renameNode(current, nodeId, nextId));
+    // The renamed node keeps its persisted canvas position.
+    migrateWorkflowPositions(`${code}:${initialDraft.id}`, nodeId, nextId);
+    // Selection survives the id change: keep the node (and any selected edge
+    // Touching it) pointed at the renamed id.
+    if (selectedNodeId === nodeId) {
+      selectNode(nextId);
+    }
+    if (selectedEdgeKey) {
+      const [from, to] = selectedEdgeKey.split('\u0000');
+      const nextFrom = from === nodeId ? nextId : from;
+      const nextTo = to === nodeId ? nextId : to;
+      if (nextFrom !== from || nextTo !== to) {
+        selectEdge(edgeKey(nextFrom, nextTo));
+      }
+    }
+  }
+
   function handleChangeNodeType(nodeId: string, type: WorkflowNodeType): void {
     draft.setGraph((current) => changeNodeType(current, nodeId, type));
   }
@@ -359,6 +391,7 @@ export function useWorkflowDesignerLayout(
     handleAddNode,
     handleDuplicateNode,
     handleUpdateNode,
+    handleCommitNodeName,
     handleChangeNodeType,
     handleRemoveNode,
     handleAddEdge,

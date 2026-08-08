@@ -33,14 +33,13 @@
     "emptyTitle": "No se encontraron pacientes",
     "emptyDescription": "Intenta con otros términos de búsqueda o registra un nuevo paciente.",
     "registerPatient": "Registrar paciente",
-    "viewDetail": "Ver",
-    "loadError": "No se pudieron cargar los pacientes.",
+    "viewDetail": "Abrir historia clínica",
     "columns": {
       "mrn": "HC",
       "name": "Nombre",
       "birthDate": "Fecha nac.",
-      "sex": "Sexo",
-      "status": "Estado"
+      "status": "Estado",
+      "actions": "Acciones"
     }
   },
   "register": {
@@ -49,7 +48,6 @@
     "subtitle": "Ingresa la información demográfica para crear un nuevo registro de paciente.",
     "submit": "Registrar paciente",
     "submitting": "Registrando…",
-    "success": "Paciente registrado exitosamente.",
     "backToList": "Volver a la lista de pacientes",
     "fields": {
       "mrn": "Número de historia clínica (HC)",
@@ -81,25 +79,40 @@
       "familyNameTooLong": "Los apellidos deben tener 128 caracteres o menos.",
       "birthDateRequired": "La fecha de nacimiento es obligatoria.",
       "birthDateInvalid": "Ingresa una fecha válida (AAAA-MM-DD).",
-      "sexRequired": "El sexo es obligatorio.",
-      "createFailed": "No se pudo registrar el paciente."
+      "sexRequired": "El sexo es obligatorio."
     }
   },
   "detail": {
-    "eyebrow": "Registro del paciente",
-    "title": "Detalles del paciente",
+    "eyebrow": "Historia clínica",
+    "title": "Historia clínica",
+    "newEncounter": "Nueva consulta",
+    "cancel": "Cancelar",
+    "deleteConfirmTitle": "¿Eliminar este paciente?",
+    "deleteConfirmBody": "El registro del paciente quedará oculto en las búsquedas. Las consultas y los documentos históricos seguirán siendo legibles.",
+    "tabs": {
+      "overview": "Resumen",
+      "encounters": "Consultas",
+      "documents": "Documentos",
+      "journeys": "Trayectoria"
+    },
+    "overview": {
+      "openEncounter": "Consulta abierta",
+      "noOpenEncounter": "No hay consultas abiertas",
+      "noOpenEncounterHint": "Inicia una consulta para registrar esta visita.",
+      "recentDocuments": "Documentos recientes",
+      "noRecentDocuments": "Aún no hay documentos",
+      "noRecentDocumentsHint": "Los documentos aparecerán aquí al iniciarse dentro de una consulta.",
+      "viewAllEncounters": "Ver todas las consultas",
+      "viewAllDocuments": "Ver todos los documentos"
+    },
     "edit": "Editar",
     "editTitle": "Editar paciente",
     "save": "Guardar cambios",
     "saving": "Guardando…",
     "delete": "Eliminar",
-    "deleteConfirm": "¿Estás seguro de que deseas eliminar este paciente? Esta acción puede ser revertida por un administrador.",
     "deleteSuccess": "Registro del paciente eliminado.",
-    "saveSuccess": "Paciente actualizado exitosamente.",
     "backToList": "Volver a la lista de pacientes",
     "loadError": "No se pudieron cargar los detalles del paciente.",
-    "updateError": "No se pudo actualizar el paciente.",
-    "deleteError": "No se pudo eliminar el paciente.",
     "notFound": "Paciente no encontrado.",
     "mrnImmutable": "La HC no se puede cambiar después del registro.",
     "fields": {
@@ -107,6 +120,7 @@
       "givenName": "Nombre",
       "familyName": "Apellidos",
       "birthDate": "Fecha de nacimiento",
+      "age": "Edad",
       "sex": "Sexo",
       "nationalId": "ID Nacional",
       "status": "Estado",
@@ -118,10 +132,6 @@
       "male": "Masculino",
       "female": "Femenino",
       "unknown": "Otro"
-    },
-    "statusOptions": {
-      "active": "Activo",
-      "retired": "Retirado"
     }
   },
   "sex": {

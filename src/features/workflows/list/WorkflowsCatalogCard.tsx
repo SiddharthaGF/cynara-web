@@ -1,4 +1,5 @@
 import { Link, useParams } from '@tanstack/react-router';
+import type { TFunction } from 'i18next';
 import { Workflow, FilePlus2 } from 'lucide-react';
 import { m } from 'motion/react';
 import type { JSX } from 'react';
@@ -25,6 +26,30 @@ import { Spinner } from '@/components/ui/spinner.tsx';
 import type { WorkflowSummary } from '@/features/workflows/types.ts';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
 import { cn } from '@/lib/utils.ts';
+
+/** Maps the raw server status enum to a localized label. */
+function formatWorkflowEditableStatus(
+  status: string | null,
+  t: TFunction,
+): string {
+  if (status === null) {
+    return t('list.noDraft');
+  }
+  switch (status) {
+    case 'draft': {
+      return t('list.status.draft');
+    }
+    case 'review': {
+      return t('list.status.review');
+    }
+    case 'published': {
+      return t('list.status.published');
+    }
+    default: {
+      return status;
+    }
+  }
+}
 
 interface WorkflowsCatalogCardProps {
   workflows: WorkflowSummary[];
@@ -161,7 +186,7 @@ export function WorkflowsCatalogCard({
                           'bg-amber-500/10 text-amber-600 dark:text-amber-400',
                       )}
                     >
-                      {status}
+                      {formatWorkflowEditableStatus(status, t)}
                     </Badge>
                     {workflow.publishedVersions.length > 0 ? (
                       <span className='text-xs text-muted-foreground'>

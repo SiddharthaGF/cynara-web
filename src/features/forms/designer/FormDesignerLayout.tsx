@@ -21,6 +21,7 @@ import type { FormVersion } from '../types.ts';
 import { ChatAiTrigger as FormAiChatTrigger } from './ai-chat/ChatMentionLists.tsx';
 import { FieldCanvas } from './FieldCanvas.tsx';
 import { FieldInspector } from './FieldInspector.tsx';
+import { FormPublishControl } from './FormPublishControl.tsx';
 import { MobileDesignerFab } from './MobileDesignerFab.tsx';
 import { SaveButton } from './SaveButton.tsx';
 import { SaveStatusBanner } from './SaveStatusBanner.tsx';
@@ -194,7 +195,7 @@ export function FormDesignerLayout({
                   to='/$locale/forms'
                   params={{ locale }}
                   aria-label={tc('actions.forms')}
-                  className='inline-flex h-7 shrink-0 items-center justify-center gap-1.5 rounded-[min(var(--radius-md),12px)] border border-transparent px-2 text-[0.8rem] font-medium whitespace-nowrap transition-colors outline-none select-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
+                  className='inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-[min(var(--radius-md),12px)] border border-transparent px-2 text-[0.8rem] font-medium whitespace-nowrap transition-colors outline-none select-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
                 >
                   <ArrowLeft className='size-4' />
                   <span className='hidden sm:inline'>
@@ -242,6 +243,14 @@ export function FormDesignerLayout({
                 onOpen={() => {
                   setPreviewOpen(true);
                 }}
+              />
+
+              <FormPublishControl
+                code={code}
+                versionStatus={layout.draft.versionStatus}
+                versionLabel={layout.draft.versionLabel}
+                saveNow={layout.draft.saveNow}
+                reloadDraft={layout.draft.reloadDraft}
               />
 
               <SaveButton

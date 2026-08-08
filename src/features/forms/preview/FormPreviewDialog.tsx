@@ -13,9 +13,10 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogTitle,
 } from '@/components/ui/dialog.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
-import { Sheet, SheetContent } from '@/components/ui/sheet.tsx';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet.tsx';
 import {
   Tabs,
   TabsContent,
@@ -92,6 +93,7 @@ export function FormPreviewDialog({
           showCloseButton={false}
           className={cn(PANEL_SHEET_CLASSNAME, 'h-full')}
         >
+          <SheetTitle className='sr-only'>{t('formPreview.title')}</SheetTitle>
           <PanelHeader
             surface='mobile'
             icon={<FlaskConical className='size-4' />}
@@ -123,6 +125,7 @@ export function FormPreviewDialog({
         showCloseButton={false}
         className='preview-modal flex h-[min(90dvh,52rem)] w-[min(96vw,52rem)] max-w-[min(96vw,52rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[min(96vw,52rem)]'
       >
+        <DialogTitle className='sr-only'>{t('formPreview.title')}</DialogTitle>
         <DialogDescription className='sr-only'>
           {t('formPreview.disclaimer')}
         </DialogDescription>

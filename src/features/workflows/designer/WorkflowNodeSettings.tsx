@@ -33,6 +33,7 @@ import type {
 } from '@/features/workflows/types.ts';
 
 import { nodeTypeColor, nodeTypeIcon } from './flow/nodeVisuals.ts';
+import { usePublishedFormOptions } from './usePublishedFormOptions.ts';
 
 interface WorkflowNodeSettingsProps {
   node: WorkflowNode;
@@ -40,6 +41,8 @@ interface WorkflowNodeSettingsProps {
   onChangeNode: (patch: Partial<WorkflowNode>) => void;
   onChangeNodeType: (type: WorkflowNodeType) => void;
   onRemoveNode: () => void;
+  /** Re-ids the node from its name when the name edit commits. */
+  onCommitName: (name: string) => void;
 }
 
 const NODE_TYPES: readonly WorkflowNodeType[] = [
@@ -64,12 +67,19 @@ export function WorkflowNodeSettings({
   onChangeNode,
   onChangeNodeType,
   onRemoveNode,
+  onCommitName,
 }: WorkflowNodeSettingsProps): JSX.Element {
   const { t } = useTranslation('workflows');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const isTask = node.type === 'task';
   const isStart = node.type === 'start';
   const assignee = node.type === 'task' ? (node.assignee ?? {}) : {};
+  const formOptionsQuery = usePublishedFormOptions();
+  const formOptions = formOptionsQuery.data ?? [];
+  const formCode = node.type === 'task' ? node.formCode : undefined;
+  const formVersion = node.type === 'task' ? node.formVersion : undefined;
+  const selectedForm = formOptions.find((option) => option.code === formCode);
+  const publishedVersions = selectedForm?.publishedVersions ?? [];
 
   return (
     <div className='grid gap-8'>
@@ -85,6 +95,15 @@ export function WorkflowNodeSettings({
               value={node.name ?? ''}
               disabled={readOnly}
               placeholder={t('inspector.namePlaceholder')}
+              onBlur={() => {
+                onCommitName(node.name ?? '');
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  onCommitName(node.name ?? '');
+                }
+              }}
               onChange={(event) => {
                 const { value } = event.target;
                 onChangeNode({ name: value.trim() ? value : undefined });
@@ -251,18 +270,43 @@ export function WorkflowNodeSettings({
                 {t('inspector.formCode')}
               </FieldLabel>
               <FieldContent>
-                <Input
-                  id='workflow-node-form-code'
-                  value={node.formCode ?? ''}
+                <Select
+                  value={formCode ?? ''}
                   disabled={readOnly}
-                  placeholder={t('inspector.formCodePlaceholder')}
-                  onChange={(event) => {
-                    const { value } = event.target;
+                  onValueChange={(code) => {
+                    if (!code) {
+                      return;
+                    }
+                    const form = formOptions.find(
+                      (option) => option.code === code,
+                    );
+                    // Picking a form pins the latest published version so the
+                    // Task is ready to publish without an extra selection.
+                    const latestVersion =
+                      form?.publishedVersions.at(-1)?.version;
                     onChangeNode({
-                      formCode: value.trim() ? value : undefined,
+                      formCode: code,
+                      formVersion: latestVersion ?? undefined,
                     });
                   }}
-                />
+                >
+                  <SelectTrigger
+                    id='workflow-node-form-code'
+                    className='w-full'
+                  >
+                    <SelectValue placeholder={t('inspector.selectForm')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {formOptions.map((option) => (
+                      <SelectItem
+                        key={option.code}
+                        value={option.code}
+                      >
+                        {option.name || option.code}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FieldContent>
             </Field>
             <Field>
@@ -270,18 +314,38 @@ export function WorkflowNodeSettings({
                 {t('inspector.formVersion')}
               </FieldLabel>
               <FieldContent>
-                <Input
-                  id='workflow-node-form-version'
-                  value={node.formVersion ?? ''}
-                  disabled={readOnly}
-                  placeholder={t('inspector.formVersionPlaceholder')}
-                  onChange={(event) => {
-                    const { value } = event.target;
-                    onChangeNode({
-                      formVersion: value.trim() ? value : undefined,
-                    });
-                  }}
-                />
+                {publishedVersions.length > 0 ? (
+                  <Select
+                    value={formVersion ?? ''}
+                    disabled={readOnly}
+                    onValueChange={(version) => {
+                      if (version) {
+                        onChangeNode({ formVersion: version });
+                      }
+                    }}
+                  >
+                    <SelectTrigger
+                      id='workflow-node-form-version'
+                      className='w-full'
+                    >
+                      <SelectValue placeholder={t('inspector.selectVersion')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {publishedVersions.map((published) => (
+                        <SelectItem
+                          key={published.version}
+                          value={published.version}
+                        >
+                          {published.version}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className='text-xs leading-relaxed text-muted-foreground'>
+                    {t('inspector.noPublishedVersions')}
+                  </p>
+                )}
               </FieldContent>
             </Field>
           </section>

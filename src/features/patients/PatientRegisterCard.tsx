@@ -297,18 +297,20 @@ export function PatientRegisterCard({
                 </Button>
               )}
             </form.Subscribe>
-            <Link
-              to='/$locale/patients'
-              params={{ locale }}
+            <Button
+              type='button'
+              variant='ghost'
+              nativeButton={false}
+              disabled={isRegistering}
+              render={
+                <Link
+                  to='/$locale/patients'
+                  params={{ locale }}
+                />
+              }
             >
-              <Button
-                type='button'
-                variant='ghost'
-                disabled={isRegistering}
-              >
-                {t('register.backToList')}
-              </Button>
-            </Link>
+              {t('register.backToList')}
+            </Button>
           </div>
         </form>
       </CardContent>

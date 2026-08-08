@@ -20,10 +20,18 @@ export interface WorkflowFlowNodeData extends Record<string, unknown> {
   node: WorkflowNode;
   /** Outgoing domain edges; decision nodes render one source handle per branch. */
   outgoing: WorkflowEdge[];
+  /** Nodes this node may still connect to, excluding self and current targets. */
+  availableTargets: WorkflowNode[];
   readOnly: boolean;
   hasErrors: boolean;
   onAddStep: (nodeId: string) => void;
   onOpenSettings: (nodeId: string) => void;
+  /** Renames this node (blank becomes undefined). */
+  onChangeName: (value: string) => void;
+  /** Called when a name edit commits (blur/Enter); re-ids the node from its name. */
+  onCommitName: (value: string) => void;
+  /** Creates a transition from this node to the given target. */
+  onConnectNodes: (targetId: string) => void;
 }
 
 export interface WorkflowFlowEdgeData extends Record<string, unknown> {
@@ -51,6 +59,9 @@ export interface DomainGraphToFlowOptions {
   defaultBranchLabel: string;
   onAddStep: (nodeId: string) => void;
   onOpenSettings: (nodeId: string) => void;
+  onUpdateNode: (nodeId: string, patch: Partial<WorkflowNode>) => void;
+  onCommitNodeName: (nodeId: string, name: string) => void;
+  onConnectNodes: (from: string, to: string) => void;
 }
 
 /** Resolved label for a transition, mirroring the designer tooltip rules. */
@@ -97,6 +108,11 @@ export function domainGraphToFlow(
 
   const nodes: WorkflowFlowNode[] = graph.nodes.map((node) => {
     const position = options.positions.get(node.id) ?? layout?.get(node.id);
+    const outgoing = outgoingEdges(graph, node.id);
+    const outgoingIds = new Set(outgoing.map((edge) => edge.to));
+    const availableTargets = graph.nodes.filter(
+      (candidate) => candidate.id !== node.id && !outgoingIds.has(candidate.id),
+    );
     return {
       id: node.id,
       type: node.type,
@@ -104,11 +120,18 @@ export function domainGraphToFlow(
       selected: options.selectedNodeId === node.id,
       data: {
         node,
-        outgoing: outgoingEdges(graph, node.id),
+        outgoing,
+        availableTargets,
         readOnly: options.readOnly,
         hasErrors: (options.nodeIssueCounts.get(node.id) ?? 0) > 0,
         onAddStep: options.onAddStep,
         onOpenSettings: options.onOpenSettings,
+        onChangeName: (value) =>
+          options.onUpdateNode(node.id, {
+            name: value.trim() ? value : undefined,
+          }),
+        onCommitName: (value) => options.onCommitNodeName(node.id, value),
+        onConnectNodes: (targetId) => options.onConnectNodes(node.id, targetId),
       },
     };
   });

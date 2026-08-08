@@ -7,7 +7,7 @@ import {
   PanelHeaderCloseButton,
   PanelSurface,
 } from '@/components/panel/index.ts';
-import { Sheet, SheetContent } from '@/components/ui/sheet.tsx';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet.tsx';
 import type {
   ClinicalField,
   ComponentSummary,
@@ -93,6 +93,9 @@ export function FieldInspector({
           showCloseButton={false}
           className={cn(PANEL_SHEET_CLASSNAME, 'h-full')}
         >
+          <SheetTitle className='sr-only'>
+            {t('mobile.fieldSettings.sheetTitle')}
+          </SheetTitle>
           <PanelHeader
             surface='mobile'
             title={t('mobile.fieldSettings.sheetTitle')}

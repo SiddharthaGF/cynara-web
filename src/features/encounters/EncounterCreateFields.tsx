@@ -2,7 +2,6 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Field, FieldError, FieldLabel } from '@/components/ui/field.tsx';
-import { Input } from '@/components/ui/input.tsx';
 import {
   Select,
   SelectContent,
@@ -193,39 +192,5 @@ export function EncounterTypeField({
         field.handleChange(next ?? '');
       }}
     />
-  );
-}
-
-interface EncounterProfessionalFieldProps {
-  field: FieldController;
-  isCreating: boolean;
-  error?: string;
-}
-
-export function EncounterProfessionalField({
-  field,
-  isCreating,
-  error,
-}: EncounterProfessionalFieldProps): JSX.Element {
-  const { t } = useTranslation('encounters');
-  return (
-    <Field data-invalid={Boolean(error)}>
-      <FieldLabel htmlFor='encounter-professional'>
-        {t('create.fields.professional')}
-      </FieldLabel>
-      <Input
-        id='encounter-professional'
-        data-testid='encounter-create-professional'
-        value={field.state.value}
-        disabled={isCreating}
-        aria-invalid={Boolean(error)}
-        placeholder={t('create.fields.professionalPlaceholder')}
-        onChange={(event) => {
-          field.handleChange(event.target.value);
-        }}
-        onBlur={field.handleBlur}
-      />
-      {error ? <FieldError>{error}</FieldError> : null}
-    </Field>
   );
 }

@@ -42,15 +42,19 @@ export function DocumentTransitionConfirmDialog({
 
   let title = '';
   let body = '';
+  let confirmLabel = t('detail.confirm.confirm');
   if (kind === 'complete') {
     title = t('detail.confirm.completeTitle');
     body = t('detail.confirm.completeBody');
+    confirmLabel = t('detail.confirm.completeAction');
   } else if (kind === 'cancel') {
     title = t('detail.confirm.cancelTitle');
     body = t('detail.confirm.cancelBody');
+    confirmLabel = t('detail.confirm.cancelAction');
   } else if (kind === 'enterInError') {
     title = t('detail.confirm.enterInErrorTitle');
     body = t('detail.confirm.enterInErrorBody');
+    confirmLabel = t('detail.confirm.enterInErrorAction');
   }
 
   const reasonRequired = kind === 'enterInError';
@@ -125,7 +129,7 @@ export function DocumentTransitionConfirmDialog({
             }}
           >
             {isPending ? <Spinner data-icon='inline-start' /> : null}
-            {t('detail.confirm.confirm')}
+            {confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

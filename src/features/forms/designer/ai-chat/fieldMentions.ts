@@ -14,6 +14,8 @@ export interface MentionableField {
   label: string;
   /** Breadcrumb for nested fields, e.g. "Medications › Dose". */
   pathLabel: string;
+  /** Lowercased haystack searched by the mention filter. Precomputed once. */
+  searchText: string;
 }
 
 export function listMentionableFields(
@@ -40,6 +42,8 @@ function walkFields(
       type: field.type,
       label,
       pathLabel,
+      searchText:
+        `${label} ${pathLabel} ${field.id} ${field.code} ${field.type}`.toLowerCase(),
     });
     if (field.items && field.items.length > 0) {
       walkFields(field.items, model, [...ancestors, label], out);
@@ -69,11 +73,7 @@ export function filterMentionableFields(
   if (needle.length === 0) {
     return fields;
   }
-  return fields.filter((field) => {
-    const haystack =
-      `${field.label} ${field.pathLabel} ${field.id} ${field.code} ${field.type}`.toLowerCase();
-    return haystack.includes(needle);
-  });
+  return fields.filter((field) => field.searchText.includes(needle));
 }
 
 export function extractMentionedFieldIds(

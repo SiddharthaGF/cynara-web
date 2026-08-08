@@ -1,5 +1,10 @@
-import { Link, useNavigate, useParams } from '@tanstack/react-router';
-import { ArrowLeft, UserCircle } from 'lucide-react';
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearch,
+} from '@tanstack/react-router';
+import { ArrowLeft, Pencil, Plus, Trash2, UserCircle } from 'lucide-react';
 import { LazyMotion, domAnimation, m, useReducedMotion } from 'motion/react';
 import type { JSX } from 'react';
 import { useCallback, useState } from 'react';
@@ -7,12 +12,22 @@ import { useTranslation } from 'react-i18next';
 
 import { isForbiddenPatientError } from '@/api/patients.ts';
 import { AppShell } from '@/components/app-shell.tsx';
+import { PageBreadcrumbs } from '@/components/page-breadcrumbs.tsx';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog.tsx';
 import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card.tsx';
@@ -24,10 +39,20 @@ import {
 } from '@/components/ui/empty.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs.tsx';
 import { InsufficientPermissionNotice } from '@/features/access-control/InsufficientPermissionNotice.tsx';
 import { PatientDocumentsTimeline } from '@/features/documents/PatientDocumentsTimeline.tsx';
+import { EncounterCreateDialog } from '@/features/encounters/EncounterCreateDialog.tsx';
 import { PatientEncountersPanel } from '@/features/encounters/PatientEncountersPanel.tsx';
+import { PatientJourneyPanel } from '@/features/journeys/PatientJourneyPanel.tsx';
+import type { PatientDetailTab } from '@/features/patients/patientDetailSearch.ts';
 import { PatientEditForm } from '@/features/patients/PatientEditForm.tsx';
+import { PatientOverview } from '@/features/patients/PatientOverview.tsx';
 import { PatientView } from '@/features/patients/PatientView.tsx';
 import {
   usePatientDetail,
@@ -36,13 +61,14 @@ import {
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
 export function PatientDetailPage(): JSX.Element {
-  const { t } = useTranslation(['patients', 'api']);
+  const { t } = useTranslation(['patients', 'api', 'common']);
   const { locale, id }: { locale: string; id: string } = useParams({
     from: '/$locale/patients/$id',
   });
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
   const { can } = useCapabilities();
+  const { tab } = useSearch({ from: '/$locale/patients/$id' });
 
   const { patient, isLoading, error: loadError } = usePatientDetail(id);
   const {
@@ -55,6 +81,18 @@ export function PatientDetailPage(): JSX.Element {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [mutationForbidden, setMutationForbidden] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const selectTab = useCallback(
+    (nextTab: PatientDetailTab) => {
+      void navigate({
+        to: '/$locale/patients/$id',
+        params: { locale, id },
+        search: { tab: nextTab },
+      });
+    },
+    [id, locale, navigate],
+  );
 
   const handleDelete = useCallback(async () => {
     if (!patient) {
@@ -101,15 +139,19 @@ export function PatientDetailPage(): JSX.Element {
             </EmptyHeader>
           </Empty>
           <div className='mt-4'>
-            <Link
-              to='/$locale/patients'
-              params={{ locale }}
+            <Button
+              variant='ghost'
+              nativeButton={false}
+              render={
+                <Link
+                  to='/$locale/patients'
+                  params={{ locale }}
+                />
+              }
             >
-              <Button variant='ghost'>
-                <ArrowLeft className='size-4' />
-                {t('detail.backToList')}
-              </Button>
-            </Link>
+              <ArrowLeft className='size-4' />
+              {t('detail.backToList')}
+            </Button>
           </div>
         </div>
       </AppShell>
@@ -118,6 +160,10 @@ export function PatientDetailPage(): JSX.Element {
 
   const canWrite = can('write', 'Patient');
   const canMutate = !mutationForbidden && canWrite;
+  const canCreateEncounter = can('write', 'Encounter');
+  const openNewEncounter = (): void => {
+    setCreateOpen(true);
+  };
 
   return (
     <AppShell variant='catalog'>
@@ -133,26 +179,69 @@ export function PatientDetailPage(): JSX.Element {
             }
             className='mb-8'
           >
-            <Link
-              to='/$locale/patients'
-              params={{ locale }}
-            >
-              <Button
-                variant='ghost'
-                size='sm'
-                className='mb-4 -ml-2'
-              >
-                <ArrowLeft className='size-4' />
-                {t('detail.backToList')}
-              </Button>
-            </Link>
-            <p className='mb-3 inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
-              <UserCircle className='size-3' />
-              {t('detail.eyebrow')}
-            </p>
-            <h1 className='font-display text-balance text-3xl font-semibold tracking-tight md:text-4xl'>
-              {t('detail.title')}
-            </h1>
+            <PageBreadcrumbs
+              className='mb-4'
+              items={[
+                {
+                  label: t('common:breadcrumb.patients'),
+                  link: (
+                    <Link
+                      to='/$locale/patients'
+                      params={{ locale }}
+                    />
+                  ),
+                },
+                { label: `${patient.givenName} ${patient.familyName}` },
+              ]}
+            />
+            <div className='flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between'>
+              <div className='min-w-0'>
+                <p className='mb-3 inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
+                  <UserCircle className='size-3' />
+                  {t('detail.eyebrow')}
+                </p>
+                <h1 className='font-display text-balance text-3xl font-semibold tracking-tight md:text-4xl'>
+                  {patient.givenName} {patient.familyName}
+                </h1>
+                <p className='mt-2 text-sm text-muted-foreground'>
+                  {t('detail.fields.mrn')}:{' '}
+                  <code className='text-foreground'>{patient.mrn}</code>
+                </p>
+              </div>
+              <div className='flex flex-wrap items-center gap-2'>
+                {canCreateEncounter ? (
+                  <Button
+                    data-testid='hc-new-encounter'
+                    onClick={openNewEncounter}
+                  >
+                    <Plus className='size-4' />
+                    {t('detail.newEncounter')}
+                  </Button>
+                ) : null}
+                {canMutate ? (
+                  <>
+                    <Button
+                      variant='outline'
+                      data-testid='patient-detail-edit'
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Pencil className='size-4' />
+                      {t('detail.edit')}
+                    </Button>
+                    <Button
+                      variant='destructive'
+                      data-testid='patient-detail-delete'
+                      onClick={() => setShowDeleteConfirm(true)}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? <Spinner data-icon='inline-start' /> : null}
+                      <Trash2 className='size-4' />
+                      {t('detail.delete')}
+                    </Button>
+                  </>
+                ) : null}
+              </div>
+            </div>
           </m.header>
 
           {mutationForbidden ? (
@@ -188,107 +277,186 @@ export function PatientDetailPage(): JSX.Element {
             </m.div>
           )}
 
-          <m.div
-            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              reduceMotion
-                ? { duration: 0 }
-                : { duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }
-            }
-          >
-            <Card className='border-border/70 shadow-sm'>
-              <CardHeader>
-                <CardTitle className='flex items-center gap-2 font-heading text-lg'>
-                  <UserCircle className='size-4 text-muted-foreground' />
-                  {isEditing
-                    ? t('detail.editTitle')
-                    : `${patient.givenName} ${patient.familyName}`}
-                </CardTitle>
-                <CardDescription>
-                  {isEditing
-                    ? t('detail.editTitle')
-                    : `${t('detail.fields.mrn')}: ${patient.mrn}`}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isEditing && canMutate ? (
+          {isEditing && canMutate ? (
+            <m.div
+              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : { duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }
+              }
+            >
+              <Card className='border-border/70 shadow-sm'>
+                <CardHeader>
+                  <CardTitle className='flex items-center gap-2 font-heading text-lg'>
+                    <UserCircle className='size-4 text-muted-foreground' />
+                    {t('detail.editTitle')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <PatientEditForm
                     patient={patient}
                     onCancel={() => setIsEditing(false)}
                     onSaved={() => setIsEditing(false)}
                   />
-                ) : (
-                  <PatientView
-                    patient={patient}
-                    onEdit={() => setIsEditing(true)}
-                    onDelete={() => setShowDeleteConfirm(true)}
-                    isDeleting={isDeleting}
-                    canMutate={canMutate}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </m.div>
+                </CardContent>
+              </Card>
+            </m.div>
+          ) : (
+            <m.div
+              initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : { duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }
+              }
+            >
+              <Tabs
+                value={tab}
+                onValueChange={(value) => {
+                  selectTab(value as PatientDetailTab);
+                }}
+              >
+                <TabsList>
+                  <TabsTrigger
+                    value='overview'
+                    data-testid='hc-tab-overview'
+                  >
+                    {t('detail.tabs.overview')}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='encounters'
+                    data-testid='hc-tab-encounters'
+                  >
+                    {t('detail.tabs.encounters')}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='documents'
+                    data-testid='hc-tab-documents'
+                  >
+                    {t('detail.tabs.documents')}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='journeys'
+                    data-testid='hc-tab-journeys'
+                  >
+                    {t('detail.tabs.journeys')}
+                  </TabsTrigger>
+                </TabsList>
 
-          <PatientEncountersPanel
+                <TabsContent
+                  value='overview'
+                  className='mt-6'
+                >
+                  <PatientView patient={patient} />
+                  <PatientOverview
+                    patientId={patient.id}
+                    locale={locale}
+                    onNewEncounter={openNewEncounter}
+                    onShowAllEncounters={() => selectTab('encounters')}
+                    onShowAllDocuments={() => selectTab('documents')}
+                  />
+                </TabsContent>
+
+                <TabsContent
+                  value='encounters'
+                  className='mt-6'
+                >
+                  <PatientEncountersPanel
+                    patientId={patient.id}
+                    locale={locale}
+                    onNewEncounter={openNewEncounter}
+                  />
+                </TabsContent>
+
+                <TabsContent
+                  value='documents'
+                  className='mt-6'
+                >
+                  <PatientDocumentsTimeline
+                    patientId={patient.id}
+                    locale={locale}
+                    onNewEncounter={
+                      canCreateEncounter ? openNewEncounter : undefined
+                    }
+                  />
+                </TabsContent>
+
+                <TabsContent
+                  value='journeys'
+                  className='mt-6'
+                >
+                  <PatientJourneyPanel
+                    patientId={patient.id}
+                    locale={locale}
+                    onNewEncounter={openNewEncounter}
+                  />
+                </TabsContent>
+              </Tabs>
+            </m.div>
+          )}
+
+          <AlertDialog
+            open={showDeleteConfirm}
+            onOpenChange={setShowDeleteConfirm}
+          >
+            <AlertDialogContent
+              data-testid='patient-delete-confirm'
+              aria-label={t('detail.deleteConfirmTitle')}
+            >
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {t('detail.deleteConfirmTitle')}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t('detail.deleteConfirmBody')}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              {deleteError ? (
+                <Alert
+                  variant='destructive'
+                  className='mt-2'
+                >
+                  <AlertDescription>{deleteError}</AlertDescription>
+                </Alert>
+              ) : null}
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeleting}>
+                  {t('detail.cancel')}
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  variant='destructive'
+                  data-testid='patient-delete-confirm-submit'
+                  onClick={() => {
+                    void handleDelete();
+                  }}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? <Spinner data-icon='inline-start' /> : null}
+                  {t('detail.delete')}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <EncounterCreateDialog
+            key={createOpen ? 'open' : 'closed'}
             patientId={patient.id}
-            locale={locale}
+            open={createOpen}
+            onOpenChange={setCreateOpen}
             onForbidden={() => {
               setMutationForbidden(true);
             }}
+            onCreated={(encounterId) => {
+              setCreateOpen(false);
+              void navigate({
+                to: '/$locale/patients/$id/encounters/$encounterId',
+                params: { locale, id: patient.id, encounterId },
+              });
+            }}
           />
-
-          <PatientDocumentsTimeline
-            patientId={patient.id}
-            locale={locale}
-          />
-
-          {showDeleteConfirm ? (
-            <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50'>
-              <m.div
-                initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className='mx-4 w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl'
-                data-testid='patient-delete-confirm'
-              >
-                <h3 className='font-heading text-lg font-medium'>
-                  {t('detail.delete')}
-                </h3>
-                <p className='mt-2 text-sm text-muted-foreground'>
-                  {t('detail.deleteConfirm')}
-                </p>
-                {deleteError ? (
-                  <Alert
-                    variant='destructive'
-                    className='mt-3'
-                  >
-                    <AlertDescription>{deleteError}</AlertDescription>
-                  </Alert>
-                ) : null}
-                <div className='mt-6 flex justify-end gap-3'>
-                  <Button
-                    variant='ghost'
-                    onClick={() => setShowDeleteConfirm(false)}
-                    disabled={isDeleting}
-                  >
-                    {t('search.clear')}
-                  </Button>
-                  <Button
-                    variant='destructive'
-                    data-testid='patient-delete-confirm-submit'
-                    onClick={() => {
-                      void handleDelete();
-                    }}
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? <Spinner data-icon='inline-start' /> : null}
-                    {t('detail.delete')}
-                  </Button>
-                </div>
-              </m.div>
-            </div>
-          ) : null}
         </div>
       </LazyMotion>
     </AppShell>

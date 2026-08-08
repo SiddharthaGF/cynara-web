@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
   WorkflowGraph,
+  WorkflowNode,
   WorkflowValidationIssue,
 } from '@/features/workflows/types.ts';
 
@@ -60,6 +61,9 @@ export interface UseWorkflowFlowOptions {
   onSelectEdge: (key: string | null) => void;
   onAddStep: (nodeId: string) => void;
   onOpenSettings: (nodeId: string) => void;
+  onUpdateNode: (nodeId: string, patch: Partial<WorkflowNode>) => void;
+  /** Re-ids a task/decision node from its name when a name edit commits. */
+  onCommitNodeName: (nodeId: string, name: string) => void;
   onConnectNodes: (from: string, to: string) => void;
   onRemoveNode: (nodeId: string) => void;
   onRemoveEdge: (key: string) => void;
@@ -89,6 +93,8 @@ export function useWorkflowFlow(
     onSelectEdge,
     onAddStep,
     onOpenSettings,
+    onUpdateNode,
+    onCommitNodeName,
     onConnectNodes,
     onRemoveNode,
     onRemoveEdge,
@@ -131,6 +137,8 @@ export function useWorkflowFlow(
     onSelectEdge,
     onAddStep,
     onOpenSettings,
+    onUpdateNode,
+    onCommitNodeName,
     onConnectNodes,
     onRemoveNode,
     onRemoveEdge,
@@ -143,6 +151,8 @@ export function useWorkflowFlow(
       onSelectEdge,
       onAddStep,
       onOpenSettings,
+      onUpdateNode,
+      onCommitNodeName,
       onConnectNodes,
       onRemoveNode,
       onRemoveEdge,
@@ -158,7 +168,20 @@ export function useWorkflowFlow(
     (nodeId: string) => callbacksRef.current.onOpenSettings(nodeId),
     [],
   );
-
+  const stableUpdateNode = useCallback(
+    (nodeId: string, patch: Partial<WorkflowNode>) =>
+      callbacksRef.current.onUpdateNode(nodeId, patch),
+    [],
+  );
+  const stableCommitNodeName = useCallback(
+    (nodeId: string, name: string) =>
+      callbacksRef.current.onCommitNodeName(nodeId, name),
+    [],
+  );
+  const stableConnectNodes = useCallback(
+    (from: string, to: string) => callbacksRef.current.onConnectNodes(from, to),
+    [],
+  );
   const nodeIssueCounts = useMemo(() => {
     const map = new Map<string, number>();
     for (const issue of validationIssues) {
@@ -223,6 +246,27 @@ export function useWorkflowFlow(
     autoLayout(graph);
   }, [graph, readOnly, autoLayout]);
 
+  // A committed rename re-ids a node. The persisted layout was migrated by the
+  // Commit handler (old id → new id), so re-read the store to keep the node on
+  // The canvas at its saved spot instead of falling back to the auto layout.
+  const previousNodeIdsRef = useRef(
+    graph.nodes.map((node) => node.id).join('\u0000'),
+  );
+  useEffect(() => {
+    const previousIds = previousNodeIdsRef.current;
+    const nextIds = graph.nodes.map((node) => node.id).join('\u0000');
+    previousNodeIdsRef.current = nextIds;
+    if (previousIds === nextIds) {
+      return;
+    }
+    const stored = loadWorkflowPositions(positionsKey);
+    if (stored === null) {
+      return;
+    }
+    positionsRef.current = stored;
+    setLayoutVersion((version) => version + 1);
+  }, [graph.nodes, positionsKey]);
+
   const projected = useMemo(
     () =>
       domainGraphToFlow(graph, {
@@ -234,6 +278,9 @@ export function useWorkflowFlow(
         defaultBranchLabel,
         onAddStep: stableAddStep,
         onOpenSettings: stableOpenSettings,
+        onUpdateNode: stableUpdateNode,
+        onCommitNodeName: stableCommitNodeName,
+        onConnectNodes: stableConnectNodes,
       }),
     [
       graph,
@@ -245,6 +292,9 @@ export function useWorkflowFlow(
       layoutVersion,
       stableAddStep,
       stableOpenSettings,
+      stableUpdateNode,
+      stableCommitNodeName,
+      stableConnectNodes,
     ],
   );
 

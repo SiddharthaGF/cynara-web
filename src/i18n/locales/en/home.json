@@ -1,0 +1,33 @@
+{
+  "eyebrow": "Home",
+  "title": "What do you want to do today?",
+  "subtitle": "Start from the task — Cynara will take you to the right place.",
+  "startSection": "Start something new",
+  "browseSection": "Go to",
+  "actions": {
+    "registerPatient": {
+      "title": "Register a patient",
+      "description": "Create a new patient record to start their care."
+    },
+    "newEncounter": {
+      "title": "Start a consultation",
+      "description": "Open a new consultation for an existing patient."
+    },
+    "createForm": {
+      "title": "Design a form",
+      "description": "Create a clinical form to collect structured data."
+    },
+    "createWorkflow": {
+      "title": "Design a workflow",
+      "description": "Model a care pathway for patient journeys."
+    }
+  },
+  "browse": {
+    "patients": "Patients",
+    "forms": "Forms",
+    "workflows": "Workflows",
+    "administration": "Administration"
+  },
+  "emptyTitle": "Nothing to do yet",
+  "emptyDescription": "Your account doesn't have permissions to start any action. Ask an administrator to grant the capabilities you need."
+}

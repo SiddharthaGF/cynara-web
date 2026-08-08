@@ -72,17 +72,17 @@ export function FormListPage(): JSX.Element {
     });
 
     try {
-      await createForm({
+      const created = await createForm({
         code: values.code.trim(),
         name: values.name.trim(),
         clinicalSchemaJson,
         uiSchemaJson,
         rulesSchemaJson,
       });
+      // Land straight in the designer: the index route resolves the draft.
       void navigate({
-        to: '/$locale/forms',
-        params: { locale },
-        search: (prev) => ({ ...prev, page: 1 }),
+        to: '/$locale/forms/$code/designer',
+        params: { locale, code: created.code },
         replace: true,
       });
     } catch {

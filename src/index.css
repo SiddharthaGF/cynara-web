@@ -1181,6 +1181,13 @@
   --xy-attribution-background-color: transparent;
 }
 
+/* Nodes are draggable canvas items, not text. Suppressing the native
+   long-press selection callout keeps a held press available for the custom
+   touch context menu instead of the iOS magnifier / Android text selection. */
+.react-flow__node {
+  -webkit-touch-callout: none;
+}
+
 /* Workflow transitions mirror node hover behavior: hovered edges gain a
    primary-tinted, thicker stroke with a soft glow so they stand out from the
    quiet canvas. The label chip reveal is driven from FlowEdge.tsx; the stroke

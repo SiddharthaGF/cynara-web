@@ -1,11 +1,11 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowLeft, ClipboardList } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
 import { LazyMotion, domAnimation, m, useReducedMotion } from 'motion/react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { PageBreadcrumbs } from '@/components/page-breadcrumbs.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
-import { Button } from '@/components/ui/button.tsx';
 import {
   encounterStatusBadgeVariant,
   formatEncounterStatus,
@@ -15,14 +15,17 @@ interface EncounterDetailHeaderProps {
   status: string;
   locale: string;
   patientId: string;
+  /** Patient display name for the breadcrumb trail; omitted while loading. */
+  patientName?: string;
 }
 
 export function EncounterDetailHeader({
   status,
   locale,
   patientId,
+  patientName,
 }: EncounterDetailHeaderProps): JSX.Element {
-  const { t } = useTranslation('encounters');
+  const { t } = useTranslation(['encounters', 'common']);
   const reduceMotion = useReducedMotion();
 
   return (
@@ -37,19 +40,30 @@ export function EncounterDetailHeader({
         }
         className='mb-8'
       >
-        <Link
-          to='/$locale/patients/$id'
-          params={{ locale, id: patientId }}
-        >
-          <Button
-            variant='ghost'
-            size='sm'
-            className='mb-4 -ml-2'
-          >
-            <ArrowLeft className='size-4' />
-            {t('detail.backToPatient')}
-          </Button>
-        </Link>
+        <PageBreadcrumbs
+          className='mb-4'
+          items={[
+            {
+              label: t('common:breadcrumb.patients'),
+              link: (
+                <Link
+                  to='/$locale/patients'
+                  params={{ locale }}
+                />
+              ),
+            },
+            {
+              label: patientName ?? t('common:breadcrumb.clinicalRecord'),
+              link: (
+                <Link
+                  to='/$locale/patients/$id'
+                  params={{ locale, id: patientId }}
+                />
+              ),
+            },
+            { label: t('common:breadcrumb.encounter') },
+          ]}
+        />
         <p className='mb-3 inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
           <ClipboardList className='size-3' />
           {t('detail.eyebrow')}

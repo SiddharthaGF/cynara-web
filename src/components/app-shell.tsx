@@ -1,5 +1,11 @@
 import { Link, useLocation, useParams } from '@tanstack/react-router';
-import { ClipboardList, Hospital, Users, Workflow } from 'lucide-react';
+import {
+  ClipboardList,
+  Hospital,
+  LayoutDashboard,
+  Users,
+  Workflow,
+} from 'lucide-react';
 import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -32,58 +38,84 @@ interface AppShellProps {
   className?: string;
 }
 
+type NavTarget =
+  | '/$locale'
+  | '/$locale/forms'
+  | '/$locale/workflows'
+  | '/$locale/patients'
+  | '/$locale/admin';
+
 interface NavEntry {
-  to:
-    | '/$locale/forms'
-    | '/$locale/workflows'
-    | '/$locale/patients'
-    | '/$locale/admin';
+  to: NavTarget;
   labelKey: string;
-  icon: typeof ClipboardList;
+  icon: typeof LayoutDashboard;
   /** Any one of these subjects (with the read action) reveals the entry. */
   subjects: readonly ('Catalog' | 'Patient' | 'Workflow' | 'Workspace')[];
 }
 
-const NAV_ENTRIES: readonly NavEntry[] = [
+interface NavGroup {
+  labelKey: string;
+  entries: NavEntry[];
+}
+
+const NAV_GROUPS: readonly NavGroup[] = [
   {
-    to: '/$locale/forms',
-    labelKey: 'nav.forms',
-    icon: ClipboardList,
-    subjects: ['Catalog'],
+    labelKey: 'nav.care',
+    entries: [
+      {
+        to: '/$locale',
+        labelKey: 'nav.home',
+        icon: LayoutDashboard,
+        subjects: [],
+      },
+      {
+        to: '/$locale/patients',
+        labelKey: 'nav.patients',
+        icon: Users,
+        subjects: ['Patient'],
+      },
+    ],
   },
   {
-    to: '/$locale/workflows',
-    labelKey: 'nav.workflows',
-    icon: Workflow,
-    subjects: ['Workflow'],
-  },
-  {
-    to: '/$locale/patients',
-    labelKey: 'nav.patients',
-    icon: Users,
-    subjects: ['Patient'],
-  },
-  {
-    to: '/$locale/admin',
-    labelKey: 'nav.administration',
-    icon: Hospital,
-    subjects: ['Catalog', 'Workspace'],
+    labelKey: 'nav.configuration',
+    entries: [
+      {
+        to: '/$locale/forms',
+        labelKey: 'nav.forms',
+        icon: ClipboardList,
+        subjects: ['Catalog'],
+      },
+      {
+        to: '/$locale/workflows',
+        labelKey: 'nav.workflows',
+        icon: Workflow,
+        subjects: ['Workflow'],
+      },
+      {
+        to: '/$locale/admin',
+        labelKey: 'nav.administration',
+        icon: Hospital,
+        subjects: ['Catalog', 'Workspace'],
+      },
+    ],
   },
 ];
 
 function useAccessibleNav(): {
-  entries: NavEntry[];
-  homeTarget: NavEntry['to'];
+  groups: NavGroup[];
+  homeTarget: NavTarget;
 } {
   const { can, isLoading } = useCapabilities();
-  const entries = NAV_ENTRIES.filter(
-    (entry) =>
-      !isLoading && entry.subjects.some((subject) => can('read', subject)),
-  );
-  return {
-    entries,
-    homeTarget: entries[0]?.to ?? '/$locale/forms',
-  };
+  const groups = NAV_GROUPS.flatMap((group) => {
+    const entries = group.entries.filter(
+      (entry) =>
+        !isLoading &&
+        (entry.subjects.length === 0 ||
+          entry.subjects.some((subject) => can('read', subject))),
+    );
+    return entries.length === 0 ? [] : [{ labelKey: group.labelKey, entries }];
+  });
+  return { groups, homeTarget: '/$locale' };
 }
 
 export function AppShell({
@@ -126,20 +158,42 @@ function AppShellContent({
   const { locale } = useParams({ from: '/$locale' });
   const location = useLocation();
   const { state } = useSidebar();
-  const { entries, homeTarget } = useAccessibleNav();
+  const { groups, homeTarget } = useAccessibleNav();
 
+  const isOnHome =
+    location.pathname === `/${locale}` || location.pathname === `/${locale}/`;
   const isOnForms = location.pathname.startsWith(`/${locale}/forms`);
   const isOnWorkflows = location.pathname.startsWith(`/${locale}/workflows`);
   const isOnPatients = location.pathname.startsWith(`/${locale}/patients`);
   const isOnAdmin = location.pathname.startsWith(`/${locale}/admin`);
   const isCollapsed = state === 'collapsed';
 
-  const routeActiveByTarget: Record<NavEntry['to'], boolean> = {
+  const routeActiveByTarget: Record<NavTarget, boolean> = {
+    '/$locale': isOnHome,
     '/$locale/forms': isOnForms,
     '/$locale/workflows': isOnWorkflows,
     '/$locale/patients': isOnPatients,
     '/$locale/admin': isOnAdmin,
   };
+
+  function currentSectionLabel(): string | null {
+    if (isOnHome) {
+      return t('nav.home');
+    }
+    if (isOnPatients) {
+      return t('nav.patients');
+    }
+    if (isOnForms) {
+      return t('nav.forms');
+    }
+    if (isOnWorkflows) {
+      return t('nav.workflows');
+    }
+    if (isOnAdmin) {
+      return t('nav.administration');
+    }
+    return null;
+  }
 
   return (
     <>
@@ -150,73 +204,78 @@ function AppShellContent({
         collapsible='icon'
         className='border-r border-sidebar-border/80'
       >
-        <SidebarHeader>
-          <Link
-            to={homeTarget}
-            params={{ locale }}
-            aria-label={t('appName')}
+        <nav
+          aria-label={t('nav.sidebar')}
+          className='flex h-full flex-col'
+        >
+          <SidebarHeader>
+            <Link
+              to={homeTarget}
+              params={{ locale }}
+              aria-label={t('appName')}
+              className={cn(
+                'flex items-center gap-2 rounded-md px-2 py-1.5 transition-opacity hover:opacity-80',
+                isCollapsed && 'size-8 justify-center gap-0 p-2',
+              )}
+            >
+              <CynaraMark showWordmark={!isCollapsed} />
+            </Link>
+          </SidebarHeader>
+
+          <SidebarContent>
+            {groups.map((group) => (
+              <SidebarGroup key={group.labelKey}>
+                <SidebarGroupLabel>{t(group.labelKey)}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.entries.map((entry) => {
+                      const Icon = entry.icon;
+                      return (
+                        <SidebarMenuItem key={entry.to}>
+                          <SidebarMenuButton
+                            render={
+                              <Link
+                                to={entry.to}
+                                params={{ locale }}
+                              />
+                            }
+                            isActive={routeActiveByTarget[entry.to]}
+                            tooltip={t(entry.labelKey)}
+                          >
+                            <Icon />
+                            <span>{t(entry.labelKey)}</span>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
+          </SidebarContent>
+
+          <SidebarFooter
             className={cn(
-              'flex items-center gap-2 rounded-md px-2 py-1.5 transition-opacity hover:opacity-80',
-              isCollapsed && 'size-8 justify-center gap-0 p-2',
+              'border-t border-sidebar-border/60',
+              isCollapsed && 'p-0',
             )}
           >
-            <CynaraMark showWordmark={!isCollapsed} />
-          </Link>
-        </SidebarHeader>
-
-        <SidebarContent>
-          {entries.length > 0 ? (
-            <SidebarGroup>
-              <SidebarGroupLabel>{t('nav.modules')}</SidebarGroupLabel>
+            <SidebarGroup className={cn(isCollapsed && 'items-center p-2')}>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {entries.map((entry) => {
-                    const Icon = entry.icon;
-                    return (
-                      <SidebarMenuItem key={entry.to}>
-                        <SidebarMenuButton
-                          render={
-                            <Link
-                              to={entry.to}
-                              params={{ locale }}
-                            />
-                          }
-                          isActive={routeActiveByTarget[entry.to]}
-                          tooltip={t(entry.labelKey)}
-                        >
-                          <Icon />
-                          <span>{t(entry.labelKey)}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
+                  <SidebarMenuItem
+                    className={cn(isCollapsed && 'flex justify-center')}
+                  >
+                    <SettingsMenu
+                      showLabel={!isCollapsed}
+                      className={cn(!isCollapsed && 'w-full')}
+                    />
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-          ) : null}
-        </SidebarContent>
-
-        <SidebarFooter
-          className={cn(
-            'border-t border-sidebar-border/60',
-            isCollapsed && 'p-0',
-          )}
-        >
-          <SidebarGroup className={cn(isCollapsed && 'items-center p-2')}>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem
-                  className={cn(isCollapsed && 'flex justify-center')}
-                >
-                  <SettingsMenu
-                    showLabel={!isCollapsed}
-                    className={cn(!isCollapsed && 'w-full')}
-                  />
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarFooter>
+          </SidebarFooter>
+        </nav>
 
         <SidebarRail />
       </Sidebar>
@@ -226,7 +285,7 @@ function AppShellContent({
           <SidebarTrigger className='text-muted-foreground' />
           {variant === 'catalog' ? (
             <span className='hidden text-xs font-medium tracking-widest text-muted-foreground uppercase sm:inline'>
-              {t('clinicalForms')}
+              {currentSectionLabel()}
             </span>
           ) : null}
         </div>

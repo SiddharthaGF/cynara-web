@@ -1,6 +1,7 @@
-import { Ban, CheckCircle2, CircleAlert } from 'lucide-react';
+import { Ban, CheckCircle2, ChevronDown, CircleAlert } from 'lucide-react';
 import { LazyMotion, domAnimation, m, useReducedMotion } from 'motion/react';
 import type { JSX } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { EncounterDto } from '@/api/encounters.ts';
@@ -8,16 +9,21 @@ import { Button } from '@/components/ui/button.tsx';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card.tsx';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible.tsx';
 import {
   formatEncounterDateTime,
   formatEncounterStatus,
   formatEncounterType,
 } from '@/features/encounters/encounterForm.ts';
 import { EncounterInfoRow } from '@/features/encounters/EncounterTransitionConfirmDialog.tsx';
+import { cn } from '@/lib/utils.ts';
 
 interface EncounterDetailCardProps {
   encounter: EncounterDto;
@@ -40,6 +46,7 @@ export function EncounterDetailCard({
 }: EncounterDetailCardProps): JSX.Element {
   const { t, i18n } = useTranslation(['encounters', 'api']);
   const reduceMotion = useReducedMotion();
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
 
   return (
     <LazyMotion features={domAnimation}>
@@ -64,9 +71,6 @@ export function EncounterDetailCard({
             <CardTitle className='font-heading text-lg'>
               {formatEncounterType(encounter.type, t)}
             </CardTitle>
-            <CardDescription>
-              {encounter.responsibleProfessionalId}
-            </CardDescription>
           </CardHeader>
           <CardContent className='space-y-6'>
             <dl className='grid gap-4 sm:grid-cols-2'>
@@ -77,18 +81,6 @@ export function EncounterDetailCard({
               <EncounterInfoRow
                 label={t('detail.fields.status')}
                 value={formatEncounterStatus(encounter.status, t)}
-              />
-              <EncounterInfoRow
-                label={t('detail.fields.professional')}
-                value={encounter.responsibleProfessionalId}
-              />
-              <EncounterInfoRow
-                label={t('detail.fields.facilityId')}
-                value={encounter.facilityId}
-              />
-              <EncounterInfoRow
-                label={t('detail.fields.clinicalAreaId')}
-                value={encounter.clinicalAreaId}
               />
               <EncounterInfoRow
                 label={t('detail.fields.startedAt')}
@@ -104,11 +96,47 @@ export function EncounterDetailCard({
                   i18n.language,
                 )}
               />
-              <EncounterInfoRow
-                label={t('detail.fields.rowVersion')}
-                value={String(encounter.rowVersion)}
-              />
             </dl>
+
+            <Collapsible
+              open={showTechnicalDetails}
+              onOpenChange={setShowTechnicalDetails}
+              className='border-t border-border/60 pt-3'
+            >
+              <CollapsibleTrigger
+                className='flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs font-medium text-muted-foreground transition-colors outline-none select-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 data-open:text-foreground'
+                aria-label={t('detail.technicalDetails')}
+              >
+                <span>{t('detail.technicalDetails')}</span>
+                <ChevronDown
+                  className={cn(
+                    'size-3.5 shrink-0 transition-transform duration-150',
+                    showTechnicalDetails && 'rotate-180',
+                  )}
+                  aria-hidden='true'
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent className='data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0'>
+                <dl className='grid gap-4 pt-3 sm:grid-cols-2'>
+                  <EncounterInfoRow
+                    label={t('detail.fields.professional')}
+                    value={encounter.responsibleProfessionalId}
+                  />
+                  <EncounterInfoRow
+                    label={t('detail.fields.facilityId')}
+                    value={encounter.facilityId}
+                  />
+                  <EncounterInfoRow
+                    label={t('detail.fields.clinicalAreaId')}
+                    value={encounter.clinicalAreaId}
+                  />
+                  <EncounterInfoRow
+                    label={t('detail.fields.rowVersion')}
+                    value={String(encounter.rowVersion)}
+                  />
+                </dl>
+              </CollapsibleContent>
+            </Collapsible>
 
             {canAct ? (
               <div className='flex flex-wrap gap-2 border-t border-border/70 pt-4'>

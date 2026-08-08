@@ -52,14 +52,12 @@
     "editTitle": "Edit {{name}}",
     "createTitle": "Add a {{kind}}",
     "backToHub": "Back to administration",
-    "loadFailed": "This section could not be loaded.",
     "emptyTitle": "Nothing here yet",
     "emptyDescription": "No records match the current view. Add the first one to start configuring this section.",
     "emptyAction": "Add the first record",
     "conflictTitle": "This record changed elsewhere",
     "conflictDescription": "Another user updated this record while you were editing. Reload to see the latest version, or continue and your changes will be rejected.",
     "conflictReload": "Reload record",
-    "conflictKeepEditing": "Keep editing",
     "notEditable": "Read-only view",
     "notEditableDescription": "You can view this section, but you do not have permission to change it.",
     "columnCode": "Code",
@@ -86,9 +84,7 @@
     "nameRequired": "Workspace name is required.",
     "nameTooLong": "Workspace name must be 256 characters or fewer.",
     "saveSuccess": "Workspace settings saved.",
-    "saveError": "Could not save workspace settings.",
-    "loadFailed": "Could not load the hospital workspace.",
-    "loadError": "Failed to load the hospital workspace."
+    "loadFailed": "Could not load the hospital workspace."
   },
   "facilities": {
     "title": "Facilities",
@@ -107,7 +103,8 @@
     "nameLabel": "Facility name",
     "namePlaceholder": "e.g. Hospital Norte",
     "nameRequired": "Facility name is required.",
-    "nameTooLong": "Facility name must be 256 characters or fewer."
+    "nameTooLong": "Facility name must be 256 characters or fewer.",
+    "parentHelp": "Facility codes cannot change after creation."
   },
   "clinicalAreas": {
     "title": "Clinical areas",
@@ -166,7 +163,6 @@
     "editSuccess": "Document updated.",
     "codeLabel": "Document code",
     "codePlaceholder": "e.g. ADM-NOTE",
-    "codeHelp": "A stable code used by clients and URLs. Cannot be changed later.",
     "codeRequired": "Document code is required.",
     "codeTooLong": "Document code must be 64 characters or fewer.",
     "codeInvalid": "Use letters, numbers, and hyphens only.",

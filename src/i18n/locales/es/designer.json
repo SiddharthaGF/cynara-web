@@ -25,26 +25,48 @@
     "reload": "Recargar última versión",
     "keepEditing": "Seguir editando"
   },
-  "palette": {
-    "title": "Añadir pregunta",
-    "description": "Haz clic en un tipo para insertarlo en el formulario.",
-    "close": "Cerrar paleta"
-  },
   "fieldGroups": {
     "basic": "Básico",
     "advanced": "Avanzado",
     "clinical": "Clínico"
   },
   "fieldTypes": {
-    "text": { "label": "Respuesta corta", "description": "Texto de una línea" },
-    "textarea": { "label": "Párrafo", "description": "Texto multilínea" },
-    "number": { "label": "Número", "description": "Valores decimales" },
-    "integer": { "label": "Número entero", "description": "Valores enteros" },
-    "boolean": { "label": "Sí / No", "description": "Interruptor o casilla" },
-    "date": { "label": "Fecha", "description": "Fecha de calendario" },
-    "datetime": { "label": "Fecha y hora", "description": "Fecha y hora" },
-    "time": { "label": "Hora", "description": "Hora del día" },
-    "choice": { "label": "Opción", "description": "Una o varias opciones" },
+    "text": {
+      "label": "Respuesta corta",
+      "description": "Texto de una línea"
+    },
+    "textarea": {
+      "label": "Párrafo",
+      "description": "Texto multilínea"
+    },
+    "number": {
+      "label": "Número",
+      "description": "Valores decimales"
+    },
+    "integer": {
+      "label": "Número entero",
+      "description": "Valores enteros"
+    },
+    "boolean": {
+      "label": "Sí / No",
+      "description": "Interruptor o casilla"
+    },
+    "date": {
+      "label": "Fecha",
+      "description": "Fecha de calendario"
+    },
+    "datetime": {
+      "label": "Fecha y hora",
+      "description": "Fecha y hora"
+    },
+    "time": {
+      "label": "Hora",
+      "description": "Hora del día"
+    },
+    "choice": {
+      "label": "Opción",
+      "description": "Una o varias opciones"
+    },
     "group": {
       "label": "Sección",
       "description": "Agrupa preguntas relacionadas"
@@ -75,22 +97,17 @@
     "fieldSettings": "Ajustes del campo",
     "actionsMenu": "Acciones de la pregunta",
     "deleteQuestion": "Eliminar pregunta",
+    "deleteQuestionTitle": "¿Eliminar esta pregunta?",
+    "deleteQuestionDescription": "La pregunta y su configuración se eliminarán de este borrador. Esta acción no se puede deshacer.",
+    "cancel": "Cancelar",
     "insertQuestion": "Insertar pregunta aquí",
-    "insertQuestionShort": "Añadir",
     "insertQuestionTitle": "Añadir pregunta",
     "insertQuestionHint": "Elige el tipo para insertarla en este punto."
   },
   "preview": {
     "shortAnswer": "Texto de respuesta corta",
     "longAnswer": "Texto de respuesta larga",
-    "validationRules": "Reglas de validación",
-    "validationRange": "Rango",
-    "validationGlanceLabel": "Restricciones: {{summary}}",
     "glance": {
-      "range": "{{min}}–{{max}}",
-      "minOnly": "≥ {{value}}",
-      "maxOnly": "≤ {{value}}",
-      "lengthRange": "{{min}}–{{max}} car.",
       "step": "paso {{value}}",
       "decimals": "{{count}} dec",
       "conditionals_one": "{{count}} condicional",
@@ -125,8 +142,9 @@
     "close": "Cerrar ajustes del campo",
     "questionNumber": "Pregunta {{number}}",
     "codeLabel": "Código",
-    "presentation": "Apariencia",
+    "presentation": "Formato",
     "tabNavLabel": "Secciones del campo",
+    "advancedOptions": "Opciones avanzadas",
     "scopeNote": "Los cambios se autoguardan y aparecen para el personal clínico al publicar.",
     "placeholder": "Marcador de posición",
     "widget": "Widget",
@@ -158,7 +176,7 @@
     },
     "hidden": "Oculto por defecto",
     "timePresetNow": "Mostrar preset rápido \"Ahora\"",
-    "clinicalConstraints": "Datos clínicos",
+    "clinicalConstraints": "Datos",
     "clinicalDescription": "Descripción clínica",
     "clinicalDescriptionHelp": "Descripción clínica interna. No se muestra en el formulario.",
     "defaultValue": "Valor por defecto",
@@ -185,11 +203,9 @@
     "minItems": "Repeticiones mín.",
     "maxItems": "Repeticiones máx.",
     "clinicalBlock": "Bloque clínico",
-    "selectBlock": "Seleccionar bloque…",
     "version": "Versión",
     "latestDraft": "Último borrador",
-    "rules": "Lógica",
-    "conditionalLogic": "Lógica condicional",
+    "rules": "Reglas",
     "showWhen": "Visible cuando",
     "showWhenHelp": "Muestra este campo cuando otro coincide con un valor.",
     "enableWhen": "Habilitado cuando",
@@ -198,8 +214,6 @@
     "requireWhenHelp": "Haz obligatorio este campo cuando la condición sea verdadera.",
     "calculate": "Calcular desde",
     "calculateHelp": "Usa otro campo para calcular este valor. El campo debe ser de solo lectura.",
-    "selectFieldCode": "Seleccionar código de campo…",
-    "selectSourceField": "Seleccionar campo origen…",
     "noCondition": "Sin condición",
     "noCalculation": "Sin cálculo",
     "fieldCodePlaceholder": "Código de campo (ref)",
@@ -209,19 +223,36 @@
     "versionNotPublished": "La versión {{version}} no está publicada.",
     "linkedTo": "Vinculado a {{name}} @ {{version}}",
     "tabs": {
-      "presentation": "Apariencia",
-      "clinical": "Datos clínicos",
-      "rules": "Lógica"
+      "presentation": "Formato",
+      "clinical": "Datos",
+      "rules": "Reglas"
     }
+  },
+  "publish": {
+    "publish": "Publicar",
+    "statusDraft": "Borrador",
+    "statusReview": "En revisión",
+    "confirmTitle": "¿Publicar este formulario?",
+    "confirmBody": "Publicar hace que esta versión esté disponible en las consultas. Los documentos existentes conservan la versión con la que comenzaron. Para cambiarla más adelante, tendrás que publicar una versión nueva.",
+    "confirmAction": "Publicar",
+    "cancel": "Cancelar",
+    "backToDraft": "Volver a borrador",
+    "withdrawTitle": "¿Volver al borrador?",
+    "withdrawBody": "La versión se desbloqueará y podrás editarla de nuevo. No quedará publicada.",
+    "withdrawAction": "Volver a borrador",
+    "publishedTitle": "Formulario publicado",
+    "publishedBody": "La versión {{version}} ya está disponible en las consultas.",
+    "continueEditing": "Seguir editando",
+    "backToForms": "Volver a formularios",
+    "saveFailed": "Corrige los problemas de validación antes de publicar.",
+    "errorGeneric": "No se pudo publicar el formulario. Inténtalo de nuevo.",
+    "errorNoDraft": "El borrador del formulario ya no está disponible. Recarga la página e inténtalo de nuevo."
   },
   "formPreview": {
     "open": "Vista previa",
     "title": "Vista previa del formulario",
     "close": "Cerrar vista previa",
-    "description": "Prueba interactiva de {{code}} — los valores permanecen solo en esta sesión.",
     "disclaimer": "La vista previa usa datos de prueba simulados. Nada de esto se guarda como respuesta clínica.",
-    "simulationLabel": "Simulación",
-    "testDataBadge": "Solo datos de prueba",
     "resetData": "Restablecer datos",
     "runValidation": "Ejecutar validación",
     "tabPreview": "Formulario",
@@ -233,22 +264,15 @@
     "copyJson": "Copiar JSON",
     "downloadJson": "Descargar JSON",
     "jsonCopied": "Copiado",
-    "viewportLabel": "Vista del preview",
     "viewportDesktop": "Vista escritorio",
-    "viewportMobile": "Vista móvil",
-    "viewportPlain": "Vista sin marco",
-    "viewportPlainShort": "Plano",
     "viewportDesktopShort": "Escritorio",
+    "viewportMobile": "Vista móvil",
     "viewportMobileShort": "Móvil",
     "deviceLabBadge": "Lab dispositivo",
     "deviceDockHint": "Solo datos de prueba — compartidos con la vista previa principal.",
-    "viewportSheetHint": "Escritorio y móvil abren el lab de dispositivo.",
     "openInDevice": "Ver en dispositivo",
     "openInDeviceHint": "Mira cómo se ve este formulario en escritorio y móvil.",
     "deviceSwitcherLabel": "Dispositivo de previsualización",
-    "deviceTitleDesktop": "Vista previa en escritorio",
-    "deviceTitleMobile": "Vista previa en móvil",
-    "deviceDisclaimer": "Marco de dispositivo simulado para probar el layout. Los datos de prueba se comparten con la vista previa principal.",
     "ruleInspection": "Reglas y validación",
     "ruleInspectionHint": "Evaluación de reglas en vivo con los valores de prueba actuales.",
     "configWarnings_one": "{{count}} advertencia de configuración",
@@ -273,7 +297,6 @@
       "required": "Obligatoriedad",
       "calculate": "Cálculo"
     },
-    "hasConditionalRules": "Tiene reglas condicionales",
     "crossFieldValidation": "Validación entre campos",
     "addRow": "Añadir fila",
     "removeRow": "Eliminar",
@@ -332,21 +355,18 @@
     "fieldSettings": {
       "fab": "Abrir ajustes del campo",
       "fabHint": "Inspecciona la pregunta seleccionada",
-      "description": "Presentación, mapeado clínico y reglas de la pregunta seleccionada.",
       "sheetTitle": "Ajustes del campo",
       "sheetSubtitle": "UI, mapeo clínico y reglas"
     },
     "ai": {
       "fab": "Abrir chat IA",
       "fabHint": "Habla con el asistente del formulario",
-      "description": "Conversa con el asistente mientras el lienzo sigue siendo editable.",
       "sheetTitle": "Cynara",
       "sheetSubtitle": "Habla con el asistente del formulario"
     }
   },
   "ai": {
     "open": "Chat IA",
-    "eyebrow": "Asistente de formularios",
     "title": "Cynara",
     "description": "Describe qué deben capturar los clínicos. Pide correcciones aquí — el lienzo sigue editable a mano.",
     "emptyTitle": "¿En qué puedo ayudarte?",
@@ -388,9 +408,7 @@
     "applying": "Generando cambios del esquema…",
     "phaseSchemaLong": "Generando los cambios del esquema… esto puede tardar varios minutos en formularios grandes",
     "applied": "Aplicado al borrador",
-    "unchanged": "No se aplicaron cambios al borrador",
     "errorTimeout": "Generar un formulario grande puede tardar varios minutos. Si llevas más de 10 minutos sin ver cambios, haz clic en Reintentar o simplifica tu petición.",
-    "thinkingLabel": "Pensó",
     "you": "Tú",
     "assistant": "Cynara",
     "model": "Modelo: {{model}}",

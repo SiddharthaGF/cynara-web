@@ -52,14 +52,12 @@
     "editTitle": "Editar {{name}}",
     "createTitle": "Agregar {{kind}}",
     "backToHub": "Volver a administración",
-    "loadFailed": "Esta sección no pudo cargarse.",
     "emptyTitle": "Aún no hay nada aquí",
     "emptyDescription": "Ningún registro coincide con la vista actual. Agregue el primero para empezar a configurar esta sección.",
     "emptyAction": "Agregar el primer registro",
     "conflictTitle": "Este registro cambió en otro lugar",
     "conflictDescription": "Otro usuario actualizó este registro mientras usted lo editaba. Recargue para ver la versión más reciente, o continúe y sus cambios serán rechazados.",
     "conflictReload": "Recargar registro",
-    "conflictKeepEditing": "Seguir editando",
     "notEditable": "Vista de solo lectura",
     "notEditableDescription": "Puede ver esta sección, pero no tiene permiso para modificarla.",
     "columnCode": "Código",
@@ -86,9 +84,7 @@
     "nameRequired": "El nombre del espacio de trabajo es obligatorio.",
     "nameTooLong": "El nombre debe tener 256 caracteres o menos.",
     "saveSuccess": "Configuración del espacio guardada.",
-    "saveError": "No se pudo guardar la configuración del espacio.",
-    "loadFailed": "No se pudo cargar el espacio de trabajo del hospital.",
-    "loadError": "No se pudo cargar el espacio de trabajo del hospital."
+    "loadFailed": "No se pudo cargar el espacio de trabajo del hospital."
   },
   "facilities": {
     "title": "Instalaciones",
@@ -107,7 +103,8 @@
     "nameLabel": "Nombre de instalación",
     "namePlaceholder": "p. ej. Hospital Norte",
     "nameRequired": "El nombre de instalación es obligatorio.",
-    "nameTooLong": "El nombre debe tener 256 caracteres o menos."
+    "nameTooLong": "El nombre debe tener 256 caracteres o menos.",
+    "parentHelp": "Los códigos de instalación no pueden cambiar después de la creación."
   },
   "clinicalAreas": {
     "title": "Áreas clínicas",
@@ -166,7 +163,6 @@
     "editSuccess": "Documento actualizado.",
     "codeLabel": "Código de documento",
     "codePlaceholder": "p. ej. ADM-NOTE",
-    "codeHelp": "Un código estable usado por clientes y URL. No se puede cambiar después.",
     "codeRequired": "El código de documento es obligatorio.",
     "codeTooLong": "El código debe tener 64 caracteres o menos.",
     "codeInvalid": "Use solo letras, números y guiones.",

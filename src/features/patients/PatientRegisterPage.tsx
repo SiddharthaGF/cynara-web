@@ -39,15 +39,19 @@ export function PatientRegisterPage(): JSX.Element {
             </EmptyHeader>
           </Empty>
           <div className='mt-4'>
-            <Link
-              to='/$locale/patients'
-              params={{ locale }}
+            <Button
+              variant='ghost'
+              nativeButton={false}
+              render={
+                <Link
+                  to='/$locale/patients'
+                  params={{ locale }}
+                />
+              }
             >
-              <Button variant='ghost'>
-                <ArrowLeft className='size-4' />
-                {t('register.backToList')}
-              </Button>
-            </Link>
+              <ArrowLeft className='size-4' />
+              {t('register.backToList')}
+            </Button>
           </div>
         </div>
       </AppShell>
@@ -68,19 +72,21 @@ export function PatientRegisterPage(): JSX.Element {
             }
             className='mb-8'
           >
-            <Link
-              to='/$locale/patients'
-              params={{ locale }}
+            <Button
+              variant='ghost'
+              size='sm'
+              nativeButton={false}
+              className='mb-4 -ml-2'
+              render={
+                <Link
+                  to='/$locale/patients'
+                  params={{ locale }}
+                />
+              }
             >
-              <Button
-                variant='ghost'
-                size='sm'
-                className='mb-4 -ml-2'
-              >
-                <ArrowLeft className='size-4' />
-                {t('register.backToList')}
-              </Button>
-            </Link>
+              <ArrowLeft className='size-4' />
+              {t('register.backToList')}
+            </Button>
             <p className='mb-3 inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
               <UserPlus className='size-3' />
               {t('register.eyebrow')}

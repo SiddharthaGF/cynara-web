@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { ClipboardList, Plus } from 'lucide-react';
 import type { JSX } from 'react';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { EncounterDto } from '@/api/encounters.ts';
@@ -23,7 +22,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
-import { EncounterCreateDialog } from '@/features/encounters/EncounterCreateDialog.tsx';
 import {
   encounterStatusBadgeVariant,
   formatEncounterDateTime,
@@ -36,19 +34,19 @@ import { useCapabilities } from '@/hooks/use-capabilities.ts';
 interface PatientEncountersPanelProps {
   patientId: string;
   locale: string;
-  onForbidden: (message: string) => void;
+  /** Opens the encounter-create dialog owned by the patient chart page. */
+  onNewEncounter: () => void;
 }
 
 export function PatientEncountersPanel({
   patientId,
   locale,
-  onForbidden,
+  onNewEncounter,
 }: PatientEncountersPanelProps): JSX.Element {
   const { t, i18n } = useTranslation(['encounters', 'api']);
   const { can } = useCapabilities();
   const { encounters, isLoading, error, isForbidden } =
     usePatientEncounters(patientId);
-  const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <Card
@@ -72,9 +70,7 @@ export function PatientEncountersPanel({
           <Button
             size='sm'
             data-testid='encounter-create-open'
-            onClick={() => {
-              setCreateOpen(true);
-            }}
+            onClick={onNewEncounter}
           >
             <Plus className='size-3.5' />
             {t('list.create')}
@@ -116,6 +112,17 @@ export function PatientEncountersPanel({
               <EmptyTitle>{t('list.emptyTitle')}</EmptyTitle>
               <EmptyDescription>{t('list.emptyDescription')}</EmptyDescription>
             </EmptyHeader>
+            {!isForbidden && can('write', 'Encounter') ? (
+              <Button
+                size='sm'
+                className='mt-4'
+                data-testid='encounter-list-empty-action'
+                onClick={onNewEncounter}
+              >
+                <Plus className='size-3.5' />
+                {t('list.create')}
+              </Button>
+            ) : null}
           </Empty>
         ) : null}
 
@@ -136,17 +143,6 @@ export function PatientEncountersPanel({
           </ul>
         ) : null}
       </CardContent>
-
-      <EncounterCreateDialog
-        key={createOpen ? 'open' : 'closed'}
-        patientId={patientId}
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onForbidden={onForbidden}
-        onCreated={() => {
-          setCreateOpen(false);
-        }}
-      />
     </Card>
   );
 }
@@ -197,27 +193,25 @@ function EncounterListRow({
             ? ` · ${t('list.columns.endedAt')}: ${formatEncounterDateTime(encounter.endedAt, language)}`
             : null}
         </p>
-        <p className='truncate text-sm text-muted-foreground'>
-          {t('list.columns.professional')}:{' '}
-          {encounter.responsibleProfessionalId}
-        </p>
       </div>
-      <Link
-        to='/$locale/patients/$id/encounters/$encounterId'
-        params={{
-          locale,
-          id: patientId,
-          encounterId: encounter.id,
-        }}
+      <Button
+        variant='outline'
+        size='sm'
+        nativeButton={false}
+        data-testid='encounter-list-open'
+        render={
+          <Link
+            to='/$locale/patients/$id/encounters/$encounterId'
+            params={{
+              locale,
+              id: patientId,
+              encounterId: encounter.id,
+            }}
+          />
+        }
       >
-        <Button
-          variant='outline'
-          size='sm'
-          data-testid='encounter-list-open'
-        >
-          {t('list.viewDetail')}
-        </Button>
-      </Link>
+        {t('list.viewDetail')}
+      </Button>
     </li>
   );
 }

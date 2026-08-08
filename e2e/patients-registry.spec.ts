@@ -222,6 +222,41 @@ test.describe('patient registration and search (CYN-50)', () => {
     ).toBeVisible();
   });
 
+  test('keeps the chart tab in the URL across reloads', async ({
+    page,
+    request,
+    baseURL,
+  }) => {
+    if (!baseURL) {
+      test.skip(true, 'Playwright baseURL is required');
+      return;
+    }
+
+    const created = await createPatientViaApi(request, baseURL, {
+      mrn: uniqueMrn('TAB'),
+    });
+
+    await page.goto(`/en/patients/${created.id}/`, {
+      waitUntil: 'domcontentloaded',
+    });
+    await expect(page.getByTestId('hc-tab-overview')).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page).toHaveURL(/[?&]tab=overview/);
+
+    await page.getByTestId('hc-tab-documents').click();
+    await expect(page).toHaveURL(/[?&]tab=documents/);
+    await expect(page.getByTestId('patient-documents-timeline')).toBeVisible({
+      timeout: 20_000,
+    });
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(page).toHaveURL(/[?&]tab=documents/);
+    await expect(page.getByTestId('patient-documents-timeline')).toBeVisible({
+      timeout: 30_000,
+    });
+  });
+
   test('paginates search results from the API', async ({
     page,
     request,

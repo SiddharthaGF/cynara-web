@@ -1,25 +1,20 @@
-import { ArrowUpIcon, RotateCwIcon, SquareIcon } from 'lucide-react';
+import { ArrowUpIcon, SquareIcon } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/components/ui/button.tsx';
 import { TooltipIconButton } from '@/components/ui/tooltip-button.tsx';
 
 interface ChatComposerActionsProps {
-  canRetry: boolean;
   canSubmit: boolean;
   isBusy: boolean;
   composerHint: string | null;
-  onRetry: () => void;
   onStop: () => void;
 }
 
 export function ChatComposerActions({
-  canRetry,
   canSubmit,
   isBusy,
   composerHint,
-  onRetry,
   onStop,
 }: ChatComposerActionsProps): JSX.Element {
   const { t } = useTranslation('designer');
@@ -30,18 +25,6 @@ export function ChatComposerActions({
         {composerHint}
       </p>
       <div className='flex items-center gap-1.5'>
-        {canRetry ? (
-          <Button
-            type='button'
-            size='sm'
-            variant='ghost'
-            className='h-8 gap-1.5 rounded-full px-2.5 text-xs'
-            onClick={onRetry}
-          >
-            <RotateCwIcon className='size-3.5' />
-            {t('ai.retry')}
-          </Button>
-        ) : null}
         {isBusy ? (
           <>
             {canSubmit ? (

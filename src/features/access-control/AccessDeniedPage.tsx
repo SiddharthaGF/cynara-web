@@ -49,15 +49,19 @@ export function AccessDeniedPage(): JSX.Element {
             <EmptyDescription>{t('access.deniedDescription')}</EmptyDescription>
           </EmptyHeader>
           {backTarget ? (
-            <Link
-              to={backTarget}
-              params={{ locale }}
+            <Button
+              variant='outline'
+              nativeButton={false}
+              render={
+                <Link
+                  to={backTarget}
+                  params={{ locale }}
+                />
+              }
             >
-              <Button variant='outline'>
-                <ArrowLeft className='size-4' />
-                {t('access.backToStart')}
-              </Button>
-            </Link>
+              <ArrowLeft className='size-4' />
+              {t('access.backToStart')}
+            </Button>
           ) : null}
         </Empty>
       </div>

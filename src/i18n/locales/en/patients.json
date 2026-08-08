@@ -33,14 +33,13 @@
     "emptyTitle": "No patients found",
     "emptyDescription": "Try a different search term or register a new patient.",
     "registerPatient": "Register patient",
-    "viewDetail": "View",
-    "loadError": "Failed to load patients.",
+    "viewDetail": "Open clinical record",
     "columns": {
       "mrn": "MRN",
       "name": "Name",
       "birthDate": "DOB",
-      "sex": "Sex",
-      "status": "Status"
+      "status": "Status",
+      "actions": "Actions"
     }
   },
   "register": {
@@ -49,7 +48,6 @@
     "subtitle": "Enter demographic information to create a new patient record.",
     "submit": "Register patient",
     "submitting": "Registering…",
-    "success": "Patient registered successfully.",
     "backToList": "Back to patient list",
     "fields": {
       "mrn": "Medical record number (MRN)",
@@ -81,25 +79,40 @@
       "familyNameTooLong": "Last name must be 128 characters or fewer.",
       "birthDateRequired": "Date of birth is required.",
       "birthDateInvalid": "Enter a valid date (YYYY-MM-DD).",
-      "sexRequired": "Sex is required.",
-      "createFailed": "Failed to register patient."
+      "sexRequired": "Sex is required."
     }
   },
   "detail": {
-    "eyebrow": "Patient record",
-    "title": "Patient details",
+    "eyebrow": "Clinical record",
+    "title": "Clinical record",
+    "newEncounter": "New consultation",
+    "cancel": "Cancel",
+    "deleteConfirmTitle": "Delete this patient?",
+    "deleteConfirmBody": "The patient record will be hidden from searches. Historical consultations and documents remain readable.",
+    "tabs": {
+      "overview": "Overview",
+      "encounters": "Consultations",
+      "documents": "Documents",
+      "journeys": "Journey"
+    },
+    "overview": {
+      "openEncounter": "Open consultation",
+      "noOpenEncounter": "No open consultations",
+      "noOpenEncounterHint": "Start a consultation to document this visit.",
+      "recentDocuments": "Recent documents",
+      "noRecentDocuments": "No documents yet",
+      "noRecentDocumentsHint": "Documents appear here once started within a consultation.",
+      "viewAllEncounters": "View all consultations",
+      "viewAllDocuments": "View all documents"
+    },
     "edit": "Edit",
     "editTitle": "Edit patient",
     "save": "Save changes",
     "saving": "Saving…",
     "delete": "Delete",
-    "deleteConfirm": "Are you sure you want to remove this patient? This action can be undone by an administrator.",
     "deleteSuccess": "Patient record removed.",
-    "saveSuccess": "Patient updated successfully.",
     "backToList": "Back to patient list",
     "loadError": "Failed to load patient details.",
-    "updateError": "Failed to update patient.",
-    "deleteError": "Failed to delete patient.",
     "notFound": "Patient not found.",
     "mrnImmutable": "MRN cannot be changed after registration.",
     "fields": {
@@ -107,6 +120,7 @@
       "givenName": "First name",
       "familyName": "Last name",
       "birthDate": "Date of birth",
+      "age": "Age",
       "sex": "Sex",
       "nationalId": "National ID",
       "status": "Status",
@@ -118,10 +132,6 @@
       "male": "Male",
       "female": "Female",
       "unknown": "Other"
-    },
-    "statusOptions": {
-      "active": "Active",
-      "retired": "Retired"
     }
   },
   "sex": {

@@ -383,14 +383,14 @@ test.describe('clinical document status (CYN-58)', () => {
     await expect(page.locator('#weight')).toBeDisabled();
     await expect(page.locator('#smoker')).toBeDisabled();
 
-    // The encounter panel still lists documents but hides the start button.
+    // The encounter panel still lists documents but hides the start actions.
     await page.goto(`/en/patients/${patient.id}/encounters/${encounter.id}/`, {
       waitUntil: 'domcontentloaded',
     });
     await expect(page.getByTestId('encounter-documents-panel')).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId('start-document-open')).toHaveCount(0);
+    await expect(page.getByTestId('encounter-available-forms')).toHaveCount(0);
     await expect(
       page
         .getByTestId('document-list-row')

@@ -1,7 +1,6 @@
 {
   "errors": {
     "network": "We could not reach Cynara. Check your connection and try again.",
-    "requestFailed": "Request failed.",
     "notFound": "We could not find what you were looking for.",
     "validation": "Some fields need attention.",
     "conflict": "This record changed while you were editing it. Reload to continue.",
@@ -11,11 +10,5 @@
     "forbidden": "You do not have permission to perform this action.",
     "rateLimited": "Too many requests. Please slow down and try again.",
     "unknown": "Something went wrong."
-  },
-  "status": {
-    "loading": "Loading…",
-    "empty": "Nothing here yet.",
-    "saving": "Saving…",
-    "saved": "Saved"
   }
 }

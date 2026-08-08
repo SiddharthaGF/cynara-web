@@ -36,6 +36,10 @@ test.describe('encounter views and lifecycle (CYN-52)', () => {
     await page.goto(`/en/patients/${patient.id}/`, {
       waitUntil: 'domcontentloaded',
     });
+    await expect(page.getByTestId('hc-tab-encounters')).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.getByTestId('hc-tab-encounters').click();
     await expect(page.getByTestId('patient-encounters-panel')).toBeVisible({
       timeout: 30_000,
     });
@@ -64,14 +68,7 @@ test.describe('encounter views and lifecycle (CYN-52)', () => {
 
     await page.getByTestId('encounter-create-submit').click();
 
-    await expect(page.getByTestId('encounter-list')).toBeVisible({
-      timeout: 30_000,
-    });
-    await expect(
-      page.getByTestId('encounter-list-row').first(),
-    ).toHaveAttribute('data-status', 'open');
-
-    await page.getByTestId('encounter-list-open').first().click();
+    // Creation navigates straight to the new consultation detail.
     await expect(page.getByTestId('encounter-detail-view')).toBeVisible({
       timeout: 30_000,
     });
@@ -131,6 +128,10 @@ test.describe('encounter views and lifecycle (CYN-52)', () => {
     await page.goto(`/en/patients/${patient.id}/`, {
       waitUntil: 'domcontentloaded',
     });
+    await expect(page.getByTestId('hc-tab-encounters')).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.getByTestId('hc-tab-encounters').click();
     await expect(
       page.getByTestId('encounter-list-row').first(),
     ).toHaveAttribute('data-historical', 'true');

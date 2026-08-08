@@ -10,36 +10,36 @@ import { ApiError } from '@/api/client.ts';
  */
 export function describeApiError(error: unknown, translate: TFunction): string {
   if (!(error instanceof ApiError)) {
-    return translate('errors.unknown');
+    return translate('api:errors.unknown');
   }
 
   const { status } = error;
   if (status === 0 || status === 504 || status === 502 || status === 503) {
-    return translate('errors.network');
+    return translate('api:errors.network');
   }
   if (status === 401) {
-    return translate('errors.unauthorized');
+    return translate('api:errors.unauthorized');
   }
   if (status === 403) {
-    return translate('errors.forbidden');
+    return translate('api:errors.forbidden');
   }
   if (status === 404) {
-    return translate('errors.notFound');
+    return translate('api:errors.notFound');
   }
   if (status === 409) {
-    return translate('errors.conflict');
+    return translate('api:errors.conflict');
   }
   if (status === 412) {
-    return translate('errors.preconditionFailed');
+    return translate('api:errors.preconditionFailed');
   }
   if (status === 422 || status === 400) {
-    return translate('errors.validation');
+    return translate('api:errors.validation');
   }
   if (status === 429) {
-    return translate('errors.rateLimited');
+    return translate('api:errors.rateLimited');
   }
   if (status >= 500) {
-    return translate('errors.server');
+    return translate('api:errors.server');
   }
 
   if (error.message && error.message.trim().length > 0) {
@@ -48,5 +48,5 @@ export function describeApiError(error: unknown, translate: TFunction): string {
   if (error.title && error.title.trim().length > 0) {
     return error.title;
   }
-  return translate('errors.unknown');
+  return translate('api:errors.unknown');
 }

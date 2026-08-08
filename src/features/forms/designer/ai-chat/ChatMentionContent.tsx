@@ -14,7 +14,7 @@ import {
   type MentionableFieldType,
 } from './fieldTypeMentions.ts';
 
-interface MentionHit {
+export interface MentionHit {
   index: number;
   length: number;
   kind: 'field' | 'type';
@@ -35,11 +35,16 @@ export function ChatMentionContent({
   return <>{renderContentWithMentions(content, fieldsById, typesBySlug)}</>;
 }
 
-function renderContentWithMentions(
+/**
+ * Finds `@field-id` and `#type-slug` mentions in raw chat text, resolved to
+ * known fields/types. Shared by the plain-text renderer and the markdown
+ * renderer so mention chips behave identically in both.
+ */
+export function scanMentionHits(
   content: string,
   fieldsById?: Map<string, MentionableField>,
   typesBySlug?: Map<string, MentionableFieldType>,
-): ReactNode {
+): MentionHit[] {
   const hits: MentionHit[] = [];
 
   if (fieldsById && fieldsById.size > 0) {
@@ -76,6 +81,16 @@ function renderContentWithMentions(
     }
   }
 
+  return hits;
+}
+
+function renderContentWithMentions(
+  content: string,
+  fieldsById?: Map<string, MentionableField>,
+  typesBySlug?: Map<string, MentionableFieldType>,
+): ReactNode {
+  const hits = scanMentionHits(content, fieldsById, typesBySlug);
+
   if (hits.length === 0) {
     return content;
   }
@@ -108,7 +123,7 @@ function renderContentWithMentions(
   return nodes;
 }
 
-function MentionChip({ hit }: { hit: MentionHit }): JSX.Element {
+export function MentionChip({ hit }: { hit: MentionHit }): JSX.Element {
   const { t } = useTranslation('designer');
   const prefix = hit.kind === 'field' ? '@' : '#';
 

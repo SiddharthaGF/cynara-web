@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { UserCircle } from 'lucide-react';
+import { ClipboardPlus, UserCircle, UserPlus } from 'lucide-react';
 import { m, useReducedMotion } from 'motion/react';
 import type { JSX } from 'react';
 import { memo, useState } from 'react';
@@ -30,6 +30,7 @@ import {
   formatPatientStatus,
 } from '@/features/patients/patientForm.ts';
 import type { ListPatientsParams } from '@/features/patients/usePatientsCatalog.ts';
+import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
 interface SearchFormValues {
   mrn: string;
@@ -161,15 +162,25 @@ interface PatientResultsTableProps {
   patients: PatientDto[];
   isLoading: boolean;
   locale: string;
+  /** Opens the encounter-create dialog for a patient directly from a search row. */
+  onNewEncounter: (patient: PatientDto) => void;
+  /** Registry framing shows an inline register action in the empty state. */
+  register?: boolean;
+  canRegister?: boolean;
 }
 
 export function PatientResultsTable({
   patients,
   isLoading,
   locale,
+  onNewEncounter,
+  register = false,
+  canRegister = false,
 }: PatientResultsTableProps): JSX.Element {
-  const { t } = useTranslation('patients');
+  const { t } = useTranslation(['patients', 'encounters']);
+  const { can } = useCapabilities();
   const reduceMotion = useReducedMotion();
+  const canCreateEncounter = can('write', 'Encounter');
 
   if (isLoading) {
     return (
@@ -194,6 +205,22 @@ export function PatientResultsTable({
           <EmptyTitle className='text-lg'>{t('search.emptyTitle')}</EmptyTitle>
           <EmptyDescription>{t('search.emptyDescription')}</EmptyDescription>
         </EmptyHeader>
+        {register && canRegister ? (
+          <Button
+            variant='outline'
+            nativeButton={false}
+            data-testid='patient-search-empty-register'
+            render={
+              <Link
+                to='/$locale/patients/register'
+                params={{ locale }}
+              />
+            }
+          >
+            <UserPlus className='size-4' />
+            {t('search.registerPatient')}
+          </Button>
+        ) : null}
       </Empty>
     );
   }
@@ -215,7 +242,7 @@ export function PatientResultsTable({
             <TableHead>{t('detail.fields.sex')}</TableHead>
             <TableHead>{t('search.columns.status')}</TableHead>
             <TableHead className='text-right'>
-              <span className='sr-only'>Actions</span>
+              <span className='sr-only'>{t('search.columns.actions')}</span>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -260,19 +287,34 @@ export function PatientResultsTable({
                 </span>
               </TableCell>
               <TableCell className='text-right'>
-                <Link
-                  to='/$locale/patients/$id'
-                  params={{ locale, id: patient.id }}
-                >
+                <div className='flex items-center justify-end gap-1'>
+                  {canCreateEncounter ? (
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      data-testid='patient-search-new-encounter'
+                      onClick={() => onNewEncounter(patient)}
+                    >
+                      <ClipboardPlus className='size-4' />
+                      {t('encounters:list.create')}
+                    </Button>
+                  ) : null}
                   <Button
                     variant='ghost'
                     size='sm'
+                    nativeButton={false}
                     data-testid='patient-search-view'
+                    render={
+                      <Link
+                        to='/$locale/patients/$id'
+                        params={{ locale, id: patient.id }}
+                      />
+                    }
                   >
                     <UserCircle className='size-4' />
                     {t('search.viewDetail')}
                   </Button>
-                </Link>
+                </div>
               </TableCell>
             </m.tr>
           ))}

@@ -43,10 +43,6 @@ export function DocumentMetadataGrid({
           value={formatClinicalDocumentStatus(document.status, t)}
         />
         <DocumentInfoRow
-          label={t('detail.fields.author')}
-          value={document.authorId ?? t('detail.unknownAuthor')}
-        />
-        <DocumentInfoRow
           label={t('detail.fields.createdAt')}
           value={formatClinicalDocumentDateTime(document.createdAt, language)}
         />
@@ -57,10 +53,6 @@ export function DocumentMetadataGrid({
         <DocumentInfoRow
           label={t('detail.fields.completedAt')}
           value={formatClinicalDocumentDateTime(document.completedAt, language)}
-        />
-        <DocumentInfoRow
-          label={t('detail.fields.rowVersion')}
-          value={String(document.rowVersion)}
         />
       </dl>
 

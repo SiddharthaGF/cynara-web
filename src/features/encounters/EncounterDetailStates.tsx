@@ -47,15 +47,19 @@ export function EncounterDetailUnavailable({
           </EmptyHeader>
         </Empty>
         <div className='mt-4'>
-          <Link
-            to='/$locale/patients/$id'
-            params={{ locale, id: patientId }}
+          <Button
+            variant='ghost'
+            nativeButton={false}
+            render={
+              <Link
+                to='/$locale/patients/$id'
+                params={{ locale, id: patientId }}
+              />
+            }
           >
-            <Button variant='ghost'>
-              <ArrowLeft className='size-4' />
-              {t('detail.backToPatient')}
-            </Button>
-          </Link>
+            <ArrowLeft className='size-4' />
+            {t('detail.backToPatient')}
+          </Button>
         </div>
       </div>
     </AppShell>

@@ -8,6 +8,9 @@ import {
   getWorkflowVersion as sdkGetWorkflowVersion,
   patchWorkflowVersion as sdkPatchWorkflowVersion,
   postWorkflowDefinition as sdkPostWorkflowDefinition,
+  publishWorkflowVersion as sdkPublishWorkflowVersion,
+  submitWorkflowReview as sdkSubmitWorkflowReview,
+  withdrawWorkflowReview as sdkWithdrawWorkflowReview,
   type AttributesInUpdateWorkflowVersionRequest,
   type DataInWorkflowDefinitionResponse,
   type DataInWorkflowVersionResponse,
@@ -16,6 +19,7 @@ import {
 } from '@/api/generated';
 import {
   buildPaginatedQuery,
+  fetchAllCollectionPages,
   includedResources,
   relationshipId,
   relationshipIds,
@@ -37,10 +41,13 @@ type WorkflowVersionResource = Pick<
   'id' | 'attributes' | 'relationships'
 >;
 
+/** Page size for full-catalog reads; code lookups flatten every page. */
+const DEFINITIONS_COLLECTION_PAGE_SIZE = 100;
+
 function listWorkflowsQuery(): Record<string, string> {
   return buildPaginatedQuery({
     include: ['versions'],
-    pageSize: 100,
+    pageSize: DEFINITIONS_COLLECTION_PAGE_SIZE,
     sort: 'code',
   });
 }
@@ -162,17 +169,26 @@ async function getDefinitionByCode(code: string): Promise<{
   definition: WorkflowDefinitionResource;
   versions: Map<string, WorkflowVersionResource>;
 }> {
-  const { data } = await sdkGetWorkflowDefinitionCollection({
-    headers: contractHeaders(),
-    query: { query: listWorkflowsQuery() },
-  });
-  const definition = data.data.find((item) => item.attributes?.code === code);
+  const collection = await fetchAllCollectionPages(
+    listWorkflowsQuery(),
+    DEFINITIONS_COLLECTION_PAGE_SIZE,
+    async (query) => {
+      const { data } = await sdkGetWorkflowDefinitionCollection({
+        headers: contractHeaders(),
+        query: { query },
+      });
+      return data;
+    },
+  );
+  const definition = collection.data.find(
+    (item) => item.attributes?.code === code,
+  );
   if (!definition) {
     throw new ApiError(404, 'Not Found', `Workflow '${code}' was not found.`);
   }
   return {
     definition,
-    versions: versionById(data.included ?? []),
+    versions: versionById(collection.included ?? []),
   };
 }
 
@@ -380,4 +396,62 @@ export async function createWorkflowDraft(
     headers: contractHeaders(),
   });
   return getWorkflowDraft(code);
+}
+
+type LifecycleTransition = 'submit-review' | 'withdraw-review' | 'publish';
+
+async function transitionWorkflowVersion(
+  versionId: string,
+  rowVersion: number,
+  transition: LifecycleTransition,
+): Promise<WorkflowVersion> {
+  const headers = contractHeaders();
+  const query = { rowVersion };
+  if (transition === 'submit-review') {
+    await sdkSubmitWorkflowReview({
+      path: { id: versionId },
+      headers,
+      query,
+    });
+  } else if (transition === 'withdraw-review') {
+    await sdkWithdrawWorkflowReview({
+      path: { id: versionId },
+      headers,
+      query,
+    });
+  } else {
+    await sdkPublishWorkflowVersion({
+      path: { id: versionId },
+      headers,
+      query,
+    });
+  }
+  return getWorkflowVersionSnapshot(versionId);
+}
+
+/**
+ * Moves an editable draft to the review state. The schema locks and the draft
+ * becomes read-only until it is published or withdrawn.
+ */
+export async function submitWorkflowReview(
+  versionId: string,
+  rowVersion: number,
+): Promise<WorkflowVersion> {
+  return transitionWorkflowVersion(versionId, rowVersion, 'submit-review');
+}
+
+/** Returns a review-state version to an editable draft. */
+export async function withdrawWorkflowReview(
+  versionId: string,
+  rowVersion: number,
+): Promise<WorkflowVersion> {
+  return transitionWorkflowVersion(versionId, rowVersion, 'withdraw-review');
+}
+
+/** Publishes a reviewed version, making it drive patient pipelines. */
+export async function publishWorkflow(
+  versionId: string,
+  rowVersion: number,
+): Promise<WorkflowVersion> {
+  return transitionWorkflowVersion(versionId, rowVersion, 'publish');
 }

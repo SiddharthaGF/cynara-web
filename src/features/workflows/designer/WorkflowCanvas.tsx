@@ -16,22 +16,40 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu.tsx';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog.tsx';
 import { outgoingEdges } from '@/features/workflows/model/workflowGraph.ts';
 import type {
   WorkflowGraph,
+  WorkflowNode,
   WorkflowNodeType,
   WorkflowValidationIssue,
 } from '@/features/workflows/types.ts';
+import { useLongPress } from '@/hooks/use-long-press.ts';
 import { useTheme } from '@/hooks/use-theme.ts';
 
 import { WorkflowFlowEdge } from './flow/FlowEdge.tsx';
 import { WorkflowFlowNode } from './flow/FlowNode.tsx';
 import { useWorkflowFlow } from './flow/useWorkflowFlow.ts';
 import {
+  canAddStepAfterTarget,
   WorkflowCanvasContextMenu,
+  resolveContextMenuTarget,
   type WorkflowContextMenuAction,
   type WorkflowContextMenuTarget,
 } from './flow/WorkflowCanvasContextMenu.tsx';
+import { WorkflowCanvasAddMenu } from './WorkflowCanvasAddMenu.tsx';
+import { WorkflowCanvasGuidance } from './WorkflowCanvasGuidance.tsx';
 
 const NODE_TYPES = {
   start: WorkflowFlowNode,
@@ -56,6 +74,9 @@ interface WorkflowCanvasProps {
   onAddNode: (type: WorkflowNodeType) => void;
   onDuplicateNode: (nodeId: string) => void;
   onOpenSettings: (nodeId: string) => void;
+  onUpdateNode: (nodeId: string, patch: Partial<WorkflowNode>) => void;
+  /** Re-ids a task/decision node from its name when a name edit commits. */
+  onCommitNodeName: (nodeId: string, name: string) => void;
   onConnectNodes: (from: string, to: string) => void;
   onRemoveNode: (nodeId: string) => void;
   onRemoveEdge: (key: string) => void;
@@ -84,6 +105,8 @@ function WorkflowCanvasInner({
   onAddNode,
   onDuplicateNode,
   onOpenSettings,
+  onUpdateNode,
+  onCommitNodeName,
   onConnectNodes,
   onRemoveNode,
   onRemoveEdge,
@@ -97,6 +120,12 @@ function WorkflowCanvasInner({
   const hasFitOnMount = useRef(false);
   const [contextMenu, setContextMenu] =
     useState<WorkflowContextMenuTarget | null>(null);
+  // Holds the touched surface from our long-press hook until the menu opens.
+  const pendingTouchTargetRef = useRef<WorkflowContextMenuTarget | null>(null);
+  // Context-menu deletes confirm first, reusing the inspector dialogs.
+  const [pendingDelete, setPendingDelete] = useState<
+    { kind: 'node'; nodeId: string } | { kind: 'edge'; edgeKey: string } | null
+  >(null);
 
   const flow = useWorkflowFlow({
     graph,
@@ -109,6 +138,8 @@ function WorkflowCanvasInner({
     onSelectEdge,
     onAddStep,
     onOpenSettings,
+    onUpdateNode,
+    onCommitNodeName,
     onConnectNodes,
     onRemoveNode,
     onRemoveEdge,
@@ -166,7 +197,7 @@ function WorkflowCanvasInner({
         break;
       }
       case 'delete-node': {
-        onRemoveNode(action.nodeId);
+        setPendingDelete({ kind: 'node', nodeId: action.nodeId });
         break;
       }
       case 'edit-edge': {
@@ -174,7 +205,7 @@ function WorkflowCanvasInner({
         break;
       }
       case 'delete-edge': {
-        onRemoveEdge(action.edgeKey);
+        setPendingDelete({ kind: 'edge', edgeKey: action.edgeKey });
         break;
       }
       case 'auto-layout': {
@@ -196,121 +227,170 @@ function WorkflowCanvasInner({
       ? (graph.nodes.find((node) => node.id === contextMenu.nodeId)?.type ??
         null)
       : null;
-  const contextMenuCanAddStepAfter = ((): boolean => {
-    if (contextMenu?.kind !== 'node') {
-      return false;
-    }
-    const node = graph.nodes.find((item) => item.id === contextMenu.nodeId);
-    if (!node || node.type === 'end') {
-      return false;
-    }
-    if (node.type === 'decision') {
-      return true;
-    }
-    return outgoingEdges(graph, node.id).length === 0;
-  })();
+  const contextMenuCanAddStepAfter = contextMenu
+    ? canAddStepAfterTarget(graph, contextMenu)
+    : false;
   const contextMenuVisible =
     contextMenu !== null &&
     (contextMenu.kind !== 'node' || contextMenuNodeType !== null);
 
+  // Fresh drafts arrive with only the Start and End nodes. Guide the first
+  // Composition step on the canvas itself, like the form designer's empty
+  // State: a visible prompt with real buttons instead of a hidden gesture.
+  const showGuidance =
+    !readOnly &&
+    graph.nodes.filter((node) => node.type !== 'start' && node.type !== 'end')
+      .length === 0;
+  const startNode = graph.nodes.find((node) => node.type === 'start');
+  const handleGuidanceAddStep = (): void => {
+    if (startNode && outgoingEdges(graph, startNode.id).length === 0) {
+      onAddStep(startNode.id);
+    } else {
+      onAddNode('task');
+    }
+  };
+
+  // Touch devices have no right-click, so a held press opens the same context
+  // Menu. This hook only records which surface was held; it also swallows the
+  // Click that follows the lift so the press does not select a node behind it.
+  const longPress = useLongPress({
+    shouldIgnore: (target) =>
+      target instanceof Element &&
+      target.closest(
+        '.react-flow__handle, .nodrag, .react-flow__controls, .react-flow__minimap, .react-flow__panel, button, [role="menu"]',
+      ) !== null,
+    onLongPress: ({ x, y, target }) => {
+      pendingTouchTargetRef.current = resolveContextMenuTarget(x, y, target);
+    },
+  });
+
   return (
-    <div
-      className='relative h-full w-full bg-background'
-      data-testid='workflow-canvas'
+    <ContextMenu
+      open={contextMenu !== null}
+      onOpenChange={(open) => {
+        if (!open) {
+          setContextMenu(null);
+          return;
+        }
+        const pending = pendingTouchTargetRef.current;
+        pendingTouchTargetRef.current = null;
+        if (pending) {
+          setContextMenu(pending);
+        }
+      }}
     >
-      <ReactFlow
-        nodes={flow.nodes}
-        edges={flow.edges}
-        nodeTypes={NODE_TYPES}
-        edgeTypes={EDGE_TYPES}
-        colorMode={theme}
-        onNodesChange={flow.onNodesChange}
-        onEdgesChange={flow.onEdgesChange}
-        onSelectionChange={flow.onSelectionChange}
-        onConnect={flow.onConnect}
-        onNodeDragStop={flow.onNodeDragStop}
-        isValidConnection={flow.isValidConnection}
-        onPaneClick={() => {
-          setContextMenu(null);
-          onSelectNode(null);
-          onSelectEdge(null);
-        }}
-        onMoveStart={() => {
-          setContextMenu(null);
-        }}
-        onPaneContextMenu={(event) => {
-          event.preventDefault();
-          setContextMenu({ kind: 'pane', x: event.clientX, y: event.clientY });
-        }}
-        onNodeContextMenu={(event, node) => {
-          event.preventDefault();
-          setContextMenu({
-            kind: 'node',
-            nodeId: node.id,
-            x: event.clientX,
-            y: event.clientY,
-          });
-        }}
-        onEdgeContextMenu={(event, edge) => {
-          event.preventDefault();
-          setContextMenu({
-            kind: 'edge',
-            edgeKey: edge.id,
-            x: event.clientX,
-            y: event.clientY,
-          });
-        }}
-        connectionLineType={ConnectionLineType.SmoothStep}
-        connectionLineStyle={{ stroke: 'var(--primary)', strokeWidth: 1.5 }}
-        deleteKeyCode={['Backspace', 'Delete']}
-        edgesReconnectable={false}
-        minZoom={0.25}
-        maxZoom={1.75}
-        proOptions={{ hideAttribution: true }}
-        nodesDraggable={!readOnly}
-        nodesConnectable={!readOnly}
-        nodesFocusable={!readOnly}
+      <ContextMenuTrigger
+        className='relative h-full w-full bg-background'
+        data-testid='workflow-canvas'
+        {...longPress}
       >
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={20}
-          color='var(--canvas-grid)'
-        />
-        <Controls showInteractive={false} />
-        <MiniMap
-          pannable
-          zoomable
-          className='overflow-hidden rounded-lg border border-border/70 shadow-sm'
-        />
-        <Panel position='top-center'>
-          <div className='flex items-center gap-1 rounded-lg border border-border/70 bg-card/90 p-1 shadow-sm backdrop-blur-sm'>
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon-sm'
-              aria-label={t('canvas.fitView')}
-              title={t('canvas.fitView')}
-              onClick={() => {
-                void fitView({ padding: 0.2, duration: 300 });
-              }}
-            >
-              <Maximize2 />
-            </Button>
-            <Button
-              type='button'
-              variant='ghost'
-              size='icon-sm'
-              aria-label={t('canvas.autoLayout')}
-              title={t('canvas.autoLayout')}
-              onClick={() => {
-                flow.autoLayout(graph);
-              }}
-            >
-              <LayoutGrid />
-            </Button>
-          </div>
-        </Panel>
-      </ReactFlow>
+        <ReactFlow
+          nodes={flow.nodes}
+          edges={flow.edges}
+          nodeTypes={NODE_TYPES}
+          edgeTypes={EDGE_TYPES}
+          colorMode={theme}
+          onNodesChange={flow.onNodesChange}
+          onEdgesChange={flow.onEdgesChange}
+          onSelectionChange={flow.onSelectionChange}
+          onConnect={flow.onConnect}
+          onNodeDragStop={flow.onNodeDragStop}
+          isValidConnection={flow.isValidConnection}
+          onPaneClick={() => {
+            setContextMenu(null);
+            onSelectNode(null);
+            onSelectEdge(null);
+          }}
+          onPaneContextMenu={(event) =>
+            setContextMenu({
+              kind: 'pane',
+              x: event.clientX,
+              y: event.clientY,
+            })
+          }
+          onNodeContextMenu={(event, node) =>
+            setContextMenu({
+              kind: 'node',
+              nodeId: node.id,
+              x: event.clientX,
+              y: event.clientY,
+            })
+          }
+          onEdgeContextMenu={(event, edge) =>
+            setContextMenu({
+              kind: 'edge',
+              edgeKey: edge.id,
+              x: event.clientX,
+              y: event.clientY,
+            })
+          }
+          connectionLineType={ConnectionLineType.SmoothStep}
+          connectionLineStyle={{ stroke: 'var(--primary)', strokeWidth: 1.5 }}
+          deleteKeyCode={['Backspace', 'Delete']}
+          edgesReconnectable={false}
+          minZoom={0.25}
+          maxZoom={1.75}
+          proOptions={{ hideAttribution: true }}
+          nodesDraggable={!readOnly}
+          nodesConnectable={!readOnly}
+          nodesFocusable={!readOnly}
+        >
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={20}
+            color='var(--canvas-grid)'
+          />
+          <Controls showInteractive={false} />
+          <MiniMap
+            pannable
+            zoomable
+            className='overflow-hidden rounded-lg border border-border/70 shadow-sm'
+          />
+          <Panel position='top-center'>
+            <div className='flex items-center gap-1 rounded-lg border border-border/70 bg-card/90 p-1 shadow-sm backdrop-blur-sm'>
+              {readOnly ? null : (
+                <>
+                  <WorkflowCanvasAddMenu onAddNode={onAddNode} />
+                  <span
+                    aria-hidden
+                    className='h-4 w-px bg-border/70'
+                  />
+                </>
+              )}
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon-sm'
+                aria-label={t('canvas.fitView')}
+                title={t('canvas.fitView')}
+                onClick={() => {
+                  void fitView({ padding: 0.2, duration: 300 });
+                }}
+              >
+                <Maximize2 />
+              </Button>
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon-sm'
+                aria-label={t('canvas.autoLayout')}
+                title={t('canvas.autoLayout')}
+                onClick={() => {
+                  flow.autoLayout(graph);
+                }}
+              >
+                <LayoutGrid />
+              </Button>
+            </div>
+          </Panel>
+        </ReactFlow>
+        {showGuidance ? (
+          <WorkflowCanvasGuidance
+            onAddStep={handleGuidanceAddStep}
+            onAddNode={onAddNode}
+          />
+        ) : null}
+      </ContextMenuTrigger>
       {contextMenuVisible && contextMenu ? (
         <WorkflowCanvasContextMenu
           target={contextMenu}
@@ -318,11 +398,59 @@ function WorkflowCanvasInner({
           canAddStepAfter={contextMenuCanAddStepAfter}
           readOnly={readOnly}
           onSelect={handleContextMenuAction}
-          onClose={() => {
-            setContextMenu(null);
-          }}
         />
       ) : null}
-    </div>
+
+      <Dialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingDelete(null);
+          }
+        }}
+      >
+        <DialogContent data-testid='workflow-delete-confirm'>
+          <DialogHeader>
+            <DialogTitle>
+              {pendingDelete?.kind === 'node'
+                ? t('canvas.deleteNodeTitle')
+                : t('canvas.deleteEdgeTitle')}
+            </DialogTitle>
+            <DialogDescription>
+              {pendingDelete?.kind === 'node'
+                ? t('canvas.deleteNodeDescription')
+                : t('canvas.deleteEdgeDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant='ghost'
+              data-testid='workflow-delete-confirm-cancel'
+              onClick={() => {
+                setPendingDelete(null);
+              }}
+            >
+              {t('versionHistory.close')}
+            </Button>
+            <Button
+              variant='destructive'
+              data-testid='workflow-delete-confirm-submit'
+              onClick={() => {
+                if (pendingDelete?.kind === 'node') {
+                  onRemoveNode(pendingDelete.nodeId);
+                } else if (pendingDelete?.kind === 'edge') {
+                  onRemoveEdge(pendingDelete.edgeKey);
+                }
+                setPendingDelete(null);
+              }}
+            >
+              {pendingDelete?.kind === 'node'
+                ? t('canvas.deleteNode')
+                : t('canvas.deleteTransition')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </ContextMenu>
   );
 }

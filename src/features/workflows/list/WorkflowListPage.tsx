@@ -30,9 +30,17 @@ export function WorkflowListPage(): JSX.Element {
     name: string;
   }): Promise<void> {
     try {
-      await createWorkflow({
+      const created = await createWorkflow({
         code: values.code.trim(),
         name: values.name.trim(),
+      });
+      // Land straight in the designer: the route resolves the editable draft.
+      if (!created.editableVersionId) {
+        await createDraft(created.code);
+      }
+      void navigate({
+        to: '/$locale/workflows/$code/designer',
+        params: { locale, code: created.code },
       });
     } catch {
       // Mutation error is surfaced through useWorkflowsCatalog().error

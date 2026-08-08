@@ -1,5 +1,5 @@
 import { Position, type NodeProps } from '@xyflow/react';
-import { Plus, Settings2 } from 'lucide-react';
+import { ArrowRight, Plus, Settings2 } from 'lucide-react';
 import { useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -15,8 +15,15 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card.tsx';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTitle,
+  PopoverTrigger,
+} from '@/components/ui/popover.tsx';
 import type {
   WorkflowEdge,
+  WorkflowNode,
   WorkflowNodeType,
 } from '@/features/workflows/types.ts';
 import { cn } from '@/lib/utils.ts';
@@ -49,8 +56,18 @@ export function WorkflowFlowNode({
   dragging,
 }: NodeProps<WorkflowFlowNode>): JSX.Element {
   const { t } = useTranslation('workflows');
-  const { node, outgoing, readOnly, hasErrors, onAddStep, onOpenSettings } =
-    data;
+  const {
+    node,
+    outgoing,
+    readOnly,
+    hasErrors,
+    availableTargets,
+    onAddStep,
+    onOpenSettings,
+    onChangeName,
+    onCommitName,
+    onConnectNodes,
+  } = data;
   const Icon = nodeTypeIcon(node.type);
   const name = node.name?.trim();
   const isTerminal = node.type === 'end';
@@ -60,6 +77,9 @@ export function WorkflowFlowNode({
   // Closes it so the floating pill does not get left behind while dragging.
   const [isActionCardOpen, setIsActionCardOpen] = useState(false);
   const actionCardOpen = !dragging && (selected || isActionCardOpen);
+  // Selected cards become editable in place (name input) and grow a visible
+  // Action row, mirroring the form designer's selected-card expansion.
+  const editing = selected && !readOnly && !dragging;
   const nodeCard = (
     <BaseNode
       className={cn(
@@ -89,7 +109,7 @@ export function WorkflowFlowNode({
               type='button'
               aria-label={t('canvas.nodeSettings')}
               title={t('canvas.nodeSettings')}
-              className='nodrag -mr-1 inline-flex size-6 items-center justify-center rounded-md text-muted-foreground opacity-70 transition-opacity outline-none hover:bg-muted hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring'
+              className='nodrag -mr-1 inline-flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-70 transition-opacity outline-none hover:bg-muted hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring'
               onClick={(event) => {
                 event.stopPropagation();
                 onOpenSettings(node.id);
@@ -102,18 +122,43 @@ export function WorkflowFlowNode({
       </BaseNodeHeader>
 
       <BaseNodeContent className='gap-1 px-3 py-0.5 pb-1'>
-        <p
-          className={cn(
-            'truncate font-heading text-sm font-medium',
-            !name && 'text-muted-foreground/70',
-          )}
-          title={name}
-        >
-          {name ?? t('node.unnamed', { type: t(`node.${node.type}`) })}
-        </p>
-        <code className='truncate font-mono text-[0.625rem] text-muted-foreground/70'>
-          {node.id}
-        </code>
+        {editing ? (
+          <input
+            type='text'
+            className='nodrag w-full rounded-md border border-border/70 bg-background/70 px-2 py-1 font-heading text-sm font-medium outline-none select-text focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/60'
+            value={node.name ?? ''}
+            placeholder={t('node.unnamed', { type: t(`node.${node.type}`) })}
+            aria-label={t('inspector.name')}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
+            onBlur={() => {
+              onCommitName(node.name ?? '');
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                onCommitName(node.name ?? '');
+              }
+            }}
+            onChange={(event) => {
+              onChangeName(event.target.value);
+            }}
+          />
+        ) : (
+          <p
+            className={cn(
+              'truncate font-heading text-sm font-medium',
+              !name && 'text-muted-foreground/70',
+            )}
+            title={name}
+          >
+            {name ?? t('node.unnamed', { type: t(`node.${node.type}`) })}
+          </p>
+        )}
       </BaseNodeContent>
 
       {node.type === 'decision' && outgoing.length > 0 ? (
@@ -130,10 +175,22 @@ export function WorkflowFlowNode({
         </div>
       ) : null}
 
+      {editing && (node.type === 'decision' || outgoing.length === 0) ? (
+        <NodeActionFooter
+          node={node}
+          availableTargets={availableTargets}
+          onAddStep={onAddStep}
+          onConnectNodes={onConnectNodes}
+        />
+      ) : null}
+
       <NodeTerminals type={node.type} />
     </BaseNode>
   );
 
+  if (editing) {
+    return nodeCard;
+  }
   if (isTerminal || readOnly || !canAddStep) {
     return nodeCard;
   }
@@ -170,6 +227,91 @@ export function WorkflowFlowNode({
         </button>
       </HoverCardContent>
     </HoverCard>
+  );
+}
+
+/**
+ * Visible action row shown on the selected node: add the next step/branch and
+ * connect a transition to another node. This is the graph equivalent of the
+ * form designer's insert gaps — construction stays on the surface instead of
+ * hiding behind right-click or hover.
+ */
+function NodeActionFooter({
+  node,
+  availableTargets,
+  onAddStep,
+  onConnectNodes,
+}: {
+  node: WorkflowNode;
+  availableTargets: WorkflowNode[];
+  onAddStep: (nodeId: string) => void;
+  onConnectNodes: (targetId: string) => void;
+}): JSX.Element {
+  const { t } = useTranslation('workflows');
+  const [connectOpen, setConnectOpen] = useState(false);
+  const isDecision = node.type === 'decision';
+  return (
+    <div className='nodrag border-t border-border/60 px-2 py-1.5'>
+      <div className='flex items-center justify-between gap-1'>
+        <button
+          type='button'
+          className='inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[0.65rem] font-medium text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-primary focus-visible:ring-2 focus-visible:ring-ring'
+          onClick={(event) => {
+            event.stopPropagation();
+            onAddStep(node.id);
+          }}
+        >
+          <Plus className='size-3' />
+          {t(isDecision ? 'canvas.addBranch' : 'canvas.addStep')}
+        </button>
+        {availableTargets.length > 0 ? (
+          <Popover
+            open={connectOpen}
+            onOpenChange={setConnectOpen}
+          >
+            <PopoverTrigger
+              render={
+                <button
+                  type='button'
+                  className='inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[0.65rem] font-medium text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-primary focus-visible:ring-2 focus-visible:ring-ring'
+                >
+                  <ArrowRight className='size-3' />
+                  {t('canvas.connect')}
+                </button>
+              }
+            />
+            <PopoverContent
+              side='bottom'
+              align='end'
+              className='w-56 p-1'
+            >
+              <PopoverTitle className='px-2 py-1 text-[0.625rem] font-medium tracking-wide text-muted-foreground uppercase'>
+                {t('canvas.connectTitle')}
+              </PopoverTitle>
+              <ul className='grid gap-0.5'>
+                {availableTargets.map((target) => (
+                  <li key={target.id}>
+                    <button
+                      type='button'
+                      className='flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-sm outline-none select-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring'
+                      onClick={() => {
+                        setConnectOpen(false);
+                        onConnectNodes(target.id);
+                      }}
+                    >
+                      <ArrowRight className='size-3 shrink-0 text-muted-foreground' />
+                      <span className='min-w-0 flex-1 truncate'>
+                        {target.name?.trim() || target.id}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </PopoverContent>
+          </Popover>
+        ) : null}
+      </div>
+    </div>
   );
 }
 

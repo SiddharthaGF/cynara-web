@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AppShell } from '@/components/app-shell.tsx';
@@ -15,6 +16,11 @@ import { WorkflowDesignerToolbar } from './WorkflowDesignerToolbar.tsx';
 import { WorkflowInspector, type InspectorMode } from './WorkflowInspector.tsx';
 import { WorkflowNodeTypeBadge } from './WorkflowNodeTypeBadge.tsx';
 
+const LazyWorkflowPreviewDialog = lazy(async () => {
+  const module = await import('../preview/WorkflowPreviewDialog.tsx');
+  return { default: module.WorkflowPreviewDialog };
+});
+
 interface WorkflowDesignerLayoutProps {
   code: string;
   initialDraft: WorkflowVersion;
@@ -28,6 +34,7 @@ export function WorkflowDesignerLayout({
   const layout = useWorkflowDesignerLayout(code, initialDraft);
   const isMobile = useIsMobile();
   const { draft } = layout;
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const isBootstrapping = draft.isLoading || draft.loadError !== null;
 
@@ -165,6 +172,8 @@ export function WorkflowDesignerLayout({
                 layout.setSelectedNodeId(nodeId);
                 layout.setShowInspector(true);
               }}
+              onUpdateNode={layout.handleUpdateNode}
+              onCommitNodeName={layout.handleCommitNodeName}
               onConnectNodes={(from, to) => {
                 layout.handleAddEdge(from, to);
                 layout.setShowInspector(true);
@@ -245,6 +254,9 @@ export function WorkflowDesignerLayout({
                   layout.handleChangeNodeType(layout.selectedNode.id, type);
                 }
               },
+              onCommitNodeName: (nodeId, name) => {
+                layout.handleCommitNodeName(nodeId, name);
+              },
               onRemoveNode: () => {
                 if (layout.selectedNode) {
                   layout.handleRemoveNode(layout.selectedNode.id);
@@ -306,9 +318,24 @@ export function WorkflowDesignerLayout({
           draft={draft}
           isMobile={isMobile}
           onOpenSettings={handleOpenSettings}
+          onOpenPreview={() => {
+            setPreviewOpen(true);
+          }}
         />
 
         {renderMain()}
+
+        {previewOpen && !isBootstrapping ? (
+          <Suspense fallback={null}>
+            <LazyWorkflowPreviewDialog
+              open={previewOpen}
+              onOpenChange={setPreviewOpen}
+              code={code}
+              graph={draft.graph}
+              validationIssues={draft.validationIssues}
+            />
+          </Suspense>
+        ) : null}
       </div>
     </AppShell>
   );

@@ -152,6 +152,7 @@ export function AdminHubPage(): JSX.Element {
                       <Button
                         variant='ghost'
                         size='sm'
+                        nativeButton={false}
                         className='px-0 text-primary'
                         render={
                           <span className='inline-flex items-center gap-1.5'>

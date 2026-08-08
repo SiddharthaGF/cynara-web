@@ -1,4 +1,4 @@
-import type { ResourceInResponse } from '@/api/generated';
+import type { Meta, ResourceInResponse } from '@/api/generated';
 
 /** Options for building the free-form query map of a JSON:API list endpoint. */
 export interface PaginatedQueryOptions {
@@ -43,6 +43,56 @@ export function buildPaginatedQuery(
     }
   }
   return params;
+}
+
+/**
+ * Minimal JSON:API collection shape shared by the generated collection
+ * documents. The contract types each resource collection separately, so this
+ * generic view keeps the pagination helper reusable across catalogs.
+ */
+export interface CollectionDocument<TResource> {
+  readonly data: readonly TResource[];
+  readonly included?: readonly ResourceInResponse[];
+  readonly meta?: Meta;
+}
+
+/**
+ * Merges a JSON:API collection across every page. The catalog endpoints cap
+ * page size, so client-side code/name lookups need every page; this fetches
+ * the remaining pages in parallel once `meta.total` reveals their count.
+ */
+export async function fetchAllCollectionPages<TResource>(
+  baseQuery: Record<string, string>,
+  pageSize: number,
+  fetchPage: (
+    query: Record<string, string>,
+  ) => Promise<CollectionDocument<TResource>>,
+): Promise<CollectionDocument<TResource>> {
+  const firstPage = await fetchPage({ ...baseQuery, 'page[number]': '1' });
+  const total = firstPage.meta?.total;
+  if (
+    firstPage.data.length === 0 ||
+    typeof total !== 'number' ||
+    firstPage.data.length >= total
+  ) {
+    return firstPage;
+  }
+  const remainingPageNumbers = Array.from(
+    { length: Math.ceil((total - firstPage.data.length) / pageSize) },
+    (_, index) => index + 2,
+  );
+  const rest = await Promise.all(
+    remainingPageNumbers.map(async (pageNumber) =>
+      fetchPage({ ...baseQuery, 'page[number]': String(pageNumber) }),
+    ),
+  );
+  return {
+    data: [...firstPage.data, ...rest.flatMap((page) => page.data)],
+    included: firstPage.included
+      ? [...firstPage.included, ...rest.flatMap((page) => page.included ?? [])]
+      : undefined,
+    meta: firstPage.meta,
+  };
 }
 
 /**

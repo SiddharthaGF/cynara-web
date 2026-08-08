@@ -41,6 +41,7 @@ export interface WorkflowVersionListParams {
 
 export interface JourneyListParams {
   patientId?: string;
+  encounterId?: string;
   status?: string;
 }
 

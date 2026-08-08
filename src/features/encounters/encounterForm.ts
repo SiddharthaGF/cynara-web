@@ -21,7 +21,6 @@ export interface EncounterCreateFields {
   facilityId: string;
   clinicalAreaId: string;
   type: string;
-  responsibleProfessionalId: string;
 }
 
 export type EncounterFieldErrors = Partial<
@@ -44,13 +43,6 @@ export function validateEncounterCreate(
     errors.type = t('create.errors.typeRequired');
   } else if (!ENCOUNTER_TYPES.includes(value.type as EncounterType)) {
     errors.type = t('create.errors.typeInvalid');
-  }
-
-  const professional = value.responsibleProfessionalId.trim();
-  if (!professional) {
-    errors.responsibleProfessionalId = t('create.errors.professionalRequired');
-  } else if (professional.length > 128) {
-    errors.responsibleProfessionalId = t('create.errors.professionalTooLong');
   }
 
   return errors;

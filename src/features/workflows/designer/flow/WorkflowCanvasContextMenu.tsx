@@ -10,12 +10,18 @@ import {
   Trash2,
 } from 'lucide-react';
 import type { JSX } from 'react';
-import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Separator } from '@/components/ui/separator.tsx';
-import type { WorkflowNodeType } from '@/features/workflows/types.ts';
-import { cn } from '@/lib/utils.ts';
+import {
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+} from '@/components/ui/context-menu.tsx';
+import { outgoingEdges } from '@/features/workflows/model/workflowGraph.ts';
+import type {
+  WorkflowGraph,
+  WorkflowNodeType,
+} from '@/features/workflows/types.ts';
 
 export type WorkflowContextMenuTarget =
   | { kind: 'pane'; x: number; y: number }
@@ -43,7 +49,6 @@ interface WorkflowCanvasContextMenuProps {
   canAddStepAfter: boolean;
   readOnly: boolean;
   onSelect: (action: WorkflowContextMenuAction) => void;
-  onClose: () => void;
 }
 
 interface MenuItem {
@@ -56,13 +61,55 @@ interface MenuItem {
 
 type MenuItemOrSeparator = MenuItem | 'separator';
 
-const MENU_WIDTH = 224;
-const MENU_MAX_HEIGHT = 320;
+/**
+ * Maps the element under a pointer to the workflow surface that was pressed:
+ * React Flow stamps node and edge ids on their wrapper elements (`data-id`).
+ */
+export function resolveContextMenuTarget(
+  x: number,
+  y: number,
+  target: EventTarget | null,
+): WorkflowContextMenuTarget {
+  const element = target instanceof Element ? target : null;
+  const node = element?.closest<HTMLElement>('.react-flow__node');
+  const nodeId = node?.dataset.id;
+  if (node && nodeId) {
+    return { kind: 'node', nodeId, x, y };
+  }
+  const edge = element?.closest<HTMLElement>('.react-flow__edge');
+  const edgeKey = edge?.dataset.id;
+  if (edge && edgeKey) {
+    return { kind: 'edge', edgeKey, x, y };
+  }
+  return { kind: 'pane', x, y };
+}
 
 /**
- * Floating context menu for the workflow canvas. It is rendered at the pointer
- * position (clamped to the viewport) and offers quick node/transition actions
- * depending on what was right-clicked: the empty pane, a node, or a transition.
+ * Whether the target node can still accept another outgoing transition, which
+ * decides if the "add step after" item is shown in the node context menu.
+ */
+export function canAddStepAfterTarget(
+  graph: WorkflowGraph,
+  target: WorkflowContextMenuTarget,
+): boolean {
+  if (target.kind !== 'node') {
+    return false;
+  }
+  const node = graph.nodes.find((item) => item.id === target.nodeId);
+  if (!node || node.type === 'end') {
+    return false;
+  }
+  if (node.type === 'decision') {
+    return true;
+  }
+  return outgoingEdges(graph, node.id).length === 0;
+}
+
+/**
+ * Items of the workflow canvas context menu. The menu itself is a shadcn
+ * `ContextMenu` wrapping the canvas in `WorkflowCanvas`, so this component only
+ * renders the popup content for whatever was right-clicked (or long-pressed):
+ * the empty pane, a node, or a transition.
  */
 export function WorkflowCanvasContextMenu({
   target,
@@ -70,99 +117,32 @@ export function WorkflowCanvasContextMenu({
   canAddStepAfter,
   readOnly,
   onSelect,
-  onClose,
 }: WorkflowCanvasContextMenuProps): JSX.Element {
   const { t } = useTranslation('workflows');
   const items = buildMenuItems(target, nodeType, canAddStepAfter, readOnly, t);
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent): void {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    return (): void => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [onClose]);
-
-  const left =
-    typeof window === 'undefined'
-      ? 0
-      : Math.max(8, Math.min(target.x, window.innerWidth - MENU_WIDTH - 8));
-  const top =
-    typeof window === 'undefined'
-      ? 0
-      : Math.max(
-          8,
-          Math.min(target.y, window.innerHeight - MENU_MAX_HEIGHT - 8),
-        );
-
   return (
-    <>
-      <div
-        className='fixed inset-0 z-40'
-        aria-hidden='true'
-        onPointerDown={(event) => {
-          if (event.target === event.currentTarget) {
-            onClose();
-          }
-        }}
-        onContextMenu={(event) => {
-          event.preventDefault();
-          onClose();
-        }}
-      />
-      <div
-        role='menu'
-        aria-label={t('canvas.contextMenu')}
-        className='fixed z-50 max-h-[360px] w-56 overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10'
-        style={{ left, top }}
-      >
-        {items.map((item) =>
-          item === 'separator' ? (
-            <Separator
-              key='separator'
-              className='-mx-1 my-1'
-            />
-          ) : (
-            <MenuButton
-              key={item.key}
-              item={item}
-              onSelect={onSelect}
-            />
-          ),
-        )}
-      </div>
-    </>
-  );
-}
-
-function MenuButton({
-  item,
-  onSelect,
-}: {
-  item: MenuItem;
-  onSelect: (action: WorkflowContextMenuAction) => void;
-}): JSX.Element {
-  const Icon = item.icon;
-  return (
-    <button
-      type='button'
-      role='menuitem'
-      className={cn(
-        "flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm text-foreground outline-none select-none hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        item.destructive &&
-          'text-destructive hover:bg-destructive/10 hover:text-destructive',
-      )}
-      onClick={() => {
-        onSelect(item.action);
-      }}
+    <ContextMenuContent
+      aria-label={t('canvas.contextMenu')}
+      className='w-56'
     >
-      <Icon />
-      {item.label}
-    </button>
+      {items.map((item) =>
+        item === 'separator' ? (
+          <ContextMenuSeparator key='separator' />
+        ) : (
+          <ContextMenuItem
+            key={item.key}
+            variant={item.destructive ? 'destructive' : 'default'}
+            onClick={() => {
+              onSelect(item.action);
+            }}
+          >
+            <item.icon />
+            {item.label}
+          </ContextMenuItem>
+        ),
+      )}
+    </ContextMenuContent>
   );
 }
 

@@ -146,7 +146,7 @@ export function WorkflowEdgeSettings({
             }}
           >
             <Trash2 className='size-3.5' />
-            {t('canvas.deleteEdgeTitle')}
+            {t('canvas.deleteTransition')}
           </Button>
         </section>
       )}
@@ -178,7 +178,7 @@ export function WorkflowEdgeSettings({
                 onRemove();
               }}
             >
-              {t('canvas.deleteEdgeTitle')}
+              {t('canvas.deleteTransition')}
             </Button>
           </DialogFooter>
         </DialogContent>

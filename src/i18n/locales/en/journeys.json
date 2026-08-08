@@ -1,0 +1,77 @@
+{
+  "panel": {
+    "eyebrow": "Patient journey",
+    "title": "Journey",
+    "subtitle": "The care path for this patient and their consultations.",
+    "emptyTitle": "No journeys yet",
+    "emptyDescription": "A care plan appears here once it is started for this patient or one of their consultations.",
+    "emptyAction": "New consultation",
+    "forbidden": "You do not have permission to view this patient's care path.",
+    "denied": "You do not have permission to view care paths."
+  },
+  "encounterPanel": {
+    "eyebrow": "Consultation journey",
+    "title": "Journey",
+    "subtitle": "The care path for this consultation.",
+    "emptyTitle": "No journeys yet",
+    "emptyDescription": "A care plan appears here once it is started for this consultation.",
+    "forbidden": "You do not have permission to view this consultation's care path."
+  },
+  "status": {
+    "running": "Running",
+    "completed": "Completed",
+    "canceled": "Canceled",
+    "enteredInError": "Entered in error"
+  },
+  "node": {
+    "start": "Start",
+    "end": "End",
+    "task": "Task",
+    "decision": "Decision",
+    "unnamed": "Untitled {{type}}"
+  },
+  "card": {
+    "carePath": "Care plan",
+    "version": "Version {{version}}",
+    "subject": "Subject",
+    "subjectEncounter": "Consultation",
+    "subjectPatient": "Patient",
+    "startedAt": "Started",
+    "endedAt": "Ended",
+    "currentStep": "Current step",
+    "nextStep": "Next step",
+    "finalStep": "Final step",
+    "openEncounter": "Open consultation",
+    "versionUnknown": "published"
+  },
+  "details": {
+    "title": "Workflow details",
+    "workflow": "Workflow",
+    "version": "Version",
+    "schemaVersion": "Schema version"
+  },
+  "timeline": {
+    "title": "Care history",
+    "event_pipeline.started": "Care path started",
+    "event_pipeline.advanced": "Advanced to {{node}}",
+    "event_pipeline.completed": "Completed",
+    "event_pipeline.canceled": "Canceled",
+    "event_pipeline.entered-in-error": "Entered in error",
+    "event_unknown": "Progression event",
+    "via": "via {{label}}",
+    "reason": "Reason",
+    "empty": "No progression events recorded."
+  },
+  "snapshot": {
+    "title": "Care path diagram",
+    "description": "Rendered from the published workflow version {{version}} at start time.",
+    "path": "Path taken",
+    "nodes": "Steps in the diagram",
+    "edges": "Transitions",
+    "state_completed": "Completed",
+    "state_current": "Current",
+    "state_pending": "Pending",
+    "edge": "{{from}} → {{to}}",
+    "noGraph": "The workflow snapshot is not available."
+  }
+}

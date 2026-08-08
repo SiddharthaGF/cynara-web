@@ -1,4 +1,5 @@
 import { Link, useParams } from '@tanstack/react-router';
+import type { TFunction } from 'i18next';
 import { FileText } from 'lucide-react';
 import { m } from 'motion/react';
 import type { JSX } from 'react';
@@ -27,6 +28,27 @@ import { useCapabilities } from '@/hooks/use-capabilities.ts';
 import { cn } from '@/lib/utils.ts';
 
 import { FormListPagination } from './FormListPagination.tsx';
+
+/** Maps the raw server status enum to a localized label. */
+function formatFormEditableStatus(status: string | null, t: TFunction): string {
+  if (status === null) {
+    return t('list.noDraft');
+  }
+  switch (status) {
+    case 'draft': {
+      return t('list.status.draft');
+    }
+    case 'review': {
+      return t('list.status.review');
+    }
+    case 'published': {
+      return t('list.status.published');
+    }
+    default: {
+      return status;
+    }
+  }
+}
 
 interface FormsCatalogCardProps {
   forms: FormSummary[];
@@ -126,9 +148,14 @@ export function FormsCatalogCard({
                 <div className='mt-3 flex flex-wrap items-center gap-2'>
                   <Badge
                     variant='secondary'
-                    className='bg-primary/8 text-primary'
+                    className={cn(
+                      form.editableStatus === 'published' &&
+                        'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+                      form.editableStatus === 'review' &&
+                        'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+                    )}
                   >
-                    {form.editableStatus ?? t('list.noDraft')}
+                    {formatFormEditableStatus(form.editableStatus, t)}
                   </Badge>
                   {form.publishedVersions.length > 0 ? (
                     <span className='text-xs text-muted-foreground'>

@@ -97,6 +97,87 @@ export function createNode(type: WorkflowNodeType, id: string): WorkflowNode {
   return NODE_FACTORIES[type](id);
 }
 
+/**
+ * Kebab-case slug for a node name, e.g. "Valoración del dolor" →
+ * "valoracion-del-dolor". Accents are stripped so non-ASCII names stay valid
+ * against `NODE_ID_PATTERN`.
+ */
+export function slugifyNodeName(name: string): string {
+  return name
+    .normalize('NFD')
+    .replaceAll(/[\u0300-\u036F]/g, '')
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/-{2,}/g, '-')
+    .replaceAll(/^-+|-+$/g, '')
+    .slice(0, 48)
+    .replaceAll(/-+$/g, '');
+}
+
+/**
+ * Resolves the id a node should take once it is given `name`, or `null` when
+ * the name does not warrant a rename (empty, unchanged, or a structural node).
+ * Task and decision ids are derived from their name so ids stay readable; the
+ * start and end anchors keep their structural ids.
+ */
+export function nodeIdFromName(
+  graph: WorkflowGraph,
+  nodeId: string,
+  name: string,
+): string | null {
+  const node = graph.nodes.find((item) => item.id === nodeId);
+  if (!node || (node.type !== 'task' && node.type !== 'decision')) {
+    return null;
+  }
+  let slug = slugifyNodeName(name);
+  if (!slug) {
+    return null;
+  }
+  // NODE_ID_PATTERN requires a leading lowercase letter. Names that begin
+  // With a digit or punctuation get the node type as a readable prefix.
+  if (!/^[a-z]/.test(slug)) {
+    slug = `${TYPE_SLUGS[node.type]}-${slug}`;
+  }
+  if (slug === nodeId) {
+    return null;
+  }
+  const used = new Set(graph.nodes.map((item) => item.id));
+  let candidate = slug;
+  for (let counter = 1; used.has(candidate); counter += 1) {
+    candidate = `${slug}-${counter}`;
+  }
+  return candidate;
+}
+
+/**
+ * Re-ids a node and rewires every edge that referenced the old id. The rest of
+ * the graph (other nodes, conditions, labels) is untouched.
+ */
+export function renameNode(
+  graph: WorkflowGraph,
+  nodeId: string,
+  nextId: string,
+): WorkflowGraph {
+  if (nodeId === nextId) {
+    return graph;
+  }
+  return {
+    ...graph,
+    nodes: graph.nodes.map((node) =>
+      node.id === nodeId ? { ...node, id: nextId } : node,
+    ),
+    edges: graph.edges.map((edge) =>
+      edge.from === nodeId || edge.to === nodeId
+        ? {
+            ...edge,
+            from: edge.from === nodeId ? nextId : edge.from,
+            to: edge.to === nodeId ? nextId : edge.to,
+          }
+        : edge,
+    ),
+  };
+}
+
 export function outgoingEdges(
   graph: WorkflowGraph,
   nodeId: string,
@@ -294,7 +375,8 @@ export function insertNodeBetween(
 /**
  * Copies a node with a fresh id and rewires every edge touching the original
  * (incoming and outgoing) to the copy, preserving branch labels and conditions.
- * Returns `null` when the node does not exist.
+ * A named copy keeps a readable id derived from its name. Returns `null` when
+ * the node does not exist.
  */
 export function duplicateNode(
   graph: WorkflowGraph,
@@ -304,7 +386,7 @@ export function duplicateNode(
   if (!source) {
     return null;
   }
-  const id = nextNodeId(graph, source.type);
+  const id = duplicateNodeId(graph, source);
   const node: WorkflowNode = { ...source, id };
   const incoming: WorkflowEdge[] = [];
   const outgoing: WorkflowEdge[] = [];
@@ -363,6 +445,33 @@ export function updateInputs(
 
 export function canHaveOutgoingEdge(node: WorkflowNode | undefined): boolean {
   return node !== undefined && node.type !== 'end';
+}
+
+/**
+ * Id for a duplicated node: the name slug when the source is named, otherwise
+ * the usual generic id. Disambiguates against the whole graph (including the
+ * source, so a second copy of the same name becomes `name-2`).
+ */
+function duplicateNodeId(graph: WorkflowGraph, source: WorkflowNode): string {
+  if (source.type === 'task' || source.type === 'decision') {
+    let slug = slugifyNodeName(source.name ?? '');
+    if (slug) {
+      if (!/^[a-z]/.test(slug)) {
+        slug = `${TYPE_SLUGS[source.type]}-${slug}`;
+      }
+      const used = new Set(graph.nodes.map((node) => node.id));
+      if (!used.has(slug)) {
+        return slug;
+      }
+      for (let counter = 1; counter < 10_000; counter += 1) {
+        const candidate = `${slug}-${counter}`;
+        if (!used.has(candidate)) {
+          return candidate;
+        }
+      }
+    }
+  }
+  return nextNodeId(graph, source.type);
 }
 
 function typeOfNodeAt(

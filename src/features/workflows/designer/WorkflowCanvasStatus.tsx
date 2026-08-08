@@ -5,6 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { StatusPill } from '@/components/status-pill.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip.tsx';
 import type { SaveState } from '@/features/workflows/designer/useWorkflowDraft.ts';
 import type { WorkflowValidationIssue } from '@/features/workflows/types.ts';
 import { translateWorkflowIssue } from '@/features/workflows/validation/translateWorkflowIssue.ts';
@@ -143,12 +148,26 @@ function IssueRow({
   const content = (
     <>
       <span className='flex flex-wrap items-center gap-1.5'>
-        <Badge
-          variant='outline'
-          className={cn('w-fit font-mono text-[0.625rem]', severityClass)}
-        >
-          {issue.code}
-        </Badge>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <span
+                tabIndex={0}
+                className='inline-flex w-fit outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              >
+                <Badge
+                  variant='outline'
+                  className={cn('font-mono text-[0.625rem]', severityClass)}
+                >
+                  {issue.code}
+                </Badge>
+              </span>
+            }
+          />
+          <TooltipContent side='top'>
+            {translateWorkflowIssue(issue, t)}
+          </TooltipContent>
+        </Tooltip>
         {hasNode ? (
           <code className='font-mono text-[0.625rem] text-muted-foreground'>
             {issue.nodeId}

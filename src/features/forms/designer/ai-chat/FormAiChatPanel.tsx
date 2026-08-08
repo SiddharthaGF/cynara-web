@@ -249,11 +249,9 @@ export function FormAiChatPanelBody({
                 modelLabel={modelLabel}
                 disabled={readOnly}
                 canSubmit={canSubmit}
-                canRetry={canRetry}
                 isBusy={busy}
                 onChange={onChange}
                 onSubmit={onSubmit}
-                onRetry={onRetry}
                 onStop={onStop}
               />
             </div>

@@ -77,7 +77,6 @@ export function ChatTranscript({
                     turn={turn}
                     fieldsById={fieldsById}
                     typesBySlug={typesBySlug}
-                    onRetry={turn.failed && canRetry ? onRetry : undefined}
                     onRemoveQueued={turn.queued ? onRemoveQueued : undefined}
                   />
                 </MessageScrollerItem>

@@ -13,6 +13,8 @@ import {
 import type { UseWorkflowDraftResult } from '@/features/workflows/designer/useWorkflowDraft.ts';
 import { cn } from '@/lib/utils.ts';
 
+import { WorkflowPreviewTrigger } from '../preview/WorkflowPreviewTrigger.tsx';
+import { WorkflowPublishControl } from './WorkflowPublishControl.tsx';
 import { WorkflowSaveButton } from './WorkflowSaveButton.tsx';
 import { WorkflowSaveStatusBanner } from './WorkflowSaveStatusBanner.tsx';
 
@@ -23,6 +25,7 @@ interface WorkflowDesignerToolbarProps {
   draft: UseWorkflowDraftResult;
   isMobile: boolean;
   onOpenSettings: () => void;
+  onOpenPreview: () => void;
 }
 
 export function WorkflowDesignerToolbar({
@@ -32,6 +35,7 @@ export function WorkflowDesignerToolbar({
   draft,
   isMobile,
   onOpenSettings,
+  onOpenPreview,
 }: WorkflowDesignerToolbarProps): JSX.Element {
   const { t } = useTranslation('workflows');
   const { locale } = useParams({ from: '/$locale' });
@@ -46,7 +50,7 @@ export function WorkflowDesignerToolbar({
                 to='/$locale/workflows'
                 params={{ locale }}
                 aria-label={t('toolbar.workflows')}
-                className='inline-flex h-7 shrink-0 items-center justify-center gap-1.5 rounded-[min(var(--radius-md),12px)] border border-transparent px-2 text-[0.8rem] font-medium whitespace-nowrap transition-colors outline-none select-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
+                className='inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-[min(var(--radius-md),12px)] border border-transparent px-2 text-[0.8rem] font-medium whitespace-nowrap transition-colors outline-none select-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:pointer-events-none [&_svg]:shrink-0'
               >
                 <ArrowLeft className='size-4' />
                 <span className='hidden sm:inline'>
@@ -69,6 +73,7 @@ export function WorkflowDesignerToolbar({
 
         {isBootstrapping ? null : (
           <>
+            <WorkflowPreviewTrigger onOpen={onOpenPreview} />
             <TooltipIconButton
               type='button'
               variant='ghost'
@@ -103,11 +108,19 @@ export function WorkflowDesignerToolbar({
               size='sm'
               disabled={draft.isReadOnly && !isMobile}
               onClick={onOpenSettings}
+              aria-label={t('toolbar.settings')}
               className={cn('shrink-0 gap-1.5')}
             >
               <Settings2 className='size-3.5' />
               <span className='hidden sm:inline'>{t('toolbar.settings')}</span>
             </Button>
+            <WorkflowPublishControl
+              code={code}
+              versionStatus={draft.versionStatus}
+              versionLabel={draft.versionLabel}
+              saveNow={draft.saveNow}
+              reloadDraft={draft.reloadDraft}
+            />
             <WorkflowSaveButton
               state={draft.saveState}
               disabled={draft.isReadOnly}

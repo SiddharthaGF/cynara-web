@@ -2,48 +2,30 @@
   "list": {
     "eyebrow": "Documentos clínicos",
     "title": "Documentos",
-    "subtitle": "Documentos clínicos iniciados en este encuentro.",
-    "create": "Nuevo documento",
+    "subtitle": "Documentos clínicos iniciados en esta consulta.",
+    "startForms": "Formularios disponibles",
+    "startFormsHint": "Inicia un formulario para registrar esta consulta.",
+    "formsEmptyDescription": "Aún no hay formularios publicados para esta instalación y área clínica. Pide a un administrador que publique uno.",
     "emptyTitle": "Aún no hay documentos",
-    "emptyDescription": "Inicia un documento para registrar los hallazgos clínicos de este encuentro.",
-    "loadError": "No se pudieron cargar los documentos.",
-    "forbidden": "No tienes permiso para ver los documentos de este encuentro.",
-    "viewDetail": "Abrir",
+    "emptyDescription": "Inicia un documento para registrar los hallazgos clínicos de esta consulta.",
+    "forbidden": "No tienes permiso para ver los documentos de esta consulta.",
+    "viewDetail": "Abrir documento",
     "documentName": "Documento clínico",
     "inProgressHint": "En curso",
-    "unknownAuthor": "Desconocido",
     "columns": {
-      "createdAt": "Inicio",
-      "author": "Autor",
-      "encounter": "Encuentro"
-    }
-  },
-  "start": {
-    "title": "Iniciar documento",
-    "description": "Elige el documento clínico que deseas iniciar para este encuentro.",
-    "submit": "Iniciar documento",
-    "submitting": "Iniciando…",
-    "cancel": "Cancelar",
-    "emptyTitle": "No hay documentos disponibles",
-    "emptyDescription": "Pide a un administrador que publique una plantilla de documento para esta instalación y área clínica.",
-    "fields": {
-      "definition": "Tipo de documento",
-      "definitionPlaceholder": "Seleccionar un tipo de documento"
-    },
-    "errors": {
-      "definitionRequired": "Elige un tipo de documento para continuar."
+      "createdAt": "Inicio"
     }
   },
   "timeline": {
     "eyebrow": "Historial de documentos",
     "title": "Documentos",
-    "subtitle": "Todos los documentos clínicos de los encuentros de este paciente.",
+    "subtitle": "Todos los documentos clínicos de las consultas de este paciente.",
     "emptyTitle": "Aún no hay documentos",
-    "emptyDescription": "Los documentos aparecerán aquí cuando se inicien dentro de un encuentro."
+    "emptyDescription": "Los documentos aparecerán aquí cuando se inicien dentro de una consulta."
   },
   "detail": {
     "eyebrow": "Documento clínico",
-    "backToEncounter": "Volver al encuentro",
+    "backToEncounter": "Volver a la consulta",
     "loadError": "No se pudo cargar el documento.",
     "draftLoadError": "No se pudieron cargar las respuestas del documento.",
     "draftUnavailable": "Las respuestas del documento no están disponibles.",
@@ -53,7 +35,12 @@
     "stale": "Este documento cambió mientras trabajabas. Recarga la versión más reciente antes de continuar.",
     "reload": "Recargar",
     "validationErrors": "Corrige los errores de validación señalados antes de guardar o completar.",
-    "unknownAuthor": "Desconocido",
+    "unsaved": "Cambios sin guardar — se guardarán automáticamente",
+    "autosaving": "Guardando automáticamente…",
+    "unsavedTitle": "¿Descartar cambios sin guardar?",
+    "unsavedBody": "Los últimos cambios de este documento no se han guardado. Si sales ahora, se descartarán.",
+    "keepEditing": "Continuar editando",
+    "discard": "Descartar cambios",
     "terminalBanner": "Este documento está cerrado. Su contenido permanece en el registro clínico.",
     "actions": {
       "save": "Guardar borrador",
@@ -73,13 +60,15 @@
       "reasonPlaceholder": "Explica por qué este documento no es válido",
       "reasonRequired": "El motivo es obligatorio.",
       "enteredInErrorReason": "Motivo de registro por error",
+      "completeAction": "Completar documento",
+      "cancelAction": "Cancelar documento",
+      "enterInErrorAction": "Marcar como registrado por error",
       "confirm": "Confirmar",
       "dismiss": "Mantener abierto"
     },
     "fields": {
       "formVersion": "Versión del formulario",
       "status": "Estado",
-      "author": "Autor",
       "createdAt": "Inicio",
       "updatedAt": "Actualizado",
       "completedAt": "Completado",

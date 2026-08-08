@@ -27,6 +27,8 @@ import {
   useEncounterDetail,
   useEncounterTransitions,
 } from '@/features/encounters/useEncountersCatalog.ts';
+import { EncounterJourneyPanel } from '@/features/journeys/EncounterJourneyPanel.tsx';
+import { usePatientDetail } from '@/features/patients/usePatientsCatalog.ts';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
 export function EncounterDetailPage(): JSX.Element {
@@ -42,6 +44,10 @@ export function EncounterDetailPage(): JSX.Element {
 
   const { encounter, isLoading, error, isForbidden, refetch } =
     useEncounterDetail(encounterId);
+  const { patient } = usePatientDetail(patientId);
+  const patientName = patient
+    ? `${patient.givenName} ${patient.familyName}`
+    : undefined;
   const {
     complete,
     cancel,
@@ -139,6 +145,7 @@ export function EncounterDetailPage(): JSX.Element {
         status={encounter.status}
         locale={locale}
         patientId={patientId}
+        patientName={patientName}
       />
 
       <EncounterDetailAlerts
@@ -189,6 +196,12 @@ export function EncounterDetailPage(): JSX.Element {
         onForbidden={() => {
           setMutationForbidden(true);
         }}
+      />
+
+      <EncounterJourneyPanel
+        encounterId={encounter.id}
+        patientId={patientId}
+        locale={locale}
       />
     </EncounterDetailShell>
   );

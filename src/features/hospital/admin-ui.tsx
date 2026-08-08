@@ -237,6 +237,7 @@ export function AdminBackLink({ locale }: { locale: string }): JSX.Element {
     <Button
       variant='ghost'
       size='sm'
+      nativeButton={false}
       className='mb-6 text-muted-foreground'
       render={
         <Link

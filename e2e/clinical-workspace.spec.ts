@@ -99,12 +99,20 @@ test.describe('clinical workspace (CYN-58)', () => {
     await expect(page.getByTestId('patient-detail-view')).toBeVisible();
     const patientId = new URL(page.url()).pathname.split('/')[3];
 
-    // Open an encounter for the patient.
-    await expect(page.getByTestId('patient-encounters-panel')).toBeVisible({
-      timeout: 30_000,
-    });
-    await expect(page.getByTestId('encounter-list-empty')).toBeVisible();
-    await page.getByTestId('encounter-create-open').click();
+    // The chart opens as a clinical record with breadcrumbs and tabs.
+    const breadcrumb = page.locator('[data-slot=breadcrumb]');
+    await expect(breadcrumb).toContainText('Patients');
+    await expect(breadcrumb).toContainText('Florence Nightingale');
+    await expect(page.getByTestId('hc-tab-overview')).toBeVisible();
+    await expect(page.getByTestId('hc-tab-encounters')).toBeVisible();
+    await expect(page.getByTestId('hc-tab-documents')).toBeVisible();
+    await expect(page.getByTestId('hc-tab-journeys')).toBeVisible();
+    await expect(
+      page.getByTestId('patient-overview-encounter-empty'),
+    ).toBeVisible({ timeout: 20_000 });
+
+    // New consultation in one click from the chart header.
+    await page.getByTestId('hc-new-encounter').click();
     await expect(page.getByTestId('encounter-create-dialog')).toBeVisible();
 
     await page.getByTestId('encounter-create-facility').click();
@@ -124,29 +132,24 @@ test.describe('clinical workspace (CYN-58)', () => {
       .click();
     await page.getByTestId('encounter-create-submit').click();
 
-    await expect(page.getByTestId('encounter-list')).toBeVisible({
-      timeout: 30_000,
-    });
-    const encounterRow = page.getByTestId('encounter-list-row').first();
-    await expect(encounterRow).toHaveAttribute('data-status', 'open');
-    await page.getByTestId('encounter-list-open').first().click();
+    // Creation navigates straight to the new consultation detail.
     await expect(page.getByTestId('encounter-detail-view')).toBeVisible({
       timeout: 30_000,
     });
+    await expect(page.locator('[data-slot=breadcrumb]')).toContainText(
+      'Consultation',
+    );
     const encounterId = lastUrlSegment(page.url());
 
-    // Start a configured clinical document from the encounter.
+    // Start a configured clinical document from the encounter in one click.
     await expect(page.getByTestId('encounter-documents-panel')).toBeVisible({
       timeout: 30_000,
     });
-    await page.getByTestId('start-document-open').click();
-    await expect(page.getByTestId('start-document-dialog')).toBeVisible();
-    await page.locator('#start-document-definition').click();
+    await expect(page.getByTestId('encounter-available-forms')).toBeVisible();
     await page
-      .locator('[data-slot=select-item]')
+      .getByTestId('start-document-action')
       .filter({ hasText: catalog.definitionName })
       .click();
-    await page.getByTestId('start-document-submit').click();
 
     await expect(page.getByTestId('document-detail-view')).toBeVisible({
       timeout: 30_000,
@@ -222,6 +225,10 @@ test.describe('clinical workspace (CYN-58)', () => {
     await page.goto(`/en/patients/${patientId}/`, {
       waitUntil: 'domcontentloaded',
     });
+    await expect(page.getByTestId('hc-tab-documents')).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.getByTestId('hc-tab-documents').click();
     await expect(page.getByTestId('patient-documents-timeline')).toBeVisible({
       timeout: 30_000,
     });

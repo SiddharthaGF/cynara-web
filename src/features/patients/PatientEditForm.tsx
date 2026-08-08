@@ -304,7 +304,7 @@ export function PatientEditForm({
           disabled={isEditing}
           onClick={onCancel}
         >
-          {t('search.clear')}
+          {t('detail.cancel')}
         </Button>
       </div>
     </form>

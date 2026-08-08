@@ -41,13 +41,18 @@ export interface UseWorkflowDraftResult {
   isLoading: boolean;
   loadError: string | null;
   isReadOnly: boolean;
+  /** Lifecycle status of the applied draft (`draft` | `review` | …). */
+  versionStatus: string;
+  /** Semver label of the applied draft, when the backend has assigned one. */
+  versionLabel: string | null;
   setGraph: (updater: (current: WorkflowGraph) => WorkflowGraph) => void;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
   canRedo: boolean;
   reloadDraft: () => Promise<void>;
-  saveNow: () => Promise<void>;
+  /** Flushes pending edits. Resolves `true` when the draft was persisted. */
+  saveNow: () => Promise<boolean>;
   dismissConflict: () => void;
 }
 
@@ -152,9 +157,10 @@ export function useWorkflowDraft(
    * appears once the final attempt has failed.
    */
   const runSaveCycle = useCallback(
-    async (attempt: number, retryOnFailure: boolean): Promise<void> => {
+    async (attempt: number, retryOnFailure: boolean): Promise<boolean> => {
       if (saveInFlightRef.current) {
-        return;
+        // An in-flight save is already persisting the current graph.
+        return true;
       }
       const { current } = graphRef;
       const issues = validateWorkflowGraph(current);
@@ -163,7 +169,7 @@ export function useWorkflowDraft(
         // A separate save-error message would just duplicate it.
         setSaveState('error');
         setSaveError(null);
-        return;
+        return false;
       }
 
       setSaveState('saving');
@@ -176,19 +182,21 @@ export function useWorkflowDraft(
           workflowSchemaJson: serializeWorkflowGraph(current),
           rowVersion: rowVersionRef.current,
         });
+        return true;
       } catch (error) {
         if (error instanceof ApiError && error.status === 409) {
           failSave(error);
-          return;
+          return false;
         }
         if (retryOnFailure && attempt < MAX_SAVE_ATTEMPTS) {
           retryTimerRef.current = window.setTimeout(() => {
             retryTimerRef.current = null;
             void runSaveCycle(attempt + 1, retryOnFailure);
           }, SAVE_RETRY_BASE_MS * attempt);
-          return;
+          return false;
         }
         failSave(error);
+        return false;
       } finally {
         saveInFlightRef.current = false;
       }
@@ -216,7 +224,7 @@ export function useWorkflowDraft(
     }
   }, [code, queryClient]);
 
-  const saveNow = useCallback(async (): Promise<void> => {
+  const saveNow = useCallback(async (): Promise<boolean> => {
     if (timerRef.current) {
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -225,7 +233,7 @@ export function useWorkflowDraft(
       window.clearTimeout(retryTimerRef.current);
       retryTimerRef.current = null;
     }
-    await runSaveCycle(1, false);
+    return runSaveCycle(1, false);
   }, [runSaveCycle]);
 
   const setGraph = useCallback(
@@ -316,6 +324,8 @@ export function useWorkflowDraft(
   const emptyDraftFallback = useMemo(createDefaultWorkflowGraph, []);
   const resolvedGraph = graph.nodes.length === 0 ? emptyDraftFallback : graph;
 
+  const appliedDraft = draftQuery.data ?? initialDraft;
+
   return {
     graph: resolvedGraph,
     rowVersion,
@@ -327,6 +337,8 @@ export function useWorkflowDraft(
       (draftQuery.isFetching && !isDirty && draftQuery.data === undefined),
     loadError,
     isReadOnly,
+    versionStatus: appliedDraft.status,
+    versionLabel: appliedDraft.version,
     setGraph,
     undo,
     redo,

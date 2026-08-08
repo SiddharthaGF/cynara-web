@@ -10,6 +10,11 @@ import {
   CardTitle,
 } from '@/components/ui/card.tsx';
 import { ScrollArea } from '@/components/ui/scroll-area.tsx';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip.tsx';
 import type { ValidationIssue } from '@/features/forms/types.ts';
 import { translateValidationIssue } from '@/features/forms/validation/translateValidationIssue.ts';
 
@@ -42,12 +47,26 @@ export function ValidationPanel({
                 key={`${issue.code}-${issue.path}`}
                 className='grid gap-1 px-4 py-3'
               >
-                <Badge
-                  variant='outline'
-                  className='w-fit font-mono text-[0.625rem]'
-                >
-                  {issue.code}
-                </Badge>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <span
+                        tabIndex={0}
+                        className='inline-flex w-fit outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                      >
+                        <Badge
+                          variant='outline'
+                          className='font-mono text-[0.625rem]'
+                        >
+                          {issue.code}
+                        </Badge>
+                      </span>
+                    }
+                  />
+                  <TooltipContent side='top'>
+                    {translateValidationIssue(issue, t)}
+                  </TooltipContent>
+                </Tooltip>
                 <p className='text-sm text-foreground'>
                   {translateValidationIssue(issue, t)}
                 </p>

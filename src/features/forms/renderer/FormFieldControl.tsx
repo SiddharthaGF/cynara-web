@@ -200,6 +200,7 @@ export function FormFieldControl({
     >
       <FieldLabel
         htmlFor={inputId}
+        id={`${inputId}-label`}
         className={isCalculated ? 'font-normal' : undefined}
       >
         {labelNode}
@@ -213,6 +214,7 @@ export function FormFieldControl({
         handleChange,
         inputId,
         invalid,
+        `${inputId}-label`,
       )}
       <FieldFeedback
         helpText={helpText}

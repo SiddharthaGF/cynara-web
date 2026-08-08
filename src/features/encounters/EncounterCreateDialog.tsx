@@ -24,7 +24,6 @@ import { Spinner } from '@/components/ui/spinner.tsx';
 import {
   EncounterClinicalAreaField,
   EncounterFacilityField,
-  EncounterProfessionalField,
   EncounterTypeField,
 } from '@/features/encounters/EncounterCreateFields.tsx';
 import {
@@ -42,7 +41,6 @@ const INITIAL_VALUES: EncounterCreateFields = {
   facilityId: '',
   clinicalAreaId: '',
   type: '',
-  responsibleProfessionalId: DEFAULT_ACTOR_ID,
 };
 
 interface EncounterCreateDialogProps {
@@ -95,7 +93,8 @@ export function EncounterCreateDialog({
         facilityId: value.facilityId,
         clinicalAreaId: value.clinicalAreaId,
         type: value.type as EncounterType,
-        responsibleProfessionalId: value.responsibleProfessionalId.trim(),
+        // The responsible professional is the signed-in actor (not a free-text field).
+        responsibleProfessionalId: DEFAULT_ACTOR_ID,
       };
 
       try {
@@ -201,16 +200,6 @@ export function EncounterCreateDialog({
                 field={field}
                 isCreating={isCreating}
                 error={fieldErrors.type}
-              />
-            )}
-          </form.Field>
-
-          <form.Field name='responsibleProfessionalId'>
-            {(field) => (
-              <EncounterProfessionalField
-                field={field}
-                isCreating={isCreating}
-                error={fieldErrors.responsibleProfessionalId}
               />
             )}
           </form.Field>
