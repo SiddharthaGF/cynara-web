@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -8,14 +9,26 @@ import {
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { createForm, listForms } from '@/api/forms.ts';
+import {
+  createForm,
+  DEFAULT_FORM_PAGE_SIZE,
+  listForms,
+  type FormListResponse,
+  type ListFormsParams,
+} from '@/api/forms.ts';
 import { queryKeys } from '@/api/query-keys.ts';
 import type { FormSummary } from '@/features/forms/types.ts';
 
-function useFormsQuery(): UseQueryResult<FormSummary[]> {
+function useFormsQuery(
+  params: ListFormsParams,
+): UseQueryResult<FormListResponse> {
   return useQuery({
-    queryKey: queryKeys.forms.list(),
-    queryFn: listForms,
+    queryKey: queryKeys.forms.list({
+      page: params.page,
+      pageSize: params.pageSize,
+    }),
+    queryFn: async () => listForms(params),
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -29,20 +42,23 @@ function useCreateFormMutation(): UseMutationResult<
   return useMutation({
     mutationFn: createForm,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.forms.list() });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.forms.all });
     },
   });
 }
 
-export function useFormsCatalog(): {
+export function useFormsCatalog(params: ListFormsParams): {
   forms: FormSummary[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
   error: string | null;
   isCreating: boolean;
   isLoading: boolean;
   createForm: ReturnType<typeof useCreateFormMutation>['mutateAsync'];
 } {
   const { t } = useTranslation('forms');
-  const formsQuery = useFormsQuery();
+  const formsQuery = useFormsQuery(params);
   const createFormMutation = useCreateFormMutation();
 
   const error = useMemo((): string | null => {
@@ -66,7 +82,11 @@ export function useFormsCatalog(): {
   ]);
 
   return {
-    forms: formsQuery.data ?? [],
+    forms: formsQuery.data?.forms ?? [],
+    totalCount: formsQuery.data?.totalCount ?? 0,
+    page: formsQuery.data?.page ?? params.page ?? 1,
+    pageSize:
+      formsQuery.data?.pageSize ?? params.pageSize ?? DEFAULT_FORM_PAGE_SIZE,
     error,
     isCreating: createFormMutation.isPending,
     isLoading: formsQuery.isLoading,

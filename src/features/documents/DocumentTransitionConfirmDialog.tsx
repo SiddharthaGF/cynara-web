@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
@@ -39,12 +39,6 @@ export function DocumentTransitionConfirmDialog({
   const { t } = useTranslation(['documents']);
   const open = kind !== null;
   const [reason, setReason] = useState('');
-
-  useEffect(() => {
-    if (!open) {
-      setReason('');
-    }
-  }, [open]);
 
   let title = '';
   let body = '';

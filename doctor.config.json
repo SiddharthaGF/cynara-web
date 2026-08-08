@@ -7,6 +7,12 @@
       "src/hooks/use-mobile.ts",
       "src/api/generated/**",
       "packages/rule-engine/dist/**"
+    ],
+    "overrides": [
+      {
+        "files": ["src/api/workflowLifecycle.ts"],
+        "rules": ["deslop/unused-file"]
+      }
     ]
   }
 }

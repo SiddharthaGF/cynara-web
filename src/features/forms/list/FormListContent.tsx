@@ -10,19 +10,27 @@ import { FormsCatalogCard } from './FormsCatalogCard.tsx';
 
 interface FormListContentProps {
   forms: FormSummary[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
   error: string | null;
   isCreating: boolean;
   isLoading: boolean;
   canCreate: boolean;
+  onPageChange: (page: number) => void;
   onCreate: (values: { code: string; name: string }) => Promise<void>;
 }
 
 export function FormListContent({
   forms,
+  totalCount,
+  page,
+  pageSize,
   error,
   isCreating,
   isLoading,
   canCreate,
+  onPageChange,
   onCreate,
 }: FormListContentProps): JSX.Element {
   const { t } = useTranslation('forms');
@@ -60,10 +68,10 @@ export function FormListContent({
           <div className='hidden md:block'>
             <div className='rounded-2xl border border-primary/15 bg-primary/5 px-5 py-4 text-right'>
               <p className='font-display text-3xl font-semibold text-primary'>
-                {forms.length}
+                {totalCount}
               </p>
               <p className='text-xs tracking-wide text-muted-foreground uppercase'>
-                {t('list.draftCount', { count: forms.length })}
+                {t('list.draftCount', { count: totalCount })}
               </p>
             </div>
           </div>
@@ -89,8 +97,12 @@ export function FormListContent({
           ) : null}
           <FormsCatalogCard
             forms={forms}
+            totalCount={totalCount}
+            page={page}
+            pageSize={pageSize}
             isLoading={isLoading}
             reduceMotion={reduceMotion}
+            onPageChange={onPageChange}
           />
         </div>
       </div>

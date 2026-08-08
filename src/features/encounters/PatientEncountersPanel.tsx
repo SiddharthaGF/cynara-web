@@ -138,6 +138,7 @@ export function PatientEncountersPanel({
       </CardContent>
 
       <EncounterCreateDialog
+        key={createOpen ? 'open' : 'closed'}
         patientId={patientId}
         open={createOpen}
         onOpenChange={setCreateOpen}

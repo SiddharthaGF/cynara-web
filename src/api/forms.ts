@@ -10,6 +10,7 @@ import {
   type DataInFormDefinitionResponse,
   type DataInFormVersionResponse,
   type FormVersionStatus,
+  type Meta,
   type ResourceInResponse,
 } from '@/api/generated';
 import {
@@ -27,17 +28,51 @@ type FormDefinitionResource = Pick<
   DataInFormDefinitionResponse,
   'id' | 'attributes' | 'relationships'
 >;
-type FormVersionResource = Pick<
+export type FormVersionResource = Pick<
   DataInFormVersionResponse,
   'id' | 'attributes' | 'relationships'
 >;
 
-function listFormsQuery(): Record<string, string> {
+export const DEFAULT_FORM_PAGE_SIZE = 20;
+
+export interface ListFormsParams {
+  /** 1-based page number for the catalog list. */
+  page?: number;
+  /** Number of form definitions per page. */
+  pageSize?: number;
+}
+
+export interface FormListResponse {
+  forms: FormSummary[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+function listFormsQuery(params: ListFormsParams): Record<string, string> {
+  return buildPaginatedQuery({
+    include: ['versions'],
+    pageSize: params.pageSize ?? DEFAULT_FORM_PAGE_SIZE,
+    pageNumber: params.page,
+    sort: 'code',
+  });
+}
+
+/**
+ * Unbounded catalog query used by code lookups and the document catalog form
+ * selector, which must see every definition regardless of the paginated list.
+ */
+export function listAllFormDefinitionsQuery(): Record<string, string> {
   return buildPaginatedQuery({
     include: ['versions'],
     pageSize: 100,
     sort: 'code',
   });
+}
+
+function readTotalCount(meta: Meta | undefined): number {
+  const total = meta?.total;
+  return typeof total === 'number' && Number.isFinite(total) ? total : 0;
 }
 
 function isEditableStatus(
@@ -46,7 +81,7 @@ function isEditableStatus(
   return status === 'draft' || status === 'review';
 }
 
-function versionById(
+export function versionById(
   included: readonly ResourceInResponse[],
 ): Map<string, FormVersionResource> {
   const map = new Map<string, FormVersionResource>();
@@ -151,7 +186,7 @@ async function getDefinitionByCode(code: string): Promise<{
 }> {
   const { data } = await sdkGetFormDefinitionCollection({
     headers: contractHeaders(),
-    query: { query: listFormsQuery() },
+    query: { query: listAllFormDefinitionsQuery() },
   });
   const definition = data.data.find((item) => item.attributes?.code === code);
   if (!definition) {
@@ -215,13 +250,20 @@ export async function getFormVersionSnapshot(
   return mapVersion(version, code || (expectedCode ?? ''));
 }
 
-export async function listForms(): Promise<FormSummary[]> {
+export async function listForms(
+  params: ListFormsParams = {},
+): Promise<FormListResponse> {
   const { data } = await sdkGetFormDefinitionCollection({
     headers: contractHeaders(),
-    query: { query: listFormsQuery() },
+    query: { query: listFormsQuery(params) },
   });
   const versions = versionById(data.included ?? []);
-  return data.data.map((definition) => mapSummary(definition, versions));
+  return {
+    forms: data.data.map((definition) => mapSummary(definition, versions)),
+    totalCount: readTotalCount(data.meta),
+    page: params.page ?? 1,
+    pageSize: params.pageSize ?? DEFAULT_FORM_PAGE_SIZE,
+  };
 }
 
 export async function createForm(input: {
@@ -337,56 +379,4 @@ export async function updateFormDraft(
 export async function resolveFormDefinitionId(code: string): Promise<string> {
   const { definition } = await getDefinitionByCode(code);
   return definition.id;
-}
-
-export interface PublishedFormVersionOption {
-  id: string;
-  version: string;
-}
-
-export interface FormVersionPickerOption {
-  formDefinitionId: string;
-  code: string;
-  name: string;
-  publishedVersions: PublishedFormVersionOption[];
-}
-
-/**
- * Form definitions with their published versions, used by the clinical
- * document catalog form selector. Only published versions can back a catalog
- * entry, so draft/review versions are omitted.
- */
-export async function listFormVersionPickerOptions(): Promise<
-  FormVersionPickerOption[]
-> {
-  const { data } = await sdkGetFormDefinitionCollection({
-    headers: contractHeaders(),
-    query: { query: listFormsQuery() },
-  });
-  const versions = versionById(data.included ?? []);
-  return data.data.map((definition) => {
-    const related = relationshipIds(definition.relationships?.versions)
-      .map((id) => versions.get(id))
-      .filter((item): item is FormVersionResource => item !== undefined);
-    const publishedVersions = related
-      .flatMap((item) =>
-        item.attributes?.status === 'published'
-          ? [
-              {
-                id: item.id,
-                version: item.attributes?.version ?? item.id,
-              },
-            ]
-          : [],
-      )
-      // The mapped array is freshly created, so an in-place sort is safe.
-      // eslint-disable-next-line unicorn/no-array-sort
-      .sort((a, b) => a.version.localeCompare(b.version));
-    return {
-      formDefinitionId: definition.id,
-      code: definition.attributes?.code ?? '',
-      name: definition.attributes?.name ?? '',
-      publishedVersions,
-    };
-  });
 }

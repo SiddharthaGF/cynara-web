@@ -1,23 +1,24 @@
 import type { APIRequestContext } from '@playwright/test';
 
+import {
+  apiOrigin,
+  completeClinicalDocumentViaApi,
+  enterClinicalDocumentInErrorViaApi,
+  headers,
+  seedWorkspaceDocument,
+  startClinicalDocumentViaApi,
+  updateFormResponseViaApi,
+} from './documentLifecycle.ts';
 import { uniqueCode } from './encounters.ts';
 
-const JSON_API_MEDIA = 'application/vnd.api+json';
-const ACTOR = 'designer-user';
-const HOSPITAL = process.env.VITE_HOSPITAL_CODE ?? 'default';
-
-function apiOrigin(baseURL: string): string {
-  return process.env.VITE_API_ORIGIN?.replace(/\/$/u, '') || baseURL;
-}
-
-function headers(): Record<string, string> {
-  return {
-    'Accept': JSON_API_MEDIA,
-    'Content-Type': JSON_API_MEDIA,
-    'X-Actor-Id': ACTOR,
-    'X-Hospital-Code': HOSPITAL,
-  };
-}
+export {
+  completeClinicalDocumentViaApi,
+  enterClinicalDocumentInErrorViaApi,
+  seedWorkspaceDocument,
+  startClinicalDocumentViaApi,
+  updateFormResponseViaApi,
+} from './documentLifecycle.ts';
+export type { CreatedClinicalDocument } from './documentLifecycle.ts';
 
 /**
  * Minimal clinical schema used to seed the document catalog. Field ids double
@@ -87,14 +88,6 @@ export const WORKSPACE_ANSWERS = {
   'body.weight.kg': 72.5,
   'history.smoker': true,
 };
-
-export interface CreatedClinicalDocument {
-  id: string;
-  formResponseId: string;
-  status: string;
-  rowVersion: number;
-  documentDefinitionId: string;
-}
 
 export interface DocumentCatalogRefs {
   facilityId: string;
@@ -290,132 +283,4 @@ export async function seedDocumentCatalog(
     definitionName,
     code: `def-${suffix}`,
   };
-}
-
-export async function startClinicalDocumentViaApi(
-  request: APIRequestContext,
-  baseURL: string,
-  input: { documentDefinitionId: string; encounterId: string },
-): Promise<CreatedClinicalDocument> {
-  const origin = apiOrigin(baseURL);
-  const response = await request.post(`${origin}/api/clinicalDocuments`, {
-    data: {
-      documentDefinitionId: input.documentDefinitionId,
-      encounterId: input.encounterId,
-    },
-    headers: headers(),
-  });
-  if (!response.ok()) {
-    throw new Error(
-      `Failed to start clinical document (${response.status()}): ${await response.text()}`,
-    );
-  }
-  const body = (await response.json()) as CreatedClinicalDocument;
-  return {
-    id: body.id,
-    formResponseId: body.formResponseId,
-    status: body.status,
-    rowVersion: body.rowVersion,
-    documentDefinitionId: body.documentDefinitionId,
-  };
-}
-
-export async function updateFormResponseViaApi(
-  request: APIRequestContext,
-  baseURL: string,
-  id: string,
-  answersJson: string,
-  rowVersion: number,
-): Promise<{ rowVersion: number }> {
-  const origin = apiOrigin(baseURL);
-  const response = await request.patch(`${origin}/api/formResponses/${id}`, {
-    data: {
-      data: {
-        id,
-        type: 'formResponses',
-        attributes: { answersJson, rowVersion },
-      },
-    },
-    headers: headers(),
-  });
-  if (!response.ok()) {
-    throw new Error(
-      `Failed to update form response (${response.status()}): ${await response.text()}`,
-    );
-  }
-  const body = (await response.json()) as {
-    data: { attributes: { rowVersion: number } };
-  };
-  return { rowVersion: body.data.attributes.rowVersion };
-}
-
-export async function completeClinicalDocumentViaApi(
-  request: APIRequestContext,
-  baseURL: string,
-  documentId: string,
-  rowVersion: number,
-): Promise<CreatedClinicalDocument> {
-  const origin = apiOrigin(baseURL);
-  const response = await request.post(
-    `${origin}/api/clinicalDocuments/${documentId}/complete`,
-    {
-      data: { rowVersion },
-      headers: headers(),
-    },
-  );
-  if (!response.ok()) {
-    throw new Error(
-      `Failed to complete clinical document (${response.status()}): ${await response.text()}`,
-    );
-  }
-  return (await response.json()) as CreatedClinicalDocument;
-}
-
-export async function enterClinicalDocumentInErrorViaApi(
-  request: APIRequestContext,
-  baseURL: string,
-  documentId: string,
-  rowVersion: number,
-  reason: string,
-): Promise<CreatedClinicalDocument> {
-  const origin = apiOrigin(baseURL);
-  const response = await request.post(
-    `${origin}/api/clinicalDocuments/${documentId}/enter-in-error`,
-    {
-      data: { rowVersion, reason },
-      headers: headers(),
-    },
-  );
-  if (!response.ok()) {
-    throw new Error(
-      `Failed to enter clinical document in error (${response.status()}): ${await response.text()}`,
-    );
-  }
-  return (await response.json()) as CreatedClinicalDocument;
-}
-
-/**
- * Seeds a complete document fixture (patient + encounter + answers) and
- * returns the document plus the encounters list page URL.
- */
-export async function seedWorkspaceDocument(
-  request: APIRequestContext,
-  baseURL: string,
-  patientId: string,
-  encounterId: string,
-  catalog: DocumentCatalogRefs,
-  answersJson: string = '{}',
-): Promise<CreatedClinicalDocument> {
-  const document = await startClinicalDocumentViaApi(request, baseURL, {
-    documentDefinitionId: catalog.definitionId,
-    encounterId,
-  });
-  await updateFormResponseViaApi(
-    request,
-    baseURL,
-    document.formResponseId,
-    answersJson,
-    0,
-  );
-  return document;
 }

@@ -8,7 +8,7 @@ import {
   formatClinicalDocumentStatus,
 } from '@/features/documents/clinicalDocumentForm.ts';
 
-export function DocumentInfoRow({
+function DocumentInfoRow({
   label,
   value,
 }: {

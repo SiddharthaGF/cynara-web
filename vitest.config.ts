@@ -10,7 +10,10 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/api/__tests__/**/*.{test,spec}.{ts,tsx}'],
+    include: [
+      'src/api/__tests__/**/*.{test,spec}.{ts,tsx}',
+      'src/features/**/__tests__/**/*.{test,spec}.{ts,tsx}',
+    ],
     setupFiles: ['./vitest.setup.ts'],
   },
 });

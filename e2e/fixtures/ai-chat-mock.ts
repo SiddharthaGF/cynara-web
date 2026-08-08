@@ -44,9 +44,9 @@ export function buildMockAiChatSse(): string {
  */
 export async function mockAiChatStream(page: Page): Promise<void> {
   // The chat composer is gated on `GET /api/ai/status` reporting the provider
-  // as configured. The seeded API deliberately has no API key, so stub the
-  // status to keep the flow deterministic (the stream itself is already
-  // mocked below).
+  // As configured. The seeded API deliberately has no API key, so stub the
+  // Status to keep the flow deterministic (the stream itself is already
+  // Mocked below).
   await page.route('**/api/ai/status', async (route) => {
     if (route.request().method() !== 'GET') {
       await route.continue();

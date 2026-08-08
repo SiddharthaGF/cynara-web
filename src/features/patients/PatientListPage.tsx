@@ -1,8 +1,13 @@
-import { Link, useParams } from '@tanstack/react-router';
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearch,
+} from '@tanstack/react-router';
 import { Search, UserPlus, Users } from 'lucide-react';
 import { LazyMotion, domAnimation, m, useReducedMotion } from 'motion/react';
 import type { JSX } from 'react';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AppShell } from '@/components/app-shell.tsx';
@@ -39,10 +44,28 @@ export function PatientListPage(): JSX.Element {
   const { locale } = useParams({ from: '/$locale' });
   const reduceMotion = useReducedMotion();
   const { can } = useCapabilities();
-  const [searchParams, setSearchParams] = useState<ListPatientsParams>({
-    page: 1,
-    pageSize: DEFAULT_PATIENT_PAGE_SIZE,
-  });
+  const search = useSearch({ from: '/$locale/patients/' });
+  const navigate = useNavigate();
+
+  const listParams = useMemo<ListPatientsParams>(() => {
+    const params: ListPatientsParams = {
+      page: search.page,
+      pageSize: search.pageSize,
+    };
+    if (search.mrn !== undefined && search.mrn !== '') {
+      params.mrn = search.mrn;
+    }
+    if (search.givenName !== undefined && search.givenName !== '') {
+      params.givenName = search.givenName;
+    }
+    if (search.familyName !== undefined && search.familyName !== '') {
+      params.familyName = search.familyName;
+    }
+    if (search.nationalId !== undefined && search.nationalId !== '') {
+      params.nationalId = search.nationalId;
+    }
+    return params;
+  }, [search]);
 
   const {
     patients,
@@ -53,33 +76,71 @@ export function PatientListPage(): JSX.Element {
     isFetching,
     error,
     isForbidden,
-  } = usePatientSearch(searchParams);
+  } = usePatientSearch(listParams);
 
-  const handleSearch = useCallback((params: ListPatientsParams) => {
-    setSearchParams({
-      ...params,
-      page: 1,
-      pageSize: DEFAULT_PATIENT_PAGE_SIZE,
-    });
-  }, []);
+  const handleSearch = useCallback(
+    (params: ListPatientsParams) => {
+      void navigate({
+        to: '/$locale/patients',
+        params: { locale },
+        search: (prev) => ({
+          ...prev,
+          mrn: params.mrn,
+          givenName: params.givenName,
+          familyName: params.familyName,
+          nationalId: params.nationalId,
+          page: 1,
+        }),
+      });
+    },
+    [locale, navigate],
+  );
 
   const handleClear = useCallback(() => {
-    setSearchParams({
-      page: 1,
-      pageSize: DEFAULT_PATIENT_PAGE_SIZE,
+    void navigate({
+      to: '/$locale/patients',
+      params: { locale },
+      search: {
+        page: 1,
+        pageSize: DEFAULT_PATIENT_PAGE_SIZE,
+      },
+      replace: true,
     });
-  }, []);
+  }, [locale, navigate]);
 
-  const handlePageChange = useCallback((nextPage: number) => {
-    setSearchParams((prev) => ({
-      ...prev,
-      page: nextPage,
-      pageSize: prev.pageSize ?? DEFAULT_PATIENT_PAGE_SIZE,
-    }));
-  }, []);
+  const handlePageChange = useCallback(
+    (nextPage: number) => {
+      void navigate({
+        to: '/$locale/patients',
+        params: { locale },
+        search: (prev) => ({ ...prev, page: nextPage }),
+        replace: true,
+      });
+    },
+    [locale, navigate],
+  );
 
   const canRegister = !isForbidden && can('write', 'Patient');
   const showSearchError = !isForbidden && error !== null && error !== '';
+
+  const searchFormValues = useMemo(
+    () => ({
+      mrn: search.mrn ?? '',
+      givenName: search.givenName ?? '',
+      familyName: search.familyName ?? '',
+      nationalId: search.nationalId ?? '',
+    }),
+    [search.familyName, search.givenName, search.mrn, search.nationalId],
+  );
+
+  const searchFormKey = [
+    search.mrn,
+    search.givenName,
+    search.familyName,
+    search.nationalId,
+  ]
+    .map((value: string | undefined) => value ?? '')
+    .join('|');
 
   return (
     <AppShell variant='catalog'>
@@ -177,6 +238,8 @@ export function PatientListPage(): JSX.Element {
                 </CardHeader>
                 <CardContent>
                   <PatientSearchForm
+                    key={searchFormKey}
+                    initialValues={searchFormValues}
                     onSearch={handleSearch}
                     onClear={handleClear}
                     isSearching={isFetching}

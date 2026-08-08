@@ -17,6 +17,8 @@ export interface FormListParams {
   includeRetired?: boolean;
   status?: string;
   sort?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface FormVersionListParams {

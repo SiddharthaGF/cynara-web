@@ -10,6 +10,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card.tsx';
@@ -25,16 +26,26 @@ import type { FormSummary } from '@/features/forms/types.ts';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
 import { cn } from '@/lib/utils.ts';
 
+import { FormListPagination } from './FormListPagination.tsx';
+
 interface FormsCatalogCardProps {
   forms: FormSummary[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
   isLoading: boolean;
   reduceMotion: boolean | null;
+  onPageChange: (page: number) => void;
 }
 
 export function FormsCatalogCard({
   forms,
+  totalCount,
+  page,
+  pageSize,
   isLoading,
   reduceMotion,
+  onPageChange,
 }: FormsCatalogCardProps): JSX.Element {
   const { t } = useTranslation('forms');
   const { locale } = useParams({ from: '/$locale' });
@@ -160,6 +171,16 @@ export function FormsCatalogCard({
         <CardContent className='min-h-0 flex-1 overflow-hidden'>
           {renderCatalogBody()}
         </CardContent>
+        {!isLoading && totalCount > pageSize ? (
+          <CardFooter className='shrink-0'>
+            <FormListPagination
+              page={page}
+              pageSize={pageSize}
+              totalCount={totalCount}
+              onPageChange={onPageChange}
+            />
+          </CardFooter>
+        ) : null}
       </Card>
     </m.div>
   );

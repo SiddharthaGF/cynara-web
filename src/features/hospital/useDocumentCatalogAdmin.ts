@@ -15,7 +15,7 @@ import {
   type UpdateDocumentDefinitionInput,
 } from '@/api/document-catalog.ts';
 import { describeApiError } from '@/api/error-message.ts';
-import type { FormVersionPickerOption } from '@/api/forms.ts';
+import type { FormVersionPickerOption } from '@/api/formVersionPicker.ts';
 import {
   useAdminListState,
   useAdminMutationState,

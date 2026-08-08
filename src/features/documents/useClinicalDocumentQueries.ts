@@ -6,7 +6,7 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query';
 
-import { ApiError } from '@/api/client.ts';
+import type { ApiError } from '@/api/client.ts';
 import {
   cancelClinicalDocument,
   completeClinicalDocument,

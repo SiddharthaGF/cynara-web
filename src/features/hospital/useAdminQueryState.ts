@@ -16,7 +16,7 @@ import { describeApiError } from '@/api/error-message.ts';
 import {
   listFormVersionPickerOptions,
   type FormVersionPickerOption,
-} from '@/api/forms.ts';
+} from '@/api/formVersionPicker.ts';
 import { queryKeys } from '@/api/query-keys.ts';
 import {
   listClinicalAreas,

@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { UserCircle } from 'lucide-react';
 import { m, useReducedMotion } from 'motion/react';
 import type { JSX } from 'react';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { PatientDto } from '@/api/patients.ts';
@@ -39,23 +39,20 @@ interface SearchFormValues {
 }
 
 interface PatientSearchFormProps {
+  initialValues: SearchFormValues;
   onSearch: (params: ListPatientsParams) => void;
   onClear: () => void;
   isSearching: boolean;
 }
 
-export function PatientSearchForm({
+const PatientSearchFormComponent = ({
+  initialValues,
   onSearch,
   onClear,
   isSearching,
-}: PatientSearchFormProps): JSX.Element {
+}: PatientSearchFormProps): JSX.Element => {
   const { t } = useTranslation('patients');
-  const [values, setValues] = useState<SearchFormValues>({
-    mrn: '',
-    givenName: '',
-    familyName: '',
-    nationalId: '',
-  });
+  const [values, setValues] = useState<SearchFormValues>(initialValues);
 
   function handleChange(field: keyof SearchFormValues, value: string): void {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -156,7 +153,9 @@ export function PatientSearchForm({
       </div>
     </form>
   );
-}
+};
+
+export const PatientSearchForm = memo(PatientSearchFormComponent);
 
 interface PatientResultsTableProps {
   patients: PatientDto[];
