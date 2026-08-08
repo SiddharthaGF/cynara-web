@@ -21,6 +21,9 @@
     "openDesigner": "Open designer",
     "noDraft": "no draft",
     "published": "Published: {{versions}}",
+    "pageRange": "Showing {{start}}–{{end}} of {{total}}",
+    "previousPage": "Previous",
+    "nextPage": "Next",
     "defaultFieldLabel": "Clinical notes",
     "errors": {
       "loadFailed": "Failed to load forms.",

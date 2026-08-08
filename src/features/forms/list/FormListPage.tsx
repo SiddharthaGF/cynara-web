@@ -1,4 +1,6 @@
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import type { JSX } from 'react';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { AppShell } from '@/components/app-shell.tsx';
@@ -10,7 +12,33 @@ import { useFormsCatalog } from './useFormsCatalog.ts';
 export function FormListPage(): JSX.Element {
   const { t } = useTranslation('forms');
   const { can } = useCapabilities();
-  const { forms, error, isCreating, isLoading, createForm } = useFormsCatalog();
+  const { locale } = useParams({ from: '/$locale' });
+  const search = useSearch({ from: '/$locale/forms/' });
+  const navigate = useNavigate();
+  const {
+    forms,
+    totalCount,
+    pageSize,
+    error,
+    isCreating,
+    isLoading,
+    createForm,
+  } = useFormsCatalog({
+    page: search.page,
+    pageSize: search.pageSize,
+  });
+
+  const handlePageChange = useCallback(
+    (nextPage: number) => {
+      void navigate({
+        to: '/$locale/forms',
+        params: { locale },
+        search: (prev) => ({ ...prev, page: nextPage }),
+        replace: true,
+      });
+    },
+    [locale, navigate],
+  );
 
   async function handleCreate(values: {
     code: string;
@@ -51,6 +79,12 @@ export function FormListPage(): JSX.Element {
         uiSchemaJson,
         rulesSchemaJson,
       });
+      void navigate({
+        to: '/$locale/forms',
+        params: { locale },
+        search: (prev) => ({ ...prev, page: 1 }),
+        replace: true,
+      });
     } catch {
       // Mutation error is surfaced through useFormsCatalog().error
     }
@@ -60,10 +94,14 @@ export function FormListPage(): JSX.Element {
     <AppShell variant='catalog'>
       <FormListContent
         forms={forms}
+        totalCount={totalCount}
+        page={search.page}
+        pageSize={pageSize}
         error={error}
         isCreating={isCreating}
         isLoading={isLoading}
         canCreate={can('write', 'Catalog')}
+        onPageChange={handlePageChange}
         onCreate={handleCreate}
       />
     </AppShell>

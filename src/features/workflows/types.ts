@@ -96,3 +96,16 @@ export interface WorkflowGraph {
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
 }
+
+export type WorkflowIssueSeverity = 'error' | 'warning';
+
+export interface WorkflowValidationIssue {
+  code: string;
+  path: string;
+  message: string;
+  severity: WorkflowIssueSeverity;
+  /** Node the issue refers to, when it is local to a node. */
+  nodeId?: string;
+  /** Edge index the issue refers to, when it is local to an edge. */
+  edgeIndex?: number;
+}

@@ -1,5 +1,5 @@
 import { Link, useLocation, useParams } from '@tanstack/react-router';
-import { ClipboardList, Hospital, Users } from 'lucide-react';
+import { ClipboardList, Hospital, Users, Workflow } from 'lucide-react';
 import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -33,7 +33,11 @@ interface AppShellProps {
 }
 
 interface NavEntry {
-  to: '/$locale/forms' | '/$locale/patients' | '/$locale/admin';
+  to:
+    | '/$locale/forms'
+    | '/$locale/workflows'
+    | '/$locale/patients'
+    | '/$locale/admin';
   labelKey: string;
   icon: typeof ClipboardList;
   /** Any one of these subjects (with the read action) reveals the entry. */
@@ -46,6 +50,12 @@ const NAV_ENTRIES: readonly NavEntry[] = [
     labelKey: 'nav.forms',
     icon: ClipboardList,
     subjects: ['Catalog'],
+  },
+  {
+    to: '/$locale/workflows',
+    labelKey: 'nav.workflows',
+    icon: Workflow,
+    subjects: ['Workflow'],
   },
   {
     to: '/$locale/patients',
@@ -119,12 +129,14 @@ function AppShellContent({
   const { entries, homeTarget } = useAccessibleNav();
 
   const isOnForms = location.pathname.startsWith(`/${locale}/forms`);
+  const isOnWorkflows = location.pathname.startsWith(`/${locale}/workflows`);
   const isOnPatients = location.pathname.startsWith(`/${locale}/patients`);
   const isOnAdmin = location.pathname.startsWith(`/${locale}/admin`);
   const isCollapsed = state === 'collapsed';
 
   const routeActiveByTarget: Record<NavEntry['to'], boolean> = {
     '/$locale/forms': isOnForms,
+    '/$locale/workflows': isOnWorkflows,
     '/$locale/patients': isOnPatients,
     '/$locale/admin': isOnAdmin,
   };

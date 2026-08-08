@@ -21,6 +21,9 @@
     "openDesigner": "Abrir diseñador",
     "noDraft": "sin borrador",
     "published": "Publicado: {{versions}}",
+    "pageRange": "Mostrando {{start}}–{{end}} de {{total}}",
+    "previousPage": "Anterior",
+    "nextPage": "Siguiente",
     "defaultFieldLabel": "Notas clínicas",
     "errors": {
       "loadFailed": "No se pudieron cargar los formularios.",

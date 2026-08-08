@@ -1,3 +1,4 @@
+import { BatteryFull, Signal, Wifi } from 'lucide-react';
 import { useRef, type JSX, type ReactNode } from 'react';
 
 import { cn } from '@/lib/utils.ts';
@@ -43,101 +44,31 @@ function StatusBar({ isLandscape }: { isLandscape: boolean }): JSX.Element {
 
 function SignalBars(): JSX.Element {
   return (
-    <svg
+    <Signal
       aria-hidden
-      viewBox='0 0 18 12'
       className='h-2.5 w-[1.1rem]'
-      fill='currentColor'
-    >
-      <rect
-        x='0'
-        y='8'
-        width='3'
-        height='4'
-        rx='0.5'
-      />
-      <rect
-        x='5'
-        y='5.5'
-        width='3'
-        height='6.5'
-        rx='0.5'
-      />
-      <rect
-        x='10'
-        y='3'
-        width='3'
-        height='9'
-        rx='0.5'
-      />
-      <rect
-        x='15'
-        y='0'
-        width='3'
-        height='12'
-        rx='0.5'
-      />
-    </svg>
+      strokeWidth={2.5}
+    />
   );
 }
 
 function WifiIcon(): JSX.Element {
   return (
-    <svg
+    <Wifi
       aria-hidden
-      viewBox='0 0 16 12'
       className='h-2.5 w-3'
-      fill='none'
-      stroke='currentColor'
-      strokeWidth='1.4'
-      strokeLinecap='round'
-    >
-      <path d='M1 4.5c4-3.5 10-3.5 14 0' />
-      <path d='M3.5 7c2.5-2 7-2 9.5 0' />
-      <path d='M6 9.5c1.2-.9 2.8-.9 4 0' />
-      <circle
-        cx='8'
-        cy='11'
-        r='0.75'
-        fill='currentColor'
-        stroke='none'
-      />
-    </svg>
+      strokeWidth={2.5}
+    />
   );
 }
 
 function BatteryIcon(): JSX.Element {
   return (
-    <svg
+    <BatteryFull
       aria-hidden
-      viewBox='0 0 26 12'
       className='h-2.5 w-[1.65rem]'
-      fill='none'
-      stroke='currentColor'
-    >
-      <rect
-        x='0.5'
-        y='0.5'
-        width='21'
-        height='11'
-        rx='2.5'
-        strokeWidth='1'
-      />
-      <rect
-        x='2.5'
-        y='2.5'
-        width='16'
-        height='7'
-        rx='1.25'
-        fill='currentColor'
-        stroke='none'
-      />
-      <path
-        d='M23 4.5v3'
-        strokeWidth='1.2'
-        strokeLinecap='round'
-      />
-    </svg>
+      strokeWidth={1.75}
+    />
   );
 }
 

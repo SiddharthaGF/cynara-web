@@ -10,6 +10,7 @@ import {
   type DataInFormDefinitionResponse,
   type DataInFormVersionResponse,
   type FormVersionStatus,
+  type Meta,
   type ResourceInResponse,
 } from '@/api/generated';
 import {
@@ -32,12 +33,46 @@ type FormVersionResource = Pick<
   'id' | 'attributes' | 'relationships'
 >;
 
-function listFormsQuery(): Record<string, string> {
+export const DEFAULT_FORM_PAGE_SIZE = 20;
+
+export interface ListFormsParams {
+  /** 1-based page number for the catalog list. */
+  page?: number;
+  /** Number of form definitions per page. */
+  pageSize?: number;
+}
+
+export interface FormListResponse {
+  forms: FormSummary[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+function listFormsQuery(params: ListFormsParams): Record<string, string> {
+  return buildPaginatedQuery({
+    include: ['versions'],
+    pageSize: params.pageSize ?? DEFAULT_FORM_PAGE_SIZE,
+    pageNumber: params.page,
+    sort: 'code',
+  });
+}
+
+/**
+ * Unbounded catalog query used by code lookups and the document catalog form
+ * selector, which must see every definition regardless of the paginated list.
+ */
+function listAllFormDefinitionsQuery(): Record<string, string> {
   return buildPaginatedQuery({
     include: ['versions'],
     pageSize: 100,
     sort: 'code',
   });
+}
+
+function readTotalCount(meta: Meta | undefined): number {
+  const total = meta?.total;
+  return typeof total === 'number' && Number.isFinite(total) ? total : 0;
 }
 
 function isEditableStatus(
@@ -151,7 +186,7 @@ async function getDefinitionByCode(code: string): Promise<{
 }> {
   const { data } = await sdkGetFormDefinitionCollection({
     headers: contractHeaders(),
-    query: { query: listFormsQuery() },
+    query: { query: listAllFormDefinitionsQuery() },
   });
   const definition = data.data.find((item) => item.attributes?.code === code);
   if (!definition) {
@@ -215,13 +250,20 @@ export async function getFormVersionSnapshot(
   return mapVersion(version, code || (expectedCode ?? ''));
 }
 
-export async function listForms(): Promise<FormSummary[]> {
+export async function listForms(
+  params: ListFormsParams = {},
+): Promise<FormListResponse> {
   const { data } = await sdkGetFormDefinitionCollection({
     headers: contractHeaders(),
-    query: { query: listFormsQuery() },
+    query: { query: listFormsQuery(params) },
   });
   const versions = versionById(data.included ?? []);
-  return data.data.map((definition) => mapSummary(definition, versions));
+  return {
+    forms: data.data.map((definition) => mapSummary(definition, versions)),
+    totalCount: readTotalCount(data.meta),
+    page: params.page ?? 1,
+    pageSize: params.pageSize ?? DEFAULT_FORM_PAGE_SIZE,
+  };
 }
 
 export async function createForm(input: {
@@ -361,7 +403,7 @@ export async function listFormVersionPickerOptions(): Promise<
 > {
   const { data } = await sdkGetFormDefinitionCollection({
     headers: contractHeaders(),
-    query: { query: listFormsQuery() },
+    query: { query: listAllFormDefinitionsQuery() },
   });
   const versions = versionById(data.included ?? []);
   return data.data.map((definition) => {

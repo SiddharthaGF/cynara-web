@@ -1,0 +1,154 @@
+import { MarkerType } from '@xyflow/react';
+import type { Edge, Node } from '@xyflow/react';
+
+import {
+  describeExpression,
+  edgeKey,
+  outgoingEdges,
+} from '@/features/workflows/model/workflowGraph.ts';
+import type {
+  WorkflowEdge,
+  WorkflowGraph,
+  WorkflowNode,
+  WorkflowNodeType,
+} from '@/features/workflows/types.ts';
+
+import { computeDagreLayout } from './autoLayout.ts';
+
+export interface WorkflowFlowNodeData extends Record<string, unknown> {
+  /** Domain node this flow node represents. */
+  node: WorkflowNode;
+  /** Outgoing domain edges; decision nodes render one source handle per branch. */
+  outgoing: WorkflowEdge[];
+  readOnly: boolean;
+  hasErrors: boolean;
+  onAddStep: (nodeId: string) => void;
+  onOpenSettings: (nodeId: string) => void;
+}
+
+export interface WorkflowFlowEdgeData extends Record<string, unknown> {
+  /** Resolved label rendered next to the edge. */
+  label: string | null;
+  isConditional: boolean;
+  isDefault: boolean;
+  readOnly: boolean;
+}
+
+export type WorkflowFlowNode = Node<WorkflowFlowNodeData, WorkflowNodeType>;
+export type WorkflowFlowEdge = Edge<WorkflowFlowEdgeData>;
+
+export interface DomainGraphToFlowOptions {
+  /**
+   * Session positions, keyed by node id. Restored from the browser store on
+   * mount and kept in sync by `useWorkflowFlow`; wins over the computed layout
+   * so dragged layouts survive re-projection.
+   */
+  positions: ReadonlyMap<string, { x: number; y: number }>;
+  selectedNodeId: string | null;
+  selectedEdgeKey: string | null;
+  readOnly: boolean;
+  nodeIssueCounts: ReadonlyMap<string, number>;
+  defaultBranchLabel: string;
+  onAddStep: (nodeId: string) => void;
+  onOpenSettings: (nodeId: string) => void;
+}
+
+/** Resolved label for a transition, mirroring the designer tooltip rules. */
+export function workflowEdgeLabel(
+  edge: WorkflowEdge,
+  isDecisionSource: boolean,
+  defaultBranchLabel: string,
+): string | null {
+  const explicit = edge.label?.trim();
+  if (explicit) {
+    return explicit;
+  }
+  if (edge.condition) {
+    const described = describeExpression(edge.condition);
+    return described || null;
+  }
+  if (isDecisionSource) {
+    return defaultBranchLabel;
+  }
+  return null;
+}
+
+/**
+ * Maps the persisted domain graph to the React Flow view model.
+ *
+ * The domain model stays the single source of truth: every structural change
+ * goes through the domain operations and is projected back here. Node positions
+ * are visual-only state owned by the session (`positions`); they win over the
+ * computed layout so dragged layouts survive re-projection. Positions are
+ * stored in the browser (never in the workflow schema) and restored here on
+ * mount. Nodes without a saved position fall back to a dagre layout with
+ * default sizes; `useWorkflowFlow` re-runs the layout with measured sizes once
+ * React Flow has measured every node.
+ */
+export function domainGraphToFlow(
+  graph: WorkflowGraph,
+  options: DomainGraphToFlowOptions,
+): { nodes: WorkflowFlowNode[]; edges: WorkflowFlowEdge[] } {
+  const nodesById = new Map(graph.nodes.map((node) => [node.id, node]));
+  const needsLayout = graph.nodes.some(
+    (node) => !options.positions.has(node.id),
+  );
+  const layout = needsLayout ? computeDagreLayout(graph, new Map()) : null;
+
+  const nodes: WorkflowFlowNode[] = graph.nodes.map((node) => {
+    const position = options.positions.get(node.id) ?? layout?.get(node.id);
+    return {
+      id: node.id,
+      type: node.type,
+      position: position ?? { x: 0, y: 0 },
+      selected: options.selectedNodeId === node.id,
+      data: {
+        node,
+        outgoing: outgoingEdges(graph, node.id),
+        readOnly: options.readOnly,
+        hasErrors: (options.nodeIssueCounts.get(node.id) ?? 0) > 0,
+        onAddStep: options.onAddStep,
+        onOpenSettings: options.onOpenSettings,
+      },
+    };
+  });
+
+  const edges: WorkflowFlowEdge[] = graph.edges.map((edge) => {
+    const source = nodesById.get(edge.from);
+    const isDecisionSource = source?.type === 'decision';
+    const isConditional = edge.condition !== undefined;
+    const isDefault = isDecisionSource && !isConditional;
+    const key = edgeKey(edge.from, edge.to);
+    return {
+      id: key,
+      source: edge.from,
+      target: edge.to,
+      // Decisions expose one source handle per branch; the handle id mirrors
+      // The branch target so edges stay anchored while branches change.
+      sourceHandle: isDecisionSource ? edge.to : null,
+      type: 'workflow',
+      selected: options.selectedEdgeKey === key,
+      deletable: !options.readOnly,
+      // Bind the arrowhead to the stroke token so it tracks the edge theme
+      // (and the hover override in index.css) instead of a fixed gray.
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 16,
+        height: 16,
+        color: 'var(--xy-edge-stroke)',
+      },
+      data: {
+        label: workflowEdgeLabel(
+          edge,
+          isDecisionSource,
+          options.defaultBranchLabel,
+        ),
+        isConditional,
+        isDefault,
+        readOnly: options.readOnly,
+      },
+    };
+  });
+
+  return { nodes, edges };
+}

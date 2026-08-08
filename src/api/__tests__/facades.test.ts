@@ -277,7 +277,9 @@ describe('generated SDK façades', () => {
     it('navigates the JSON:API envelope and maps summaries', async () => {
       const captured = stubFetchWithCapture(() =>
         jsonApiResponse({
-          links: { self: 'http://api.test/api/formDefinitions' },
+          links: {
+            self: 'http://api.test/api/formDefinitions?page[size]=20',
+          },
           data: [
             {
               id: 'f-1',
@@ -312,21 +314,28 @@ describe('generated SDK façades', () => {
               },
             },
           ],
+          meta: { total: 1 },
         }),
       );
 
-      const summaries = await listForms();
+      const result = await listForms({ page: 1, pageSize: 20 });
 
       expect(captured.url).toContain('/api/formDefinitions');
-      expect(captured.url).toContain('include=versions');
-      expect(captured.url).toContain('page[size]=100');
-      expect(summaries).toHaveLength(1);
-      expect(summaries[0]).toMatchObject({
-        code: 'imc',
-        editableVersionId: 'v-1',
-        editableStatus: 'draft',
-        editableRowVersion: 3,
-        publishedVersions: [],
+      expect(captured.url).toContain('page[size]=20');
+      expect(captured.url).toContain('page[number]=1');
+      expect(result).toMatchObject({
+        totalCount: 1,
+        page: 1,
+        pageSize: 20,
+        forms: [
+          {
+            code: 'imc',
+            editableVersionId: 'v-1',
+            editableStatus: 'draft',
+            editableRowVersion: 3,
+            publishedVersions: [],
+          },
+        ],
       });
     });
 
