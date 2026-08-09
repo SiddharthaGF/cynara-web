@@ -55,10 +55,7 @@ export function PatientView({ patient }: PatientViewProps): JSX.Element {
   const ageYears = patientAgeYears(patient.birthDate);
 
   return (
-    <div
-      className='space-y-6'
-      data-testid='patient-detail-view'
-    >
+    <div className='space-y-6'>
       <div className='flex items-center gap-3'>
         <div className='flex size-10 items-center justify-center rounded-full bg-primary/10'>
           <UserCircle className='size-5 text-primary' />

@@ -100,7 +100,10 @@ export function PatientDetailPage(): JSX.Element {
 
   return (
     <AppShell variant='catalog'>
-      <div className='mx-auto max-w-3xl px-6 py-6 pb-12'>
+      <div
+        className='mx-auto max-w-3xl px-6 py-6 pb-12'
+        data-testid='patient-detail-view'
+      >
         <PatientDetailHeader
           patient={patient}
           locale={locale}
