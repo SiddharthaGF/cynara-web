@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { PatientDto } from '@/api/patients.ts';
 import {
+  formatPatientBloodType,
   formatPatientDateTime,
   formatPatientSex,
   formatPatientStatus,
@@ -86,6 +87,10 @@ export function PatientView({ patient }: PatientViewProps): JSX.Element {
         <PatientInfoRow
           label={t('detail.fields.sex')}
           value={formatPatientSex(patient.sex, t)}
+        />
+        <PatientInfoRow
+          label={t('detail.fields.bloodType')}
+          value={formatPatientBloodType(patient.bloodType)}
         />
         <PatientInfoRow
           label={t('detail.fields.nationalId')}

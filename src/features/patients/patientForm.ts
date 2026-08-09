@@ -10,6 +10,7 @@ export interface PatientIdentityFields {
   familyName: string;
   birthDate: string;
   sex: string;
+  bloodType: string;
 }
 
 export type PatientFieldErrors = Partial<
@@ -65,6 +66,10 @@ export function validatePatientIdentity(
     errors.sex = t('register.errors.sexRequired');
   }
 
+  if (!values.bloodType) {
+    errors.bloodType = t('register.errors.bloodTypeRequired');
+  }
+
   return errors;
 }
 
@@ -76,6 +81,13 @@ export function formatPatientSex(sex: string, t: Translate): string {
     return t('sex.female');
   }
   return t('sex.unknown');
+}
+
+/** Blood type rendered in clinical notation (a+ -> A+). */
+export function formatPatientBloodType(
+  bloodType: string | null | undefined,
+): string {
+  return bloodType ? bloodType.toUpperCase() : '';
 }
 
 export function formatPatientStatus(status: string, t: Translate): string {

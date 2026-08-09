@@ -8,6 +8,7 @@ import { describeApiError } from '@/api/error-message.ts';
 import {
   isDuplicateMrnError,
   isForbiddenPatientError,
+  type PatientBloodType,
   type PatientDto,
 } from '@/api/patients.ts';
 import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
@@ -21,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
 import { DatePickerInput } from '@/features/forms/renderer/DatePickerInput.tsx';
+import { PatientBloodTypeField } from '@/features/patients/PatientBloodTypeField.tsx';
 import {
   validatePatientIdentity,
   type PatientFieldErrors,
@@ -35,6 +37,7 @@ interface EditFormValues {
   familyName: string;
   birthDate: string;
   sex: string;
+  bloodType: string;
 }
 
 function patientToFormValues(patient: PatientDto): EditFormValues {
@@ -44,6 +47,7 @@ function patientToFormValues(patient: PatientDto): EditFormValues {
     familyName: patient.familyName,
     birthDate: patient.birthDate,
     sex: patient.sex,
+    bloodType: patient.bloodType,
   };
 }
 
@@ -77,6 +81,7 @@ export function PatientEditForm({
         familyName: value.familyName,
         birthDate: value.birthDate,
         sex: value.sex,
+        bloodType: value.bloodType,
       };
       const errors = validatePatientIdentity(identity, t, {
         requireMrn: false,
@@ -93,6 +98,7 @@ export function PatientEditForm({
           familyName: value.familyName.trim(),
           birthDate: value.birthDate.trim(),
           sex: value.sex as 'female' | 'male' | 'unknown',
+          bloodType: value.bloodType as PatientBloodType,
           nationalId: value.nationalId.trim() || null,
           rowVersion: patient.rowVersion,
         });
@@ -271,6 +277,22 @@ export function PatientEditForm({
               onChange={(val) => {
                 field.handleChange(val);
                 setFieldErrors((prev) => ({ ...prev, sex: undefined }));
+              }}
+            />
+          )}
+        </form.Field>
+
+        <form.Field name='bloodType'>
+          {(field) => (
+            <PatientBloodTypeField
+              id='edit-bloodType'
+              label={t('detail.fields.bloodType')}
+              value={field.state.value}
+              error={fieldErrors.bloodType}
+              disabled={isEditing}
+              onChange={(val) => {
+                field.handleChange(val);
+                setFieldErrors((prev) => ({ ...prev, bloodType: undefined }));
               }}
             />
           )}

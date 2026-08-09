@@ -63,7 +63,9 @@
       "sexFemale": "Femenino",
       "sexUnknown": "Otro",
       "nationalId": "ID Nacional",
-      "nationalIdPlaceholder": "ej. 12345678"
+      "nationalIdPlaceholder": "ej. 12345678",
+      "bloodType": "Tipo de sangre",
+      "bloodTypePlaceholder": "Seleccionar tipo de sangre"
     },
     "errors": {
       "mrnRequired": "La HC es obligatoria.",
@@ -78,7 +80,8 @@
       "familyNameTooLong": "Los apellidos deben tener 128 caracteres o menos.",
       "birthDateRequired": "La fecha de nacimiento es obligatoria.",
       "birthDateInvalid": "Ingresa una fecha válida (AAAA-MM-DD).",
-      "sexRequired": "El sexo es obligatorio."
+      "sexRequired": "El sexo es obligatorio.",
+      "bloodTypeRequired": "El tipo de sangre es obligatorio."
     }
   },
   "detail": {
@@ -121,6 +124,7 @@
       "birthDate": "Fecha de nacimiento",
       "age": "Edad",
       "sex": "Sexo",
+      "bloodType": "Tipo de sangre",
       "nationalId": "ID Nacional",
       "status": "Estado",
       "createdAt": "Creado",

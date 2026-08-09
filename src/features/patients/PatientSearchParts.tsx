@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
 import {
+  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -30,7 +31,7 @@ import {
 import type { ListPatientsParams } from '@/features/patients/usePatientsCatalog.ts';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
-interface SearchFormValues {
+export interface SearchFormValues {
   mrn: string;
   givenName: string;
   familyName: string;
@@ -207,11 +208,8 @@ export function PatientResultsTable({
   }
 
   return (
-    <div className='w-full overflow-hidden rounded-lg border border-border/60'>
-      <table
-        data-slot='table'
-        className='w-full min-w-[40rem] caption-bottom text-sm'
-      >
+    <div className='overflow-hidden rounded-lg border border-border/60'>
+      <Table className='min-w-[40rem]'>
         <TableHeader>
           <TableRow>
             <TableHead>{t('search.columns.mrn')}</TableHead>
@@ -283,7 +281,7 @@ export function PatientResultsTable({
             </TableRow>
           ))}
         </TableBody>
-      </table>
+      </Table>
     </div>
   );
 }

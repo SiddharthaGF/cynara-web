@@ -25,6 +25,7 @@ import {
 import { Input } from '@/components/ui/input.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
 import { DatePickerInput } from '@/features/forms/renderer/DatePickerInput.tsx';
+import { PatientBloodTypeField } from '@/features/patients/PatientBloodTypeField.tsx';
 import type {
   PatientFieldErrors,
   PatientIdentityFields,
@@ -265,6 +266,27 @@ export function PatientRegisterCard({
                     setFieldErrors((prev) => ({
                       ...prev,
                       sex: undefined,
+                    }));
+                  }}
+                />
+              )}
+            </form.Field>
+
+            <form.Field name='bloodType'>
+              {(field) => (
+                <PatientBloodTypeField
+                  id='bloodType'
+                  label={t('register.fields.bloodType')}
+                  value={field.state.value}
+                  error={fieldErrors.bloodType}
+                  disabled={isRegistering}
+                  required
+                  placeholder={t('register.fields.bloodTypePlaceholder')}
+                  onChange={(val) => {
+                    field.handleChange(val);
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      bloodType: undefined,
                     }));
                   }}
                 />

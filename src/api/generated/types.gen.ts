@@ -1980,6 +1980,7 @@ export type PatientDto = {
     familyName?: string;
     birthDate?: string;
     sex?: 'female' | 'male' | 'unknown';
+    bloodType?: 'a+' | 'a-' | 'b+' | 'b-' | 'ab+' | 'ab-' | 'o+' | 'o-';
     status?: 'active' | 'retired';
     rowVersion?: number;
     deletedAt?: string | null;
@@ -3211,6 +3212,7 @@ export type PatientDtoWritable = {
     familyName?: string;
     birthDate?: string;
     sex?: 'female' | 'male' | 'unknown';
+    bloodType?: 'a+' | 'a-' | 'b+' | 'b-' | 'ab+' | 'ab-' | 'o+' | 'o-';
     status?: 'active' | 'retired';
     rowVersion?: number;
     deletedAt?: string | null;

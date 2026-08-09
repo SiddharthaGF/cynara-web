@@ -63,7 +63,9 @@
       "sexFemale": "Female",
       "sexUnknown": "Other",
       "nationalId": "National ID",
-      "nationalIdPlaceholder": "e.g. 12345678"
+      "nationalIdPlaceholder": "e.g. 12345678",
+      "bloodType": "Blood type",
+      "bloodTypePlaceholder": "Select blood type"
     },
     "errors": {
       "mrnRequired": "MRN is required.",
@@ -78,7 +80,8 @@
       "familyNameTooLong": "Last name must be 128 characters or fewer.",
       "birthDateRequired": "Date of birth is required.",
       "birthDateInvalid": "Enter a valid date (YYYY-MM-DD).",
-      "sexRequired": "Sex is required."
+      "sexRequired": "Sex is required.",
+      "bloodTypeRequired": "Blood type is required."
     }
   },
   "detail": {
@@ -121,6 +124,7 @@
       "birthDate": "Date of birth",
       "age": "Age",
       "sex": "Sex",
+      "bloodType": "Blood type",
       "nationalId": "National ID",
       "status": "Status",
       "createdAt": "Created",

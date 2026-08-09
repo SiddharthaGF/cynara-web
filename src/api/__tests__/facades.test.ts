@@ -118,6 +118,7 @@ describe('generated SDK façades', () => {
         familyName: 'Hopper',
         birthDate: '1906-12-09',
         sex: 'female',
+        bloodType: 'o+',
       });
 
       // CYN-55: POST /api/patients has no requestBody schema. The generated
@@ -132,6 +133,7 @@ describe('generated SDK façades', () => {
         mrn: 'M-002',
         givenName: 'Grace',
         sex: 'female',
+        bloodType: 'o+',
       });
       expect(result).toMatchObject({ mrn: 'M-002', status: 'active' });
     });

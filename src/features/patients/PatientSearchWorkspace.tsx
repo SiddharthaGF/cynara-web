@@ -4,35 +4,24 @@ import {
   useParams,
   useSearch,
 } from '@tanstack/react-router';
-import { Search, UserPlus } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import type { JSX } from 'react';
-import { useCallback, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PageBreadcrumbs } from '@/components/page-breadcrumbs.tsx';
 import { PageHeader } from '@/components/page-header.tsx';
 import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card.tsx';
+import { Card, CardContent, CardHeader } from '@/components/ui/card.tsx';
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
 } from '@/components/ui/empty.tsx';
+import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { EncounterCreateDialog } from '@/features/encounters/EncounterCreateDialog.tsx';
-import { formatPatientResultDescription } from '@/features/patients/patientForm.ts';
-import { PatientSearchPagination } from '@/features/patients/PatientSearchPagination.tsx';
-import {
-  PatientResultsTable,
-  PatientSearchForm,
-} from '@/features/patients/PatientSearchParts.tsx';
 import {
   DEFAULT_PATIENT_PAGE_SIZE,
   usePatientSearch,
@@ -48,6 +37,11 @@ export interface PatientSearchFraming {
   subtitleKey: string;
   cardTitleKey: string;
 }
+
+const LazyPatientSearchCard = lazy(async () => {
+  const module = await import('./PatientSearchCard.tsx');
+  return { default: module.PatientSearchCard };
+});
 
 interface PatientSearchWorkspaceProps {
   /** Route the search state lives on (the single patient search surface). */
@@ -236,50 +230,43 @@ export function PatientSearchWorkspace({
       ) : null}
 
       {isForbidden ? null : (
-        <Card className='border-border/70 shadow-sm'>
-          <CardHeader>
-            <CardTitle className='flex items-center gap-2 font-heading text-lg'>
-              <Search className='size-4 text-muted-foreground' />
-              {t(framing.cardTitleKey)}
-            </CardTitle>
-            <CardDescription>
-              {formatPatientResultDescription(isLoading, totalCount, t)}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PatientSearchForm
-              key={searchFormKey}
-              initialValues={searchFormValues}
-              onSearch={handleSearch}
-              onClear={handleClear}
-              isSearching={isFetching}
-            />
-            <div className='mt-6'>
-              {createForbidden ? (
-                <Alert
-                  variant='destructive'
-                  className='mb-4'
-                >
-                  <AlertDescription>{createForbidden}</AlertDescription>
-                </Alert>
-              ) : null}
-              <PatientResultsTable
-                patients={patients}
-                isLoading={isLoading}
-                locale={locale}
-                onNewEncounter={setCreatePatient}
-                register={register}
-                canRegister={canRegister}
-              />
-              <PatientSearchPagination
-                page={page}
-                pageSize={pageSize}
-                totalCount={totalCount}
-                onPageChange={handlePageChange}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <Suspense
+          fallback={
+            <Card className='border-border/70 shadow-sm'>
+              <CardHeader>
+                <Skeleton className='h-6 w-48' />
+                <Skeleton className='mt-2 h-4 w-56' />
+              </CardHeader>
+              <CardContent>
+                <div className='grid gap-3'>
+                  <Skeleton className='h-11 w-full' />
+                  <Skeleton className='h-11 w-full' />
+                  <Skeleton className='h-64 w-full' />
+                </div>
+              </CardContent>
+            </Card>
+          }
+        >
+          <LazyPatientSearchCard
+            title={t(framing.cardTitleKey)}
+            searchFormKey={searchFormKey}
+            searchFormValues={searchFormValues}
+            isSearching={isFetching}
+            onSearch={handleSearch}
+            onClear={handleClear}
+            createForbidden={createForbidden}
+            patients={patients}
+            isLoading={isLoading}
+            locale={locale}
+            onNewEncounter={setCreatePatient}
+            register={register}
+            canRegister={canRegister}
+            page={page}
+            pageSize={pageSize}
+            totalCount={totalCount}
+            onPageChange={handlePageChange}
+          />
+        </Suspense>
       )}
 
       {register && canRegister ? (
