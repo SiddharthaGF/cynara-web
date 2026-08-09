@@ -25,6 +25,18 @@ import {
   type WorkflowFlowNode,
 } from './flowTransform.ts';
 import {
+  canConnectNodes,
+  countIssuesPerNode,
+  loadInitialPositions,
+  measureFlowNodeSizes,
+  planNodeChangeActions,
+  removedEdgeIds,
+  selectionChangeAction,
+  settleNodePosition,
+  stableCallbacksFor,
+  type FlowCallbacks,
+} from './useWorkflowFlow.helpers.ts';
+import {
   loadWorkflowPositions,
   saveWorkflowPositions,
 } from './workflowCanvasStorage.ts';
@@ -104,9 +116,7 @@ export function useWorkflowFlow(
   // Workflow schema, which the backend validates strictly). Falls back to an
   // Empty map so the first projection computes the dagre auto layout.
   const initialPositions = useMemo(
-    () =>
-      loadWorkflowPositions(positionsKey) ??
-      new Map<string, { x: number; y: number }>(),
+    () => loadInitialPositions(positionsKey),
     [positionsKey],
   );
   const positionsRef = useRef(initialPositions);
@@ -117,22 +127,15 @@ export function useWorkflowFlow(
   const nodesInitialized = useNodesInitialized();
   const { getNodes } = useReactFlow<WorkflowFlowNode, WorkflowFlowEdge>();
 
-  const measureNodes = useCallback((): Map<string, FlowNodeSize> => {
-    const sizes = new Map<string, FlowNodeSize>();
-    for (const node of getNodes()) {
-      const width = node.measured?.width;
-      const height = node.measured?.height;
-      if (width !== undefined && height !== undefined) {
-        sizes.set(node.id, { width, height });
-      }
-    }
-    return sizes;
-  }, [getNodes]);
+  const measureNodes = useCallback(
+    (): Map<string, FlowNodeSize> => measureFlowNodeSizes(getNodes()),
+    [getNodes],
+  );
 
   // Callbacks are forwarded through refs so the projection stays stable
   // Across parent re-renders (e.g. autosave state changes) without
   // Clobbering a live drag.
-  const callbacksRef = useRef({
+  const callbacksRef = useRef<FlowCallbacks>({
     onSelectNode,
     onSelectEdge,
     onAddStep,
@@ -160,37 +163,15 @@ export function useWorkflowFlow(
     };
   });
 
-  const stableAddStep = useCallback(
-    (nodeId: string) => callbacksRef.current.onAddStep(nodeId),
+  const stableCallbacks = useMemo(
+    () => stableCallbacksFor(() => callbacksRef.current),
     [],
   );
-  const stableOpenSettings = useCallback(
-    (nodeId: string) => callbacksRef.current.onOpenSettings(nodeId),
-    [],
+
+  const nodeIssueCounts = useMemo(
+    () => countIssuesPerNode(validationIssues),
+    [validationIssues],
   );
-  const stableUpdateNode = useCallback(
-    (nodeId: string, patch: Partial<WorkflowNode>) =>
-      callbacksRef.current.onUpdateNode(nodeId, patch),
-    [],
-  );
-  const stableCommitNodeName = useCallback(
-    (nodeId: string, name: string) =>
-      callbacksRef.current.onCommitNodeName(nodeId, name),
-    [],
-  );
-  const stableConnectNodes = useCallback(
-    (from: string, to: string) => callbacksRef.current.onConnectNodes(from, to),
-    [],
-  );
-  const nodeIssueCounts = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const issue of validationIssues) {
-      if (issue.nodeId) {
-        map.set(issue.nodeId, (map.get(issue.nodeId) ?? 0) + 1);
-      }
-    }
-    return map;
-  }, [validationIssues]);
 
   const [layoutVersion, setLayoutVersion] = useState(0);
 
@@ -249,14 +230,12 @@ export function useWorkflowFlow(
   // A committed rename re-ids a node. The persisted layout was migrated by the
   // Commit handler (old id → new id), so re-read the store to keep the node on
   // The canvas at its saved spot instead of falling back to the auto layout.
-  const previousNodeIdsRef = useRef(
-    graph.nodes.map((node) => node.id).join('\u0000'),
-  );
+  const previousNodeIdsRef = useRef<string | null>(null);
   useEffect(() => {
     const previousIds = previousNodeIdsRef.current;
     const nextIds = graph.nodes.map((node) => node.id).join('\u0000');
     previousNodeIdsRef.current = nextIds;
-    if (previousIds === nextIds) {
+    if (previousIds === null || previousIds === nextIds) {
       return;
     }
     const stored = loadWorkflowPositions(positionsKey);
@@ -276,11 +255,11 @@ export function useWorkflowFlow(
         readOnly,
         nodeIssueCounts,
         defaultBranchLabel,
-        onAddStep: stableAddStep,
-        onOpenSettings: stableOpenSettings,
-        onUpdateNode: stableUpdateNode,
-        onCommitNodeName: stableCommitNodeName,
-        onConnectNodes: stableConnectNodes,
+        onAddStep: stableCallbacks.onAddStep,
+        onOpenSettings: stableCallbacks.onOpenSettings,
+        onUpdateNode: stableCallbacks.onUpdateNode,
+        onCommitNodeName: stableCallbacks.onCommitNodeName,
+        onConnectNodes: stableCallbacks.onConnectNodes,
       }),
     [
       graph,
@@ -290,11 +269,7 @@ export function useWorkflowFlow(
       nodeIssueCounts,
       defaultBranchLabel,
       layoutVersion,
-      stableAddStep,
-      stableOpenSettings,
-      stableUpdateNode,
-      stableCommitNodeName,
-      stableConnectNodes,
+      stableCallbacks,
     ],
   );
 
@@ -316,25 +291,15 @@ export function useWorkflowFlow(
 
   const handleNodesChange = useCallback(
     (changes: NodeChange<WorkflowFlowNode>[]): void => {
-      const stateChanges: NodeChange<WorkflowFlowNode>[] = [];
-      for (const change of changes) {
-        if (change.type === 'position' && change.position) {
-          // Track the live position for persistence. Every pointermove flows
-          // Through the controlled `nodes` prop so the store adopts the node
-          // Once per frame. Pushing straight into the store instead re-enters
-          // `onNodesChange` with a `replace` change: React Flow diffs the queue
-          // Output by reference, and `applyNodeChanges` always rebuilds the
-          // Dragged node object.
-          positionsRef.current.set(change.id, {
-            x: change.position.x,
-            y: change.position.y,
-          });
-        } else if (change.type === 'remove') {
-          positionsRef.current.delete(change.id);
+      const { stateChanges, actions } = planNodeChangeActions(changes);
+      for (const action of actions) {
+        if (action.kind === 'position') {
+          positionsRef.current.set(action.id, action.position);
+        } else {
+          positionsRef.current.delete(action.id);
           saveWorkflowPositions(positionsKey, positionsRef.current);
-          callbacksRef.current.onRemoveNode(change.id);
+          callbacksRef.current.onRemoveNode(action.id);
         }
-        stateChanges.push(change);
       }
       if (stateChanges.length > 0) {
         setFlowNodes((nodes) => applyNodeChanges(stateChanges, nodes));
@@ -346,10 +311,8 @@ export function useWorkflowFlow(
   const handleEdgesChange = useCallback(
     (changes: EdgeChange<WorkflowFlowEdge>[]): void => {
       setFlowEdges((edges) => applyEdgeChanges(changes, edges));
-      for (const change of changes) {
-        if (change.type === 'remove') {
-          callbacksRef.current.onRemoveEdge(change.id);
-        }
+      for (const id of removedEdgeIds(changes)) {
+        callbacksRef.current.onRemoveEdge(id);
       }
     },
     [],
@@ -359,17 +322,15 @@ export function useWorkflowFlow(
     (
       params: OnSelectionChangeParams<WorkflowFlowNode, WorkflowFlowEdge>,
     ): void => {
-      const { nodes, edges } = params;
-      if (nodes.length > 0) {
-        callbacksRef.current.onSelectNode(nodes[0]?.id ?? null);
-        return;
+      const action = selectionChangeAction(params);
+      if (action.kind === 'node') {
+        callbacksRef.current.onSelectNode(action.id);
+      } else if (action.kind === 'edge') {
+        callbacksRef.current.onSelectEdge(action.id);
+      } else {
+        callbacksRef.current.onSelectNode(null);
+        callbacksRef.current.onSelectEdge(null);
       }
-      if (edges.length > 0) {
-        callbacksRef.current.onSelectEdge(edges[0]?.id ?? null);
-        return;
-      }
-      callbacksRef.current.onSelectNode(null);
-      callbacksRef.current.onSelectEdge(null);
     },
     [],
   );
@@ -387,8 +348,7 @@ export function useWorkflowFlow(
       node: WorkflowFlowNode,
     ): void => {
       const position = { x: node.position.x, y: node.position.y };
-      positionsRef.current.set(node.id, position);
-      saveWorkflowPositions(positionsKey, positionsRef.current);
+      settleNodePosition(positionsKey, node, positionsRef.current);
       // The controlled `nodes` prop skipped every per-pixel position change, so
       // Bring the dragged node up to date (and clear the live drag flag) here.
       setFlowNodes((nodes) =>
@@ -401,20 +361,8 @@ export function useWorkflowFlow(
   );
 
   const isValidConnection = useCallback(
-    (connection: Connection | WorkflowFlowEdge): boolean => {
-      if (
-        !connection.source ||
-        !connection.target ||
-        connection.source === connection.target
-      ) {
-        return false;
-      }
-      // The domain model keys edges by (from, to); parallel edges are invalid.
-      return !graph.edges.some(
-        (edge) =>
-          edge.from === connection.source && edge.to === connection.target,
-      );
-    },
+    (connection: Connection | WorkflowFlowEdge): boolean =>
+      canConnectNodes(connection, graph.edges),
     [graph.edges],
   );
 

@@ -81,6 +81,7 @@ export function AdminHubPage(): JSX.Element {
           className='mb-4'
           items={[
             {
+              key: 'home',
               label: t('common:nav.home'),
               link: (
                 <Link
@@ -89,7 +90,7 @@ export function AdminHubPage(): JSX.Element {
                 />
               ),
             },
-            { label: t('hub.title') },
+            { key: 'hub', label: t('hub.title') },
           ]}
         />
         <PageHeader

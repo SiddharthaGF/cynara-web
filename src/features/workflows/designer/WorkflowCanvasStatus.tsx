@@ -151,10 +151,7 @@ function IssueRow({
         <Tooltip>
           <TooltipTrigger
             render={
-              <span
-                tabIndex={0}
-                className='inline-flex w-fit outline-none focus-visible:ring-2 focus-visible:ring-ring'
-              >
+              <span className='inline-flex w-fit'>
                 <Badge
                   variant='outline'
                   className={cn('font-mono text-[0.625rem]', severityClass)}

@@ -139,6 +139,9 @@ export function WorkflowFlowNode({
               onCommitName(node.name ?? '');
             }}
             onKeyDown={(event) => {
+              if (event.nativeEvent.isComposing) {
+                return;
+              }
               if (event.key === 'Enter') {
                 event.preventDefault();
                 onCommitName(node.name ?? '');

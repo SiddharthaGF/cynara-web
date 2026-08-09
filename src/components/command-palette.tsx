@@ -9,7 +9,7 @@ import {
   Workflow,
 } from 'lucide-react';
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { listPatients, type PatientDto } from '@/api/patients.ts';
@@ -48,18 +48,24 @@ export function CommandPalette({
   const { can } = useCapabilities();
   const [query, setQuery] = useState('');
 
+  // Latest onOpenChange, read from the keydown handler without re-subscribing
+  // The effect every time the parent re-creates the callback.
+  const onOpenChangeEvent = useEffectEvent((nextOpen: boolean): void => {
+    onOpenChange(nextOpen);
+  });
+
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
+    const onKeyDown = (event: KeyboardEvent): void => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
-        onOpenChange(!open);
+        onOpenChangeEvent(!open);
       }
     };
     window.addEventListener('keydown', onKeyDown);
-    return () => {
+    return (): void => {
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [open, onOpenChange]);
+  }, [open]);
 
   const canReadPatients = can('read', 'Patient');
   const canReadCatalog = can('read', 'Catalog');
@@ -104,7 +110,7 @@ export function CommandPalette({
     },
   ].filter((item) => item.visible);
 
-  function handleClose() {
+  function handleClose(): void {
     onOpenChange(false);
   }
 

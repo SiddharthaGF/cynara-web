@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -51,7 +52,7 @@ export function WorkflowSimulationTrace({
       <ol className='grid flex-1 content-start gap-1.5 overflow-y-auto pr-1'>
         {steps.map((step, index) => (
           <TraceStep
-            key={`${step.node.id}-${index}`}
+            key={step.node.id}
             step={step}
             index={index}
             active={index === currentStepIndex}
@@ -174,7 +175,7 @@ function TraceStep({
                   variant={branch.taken ? 'default' : 'secondary'}
                   className='shrink-0 px-1.5 text-[0.6rem] font-normal'
                 >
-                  {branchBadgeLabel(branch)}
+                  {branchBadgeLabel(branch, t)}
                 </Badge>
               </li>
             ))}
@@ -210,8 +211,10 @@ function assigneePartsFor(step: WorkflowSimulationStep): string[] {
   );
 }
 
-function branchBadgeLabel(branch: WorkflowBranchEvaluation): string {
-  const { t } = useTranslation('workflows');
+function branchBadgeLabel(
+  branch: WorkflowBranchEvaluation,
+  t: TFunction,
+): string {
   if (branch.isDefault) {
     return t('preview.defaultBranch');
   }

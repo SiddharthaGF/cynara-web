@@ -1,6 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 
-import { listFormVersionPickerOptions } from '@/api/formVersionPicker.ts';
+import {
+  listFormVersionPickerOptions,
+  type FormVersionPickerOption,
+} from '@/api/formVersionPicker.ts';
 import { queryKeys } from '@/api/query-keys.ts';
 
 /**
@@ -8,7 +11,9 @@ import { queryKeys } from '@/api/query-keys.ts';
  * document catalog picker. Only published versions can back a workflow task,
  * so draft/review versions are omitted.
  */
-export function usePublishedFormOptions() {
+export function usePublishedFormOptions(): UseQueryResult<
+  FormVersionPickerOption[]
+> {
   return useQuery({
     queryKey: queryKeys.formDefinitions.versionOptions(),
     queryFn: listFormVersionPickerOptions,

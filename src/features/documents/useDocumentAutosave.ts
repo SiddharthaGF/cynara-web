@@ -52,13 +52,24 @@ export function useDocumentAutosave({
   const pausedRef = useRef(paused);
   const discardingRef = useRef(false);
   const timerRef = useRef<number | null>(null);
-  valuesRef.current = valuesJson;
-  snapshotRef.current = savedSnapshot;
-  editableRef.current = editable;
-  pausedRef.current = paused;
+
+  useEffect(() => {
+    valuesRef.current = valuesJson;
+  }, [valuesJson]);
+  useEffect(() => {
+    snapshotRef.current = savedSnapshot;
+  }, [savedSnapshot]);
+  useEffect(() => {
+    editableRef.current = editable;
+  }, [editable]);
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
 
   const saveRef = useRef(save);
-  saveRef.current = save;
+  useEffect(() => {
+    saveRef.current = save;
+  }, [save]);
 
   const advanceSnapshot = useCallback((answersJson: string): void => {
     snapshotRef.current = answersJson;

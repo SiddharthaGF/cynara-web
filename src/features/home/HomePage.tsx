@@ -112,6 +112,15 @@ const BROWSE_ENTRIES: readonly BrowseEntry[] = [
   },
 ];
 
+const LOADING_STATE = (
+  <div className='grid gap-3'>
+    <Skeleton className='h-10 w-full' />
+    <Skeleton className='h-10 w-full' />
+    <Skeleton className='h-10 w-full' />
+    <Skeleton className='h-10 w-full' />
+  </div>
+);
+
 export function HomePage(): JSX.Element {
   const { t } = useTranslation('home');
   const { locale } = useParams({ from: '/$locale' });
@@ -128,15 +137,6 @@ export function HomePage(): JSX.Element {
     ),
   );
   const hasAnyAction = quickActions.length > 0 || browseEntries.length > 0;
-
-  const loadingState = (
-    <div className='grid gap-3'>
-      <Skeleton className='h-10 w-full' />
-      <Skeleton className='h-10 w-full' />
-      <Skeleton className='h-10 w-full' />
-      <Skeleton className='h-10 w-full' />
-    </div>
-  );
 
   const emptyState = (
     <Empty
@@ -226,7 +226,7 @@ export function HomePage(): JSX.Element {
             ) : null}
           </>
         ) : (
-          loadingState
+          LOADING_STATE
         )}
       </div>
     </AppShell>

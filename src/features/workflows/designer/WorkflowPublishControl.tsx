@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { ArrowLeft, Plus, Rocket, Undo2 } from 'lucide-react';
+import { Rocket, Undo2 } from 'lucide-react';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,19 +12,13 @@ import {
   submitWorkflowReview,
   withdrawWorkflowReview,
 } from '@/api/workflows.ts';
-import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog.tsx';
-import { Spinner } from '@/components/ui/spinner.tsx';
 import type { WorkflowVersion } from '@/features/workflows/types.ts';
+
+import { WorkflowPublishDialog } from './WorkflowPublishDialog.tsx';
+import { WorkflowPublishedDialog } from './WorkflowPublishedDialog.tsx';
+import { WorkflowWithdrawDialog } from './WorkflowWithdrawDialog.tsx';
 
 type PublishDialog = 'publish' | 'withdraw' | null;
 
@@ -214,162 +208,49 @@ export function WorkflowPublishControl({
         </Button>
       </div>
 
-      <Dialog
+      <WorkflowPublishDialog
         open={activeDialog === 'publish'}
+        error={publishError}
+        isPending={publishMutation.isPending}
         onOpenChange={(open) => {
           if (!open) {
             setActiveDialog(null);
           }
         }}
-      >
-        <DialogContent data-testid='workflow-publish-dialog'>
-          <DialogHeader>
-            <DialogTitle>{t('publish.confirmTitle')}</DialogTitle>
-            <DialogDescription>{t('publish.confirmBody')}</DialogDescription>
-          </DialogHeader>
-          {publishError ? (
-            <Alert variant='destructive'>
-              <AlertDescription>{publishError}</AlertDescription>
-            </Alert>
-          ) : null}
-          <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              disabled={publishMutation.isPending}
-              onClick={() => {
-                setActiveDialog(null);
-              }}
-            >
-              {t('publish.cancel')}
-            </Button>
-            <Button
-              type='button'
-              disabled={publishMutation.isPending}
-              onClick={() => {
-                void publishMutation.mutateAsync();
-              }}
-              data-testid='workflow-publish-confirm'
-            >
-              {publishMutation.isPending ? (
-                <Spinner data-icon='inline-start' />
-              ) : (
-                <Rocket
-                  className='size-3.5'
-                  aria-hidden='true'
-                />
-              )}
-              {t('publish.confirmAction')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onConfirm={() => {
+          publishMutation.mutate();
+        }}
+      />
 
-      <Dialog
+      <WorkflowWithdrawDialog
         open={activeDialog === 'withdraw'}
+        error={withdrawError}
+        isPending={withdrawMutation.isPending}
         onOpenChange={(open) => {
           if (!open) {
             setActiveDialog(null);
           }
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('publish.withdrawTitle')}</DialogTitle>
-            <DialogDescription>{t('publish.withdrawBody')}</DialogDescription>
-          </DialogHeader>
-          {withdrawError ? (
-            <Alert variant='destructive'>
-              <AlertDescription>{withdrawError}</AlertDescription>
-            </Alert>
-          ) : null}
-          <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              disabled={withdrawMutation.isPending}
-              onClick={() => {
-                setActiveDialog(null);
-              }}
-            >
-              {t('publish.cancel')}
-            </Button>
-            <Button
-              type='button'
-              variant='destructive'
-              disabled={withdrawMutation.isPending}
-              onClick={() => {
-                void withdrawMutation.mutateAsync();
-              }}
-            >
-              {withdrawMutation.isPending ? (
-                <Spinner data-icon='inline-start' />
-              ) : (
-                <Undo2
-                  className='size-3.5'
-                  aria-hidden='true'
-                />
-              )}
-              {t('publish.withdrawAction')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onConfirm={() => {
+          withdrawMutation.mutate();
+        }}
+      />
 
-      <Dialog
+      <WorkflowPublishedDialog
         open={publishedVersion !== null}
+        version={publishedVersion?.version ?? null}
+        continuePending={continueEditingMutation.isPending}
         onOpenChange={(open) => {
           // Published workflows have no editable draft, so the dialog only dismisses into an explicit next step.
           if (!open) {
             backToWorkflows();
           }
         }}
-      >
-        <DialogContent
-          showCloseButton={false}
-          data-testid='workflow-published-dialog'
-        >
-          <DialogHeader>
-            <DialogTitle>{t('publish.publishedTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('publish.publishedBody', {
-                version: publishedVersion?.version ?? '',
-              })}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              disabled={continueEditingMutation.isPending}
-              onClick={() => {
-                void continueEditingMutation.mutateAsync();
-              }}
-            >
-              {continueEditingMutation.isPending ? (
-                <Spinner data-icon='inline-start' />
-              ) : (
-                <Plus
-                  className='size-3.5'
-                  aria-hidden='true'
-                />
-              )}
-              {t('publish.continueEditing')}
-            </Button>
-            <Button
-              type='button'
-              onClick={backToWorkflows}
-              data-testid='workflow-published-back'
-            >
-              <ArrowLeft
-                className='size-3.5'
-                aria-hidden='true'
-              />
-              {t('publish.backToWorkflows')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onContinue={() => {
+          continueEditingMutation.mutate();
+        }}
+        onBack={backToWorkflows}
+      />
     </>
   );
 }

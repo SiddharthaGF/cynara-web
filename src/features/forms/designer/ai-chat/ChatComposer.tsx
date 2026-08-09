@@ -10,19 +10,12 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Mention,
-  MentionContent,
-  MentionLabel,
-  MentionTextarea,
-} from '@/components/ui/mention.tsx';
-import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import type { FieldType, FormDraftModel } from '@/features/forms/types.ts';
 import { useIsMobile } from '@/hooks/use-mobile.ts';
 
 import { FIELD_TYPE_KEYS } from '../fieldTypeMeta.ts';
 import { ChatComposerActions } from './ChatComposerActions.tsx';
-import { FieldMentionList, TypeMentionList } from './ChatMentionLists.tsx';
+import { ChatComposerMention } from './ChatComposerMention.tsx';
 import {
   filterMentionableFields,
   listMentionableFields,
@@ -252,12 +245,37 @@ export function ChatComposer({
         ref={wrapRef}
         className='ai-chat-composer'
       >
-        <Mention
-          key={activeTrigger}
-          trigger={activeTrigger}
-          loop
+        <ChatComposerMention
+          value={value}
           disabled={disabled}
-          inputValue={value}
+          activeTrigger={activeTrigger}
+          inputRef={inputRef}
+          mentionedValues={mentionedValues}
+          isTypeMode={isTypeMode}
+          visibleFields={visibleFields}
+          visibleTypes={visibleTypes}
+          emptyLabel={emptyLabel}
+          menuHint={menuHint}
+          label={isTypeMode ? t('ai.mention.typeLabel') : t('ai.mention.label')}
+          placeholder={
+            isMobile ? t('ai.placeholderShort') : t('ai.placeholder')
+          }
+          onMentionedValuesChange={setMentionedValues}
+          onMentionOpenChange={setMentionOpen}
+          onFilter={handleFilter}
+          onKeyDown={handleKeyDown}
+          onClick={(event) => {
+            syncTriggerFromCaret(
+              event.currentTarget.value,
+              event.currentTarget.selectionStart ?? 0,
+            );
+          }}
+          onKeyUp={(event) => {
+            syncTriggerFromCaret(
+              event.currentTarget.value,
+              event.currentTarget.selectionStart ?? 0,
+            );
+          }}
           onInputValueChange={(next) => {
             // Remount for @↔# can emit ''; keep parent text until restore runs.
             const pending = triggerRemountRef.current;
@@ -292,61 +310,7 @@ export function ChatComposer({
               }
             });
           }}
-          value={mentionedValues}
-          onValueChange={setMentionedValues}
-          onOpenChange={setMentionOpen}
-          onFilter={handleFilter}
-          className='w-full'
-        >
-          <MentionLabel className='sr-only'>
-            {isTypeMode ? t('ai.mention.typeLabel') : t('ai.mention.label')}
-          </MentionLabel>
-          <ScrollArea className='ai-chat-composer-scroll w-full'>
-            <MentionTextarea
-              // DiceUI does not bind inputValue to the DOM; seed on remount.
-              ref={inputRef}
-              data-testid='ai-chat-input'
-              defaultValue={value}
-              placeholder={
-                isMobile ? t('ai.placeholderShort') : t('ai.placeholder')
-              }
-              disabled={disabled}
-              onKeyDown={handleKeyDown}
-              onClick={(event) => {
-                syncTriggerFromCaret(
-                  event.currentTarget.value,
-                  event.currentTarget.selectionStart ?? 0,
-                );
-              }}
-              onKeyUp={(event) => {
-                syncTriggerFromCaret(
-                  event.currentTarget.value,
-                  event.currentTarget.selectionStart ?? 0,
-                );
-              }}
-              className='ai-chat-mention-input border-0 bg-transparent px-1 py-2 text-sm leading-6 shadow-none focus-visible:ring-0'
-            />
-          </ScrollArea>
-          <MentionContent
-            side='top'
-            sideOffset={8}
-            className='ai-chat-mention-menu w-[min(100%,20rem)] overflow-hidden p-1.5'
-          >
-            {isTypeMode ? (
-              <TypeMentionList
-                types={visibleTypes}
-                emptyLabel={emptyLabel}
-                menuHint={menuHint}
-              />
-            ) : (
-              <FieldMentionList
-                fields={visibleFields}
-                emptyLabel={emptyLabel}
-                menuHint={menuHint}
-              />
-            )}
-          </MentionContent>
-        </Mention>
+        />
 
         <ChatComposerActions
           canSubmit={canSubmit}

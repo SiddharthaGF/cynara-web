@@ -77,7 +77,7 @@ export function JourneyGraphSnapshot({
           <ol className='space-y-0'>
             {path.map((step, index) => (
               <li
-                key={`${step.nodeId}-${index}`}
+                key={step.nodeId}
                 className='relative flex gap-3 pb-3 last:pb-0'
               >
                 {index < path.length - 1 ? (
@@ -154,9 +154,9 @@ export function JourneyGraphSnapshot({
             {t('snapshot.edges')}
           </p>
           <ul className='flex flex-wrap gap-1.5'>
-            {journey.graph.edges.map((edge, index) => (
+            {journey.graph.edges.map((edge) => (
               <li
-                key={`${edge.from}-${edge.to}-${index}`}
+                key={`${edge.from}-${edge.to}`}
                 className='inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/30 px-2 py-1 text-xs text-muted-foreground'
               >
                 <span>{journeyNodeLabel(journey, edge.from, t)}</span>

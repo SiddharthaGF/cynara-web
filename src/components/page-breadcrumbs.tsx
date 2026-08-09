@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/breadcrumb.tsx';
 
 export interface PageBreadcrumbEntry {
+  /** Stable identity for the crumb within the trail. */
+  key: string;
   /** Visible label for the crumb. */
   label: ReactNode;
   /**
@@ -35,7 +37,7 @@ export function PageBreadcrumbs({
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
           return (
-            <Fragment key={index}>
+            <Fragment key={item.key}>
               <BreadcrumbItem>
                 {isLast || !item.link ? (
                   <BreadcrumbPage>{item.label}</BreadcrumbPage>

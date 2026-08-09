@@ -55,11 +55,8 @@ export function useLongPress({
 
   const timerRef = useRef<number | null>(null);
   const startRef = useRef<LongPressPoint | null>(null);
-  const suppressedClickRef = useRef<{
-    onClick: (event: MouseEvent) => void;
-    onPointerDown: () => void;
-    timeout: number;
-  } | null>(null);
+  const disarmTimerRef = useRef<number | null>(null);
+  const suppressClickRef = useRef(false);
 
   const clearTimer = useCallback((): void => {
     if (timerRef.current !== null) {
@@ -80,22 +77,16 @@ export function useLongPress({
   // Inspector over the just-opened menu on mobile). The suppression is disarmed
   // By the next pointerdown, so subsequent menu taps work normally.
   const disarmSuppressedClick = useCallback((): void => {
-    const suppression = suppressedClickRef.current;
-    if (!suppression) {
-      return;
+    suppressClickRef.current = false;
+    if (disarmTimerRef.current !== null) {
+      window.clearTimeout(disarmTimerRef.current);
+      disarmTimerRef.current = null;
     }
-    suppressedClickRef.current = null;
-    window.clearTimeout(suppression.timeout);
-    window.removeEventListener('pointerdown', suppression.onPointerDown, true);
-    window.removeEventListener('click', suppression.onClick, true);
   }, []);
 
-  const suppressClickAfterLongPress = useCallback((): void => {
-    if (suppressedClickRef.current) {
-      return;
-    }
+  useEffect(() => {
     const onClick = (event: MouseEvent): void => {
-      if (event.button !== 0) {
+      if (!suppressClickRef.current || event.button !== 0) {
         return;
       }
       disarmSuppressedClick();
@@ -106,17 +97,23 @@ export function useLongPress({
     const onPointerDown = (): void => {
       disarmSuppressedClick();
     };
-    suppressedClickRef.current = {
-      onClick,
-      onPointerDown,
-      // Safety net: never swallow a click that arrives long after the press.
-      timeout: window.setTimeout(disarmSuppressedClick, 1500),
-    };
     window.addEventListener('pointerdown', onPointerDown, true);
     window.addEventListener('click', onClick, true);
+    return (): void => {
+      disarmSuppressedClick();
+      window.removeEventListener('pointerdown', onPointerDown, true);
+      window.removeEventListener('click', onClick, true);
+    };
   }, [disarmSuppressedClick]);
 
-  useEffect(() => disarmSuppressedClick, [disarmSuppressedClick]);
+  const suppressClickAfterLongPress = useCallback((): void => {
+    if (suppressClickRef.current) {
+      return;
+    }
+    suppressClickRef.current = true;
+    // Safety net: never swallow a click that arrives long after the press.
+    disarmTimerRef.current = window.setTimeout(disarmSuppressedClick, 1500);
+  }, [disarmSuppressedClick]);
 
   const handlePointerDown = useCallback(
     (event: PointerEvent): void => {

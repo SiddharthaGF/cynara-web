@@ -55,6 +55,7 @@ export function FormListContent({
         className='mb-4'
         items={[
           {
+            key: 'home',
             label: t('common:nav.home'),
             link: (
               <Link
@@ -63,7 +64,7 @@ export function FormListContent({
               />
             ),
           },
-          { label: t('list.title') },
+          { key: 'title', label: t('list.title') },
         ]}
       />
       <PageHeader

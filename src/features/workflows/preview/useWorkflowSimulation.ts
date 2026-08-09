@@ -39,7 +39,7 @@ export interface WorkflowSimulationControl {
 export function useWorkflowSimulation(
   graph: WorkflowGraph,
 ): WorkflowSimulationControl {
-  const inputCodes = graph.inputs ?? [];
+  const inputCodes = useMemo(() => graph.inputs ?? [], [graph]);
   const inferredTypes = useMemo(() => inferInputType(graph), [graph]);
 
   const [values, setValues] = useState<Record<string, SimulationValue>>({});

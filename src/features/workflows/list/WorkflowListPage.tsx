@@ -5,7 +5,10 @@ import { AppShell } from '@/components/app-shell.tsx';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
 import { useWorkflowsCatalog } from './useWorkflowsCatalog.ts';
-import { WorkflowListContent } from './WorkflowListContent.tsx';
+import {
+  WorkflowListContent,
+  type WorkflowCreationState,
+} from './WorkflowListContent.tsx';
 
 export function WorkflowListPage(): JSX.Element {
   const navigate = useNavigate();
@@ -20,6 +23,13 @@ export function WorkflowListPage(): JSX.Element {
     createWorkflow,
     createDraft,
   } = useWorkflowsCatalog();
+
+  let creationState: WorkflowCreationState = 'idle';
+  if (isCreating) {
+    creationState = 'creating';
+  } else if (isCreatingDraft) {
+    creationState = 'creating-draft';
+  }
 
   async function handleCreate(values: {
     code: string;
@@ -61,8 +71,7 @@ export function WorkflowListPage(): JSX.Element {
       <WorkflowListContent
         workflows={workflows}
         error={error}
-        isCreating={isCreating}
-        isCreatingDraft={isCreatingDraft}
+        creationState={creationState}
         isLoading={isLoading}
         canCreate={can('write', 'Catalog')}
         onCreate={handleCreate}

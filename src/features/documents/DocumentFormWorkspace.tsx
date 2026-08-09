@@ -1,7 +1,6 @@
-import { useBlocker } from '@tanstack/react-router';
-import { CloudUpload } from 'lucide-react';
+import type { TFunction } from 'i18next';
 import type { JSX } from 'react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { ClinicalDocumentDto } from '@/api/clinical-documents.ts';
@@ -13,15 +12,6 @@ import {
 } from '@/api/clinical-documents.ts';
 import { describeApiError } from '@/api/error-message.ts';
 import { isStaleFormResponseError } from '@/api/form-responses.ts';
-import { Button } from '@/components/ui/button.tsx';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog.tsx';
 import { DocumentDetailShell } from '@/features/documents/DocumentDetailStates.tsx';
 import { DocumentFormAlerts } from '@/features/documents/DocumentFormAlerts.tsx';
 import { DocumentFormCard } from '@/features/documents/DocumentFormCard.tsx';
@@ -30,16 +20,20 @@ import {
   DocumentTransitionConfirmDialog,
   type DocumentTransitionKind,
 } from '@/features/documents/DocumentTransitionConfirmDialog.tsx';
+import { DocumentUnsavedDialog } from '@/features/documents/DocumentUnsavedDialog.tsx';
+import { DocumentUnsavedIndicator } from '@/features/documents/DocumentUnsavedIndicator.tsx';
 import {
   useClinicalDocumentTransitions,
   useUpdateFormResponse,
 } from '@/features/documents/useClinicalDocumentsCatalog.ts';
 import { useDocumentAutosave } from '@/features/documents/useDocumentAutosave.ts';
+import { useUnsavedChangesBlocker } from '@/features/documents/useUnsavedChangesBlocker.ts';
 import { iterateFields, parseDraft } from '@/features/forms/model/formDraft.ts';
 import { useFormRenderer } from '@/features/forms/renderer/FormRenderer.tsx';
 import { createInitialValues } from '@/features/forms/renderer/formValues.ts';
 import { humanizeFieldLabel } from '@/features/forms/renderer/labelFallback.ts';
 import type { FormValues } from '@/features/forms/renderer/types.ts';
+import type { UseFormRendererReturn } from '@/features/forms/renderer/useFormRenderer.ts';
 import { stripLegacyCalculatedLabelSuffix } from '@/features/forms/stripLegacyCalculatedLabelSuffix.ts';
 import { usePatientDetail } from '@/features/patients/usePatientsCatalog.ts';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
@@ -119,7 +113,9 @@ export function DocumentFormWorkspace({
 
   // ─── Unsaved-changes tracking + draft autosave ────────────────────────────
   const latestRowVersionRef = useRef(response.rowVersion);
-  latestRowVersionRef.current = response.rowVersion;
+  useEffect(() => {
+    latestRowVersionRef.current = response.rowVersion;
+  }, [response.rowVersion]);
 
   const persistAnswers = useCallback(
     async (answersJson: string): Promise<{ ok: boolean; stale: boolean }> => {
@@ -173,26 +169,7 @@ export function DocumentFormWorkspace({
     return false;
   }, [markSaved, persistAnswers, renderer.values]);
 
-  const blocker = useBlocker({
-    shouldBlockFn: () => isDirty,
-    enableBeforeUnload: () => isDirty,
-    withResolver: true,
-  });
-
-  const keepEditing = useCallback((): void => {
-    if (blocker.status !== 'blocked') {
-      return;
-    }
-    blocker.reset();
-  }, [blocker]);
-
-  const discardChanges = useCallback((): void => {
-    if (blocker.status !== 'blocked') {
-      return;
-    }
-    markDiscarding();
-    blocker.proceed();
-  }, [blocker, markDiscarding]);
+  const blocker = useUnsavedChangesBlocker(isDirty, markDiscarding);
 
   const runTransition = async (
     kind: DocumentTransitionKind,
@@ -243,39 +220,8 @@ export function DocumentFormWorkspace({
     if (!renderer.hasValidationErrors) {
       return false;
     }
-    const labels = new Map<string, string>();
-    for (const field of iterateFields(model.clinical.fields)) {
-      labels.set(
-        field.id,
-        stripLegacyCalculatedLabelSuffix(
-          model.ui.fields[field.id]?.label ?? humanizeFieldLabel(field.id),
-        ),
-      );
-    }
-    const missing = [
-      ...new Set(
-        Object.keys(renderer.fieldErrors).map((key) => key.split('::')[0]),
-      ),
-    ]
-      .map((fieldId) => labels.get(fieldId))
-      .filter((label): label is string => Boolean(label));
-    setActionError(
-      missing.length > 0
-        ? t('detail.validationSummary', {
-            count: missing.length,
-            fields: missing.slice(0, 5).join(', '),
-          })
-        : t('detail.validationErrors'),
-    );
-    requestAnimationFrame(() => {
-      const firstInvalid = globalThis.document.querySelector(
-        '[data-field-id][data-invalid="true"]',
-      );
-      if (firstInvalid instanceof HTMLElement) {
-        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        firstInvalid.focus({ preventScroll: true });
-      }
-    });
+    setActionError(buildValidationMessage(model, renderer, t));
+    focusFirstInvalidField();
     return true;
   };
 
@@ -327,15 +273,10 @@ export function DocumentFormWorkspace({
         patientName={patientName}
       />
 
-      {isDirty ? (
-        <div
-          className='mb-4 inline-flex items-center gap-1.5 rounded-full border border-amber-600/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-700 dark:text-amber-400'
-          data-testid='document-unsaved-indicator'
-        >
-          <CloudUpload className='size-3.5' />
-          {isSaving ? t('detail.autosaving') : t('detail.unsaved')}
-        </div>
-      ) : null}
+      <DocumentUnsavedIndicator
+        isDirty={isDirty}
+        isSaving={isSaving}
+      />
 
       <DocumentFormAlerts
         mutationForbidden={mutationForbidden}
@@ -386,41 +327,11 @@ export function DocumentFormWorkspace({
         }}
       />
 
-      <Dialog
-        open={blocker.status === 'blocked'}
-        onOpenChange={(open) => {
-          if (!open) {
-            keepEditing();
-          }
-        }}
-      >
-        <DialogContent
-          className='sm:max-w-md'
-          data-testid='document-unsaved-dialog'
-        >
-          <DialogHeader>
-            <DialogTitle>{t('detail.unsavedTitle')}</DialogTitle>
-            <DialogDescription>{t('detail.unsavedBody')}</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className='mt-2'>
-            <Button
-              type='button'
-              variant='outline'
-              onClick={keepEditing}
-            >
-              {t('detail.keepEditing')}
-            </Button>
-            <Button
-              type='button'
-              variant='destructive'
-              data-testid='document-unsaved-discard'
-              onClick={discardChanges}
-            >
-              {t('detail.discard')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DocumentUnsavedDialog
+        open={blocker.blocked}
+        onKeepEditing={blocker.keepEditing}
+        onDiscard={blocker.discardChanges}
+      />
     </DocumentDetailShell>
   );
 }
@@ -439,4 +350,45 @@ function mergeAnswers(
     parsed = {};
   }
   return { ...createInitialValues(model), ...parsed };
+}
+
+function buildValidationMessage(
+  model: ReturnType<typeof parseDraft>,
+  renderer: UseFormRendererReturn,
+  translate: TFunction,
+): string {
+  const labels = new Map<string, string>();
+  for (const field of iterateFields(model.clinical.fields)) {
+    labels.set(
+      field.id,
+      stripLegacyCalculatedLabelSuffix(
+        model.ui.fields[field.id]?.label ?? humanizeFieldLabel(field.id),
+      ),
+    );
+  }
+  const missing = [
+    ...new Set(
+      Object.keys(renderer.fieldErrors).map((key) => key.split('::')[0]),
+    ),
+  ]
+    .map((fieldId) => labels.get(fieldId))
+    .filter((label): label is string => Boolean(label));
+  return missing.length > 0
+    ? translate('detail.validationSummary', {
+        count: missing.length,
+        fields: missing.slice(0, 5).join(', '),
+      })
+    : translate('detail.validationErrors');
+}
+
+function focusFirstInvalidField(): void {
+  requestAnimationFrame(() => {
+    const firstInvalid = globalThis.document.querySelector(
+      '[data-field-id][data-invalid="true"]',
+    );
+    if (firstInvalid instanceof HTMLElement) {
+      firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      firstInvalid.focus({ preventScroll: true });
+    }
+  });
 }

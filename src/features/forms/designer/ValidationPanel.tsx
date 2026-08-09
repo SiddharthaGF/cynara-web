@@ -50,10 +50,7 @@ export function ValidationPanel({
                 <Tooltip>
                   <TooltipTrigger
                     render={
-                      <span
-                        tabIndex={0}
-                        className='inline-flex w-fit outline-none focus-visible:ring-2 focus-visible:ring-ring'
-                      >
+                      <span className='inline-flex w-fit'>
                         <Badge
                           variant='outline'
                           className='font-mono text-[0.625rem]'

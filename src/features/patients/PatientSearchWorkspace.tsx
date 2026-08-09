@@ -177,6 +177,7 @@ export function PatientSearchWorkspace({
         className='mb-4'
         items={[
           {
+            key: 'home',
             label: t('common:nav.home'),
             link: (
               <Link
@@ -185,7 +186,7 @@ export function PatientSearchWorkspace({
               />
             ),
           },
-          { label: t(framing.titleKey) },
+          { key: 'page', label: t(framing.titleKey) },
         ]}
       />
       <PageHeader

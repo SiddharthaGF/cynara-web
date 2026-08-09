@@ -342,7 +342,7 @@ test.describe('Workflow lifecycle publishing', () => {
       .click();
 
     // The draft is editable again: the lifecycle badge switches to Draft and
-    // the canvas "Add" control (gated on read-only) reappears.
+    // The canvas "Add" control (gated on read-only) reappears.
     await expect(page.getByTestId('workflow-publish-control')).toContainText(
       'Draft',
       { timeout: 30_000 },

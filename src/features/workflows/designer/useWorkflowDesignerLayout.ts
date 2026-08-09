@@ -29,21 +29,19 @@ import {
 import type {
   WorkflowEdge,
   WorkflowExpression,
-  WorkflowGraph,
   WorkflowNode,
   WorkflowNodeType,
   WorkflowVersion,
 } from '@/features/workflows/types.ts';
 
 import { migrateWorkflowPositions } from './flow/workflowCanvasStorage.ts';
-
-const OPEN_OVERLAY_SELECTOR =
-  '[data-slot="select-content"][data-open], [data-slot="dropdown-menu-content"][data-open], [data-slot="popover-content"][data-open], [data-slot="dialog-content"]';
-
-/** True when a select/popover/dialog overlay is open and owns the keys. */
-function hasOpenOverlay(): boolean {
-  return document.querySelector(OPEN_OVERLAY_SELECTOR) !== null;
-}
+import {
+  createEscapeKeyHandler,
+  createShortcutKeyHandler,
+  edgeIndexFromKey,
+  remapEdgeKey,
+  targetOptions,
+} from './useWorkflowDesignerLayout.helpers.ts';
 
 export interface WorkflowDesignerLayout {
   draft: ReturnType<typeof useWorkflowDraft>;
@@ -93,63 +91,29 @@ export function useWorkflowDesignerLayout(
     if (!selectedNodeId && !selectedEdgeKey) {
       return undefined;
     }
-
-    function handleKeyDown(event: KeyboardEvent): void {
-      if (event.key !== 'Escape') {
-        return;
-      }
-      if (hasOpenOverlay()) {
-        return;
-      }
+    const handleKeyDown = createEscapeKeyHandler(() => {
       setSelectedNodeId(null);
       setSelectedEdgeKey(null);
       setShowInspector(false);
-    }
-
+    });
     window.addEventListener('keydown', handleKeyDown);
     return (): void => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [selectedNodeId, selectedEdgeKey]);
 
-  /*
-   * Editor shortcuts: Ctrl/Cmd+S saves, Ctrl/Cmd+Z undoes, Ctrl/Cmd+Shift+Z
-   * and Ctrl/Cmd+Y redo. Undo/redo apply to the whole graph even when the
-   * focus is in an inspector input (typing bursts are coalesced into one
-   * history step), but yield to native behavior while an overlay is open.
-   */
+  // Editor shortcuts (see `createShortcutKeyHandler`): Ctrl/Cmd+S saves,
+  // Ctrl/Cmd+Z undoes, Ctrl/Cmd+Shift+Z and Ctrl/Cmd+Y redo. Undo/redo apply
+  // To the whole graph even when the focus is in an inspector input (typing
+  // Bursts are coalesced into one history step), but yield to native behavior
+  // While an overlay is open.
   useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent): void {
-      const mod = event.metaKey || event.ctrlKey;
-      if (!mod || event.altKey) {
-        return;
-      }
-      const key = event.key.toLowerCase();
-      if (key === 's') {
-        event.preventDefault();
-        if (!draft.isReadOnly) {
-          void draft.saveNow();
-        }
-        return;
-      }
-      if (hasOpenOverlay()) {
-        return;
-      }
-      if (key === 'z') {
-        event.preventDefault();
-        if (event.shiftKey) {
-          draft.redo();
-        } else {
-          draft.undo();
-        }
-        return;
-      }
-      if (key === 'y' && !event.shiftKey) {
-        event.preventDefault();
-        draft.redo();
-      }
-    }
-
+    const handleKeyDown = createShortcutKeyHandler({
+      isReadOnly: draft.isReadOnly,
+      redo: draft.redo,
+      saveNow: draft.saveNow,
+      undo: draft.undo,
+    });
     window.addEventListener('keydown', handleKeyDown);
     return (): void => {
       window.removeEventListener('keydown', handleKeyDown);
@@ -183,17 +147,10 @@ export function useWorkflowDesignerLayout(
     [draft.graph, selectedNode],
   );
 
-  const availableTargets = useMemo(() => {
-    if (!selectedNode) {
-      return [];
-    }
-    const existingTargets = new Set(
-      outgoingEdges(draft.graph, selectedNode.id).map((edge) => edge.to),
-    );
-    return draft.graph.nodes.filter(
-      (node) => node.id !== selectedNode.id && !existingTargets.has(node.id),
-    );
-  }, [draft.graph, selectedNode]);
+  const availableTargets = useMemo(
+    () => (selectedNode ? targetOptions(draft.graph, selectedNode) : []),
+    [draft.graph, selectedNode],
+  );
 
   function selectNode(nodeId: string | null): void {
     setSelectedNodeId(nodeId);
@@ -273,11 +230,9 @@ export function useWorkflowDesignerLayout(
       selectNode(nextId);
     }
     if (selectedEdgeKey) {
-      const [from, to] = selectedEdgeKey.split('\u0000');
-      const nextFrom = from === nodeId ? nextId : from;
-      const nextTo = to === nodeId ? nextId : to;
-      if (nextFrom !== from || nextTo !== to) {
-        selectEdge(edgeKey(nextFrom, nextTo));
+      const nextKey = remapEdgeKey(selectedEdgeKey, nodeId, nextId);
+      if (nextKey !== selectedEdgeKey) {
+        selectEdge(nextKey);
       }
     }
   }
@@ -403,9 +358,4 @@ export function useWorkflowDesignerLayout(
     handleRemoveInput,
     handleUpdateInput,
   };
-}
-
-function edgeIndexFromKey(graph: WorkflowGraph, key: string): number {
-  const [from, to] = key.split('\u0000');
-  return edgeIndex(graph, from, to);
 }

@@ -4,30 +4,19 @@ import {
   ConnectionLineType,
   Controls,
   MiniMap,
-  Panel,
   ReactFlow,
   ReactFlowProvider,
   useNodesInitialized,
   useReactFlow,
 } from '@xyflow/react';
-import { LayoutGrid, Maximize2 } from 'lucide-react';
 import type { JSX } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/components/ui/button.tsx';
 import {
   ContextMenu,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu.tsx';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog.tsx';
 import { outgoingEdges } from '@/features/workflows/model/workflowGraph.ts';
 import type {
   WorkflowGraph,
@@ -38,18 +27,24 @@ import type {
 import { useLongPress } from '@/hooks/use-long-press.ts';
 import { useTheme } from '@/hooks/use-theme.ts';
 
+import {
+  canAddStepAfterTarget,
+  resolveContextMenuTarget,
+  type WorkflowContextMenuTarget,
+} from './flow/contextMenuTarget.ts';
 import { WorkflowFlowEdge } from './flow/FlowEdge.tsx';
 import { WorkflowFlowNode } from './flow/FlowNode.tsx';
 import { useWorkflowFlow } from './flow/useWorkflowFlow.ts';
 import {
-  canAddStepAfterTarget,
   WorkflowCanvasContextMenu,
-  resolveContextMenuTarget,
   type WorkflowContextMenuAction,
-  type WorkflowContextMenuTarget,
 } from './flow/WorkflowCanvasContextMenu.tsx';
-import { WorkflowCanvasAddMenu } from './WorkflowCanvasAddMenu.tsx';
+import {
+  WorkflowCanvasDeleteDialog,
+  type WorkflowCanvasDeleteTarget,
+} from './WorkflowCanvasDeleteDialog.tsx';
 import { WorkflowCanvasGuidance } from './WorkflowCanvasGuidance.tsx';
+import { WorkflowCanvasToolbar } from './WorkflowCanvasToolbar.tsx';
 
 const NODE_TYPES = {
   start: WorkflowFlowNode,
@@ -123,9 +118,8 @@ function WorkflowCanvasInner({
   // Holds the touched surface from our long-press hook until the menu opens.
   const pendingTouchTargetRef = useRef<WorkflowContextMenuTarget | null>(null);
   // Context-menu deletes confirm first, reusing the inspector dialogs.
-  const [pendingDelete, setPendingDelete] = useState<
-    { kind: 'node'; nodeId: string } | { kind: 'edge'; edgeKey: string } | null
-  >(null);
+  const [pendingDelete, setPendingDelete] =
+    useState<WorkflowCanvasDeleteTarget | null>(null);
 
   const flow = useWorkflowFlow({
     graph,
@@ -346,43 +340,16 @@ function WorkflowCanvasInner({
             zoomable
             className='overflow-hidden rounded-lg border border-border/70 shadow-sm'
           />
-          <Panel position='top-center'>
-            <div className='flex items-center gap-1 rounded-lg border border-border/70 bg-card/90 p-1 shadow-sm backdrop-blur-sm'>
-              {readOnly ? null : (
-                <>
-                  <WorkflowCanvasAddMenu onAddNode={onAddNode} />
-                  <span
-                    aria-hidden
-                    className='h-4 w-px bg-border/70'
-                  />
-                </>
-              )}
-              <Button
-                type='button'
-                variant='ghost'
-                size='icon-sm'
-                aria-label={t('canvas.fitView')}
-                title={t('canvas.fitView')}
-                onClick={() => {
-                  void fitView({ padding: 0.2, duration: 300 });
-                }}
-              >
-                <Maximize2 />
-              </Button>
-              <Button
-                type='button'
-                variant='ghost'
-                size='icon-sm'
-                aria-label={t('canvas.autoLayout')}
-                title={t('canvas.autoLayout')}
-                onClick={() => {
-                  flow.autoLayout(graph);
-                }}
-              >
-                <LayoutGrid />
-              </Button>
-            </div>
-          </Panel>
+          <WorkflowCanvasToolbar
+            readOnly={readOnly}
+            onAddNode={onAddNode}
+            onFitView={() => {
+              void fitView({ padding: 0.2, duration: 300 });
+            }}
+            onAutoLayout={() => {
+              flow.autoLayout(graph);
+            }}
+          />
         </ReactFlow>
         {showGuidance ? (
           <WorkflowCanvasGuidance
@@ -401,56 +368,14 @@ function WorkflowCanvasInner({
         />
       ) : null}
 
-      <Dialog
-        open={pendingDelete !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setPendingDelete(null);
-          }
+      <WorkflowCanvasDeleteDialog
+        pendingDelete={pendingDelete}
+        onCancel={() => {
+          setPendingDelete(null);
         }}
-      >
-        <DialogContent data-testid='workflow-delete-confirm'>
-          <DialogHeader>
-            <DialogTitle>
-              {pendingDelete?.kind === 'node'
-                ? t('canvas.deleteNodeTitle')
-                : t('canvas.deleteEdgeTitle')}
-            </DialogTitle>
-            <DialogDescription>
-              {pendingDelete?.kind === 'node'
-                ? t('canvas.deleteNodeDescription')
-                : t('canvas.deleteEdgeDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant='ghost'
-              data-testid='workflow-delete-confirm-cancel'
-              onClick={() => {
-                setPendingDelete(null);
-              }}
-            >
-              {t('versionHistory.close')}
-            </Button>
-            <Button
-              variant='destructive'
-              data-testid='workflow-delete-confirm-submit'
-              onClick={() => {
-                if (pendingDelete?.kind === 'node') {
-                  onRemoveNode(pendingDelete.nodeId);
-                } else if (pendingDelete?.kind === 'edge') {
-                  onRemoveEdge(pendingDelete.edgeKey);
-                }
-                setPendingDelete(null);
-              }}
-            >
-              {pendingDelete?.kind === 'node'
-                ? t('canvas.deleteNode')
-                : t('canvas.deleteTransition')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onRemoveNode={onRemoveNode}
+        onRemoveEdge={onRemoveEdge}
+      />
     </ContextMenu>
   );
 }

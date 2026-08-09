@@ -38,6 +38,7 @@ export function DocumentFormHeader({
         className='mb-4'
         items={[
           {
+            key: 'patients',
             label: t('common:breadcrumb.patients'),
             link: (
               <Link
@@ -47,6 +48,7 @@ export function DocumentFormHeader({
             ),
           },
           {
+            key: 'patient',
             label: patientName ?? t('common:breadcrumb.clinicalRecord'),
             link: (
               <Link
@@ -56,6 +58,7 @@ export function DocumentFormHeader({
             ),
           },
           {
+            key: 'encounter',
             label: t('common:breadcrumb.encounter'),
             link: (
               <Link
@@ -64,7 +67,7 @@ export function DocumentFormHeader({
               />
             ),
           },
-          { label: title },
+          { key: 'title', label: title },
         ]}
       />
       <div className='flex flex-wrap items-center gap-3'>

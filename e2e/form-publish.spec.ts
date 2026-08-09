@@ -229,7 +229,7 @@ test.describe('Form lifecycle publishing', () => {
       .click();
 
     // The draft is editable again: the lifecycle badge switches to Draft and
-    // the AI chat trigger (gated on read-only) re-enables.
+    // The AI chat trigger (gated on read-only) re-enables.
     await expect(page.getByTestId('form-publish-control')).toContainText(
       'Draft',
       { timeout: 30_000 },

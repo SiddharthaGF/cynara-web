@@ -8,13 +8,10 @@ import remarkGfm from 'remark-gfm';
 
 import { cn } from '@/lib/utils.ts';
 
-import {
-  type MentionHit,
-  MentionChip,
-  scanMentionHits,
-} from './ChatMentionContent.tsx';
+import { MentionChip } from './ChatMentionContent.tsx';
 import type { MentionableField } from './fieldMentions.ts';
 import type { MentionableFieldType } from './fieldTypeMentions.ts';
+import { scanMentionHits, type MentionHit } from './mentionScan.ts';
 
 /**
  * Renders assistant chat text as markdown (GFM) with mention chips injected
@@ -180,7 +177,7 @@ export const ChatMarkdownContent = memo(
     const components = useMemo<Components>(
       () => ({
         ...baseComponents,
-        a: ({ href, children }) => {
+        a: ({ href, children }): JSX.Element => {
           if (href) {
             const hit = resolveMentionUri(href, fieldsById, typesBySlug);
             if (hit) {

@@ -37,6 +37,15 @@ export function WorkflowRulesPanel({
     (node): node is Extract<WorkflowNode, { type: 'decision' }> =>
       node.type === 'decision',
   );
+  const edgesBySource = new Map<string, WorkflowEdge[]>();
+  for (const edge of graph.edges) {
+    const list = edgesBySource.get(edge.from);
+    if (list) {
+      list.push(edge);
+    } else {
+      edgesBySource.set(edge.from, [edge]);
+    }
+  }
 
   if (decisions.length === 0) {
     return (
@@ -75,15 +84,13 @@ export function WorkflowRulesPanel({
               </h3>
             </header>
             <ul className='grid gap-1.5'>
-              {graph.edges
-                .filter((edge) => edge.from === decision.id)
-                .map((edge) => (
-                  <BranchRow
-                    key={edgeKey(edge.from, edge.to)}
-                    edge={edge}
-                    evaluation={evaluations.get(edgeKey(edge.from, edge.to))}
-                  />
-                ))}
+              {(edgesBySource.get(decision.id) ?? []).map((edge) => (
+                <BranchRow
+                  key={edgeKey(edge.from, edge.to)}
+                  edge={edge}
+                  evaluation={evaluations.get(edgeKey(edge.from, edge.to))}
+                />
+              ))}
             </ul>
           </section>
         ))}

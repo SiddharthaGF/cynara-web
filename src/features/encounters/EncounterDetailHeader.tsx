@@ -31,6 +31,7 @@ export function EncounterDetailHeader({
         className='mb-4'
         items={[
           {
+            key: 'patients',
             label: t('common:breadcrumb.patients'),
             link: (
               <Link
@@ -40,6 +41,7 @@ export function EncounterDetailHeader({
             ),
           },
           {
+            key: 'patient',
             label: patientName ?? t('common:breadcrumb.clinicalRecord'),
             link: (
               <Link
@@ -48,7 +50,7 @@ export function EncounterDetailHeader({
               />
             ),
           },
-          { label: t('common:breadcrumb.encounter') },
+          { key: 'encounter', label: t('common:breadcrumb.encounter') },
         ]}
       />
       <div className='flex flex-wrap items-center gap-3'>

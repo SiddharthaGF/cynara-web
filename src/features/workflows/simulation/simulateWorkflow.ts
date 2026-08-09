@@ -103,6 +103,7 @@ export function simulateWorkflow(
   const steps: WorkflowSimulationStep[] = [];
   const visitedNodeIds: string[] = [];
   const takenEdgeKeys: string[] = [];
+  const takenEdgeKeySet = new Set<string>();
   const maxSteps = graph.nodes.length * 4 + 16;
 
   if (!startNode) {
@@ -163,9 +164,10 @@ export function simulateWorkflow(
     steps.push(outcome.step);
 
     const key = edgeKeyOf(outcome.exitedVia);
-    if (takenEdgeKeys.includes(key)) {
+    if (takenEdgeKeySet.has(key)) {
       return blocked('cycle', current.id, steps, visitedNodeIds, takenEdgeKeys);
     }
+    takenEdgeKeySet.add(key);
     takenEdgeKeys.push(key);
 
     const next = nodeById.get(outcome.exitedVia.to);

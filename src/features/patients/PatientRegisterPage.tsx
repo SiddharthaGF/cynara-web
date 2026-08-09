@@ -64,6 +64,7 @@ export function PatientRegisterPage(): JSX.Element {
           className='mb-4'
           items={[
             {
+              key: 'home',
               label: t('common:nav.home'),
               link: (
                 <Link
@@ -73,6 +74,7 @@ export function PatientRegisterPage(): JSX.Element {
               ),
             },
             {
+              key: 'patients',
               label: t('common:nav.patients'),
               link: (
                 <Link
@@ -81,7 +83,7 @@ export function PatientRegisterPage(): JSX.Element {
                 />
               ),
             },
-            { label: t('register.title') },
+            { key: 'register', label: t('register.title') },
           ]}
         />
 

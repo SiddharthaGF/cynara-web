@@ -21,6 +21,14 @@ import {
 import type { ClinicalField, TimePreset } from '@/features/forms/types.ts';
 import { cn } from '@/lib/utils.ts';
 
+// Formatters for the Spanish day-picker labels. Built once at module scope
+// Because constructing an Intl formatter is comparatively expensive.
+const esMonthYearFormatter = new Intl.DateTimeFormat('es', {
+  month: 'long',
+  year: 'numeric',
+});
+const esWeekdayFormatter = new Intl.DateTimeFormat('es', { weekday: 'long' });
+
 interface DatePickerInputProps {
   'fieldType': Extract<ClinicalField['type'], 'date' | 'datetime'>;
   'value': unknown;
@@ -270,16 +278,11 @@ function localizedCalendarLabels(
     labelNav: () => t('calendar.navigation'),
     labelGrid: (date) =>
       t('calendar.monthGrid', {
-        month: new Intl.DateTimeFormat('es', {
-          month: 'long',
-          year: 'numeric',
-        }).format(date),
+        month: esMonthYearFormatter.format(date),
       }),
     labelWeekday: (date) =>
       t('calendar.weekday', {
-        weekday: new Intl.DateTimeFormat('es', { weekday: 'long' }).format(
-          date,
-        ),
+        weekday: esWeekdayFormatter.format(date),
       }),
   };
 }

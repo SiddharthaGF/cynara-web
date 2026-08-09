@@ -12,11 +12,12 @@ import {
 } from './CreateWorkflowCard.tsx';
 import { WorkflowsCatalogTable } from './WorkflowsCatalogTable.tsx';
 
+export type WorkflowCreationState = 'idle' | 'creating' | 'creating-draft';
+
 interface WorkflowListContentProps {
   workflows: WorkflowSummary[];
   error: string | null;
-  isCreating: boolean;
-  isCreatingDraft: boolean;
+  creationState: WorkflowCreationState;
   isLoading: boolean;
   canCreate: boolean;
   onCreate: (values: { code: string; name: string }) => Promise<void>;
@@ -26,8 +27,7 @@ interface WorkflowListContentProps {
 export function WorkflowListContent({
   workflows,
   error,
-  isCreating,
-  isCreatingDraft,
+  creationState,
   isLoading,
   canCreate,
   onCreate,
@@ -45,6 +45,7 @@ export function WorkflowListContent({
         className='mb-4'
         items={[
           {
+            key: 'home',
             label: t('common:nav.home'),
             link: (
               <Link
@@ -53,7 +54,7 @@ export function WorkflowListContent({
               />
             ),
           },
-          { label: t('list.title') },
+          { key: 'title', label: t('list.title') },
         ]}
       />
       <PageHeader
@@ -74,14 +75,14 @@ export function WorkflowListContent({
       <div className='grid gap-6 lg:grid-cols-[minmax(17rem,20rem)_minmax(0,1fr)]'>
         {canCreate ? (
           <CreateWorkflowCard
-            isCreating={isCreating}
+            isCreating={creationState === 'creating'}
             onSubmit={onCreate}
           />
         ) : null}
         <WorkflowsCatalogTable
           workflows={workflows}
           isLoading={isLoading}
-          isCreatingDraft={isCreatingDraft}
+          isCreatingDraft={creationState === 'creating-draft'}
           onCreateDraft={onCreateDraft}
         />
       </div>

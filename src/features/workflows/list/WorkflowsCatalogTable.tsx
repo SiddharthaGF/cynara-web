@@ -75,7 +75,10 @@ function formatUpdatedAt(iso: string, locale: string): string {
   if (!iso) {
     return '—';
   }
-  const formatter = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
+  const formatter = new Intl.DateTimeFormat(locale, {
+    dateStyle: 'medium',
+    timeZone: 'UTC',
+  });
   return formatter.format(new Date(iso));
 }
 

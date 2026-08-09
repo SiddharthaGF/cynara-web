@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { ArrowLeft, Plus, Rocket, Undo2 } from 'lucide-react';
+import { Rocket, Undo2 } from 'lucide-react';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,19 +12,13 @@ import {
   withdrawFormReview,
 } from '@/api/forms.ts';
 import { queryKeys } from '@/api/query-keys.ts';
-import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog.tsx';
-import { Spinner } from '@/components/ui/spinner.tsx';
 import type { FormVersion } from '@/features/forms/types.ts';
+
+import { PublishConfirmDialog } from './PublishConfirmDialog.tsx';
+import { PublishedVersionDialog } from './PublishedVersionDialog.tsx';
+import { WithdrawConfirmDialog } from './WithdrawConfirmDialog.tsx';
 
 type PublishDialog = 'publish' | 'withdraw' | null;
 
@@ -200,162 +194,38 @@ export function FormPublishControl({
         </Button>
       </div>
 
-      <Dialog
+      <PublishConfirmDialog
         open={activeDialog === 'publish'}
-        onOpenChange={(open) => {
-          if (!open) {
-            setActiveDialog(null);
-          }
+        error={publishError}
+        isPending={publishMutation.isPending}
+        onCancel={() => {
+          setActiveDialog(null);
         }}
-      >
-        <DialogContent data-testid='form-publish-dialog'>
-          <DialogHeader>
-            <DialogTitle>{t('publish.confirmTitle')}</DialogTitle>
-            <DialogDescription>{t('publish.confirmBody')}</DialogDescription>
-          </DialogHeader>
-          {publishError ? (
-            <Alert variant='destructive'>
-              <AlertDescription>{publishError}</AlertDescription>
-            </Alert>
-          ) : null}
-          <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              disabled={publishMutation.isPending}
-              onClick={() => {
-                setActiveDialog(null);
-              }}
-            >
-              {t('publish.cancel')}
-            </Button>
-            <Button
-              type='button'
-              disabled={publishMutation.isPending}
-              onClick={() => {
-                void publishMutation.mutateAsync();
-              }}
-              data-testid='form-publish-confirm'
-            >
-              {publishMutation.isPending ? (
-                <Spinner data-icon='inline-start' />
-              ) : (
-                <Rocket
-                  className='size-3.5'
-                  aria-hidden='true'
-                />
-              )}
-              {t('publish.confirmAction')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onConfirm={() => {
+          publishMutation.mutate();
+        }}
+      />
 
-      <Dialog
+      <WithdrawConfirmDialog
         open={activeDialog === 'withdraw'}
-        onOpenChange={(open) => {
-          if (!open) {
-            setActiveDialog(null);
-          }
+        error={withdrawError}
+        isPending={withdrawMutation.isPending}
+        onCancel={() => {
+          setActiveDialog(null);
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('publish.withdrawTitle')}</DialogTitle>
-            <DialogDescription>{t('publish.withdrawBody')}</DialogDescription>
-          </DialogHeader>
-          {withdrawError ? (
-            <Alert variant='destructive'>
-              <AlertDescription>{withdrawError}</AlertDescription>
-            </Alert>
-          ) : null}
-          <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              disabled={withdrawMutation.isPending}
-              onClick={() => {
-                setActiveDialog(null);
-              }}
-            >
-              {t('publish.cancel')}
-            </Button>
-            <Button
-              type='button'
-              variant='destructive'
-              disabled={withdrawMutation.isPending}
-              onClick={() => {
-                void withdrawMutation.mutateAsync();
-              }}
-            >
-              {withdrawMutation.isPending ? (
-                <Spinner data-icon='inline-start' />
-              ) : (
-                <Undo2
-                  className='size-3.5'
-                  aria-hidden='true'
-                />
-              )}
-              {t('publish.withdrawAction')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onConfirm={() => {
+          withdrawMutation.mutate();
+        }}
+      />
 
-      <Dialog
-        open={publishedVersion !== null}
-        onOpenChange={(open) => {
-          // Published versions have no editable draft, so the dialog only dismisses into an explicit next step.
-          if (!open) {
-            backToForms();
-          }
+      <PublishedVersionDialog
+        version={publishedVersion}
+        isPending={continueEditingMutation.isPending}
+        onClose={backToForms}
+        onContinueEditing={() => {
+          continueEditingMutation.mutate();
         }}
-      >
-        <DialogContent
-          showCloseButton={false}
-          data-testid='form-published-dialog'
-        >
-          <DialogHeader>
-            <DialogTitle>{t('publish.publishedTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('publish.publishedBody', {
-                version: publishedVersion?.version ?? '',
-              })}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type='button'
-              variant='outline'
-              disabled={continueEditingMutation.isPending}
-              onClick={() => {
-                void continueEditingMutation.mutateAsync();
-              }}
-            >
-              {continueEditingMutation.isPending ? (
-                <Spinner data-icon='inline-start' />
-              ) : (
-                <Plus
-                  className='size-3.5'
-                  aria-hidden='true'
-                />
-              )}
-              {t('publish.continueEditing')}
-            </Button>
-            <Button
-              type='button'
-              onClick={backToForms}
-              data-testid='form-published-back'
-            >
-              <ArrowLeft
-                className='size-3.5'
-                aria-hidden='true'
-              />
-              {t('publish.backToForms')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      />
     </>
   );
 }
