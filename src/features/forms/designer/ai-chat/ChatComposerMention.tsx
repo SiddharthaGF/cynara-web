@@ -80,7 +80,6 @@ export function ChatComposerMention({
         <MentionTextarea
           // DiceUI does not bind inputValue to the DOM; seed on remount.
           ref={inputRef}
-          data-testid='ai-chat-input'
           defaultValue={value}
           placeholder={placeholder}
           disabled={disabled}

@@ -42,30 +42,14 @@ export function PatientDetailTabs({
       }}
     >
       <TabsList>
-        <TabsTrigger
-          value='overview'
-          data-testid='hc-tab-overview'
-        >
-          {t('detail.tabs.overview')}
-        </TabsTrigger>
-        <TabsTrigger
-          value='encounters'
-          data-testid='hc-tab-encounters'
-        >
+        <TabsTrigger value='overview'>{t('detail.tabs.overview')}</TabsTrigger>
+        <TabsTrigger value='encounters'>
           {t('detail.tabs.encounters')}
         </TabsTrigger>
-        <TabsTrigger
-          value='documents'
-          data-testid='hc-tab-documents'
-        >
+        <TabsTrigger value='documents'>
           {t('detail.tabs.documents')}
         </TabsTrigger>
-        <TabsTrigger
-          value='journeys'
-          data-testid='hc-tab-journeys'
-        >
-          {t('detail.tabs.journeys')}
-        </TabsTrigger>
+        <TabsTrigger value='journeys'>{t('detail.tabs.journeys')}</TabsTrigger>
       </TabsList>
 
       <TabsContent

@@ -89,10 +89,7 @@ export function EncounterAvailableForms({
   };
 
   return (
-    <section
-      className={compact ? 'mt-4' : 'mb-6'}
-      data-testid='encounter-available-forms'
-    >
+    <section className={compact ? 'mt-4' : 'mb-6'}>
       <div className='mb-2 flex items-center justify-between gap-2'>
         <p className='text-xs font-medium tracking-[0.2em] text-accent uppercase'>
           {t('list.startForms')}
@@ -115,7 +112,6 @@ export function EncounterAvailableForms({
         <Alert
           variant='destructive'
           className='mb-3'
-          data-testid='start-document-error'
         >
           <AlertDescription>{startError}</AlertDescription>
         </Alert>
@@ -150,7 +146,6 @@ export function EncounterAvailableForms({
               key={definition.id}
               variant='outline'
               size='sm'
-              data-testid='start-document-action'
               disabled={isStarting}
               onClick={() => {
                 void handleStart(definition.id);

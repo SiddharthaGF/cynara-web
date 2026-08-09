@@ -114,7 +114,6 @@ export function DocumentCatalogTable({
                       variant='ghost'
                       size='sm'
                       onClick={() => onEdit(item)}
-                      data-testid='admin-row-edit'
                     >
                       <Pencil className='size-4' />
                       <span className='sr-only'>{t('shared.edit')}</span>
@@ -124,7 +123,6 @@ export function DocumentCatalogTable({
                       size='sm'
                       disabled={isRetired}
                       onClick={() => onRetire(item)}
-                      data-testid='admin-row-retire'
                     >
                       <Archive className='size-4' />
                       <span className='sr-only'>{t('shared.retire')}</span>
@@ -143,7 +141,6 @@ export function DocumentCatalogTable({
     <div className='overflow-x-auto'>
       <table
         data-slot='table'
-        data-testid='admin-table'
         className='w-full min-w-[56rem] caption-bottom text-sm'
       >
         <TableHeader>

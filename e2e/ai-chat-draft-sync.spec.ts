@@ -16,19 +16,20 @@ async function openDesigner(page: Page, formCode: string): Promise<void> {
   await page.goto(`/en/forms/${formCode}/designer/`, {
     waitUntil: 'domcontentloaded',
   });
-  await expect(page.getByTestId('designer-field-list')).toBeVisible({
+  // Question cards keep `data-field-id`; the seeded draft has exactly one.
+  await expect(page.locator('[data-field-id]').first()).toBeVisible({
     timeout: 30_000,
   });
-  await expect(page.getByTestId('designer-field')).toHaveCount(1);
-  await expect(page.getByTestId('designer-field').first()).toContainText(
+  await expect(page.locator('[data-field-id]')).toHaveCount(1);
+  await expect(page.locator('[data-field-id]').first()).toContainText(
     'Clinical notes',
   );
 }
 
 async function ensureChatOpen(page: Page): Promise<Locator> {
-  const chat = page.getByTestId('ai-chat-panel');
+  const chat = page.getByRole('complementary', { name: 'Cynara' });
   if ((await chat.count()) === 0) {
-    await page.getByTestId('ai-chat-open').click();
+    await page.getByRole('button', { name: 'AI chat' }).click();
   }
   await expect(chat).toBeVisible({ timeout: 10_000 });
   return chat;
@@ -36,7 +37,7 @@ async function ensureChatOpen(page: Page): Promise<Locator> {
 
 async function sendAiPrompt(page: Page, prompt: string): Promise<void> {
   const chat = await ensureChatOpen(page);
-  const input = page.getByTestId('ai-chat-input');
+  const input = page.getByPlaceholder('Ask anything… @ question · # type');
   await input.click();
   await input.fill(prompt);
   await page.getByRole('button', { name: 'Send' }).click();
@@ -55,7 +56,7 @@ async function closePreview(page: Page): Promise<void> {
   } else {
     await page.keyboard.press('Escape');
   }
-  await expect(page.getByTestId('preview-form')).toHaveCount(0);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
 async function fieldIds(locator: Locator): Promise<string[]> {
@@ -71,13 +72,11 @@ async function fieldIds(locator: Locator): Promise<string[]> {
 }
 
 async function designerFieldIds(page: Page): Promise<string[]> {
-  return fieldIds(page.getByTestId('designer-field'));
+  return fieldIds(page.locator('[data-field-id]'));
 }
 
 async function previewFieldIds(page: Page): Promise<string[]> {
-  return fieldIds(
-    page.getByTestId('preview-form').getByTestId('preview-field'),
-  );
+  return fieldIds(page.getByRole('dialog').locator('[data-field-id]'));
 }
 
 async function expectLabelsInOrder(
@@ -105,27 +104,19 @@ test.describe('AI chat draft sync (real app, mocked stream)', () => {
 
     await sendAiPrompt(page, 'Create a form for bariatric patient follow-up');
 
-    await expect(page.getByTestId('designer-field')).toHaveCount(
+    await expect(page.locator('[data-field-id]')).toHaveCount(
       APPLIED_FIELD_ORDER.length,
       { timeout: 15_000 },
     );
     expect(await designerFieldIds(page)).toEqual([...APPLIED_FIELD_ORDER]);
-    await expectLabelsInOrder(
-      page.getByTestId('designer-field'),
-      APPLIED_LABELS,
-    );
+    await expectLabelsInOrder(page.locator('[data-field-id]'), APPLIED_LABELS);
 
-    await page.getByTestId('form-preview-open').click();
-    const previewForm = page.getByTestId('preview-form');
-    await expect(previewForm).toBeVisible();
-    await expect(previewForm.getByTestId('preview-field')).toHaveCount(
-      APPLIED_FIELD_ORDER.length,
-    );
+    await page.getByRole('button', { name: 'Preview' }).click();
+    const previewFields = page.getByRole('dialog').locator('[data-field-id]');
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(previewFields).toHaveCount(APPLIED_FIELD_ORDER.length);
     expect(await previewFieldIds(page)).toEqual([...APPLIED_FIELD_ORDER]);
-    await expectLabelsInOrder(
-      previewForm.getByTestId('preview-field'),
-      APPLIED_LABELS,
-    );
+    await expectLabelsInOrder(previewFields, APPLIED_LABELS);
   });
 
   test('keeps designer and preview aligned after repeated chat applies', async ({
@@ -137,23 +128,23 @@ test.describe('AI chat draft sync (real app, mocked stream)', () => {
     await openDesigner(page, code);
     await sendAiPrompt(page, 'Build the bariatric follow-up form');
 
-    await expect(page.getByTestId('designer-field')).toHaveCount(
+    await expect(page.locator('[data-field-id]')).toHaveCount(
       APPLIED_FIELD_ORDER.length,
     );
 
-    await page.getByTestId('form-preview-open').click();
-    await expect(page.getByTestId('preview-form')).toBeVisible();
+    await page.getByRole('button', { name: 'Preview' }).click();
+    await expect(page.getByRole('dialog')).toBeVisible();
     expect(await previewFieldIds(page)).toEqual([...APPLIED_FIELD_ORDER]);
 
     await closePreview(page);
 
     await sendAiPrompt(page, 'Keep the same follow-up fields');
-    await expect(page.getByTestId('designer-field')).toHaveCount(
+    await expect(page.locator('[data-field-id]')).toHaveCount(
       APPLIED_FIELD_ORDER.length,
     );
     expect(await designerFieldIds(page)).toEqual([...APPLIED_FIELD_ORDER]);
 
-    await page.getByTestId('form-preview-open').click();
+    await page.getByRole('button', { name: 'Preview' }).click();
     expect(await previewFieldIds(page)).toEqual([...APPLIED_FIELD_ORDER]);
   });
 });

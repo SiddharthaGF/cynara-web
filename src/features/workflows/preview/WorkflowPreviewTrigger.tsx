@@ -20,7 +20,6 @@ export function WorkflowPreviewTrigger({
         variant='outline'
         size='sm'
         className='gap-1.5 shrink-0'
-        data-testid='workflow-preview-open'
         onClick={onOpen}
         aria-label={t('preview.open')}
       >

@@ -165,7 +165,7 @@ export function QuestionCardActions({
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
       >
-        <DialogContent data-testid='question-delete-confirm'>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('canvas.deleteQuestionTitle')}</DialogTitle>
             <DialogDescription>
@@ -178,7 +178,6 @@ export function QuestionCardActions({
             </DialogClose>
             <Button
               variant='destructive'
-              data-testid='question-delete-confirm-submit'
               onClick={() => {
                 setConfirmOpen(false);
                 onRemove(field.id);

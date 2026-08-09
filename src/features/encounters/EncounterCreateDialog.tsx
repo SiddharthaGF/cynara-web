@@ -122,20 +122,14 @@ export function EncounterCreateDialog({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent
-        className='sm:max-w-md'
-        data-testid='encounter-create-dialog'
-      >
+      <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>{t('create.title')}</DialogTitle>
           <DialogDescription>{t('create.description')}</DialogDescription>
         </DialogHeader>
 
         {serverError !== null && serverError !== '' ? (
-          <Alert
-            variant='destructive'
-            data-testid='encounter-create-error'
-          >
+          <Alert variant='destructive'>
             <AlertDescription>{serverError}</AlertDescription>
           </Alert>
         ) : null}
@@ -147,7 +141,7 @@ export function EncounterCreateDialog({
         ) : null}
 
         {taxonomyEmpty ? (
-          <Alert data-testid='encounter-create-taxonomy-empty'>
+          <Alert>
             <AlertDescription>
               {t('create.errors.taxonomyEmpty')}
             </AlertDescription>
@@ -158,7 +152,6 @@ export function EncounterCreateDialog({
         {/* react-doctor-disable-next-line react-doctor/no-prevent-default */}
         <form
           className='grid gap-4'
-          data-testid='encounter-create-form'
           onSubmit={(event) => {
             event.preventDefault();
             void form.handleSubmit();
@@ -217,7 +210,6 @@ export function EncounterCreateDialog({
             </Button>
             <Button
               type='submit'
-              data-testid='encounter-create-submit'
               disabled={isCreating || taxonomyEmpty}
             >
               {isCreating ? <Spinner data-icon='inline-start' /> : null}

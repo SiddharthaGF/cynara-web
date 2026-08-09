@@ -74,7 +74,7 @@ export function EncounterTransitionConfirmDialog({
         }
       }}
     >
-      <DialogContent data-testid='encounter-transition-confirm'>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{body}</DialogDescription>
@@ -94,7 +94,6 @@ export function EncounterTransitionConfirmDialog({
           </Button>
           <Button
             variant={kind === 'enterInError' ? 'destructive' : 'default'}
-            data-testid='encounter-transition-confirm-submit'
             disabled={isPending}
             onClick={onConfirm}
           >

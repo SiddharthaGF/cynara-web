@@ -25,9 +25,6 @@ interface JourneyPanelBodyProps {
   patientId: string;
   locale: string;
   language: string;
-  listTestId: string;
-  forbiddenTestId: string;
-  emptyTestId: string;
 }
 
 /**
@@ -47,26 +44,17 @@ export function JourneyPanelBody({
   patientId,
   locale,
   language,
-  listTestId,
-  forbiddenTestId,
-  emptyTestId,
 }: JourneyPanelBodyProps): JSX.Element {
   return (
     <div className='space-y-3'>
       {isForbidden ? (
-        <Alert
-          variant='destructive'
-          data-testid={forbiddenTestId}
-        >
+        <Alert variant='destructive'>
           <AlertDescription>{forbiddenMessage}</AlertDescription>
         </Alert>
       ) : null}
 
       {!isForbidden && error ? (
-        <Alert
-          variant='destructive'
-          data-testid='journey-list-error'
-        >
+        <Alert variant='destructive'>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
@@ -79,10 +67,7 @@ export function JourneyPanelBody({
       ) : null}
 
       {!isLoading && !isForbidden && !error && journeys.length === 0 ? (
-        <Empty
-          className='min-h-36 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-8'
-          data-testid={emptyTestId}
-        >
+        <Empty className='min-h-36 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-8'>
           <EmptyHeader>
             <EmptyTitle>{emptyTitle}</EmptyTitle>
             <EmptyDescription>{emptyDescription}</EmptyDescription>
@@ -92,10 +77,7 @@ export function JourneyPanelBody({
       ) : null}
 
       {!isLoading && journeys.length > 0 ? (
-        <div
-          className='space-y-3'
-          data-testid={listTestId}
-        >
+        <div className='space-y-3'>
           {journeys.map((journey) => (
             <JourneyCard
               key={journey.pipelineId}

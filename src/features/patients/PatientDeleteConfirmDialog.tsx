@@ -36,10 +36,7 @@ export function PatientDeleteConfirmDialog({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <AlertDialogContent
-        data-testid='patient-delete-confirm'
-        aria-label={t('detail.deleteConfirmTitle')}
-      >
+      <AlertDialogContent aria-label={t('detail.deleteConfirmTitle')}>
         <AlertDialogHeader>
           <AlertDialogTitle>{t('detail.deleteConfirmTitle')}</AlertDialogTitle>
           <AlertDialogDescription>
@@ -60,7 +57,6 @@ export function PatientDeleteConfirmDialog({
           </AlertDialogCancel>
           <AlertDialogAction
             variant='destructive'
-            data-testid='patient-delete-confirm-submit'
             onClick={onConfirm}
             disabled={isDeleting}
           >

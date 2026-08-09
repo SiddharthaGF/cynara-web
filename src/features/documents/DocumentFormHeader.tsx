@@ -74,10 +74,7 @@ export function DocumentFormHeader({
         <h1 className='font-display text-balance text-2xl font-semibold tracking-tight md:text-3xl'>
           {title}
         </h1>
-        <Badge
-          variant={clinicalDocumentStatusBadgeVariant(status)}
-          data-testid='document-detail-status'
-        >
+        <Badge variant={clinicalDocumentStatusBadgeVariant(status)}>
           {formatClinicalDocumentStatus(status, t)}
         </Badge>
       </div>

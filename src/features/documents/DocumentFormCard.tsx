@@ -59,7 +59,6 @@ export function DocumentFormCard({
           ? 'border-border/70 bg-muted/15 shadow-sm'
           : 'border-border/70 shadow-sm'
       }
-      data-testid='document-detail-view'
     >
       <CardHeader>
         <CardTitle className='flex items-center gap-2 font-heading text-lg'>
@@ -76,10 +75,7 @@ export function DocumentFormCard({
           language={language}
         />
 
-        <div
-          className='border-t border-border/70 pt-6'
-          data-testid='document-form-canvas'
-        >
+        <div className='border-t border-border/70 pt-6'>
           <FormRendererView
             model={model}
             renderer={renderer}

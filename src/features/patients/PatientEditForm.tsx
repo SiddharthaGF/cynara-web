@@ -113,7 +113,7 @@ export function PatientEditForm({
 
   return (
     <form
-      data-testid='patient-edit-form'
+      aria-label={t('detail.editTitle')}
       onSubmit={(e) => {
         e.preventDefault();
         void form.handleSubmit();
@@ -124,7 +124,6 @@ export function PatientEditForm({
         <Alert
           variant='destructive'
           className='mb-4'
-          data-testid='patient-edit-error'
         >
           <AlertDescription>{serverError}</AlertDescription>
         </Alert>
@@ -139,7 +138,6 @@ export function PatientEditForm({
             disabled
             readOnly
             aria-readonly='true'
-            data-testid='patient-edit-mrn'
           />
           <p className='text-xs text-muted-foreground'>
             {t('detail.mrnImmutable')}
@@ -156,7 +154,6 @@ export function PatientEditForm({
                 </FieldLabel>
                 <Input
                   id='edit-nationalId'
-                  data-testid='patient-edit-nationalId'
                   value={field.state.value}
                   onChange={(e) => {
                     field.handleChange(e.target.value);
@@ -185,7 +182,6 @@ export function PatientEditForm({
                 </FieldLabel>
                 <Input
                   id='edit-givenName'
-                  data-testid='patient-edit-givenName'
                   value={field.state.value}
                   onChange={(e) => {
                     field.handleChange(e.target.value);
@@ -213,7 +209,6 @@ export function PatientEditForm({
                 </FieldLabel>
                 <Input
                   id='edit-familyName'
-                  data-testid='patient-edit-familyName'
                   value={field.state.value}
                   onChange={(e) => {
                     field.handleChange(e.target.value);
@@ -242,7 +237,6 @@ export function PatientEditForm({
                 <DatePickerInput
                   fieldType='date'
                   inputId='edit-birthDate'
-                  data-testid='patient-edit-birthDate'
                   value={field.state.value}
                   enabled={!isEditing}
                   placeholder={t('register.fields.birthDatePlaceholder')}
@@ -265,7 +259,6 @@ export function PatientEditForm({
           {(field) => (
             <PatientSexField
               id='edit-sex'
-              testId='patient-edit-sex'
               label={t('detail.fields.sex')}
               labels={{
                 female: t('detail.sexOptions.female'),
@@ -289,7 +282,6 @@ export function PatientEditForm({
           {(canSubmit) => (
             <Button
               type='submit'
-              data-testid='patient-edit-save'
               disabled={isEditing || !canSubmit}
             >
               {isEditing ? <Spinner data-icon='inline-start' /> : null}

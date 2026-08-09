@@ -42,10 +42,7 @@ export function JourneyTimeline({
   }
 
   return (
-    <ol
-      className='space-y-0'
-      data-testid='journey-timeline'
-    >
+    <ol className='space-y-0'>
       {journey.history.map((event, index) => (
         <TimelineEvent
           key={event.id}

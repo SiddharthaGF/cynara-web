@@ -70,10 +70,7 @@ export function FormListPagination({
   const rangeEnd = Math.min(page * pageSize, totalCount);
 
   return (
-    <div
-      className='flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'
-      data-testid='form-list-pagination'
-    >
+    <div className='flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
       <p className='text-sm text-muted-foreground'>
         {t('list.pageRange', {
           start: rangeStart,
@@ -90,7 +87,6 @@ export function FormListPagination({
               size='default'
               className='pl-1.5!'
               disabled={page <= 1}
-              data-testid='form-list-page-prev'
               aria-label={t('list.previousPage')}
               onClick={() => {
                 onPageChange(page - 1);
@@ -112,7 +108,6 @@ export function FormListPagination({
                   size='icon'
                   variant={item.value === page ? 'outline' : 'ghost'}
                   aria-current={item.value === page ? 'page' : undefined}
-                  data-testid={`form-list-page-${String(item.value)}`}
                   className={cn(item.value === page && 'pointer-events-none')}
                   onClick={() => {
                     onPageChange(item.value);
@@ -130,7 +125,6 @@ export function FormListPagination({
               size='default'
               className='pr-1.5!'
               disabled={page >= totalPages}
-              data-testid='form-list-page-next'
               aria-label={t('list.nextPage')}
               onClick={() => {
                 onPageChange(page + 1);

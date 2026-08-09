@@ -30,16 +30,15 @@ const esMonthYearFormatter = new Intl.DateTimeFormat('es', {
 const esWeekdayFormatter = new Intl.DateTimeFormat('es', { weekday: 'long' });
 
 interface DatePickerInputProps {
-  'fieldType': Extract<ClinicalField['type'], 'date' | 'datetime'>;
-  'value': unknown;
-  'enabled': boolean;
-  'placeholder': string | undefined;
-  'inputId'?: string;
-  'timePresets'?: TimePreset[];
-  'ariaInvalid'?: boolean;
-  'ariaRequired'?: boolean;
-  'data-testid'?: string;
-  'onChange': (value: unknown) => void;
+  fieldType: Extract<ClinicalField['type'], 'date' | 'datetime'>;
+  value: unknown;
+  enabled: boolean;
+  placeholder: string | undefined;
+  inputId?: string;
+  timePresets?: TimePreset[];
+  ariaInvalid?: boolean;
+  ariaRequired?: boolean;
+  onChange: (value: unknown) => void;
 }
 
 export function DatePickerInput({
@@ -51,7 +50,6 @@ export function DatePickerInput({
   timePresets,
   ariaInvalid = false,
   ariaRequired = false,
-  'data-testid': testId,
   onChange,
 }: DatePickerInputProps): JSX.Element {
   const { i18n, t } = useTranslation('common');
@@ -163,7 +161,6 @@ export function DatePickerInput({
                 <Button
                   type='button'
                   variant='outline'
-                  data-testid={testId}
                   aria-invalid={ariaInvalid || undefined}
                   aria-required={ariaRequired || undefined}
                   className={cn(
@@ -226,7 +223,6 @@ export function DatePickerInput({
           <Button
             type='button'
             variant='outline'
-            data-testid={testId}
             aria-invalid={ariaInvalid || undefined}
             aria-required={ariaRequired || undefined}
             className={cn(

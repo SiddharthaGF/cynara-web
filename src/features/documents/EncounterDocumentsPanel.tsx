@@ -74,10 +74,7 @@ export function EncounterDocumentsPanel({
   const canStart = encounterOpen && !isForbidden && canWrite;
 
   return (
-    <Card
-      className='mt-8 border-border/70 shadow-sm'
-      data-testid='encounter-documents-panel'
-    >
+    <Card className='mt-8 border-border/70 shadow-sm'>
       <CardHeader>
         <p className='mb-2 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
           {t('list.eyebrow')}
@@ -90,19 +87,13 @@ export function EncounterDocumentsPanel({
       </CardHeader>
       <CardContent>
         {isForbidden ? (
-          <Alert
-            variant='destructive'
-            data-testid='document-list-forbidden'
-          >
+          <Alert variant='destructive'>
             <AlertDescription>{t('list.forbidden')}</AlertDescription>
           </Alert>
         ) : null}
 
         {!isForbidden && error ? (
-          <Alert
-            variant='destructive'
-            data-testid='document-list-error'
-          >
+          <Alert variant='destructive'>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : null}
@@ -126,10 +117,7 @@ export function EncounterDocumentsPanel({
         ) : null}
 
         {!isLoading && !isForbidden && !error && documents.length === 0 ? (
-          <Empty
-            className='min-h-36 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-8'
-            data-testid='document-list-empty'
-          >
+          <Empty className='min-h-36 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-8'>
             <EmptyHeader>
               <EmptyTitle>{t('list.emptyTitle')}</EmptyTitle>
               <EmptyDescription>{t('list.emptyDescription')}</EmptyDescription>
@@ -138,10 +126,7 @@ export function EncounterDocumentsPanel({
         ) : null}
 
         {!isLoading && documents.length > 0 ? (
-          <ul
-            className='divide-y divide-border/70 rounded-xl border border-border/70'
-            data-testid='document-list'
-          >
+          <ul className='divide-y divide-border/70 rounded-xl border border-border/70'>
             {documents.map((document) => (
               <DocumentListRow
                 key={document.id}
@@ -188,7 +173,6 @@ function DocumentListRow({
           ? 'flex flex-col gap-3 bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
           : 'flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
       }
-      data-testid='document-list-row'
       data-status={document.status}
       data-terminal={terminal ? 'true' : 'false'}
     >
@@ -223,7 +207,6 @@ function DocumentListRow({
         <Button
           variant='outline'
           size='sm'
-          data-testid='document-list-open'
         >
           {t('list.viewDetail')}
         </Button>

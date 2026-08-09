@@ -41,10 +41,7 @@ export function PatientJourneyPanel({
   );
 
   return (
-    <Card
-      className='mt-8 border-border/70 shadow-sm'
-      data-testid='patient-journey-panel'
-    >
+    <Card className='mt-8 border-border/70 shadow-sm'>
       <CardHeader>
         <p className='mb-2 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
           {t('panel.eyebrow')}
@@ -70,7 +67,6 @@ export function PatientJourneyPanel({
               onNewEncounter ? (
                 <Button
                   size='sm'
-                  data-testid='patient-journey-empty-action'
                   onClick={onNewEncounter}
                 >
                   {t('panel.emptyAction')}
@@ -81,15 +77,9 @@ export function PatientJourneyPanel({
             patientId={patientId}
             locale={locale}
             language={i18n.language}
-            listTestId='patient-journey-list'
-            forbiddenTestId='patient-journey-forbidden'
-            emptyTestId='patient-journey-empty'
           />
         ) : (
-          <p
-            className='rounded-lg border border-border/70 bg-muted/20 px-3 py-3 text-sm text-muted-foreground'
-            data-testid='patient-journey-denied'
-          >
+          <p className='rounded-lg border border-border/70 bg-muted/20 px-3 py-3 text-sm text-muted-foreground'>
             {t('panel.denied')}
           </p>
         )}

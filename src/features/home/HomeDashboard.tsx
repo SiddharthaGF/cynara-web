@@ -116,7 +116,6 @@ function RecentForms(): JSX.Element | null {
                       }
                     : { locale }
                 }
-                data-testid='home-recent-form'
                 className='group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/40'
               >
                 <span className='min-w-0 flex-1'>
@@ -197,7 +196,6 @@ function RecentWorkflows(): JSX.Element | null {
                     : '/$locale/workflows'
                 }
                 params={{ locale, code: workflow.code }}
-                data-testid='home-recent-workflow'
                 className='group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/40'
               >
                 <span className='min-w-0 flex-1'>
@@ -279,7 +277,6 @@ function ActiveEncounters(): JSX.Element | null {
                 id: encounter.patientId,
                 encounterId: encounter.id,
               }}
-              data-testid='home-recent-encounter'
               className='group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-muted/40'
             >
               <span className='min-w-0 flex-1'>
@@ -308,10 +305,7 @@ function ActiveEncounters(): JSX.Element | null {
  */
 export function HomeDashboard(): JSX.Element {
   return (
-    <div
-      className='grid gap-6 lg:grid-cols-2'
-      data-testid='home-dashboard'
-    >
+    <div className='grid gap-6 lg:grid-cols-2'>
       <RecentForms />
       <RecentWorkflows />
       <ActiveEncounters />

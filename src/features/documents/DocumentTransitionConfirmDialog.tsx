@@ -70,7 +70,7 @@ export function DocumentTransitionConfirmDialog({
         }
       }}
     >
-      <DialogContent data-testid='document-transition-confirm'>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{body}</DialogDescription>
@@ -87,7 +87,6 @@ export function DocumentTransitionConfirmDialog({
             </FieldLabel>
             <Input
               id='document-transition-reason'
-              data-testid='document-transition-reason'
               value={reason}
               disabled={isPending}
               aria-invalid={showReasonError}
@@ -118,7 +117,6 @@ export function DocumentTransitionConfirmDialog({
           </Button>
           <Button
             variant={kind === 'enterInError' ? 'destructive' : 'default'}
-            data-testid='document-transition-confirm-submit'
             disabled={isPending || showReasonError}
             onClick={() => {
               if (reasonRequired) {

@@ -59,7 +59,7 @@ export function EncounterDetailHeader({
         </h1>
         <Badge
           variant={encounterStatusBadgeVariant(status)}
-          data-testid='encounter-detail-status'
+          role='status'
         >
           {formatEncounterStatus(status, t)}
         </Badge>

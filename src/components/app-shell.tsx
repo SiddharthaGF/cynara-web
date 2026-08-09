@@ -329,7 +329,6 @@ function AppShellContent({
                 setCommandOpen(true);
               }}
               aria-label={t('search.trigger')}
-              data-testid='global-search-trigger'
               className='text-muted-foreground'
             >
               <Search className='size-4' />
@@ -343,7 +342,6 @@ function AppShellContent({
             <DropdownMenu>
               <DropdownMenuTrigger
                 aria-label={t('user.menuLabel')}
-                data-testid='user-menu-trigger'
                 className='focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
               >
                 <Avatar className='size-7'>
@@ -366,7 +364,6 @@ function AppShellContent({
                           params={{ locale }}
                         />
                       }
-                      data-testid='user-menu-workspace-settings'
                     >
                       {t('user.workspaceSettings')}
                     </DropdownMenuItem>

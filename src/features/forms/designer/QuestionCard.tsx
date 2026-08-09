@@ -261,7 +261,6 @@ export function QuestionCard({
         )}
         role='button'
         tabIndex={0}
-        data-testid='designer-field'
         data-field-id={field.id}
         aria-label={label}
         aria-current={isSelected ? 'true' : undefined}

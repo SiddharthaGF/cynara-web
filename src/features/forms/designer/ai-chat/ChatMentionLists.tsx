@@ -175,7 +175,6 @@ export function ChatAiTrigger({
         size='sm'
         variant='secondary'
         disabled={disabled}
-        data-testid='ai-chat-open'
         onClick={onOpen}
         aria-label={t('ai.open')}
         className='shrink-0 gap-1.5 rounded-full px-2.5 sm:px-3'

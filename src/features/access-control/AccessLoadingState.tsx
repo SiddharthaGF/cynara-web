@@ -7,10 +7,7 @@ export function AccessLoadingState(): JSX.Element {
   const { t } = useTranslation('common');
 
   return (
-    <div
-      className='flex min-h-svh items-center justify-center'
-      data-testid='access-loading'
-    >
+    <div className='flex min-h-svh items-center justify-center'>
       <StatusState
         kind='loading'
         title={t('access.checking')}

@@ -99,7 +99,8 @@ async function openDesigner(page: Page, formCode: string): Promise<void> {
   await page.goto(`/en/forms/${formCode}/designer/`, {
     waitUntil: 'domcontentloaded',
   });
-  await expect(page.getByTestId('designer-field-list')).toBeVisible({
+  // The designer canvas exposes question cards that keep `data-field-id`.
+  await expect(page.locator('[data-field-id]').first()).toBeVisible({
     timeout: 30_000,
   });
 }
@@ -117,11 +118,11 @@ test.describe('Form lifecycle publishing', () => {
     const { code, definitionId } = await createFormViaApi(request, baseURL!);
     await openDesigner(page, code);
 
-    const publishTrigger = page.getByTestId('form-publish-trigger');
+    const publishTrigger = page.getByRole('button', { name: 'Publish' });
     await expect(publishTrigger).toBeVisible();
     await publishTrigger.click();
 
-    const publishDialog = page.getByTestId('form-publish-dialog');
+    const publishDialog = page.getByRole('dialog');
     await expect(publishDialog).toBeVisible();
     // The confirmation must explain the consequences of publishing.
     await expect(publishDialog).toContainText('Publish this form?');
@@ -129,15 +130,17 @@ test.describe('Form lifecycle publishing', () => {
       'Existing documents keep the version they were started with',
     );
 
-    await page.getByTestId('form-publish-confirm').click();
+    await publishDialog.getByRole('button', { name: 'Publish' }).click();
 
-    const publishedDialog = page.getByTestId('form-published-dialog');
+    const publishedDialog = page.getByRole('dialog');
     await expect(publishedDialog).toBeVisible({ timeout: 30_000 });
     await expect(publishedDialog).toContainText('Form published');
 
-    await page.getByTestId('form-published-back').click();
+    await publishedDialog
+      .getByRole('button', { name: 'Back to forms' })
+      .click();
     await expect(page).toHaveURL(/\/en\/forms(\?.*)?$/);
-    await expect(page.getByTestId('form-list-content')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Forms' })).toBeVisible();
 
     // The backend moved the version to published with no editable draft.
     const statuses = await getFormVersionStatuses(
@@ -153,14 +156,14 @@ test.describe('Form lifecycle publishing', () => {
 
   test('creating a form lands directly in the designer', async ({ page }) => {
     await page.goto('/en/forms', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('create-form-card')).toBeVisible();
+    await expect(page.getByText('New draft', { exact: true })).toBeVisible();
 
     const code = `e2e-create-${Date.now()}`;
     await page.getByLabel('Code').fill(code);
     await page.getByLabel('Name').fill(`E2E create ${code}`);
     await page.getByRole('button', { name: 'Create form' }).click();
 
-    await expect(page.getByTestId('designer-field-list')).toBeVisible({
+    await expect(page.locator('[data-field-id]').first()).toBeVisible({
       timeout: 30_000,
     });
     await expect(page).toHaveURL(
@@ -177,14 +180,14 @@ test.describe('Form lifecycle publishing', () => {
     await openDesigner(page, code);
 
     // Select the seeded "Clinical notes" field to reveal its action menu.
-    await page.getByTestId('designer-field').click();
+    await page.getByRole('button', { name: 'Clinical notes' }).click();
     const actionsMenu = page.getByRole('button', { name: 'Question actions' });
     await expect(actionsMenu).toBeVisible();
 
     await actionsMenu.click();
     await page.getByRole('menuitem', { name: 'Delete question' }).click();
 
-    const dialog = page.getByTestId('question-delete-confirm');
+    const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
     // The confirmation must explain the consequence of an irreversible delete.
     await expect(dialog).toContainText('Delete this question?');
@@ -193,13 +196,13 @@ test.describe('Form lifecycle publishing', () => {
     // Cancel keeps the field.
     await dialog.getByRole('button', { name: 'Cancel' }).click();
     await expect(dialog).toHaveCount(0);
-    await expect(page.getByTestId('designer-field')).toHaveCount(1);
+    await expect(page.locator('[data-field-id]')).toHaveCount(1);
 
     // Confirming removes the question from the draft.
     await actionsMenu.click();
     await page.getByRole('menuitem', { name: 'Delete question' }).click();
-    await page.getByTestId('question-delete-confirm-submit').click();
-    await expect(page.getByTestId('designer-field')).toHaveCount(0);
+    await dialog.getByRole('button', { name: 'Delete question' }).click();
+    await expect(page.locator('[data-field-id]')).toHaveCount(0);
   });
 
   test('review state shows publish and back-to-draft controls', async ({
@@ -211,10 +214,8 @@ test.describe('Form lifecycle publishing', () => {
     await submitDraftForReview(request, baseURL!, definitionId);
     await openDesigner(page, code);
 
-    await expect(page.getByTestId('form-publish-control')).toContainText(
-      'In review',
-    );
-    await expect(page.getByTestId('form-publish-trigger')).toBeVisible();
+    await expect(page.getByText('In review', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Publish' })).toBeVisible();
 
     const backToDraft = page.getByRole('button', { name: 'Back to draft' });
     await expect(backToDraft).toBeVisible();
@@ -230,11 +231,10 @@ test.describe('Form lifecycle publishing', () => {
 
     // The draft is editable again: the lifecycle badge switches to Draft and
     // The AI chat trigger (gated on read-only) re-enables.
-    await expect(page.getByTestId('form-publish-control')).toContainText(
-      'Draft',
-      { timeout: 30_000 },
-    );
-    await expect(page.getByTestId('ai-chat-open')).toBeEnabled({
+    await expect(page.getByText('Draft', { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByRole('button', { name: 'AI chat' })).toBeEnabled({
       timeout: 30_000,
     });
   });

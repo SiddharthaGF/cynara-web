@@ -130,10 +130,7 @@ export function WorkflowsCatalogTable({
 
   if (isLoading) {
     return (
-      <div
-        className='grid gap-3'
-        data-testid='workflows-catalog-loading'
-      >
+      <div className='grid gap-3'>
         <Skeleton className='h-10 w-full' />
         <Skeleton className='h-12 w-full' />
         <Skeleton className='h-12 w-full' />
@@ -143,10 +140,7 @@ export function WorkflowsCatalogTable({
   }
 
   return (
-    <div
-      className='flex min-w-0 flex-col gap-3'
-      data-testid='workflows-catalog-table'
-    >
+    <div className='flex min-w-0 flex-col gap-3'>
       <div className='flex flex-col gap-2 sm:flex-row sm:items-center'>
         <div className='relative min-w-0 flex-1'>
           <Search
@@ -239,7 +233,6 @@ export function WorkflowsCatalogTable({
                   return (
                     <TableRow
                       key={workflow.code}
-                      data-testid='workflows-catalog-row'
                       data-workflow-code={workflow.code}
                     >
                       <TableCell className='font-medium'>

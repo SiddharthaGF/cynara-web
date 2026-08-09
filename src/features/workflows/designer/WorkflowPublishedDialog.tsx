@@ -37,10 +37,7 @@ export function WorkflowPublishedDialog({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent
-        showCloseButton={false}
-        data-testid='workflow-published-dialog'
-      >
+      <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{t('publish.publishedTitle')}</DialogTitle>
           <DialogDescription>
@@ -69,7 +66,6 @@ export function WorkflowPublishedDialog({
           <Button
             type='button'
             onClick={onBack}
-            data-testid='workflow-published-back'
           >
             <ArrowLeft
               className='size-3.5'

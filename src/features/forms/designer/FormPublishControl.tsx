@@ -138,10 +138,7 @@ export function FormPublishControl({
 
   return (
     <>
-      <div
-        className='flex shrink-0 items-center gap-2'
-        data-testid='form-publish-control'
-      >
+      <div className='flex shrink-0 items-center gap-2'>
         <Badge
           variant={isReview ? 'secondary' : 'outline'}
           className='hidden gap-1.5 font-normal sm:inline-flex'
@@ -184,7 +181,6 @@ export function FormPublishControl({
             setPublishError(null);
             setActiveDialog('publish');
           }}
-          data-testid='form-publish-trigger'
         >
           <Rocket
             className='size-3.5'

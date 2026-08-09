@@ -49,10 +49,7 @@ export function PatientEncountersPanel({
     usePatientEncounters(patientId);
 
   return (
-    <Card
-      className='mt-8 border-border/70 shadow-sm'
-      data-testid='patient-encounters-panel'
-    >
+    <Card className='mt-8 border-border/70 shadow-sm'>
       <CardHeader className='flex flex-row items-start justify-between gap-4 space-y-0'>
         <div>
           <p className='mb-2 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
@@ -69,7 +66,6 @@ export function PatientEncountersPanel({
         {!isForbidden && can('write', 'Encounter') ? (
           <Button
             size='sm'
-            data-testid='encounter-create-open'
             onClick={onNewEncounter}
           >
             <Plus className='size-3.5' />
@@ -79,19 +75,13 @@ export function PatientEncountersPanel({
       </CardHeader>
       <CardContent>
         {isForbidden ? (
-          <Alert
-            variant='destructive'
-            data-testid='encounter-list-forbidden'
-          >
+          <Alert variant='destructive'>
             <AlertDescription>{t('list.forbidden')}</AlertDescription>
           </Alert>
         ) : null}
 
         {!isForbidden && error ? (
-          <Alert
-            variant='destructive'
-            data-testid='encounter-list-error'
-          >
+          <Alert variant='destructive'>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : null}
@@ -104,10 +94,7 @@ export function PatientEncountersPanel({
         ) : null}
 
         {!isLoading && !isForbidden && !error && encounters.length === 0 ? (
-          <Empty
-            className='min-h-36 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-8'
-            data-testid='encounter-list-empty'
-          >
+          <Empty className='min-h-36 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-8'>
             <EmptyHeader>
               <EmptyTitle>{t('list.emptyTitle')}</EmptyTitle>
               <EmptyDescription>{t('list.emptyDescription')}</EmptyDescription>
@@ -116,7 +103,6 @@ export function PatientEncountersPanel({
               <Button
                 size='sm'
                 className='mt-4'
-                data-testid='encounter-list-empty-action'
                 onClick={onNewEncounter}
               >
                 <Plus className='size-3.5' />
@@ -127,10 +113,7 @@ export function PatientEncountersPanel({
         ) : null}
 
         {!isLoading && encounters.length > 0 ? (
-          <ul
-            className='divide-y divide-border/70 rounded-xl border border-border/70'
-            data-testid='encounter-list'
-          >
+          <ul className='divide-y divide-border/70 rounded-xl border border-border/70'>
             {encounters.map((encounter) => (
               <EncounterListRow
                 key={encounter.id}
@@ -168,7 +151,6 @@ function EncounterListRow({
           ? 'flex flex-col gap-3 bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
           : 'flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
       }
-      data-testid='encounter-list-row'
       data-status={encounter.status}
       data-historical={historical ? 'true' : 'false'}
     >
@@ -198,7 +180,6 @@ function EncounterListRow({
         variant='outline'
         size='sm'
         nativeButton={false}
-        data-testid='encounter-list-open'
         render={
           <Link
             to='/$locale/patients/$id/encounters/$encounterId'

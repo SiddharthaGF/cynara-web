@@ -92,10 +92,7 @@ function OpenEncounterCard({
   );
 
   return (
-    <Card
-      className='border-border/70 shadow-sm'
-      data-testid='patient-overview-encounter'
-    >
+    <Card className='border-border/70 shadow-sm'>
       <CardHeader className='flex flex-row items-start justify-between gap-4 space-y-0'>
         <div>
           <CardTitle className='flex items-center gap-2 font-heading text-lg'>
@@ -107,7 +104,6 @@ function OpenEncounterCard({
           <Button
             variant='ghost'
             size='sm'
-            data-testid='patient-overview-view-encounters'
             onClick={onShowAll}
           >
             {t('patients:detail.overview.viewAllEncounters')}
@@ -123,10 +119,7 @@ function OpenEncounterCard({
 
         {!isLoading && !isForbidden && open ? (
           <div className='space-y-3'>
-            <div
-              className='flex flex-col gap-3 rounded-xl border border-border/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
-              data-testid='patient-overview-open-encounter'
-            >
+            <div className='flex flex-col gap-3 rounded-xl border border-border/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'>
               <div className='min-w-0 space-y-1'>
                 <div className='flex flex-wrap items-center gap-2'>
                   <span className='font-medium'>
@@ -145,7 +138,6 @@ function OpenEncounterCard({
                 variant='outline'
                 size='sm'
                 nativeButton={false}
-                data-testid='patient-overview-open-encounter-link'
                 render={
                   <Link
                     to='/$locale/patients/$id/encounters/$encounterId'
@@ -174,10 +166,7 @@ function OpenEncounterCard({
         ) : null}
 
         {!isLoading && !isForbidden && !open ? (
-          <Empty
-            className='min-h-32 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-6'
-            data-testid='patient-overview-encounter-empty'
-          >
+          <Empty className='min-h-32 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-6'>
             <EmptyHeader>
               <EmptyTitle>
                 {t('patients:detail.overview.noOpenEncounter')}
@@ -189,7 +178,6 @@ function OpenEncounterCard({
             <Button
               size='sm'
               className='mt-4'
-              data-testid='patient-overview-new-encounter'
               onClick={onNewEncounter}
             >
               <Plus className='size-3.5' />
@@ -220,10 +208,7 @@ function RecentDocumentsCard({
     definitionLookup.items.find((item) => item.id === definitionId)?.name ?? '';
 
   return (
-    <Card
-      className='border-border/70 shadow-sm'
-      data-testid='patient-overview-documents'
-    >
+    <Card className='border-border/70 shadow-sm'>
       <CardHeader className='flex flex-row items-start justify-between gap-4 space-y-0'>
         <div>
           <CardTitle className='flex items-center gap-2 font-heading text-lg'>
@@ -238,7 +223,6 @@ function RecentDocumentsCard({
           <Button
             variant='ghost'
             size='sm'
-            data-testid='patient-overview-view-documents'
             onClick={onShowAll}
           >
             {t('patients:detail.overview.viewAllDocuments')}
@@ -253,15 +237,11 @@ function RecentDocumentsCard({
         ) : null}
 
         {!isLoading && !isForbidden && recent.length > 0 ? (
-          <ul
-            className='divide-y divide-border/70 rounded-xl border border-border/70'
-            data-testid='patient-overview-documents-list'
-          >
+          <ul className='divide-y divide-border/70 rounded-xl border border-border/70'>
             {recent.map((document) => (
               <li
                 key={document.id}
                 className='flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
-                data-testid='patient-overview-documents-row'
               >
                 <div className='min-w-0 space-y-1'>
                   <div className='flex flex-wrap items-center gap-2'>
@@ -297,7 +277,6 @@ function RecentDocumentsCard({
                   <Button
                     variant='outline'
                     size='sm'
-                    data-testid='patient-overview-documents-open'
                   >
                     {t('list.viewDetail')}
                   </Button>
@@ -308,10 +287,7 @@ function RecentDocumentsCard({
         ) : null}
 
         {!isLoading && !isForbidden && documents.length === 0 ? (
-          <Empty
-            className='min-h-32 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-6'
-            data-testid='patient-overview-documents-empty'
-          >
+          <Empty className='min-h-32 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-6'>
             <EmptyHeader>
               <EmptyTitle>
                 {t('patients:detail.overview.noRecentDocuments')}

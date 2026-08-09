@@ -44,7 +44,7 @@ export function WorkflowCanvasDeleteDialog({
         }
       }}
     >
-      <DialogContent data-testid='workflow-delete-confirm'>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>
             {pendingDelete?.kind === 'node'
@@ -60,14 +60,12 @@ export function WorkflowCanvasDeleteDialog({
         <DialogFooter>
           <Button
             variant='ghost'
-            data-testid='workflow-delete-confirm-cancel'
             onClick={onCancel}
           >
             {t('versionHistory.close')}
           </Button>
           <Button
             variant='destructive'
-            data-testid='workflow-delete-confirm-submit'
             onClick={() => {
               if (pendingDelete?.kind === 'node') {
                 onRemoveNode(pendingDelete.nodeId);

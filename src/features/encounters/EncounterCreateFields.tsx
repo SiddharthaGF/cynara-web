@@ -24,7 +24,6 @@ interface SelectOption {
 
 interface EncounterSelectFieldProps {
   id: string;
-  testId?: string;
   label: string;
   placeholder: string;
   options: SelectOption[];
@@ -36,7 +35,6 @@ interface EncounterSelectFieldProps {
 
 function EncounterSelectField({
   id,
-  testId,
   label,
   placeholder,
   options,
@@ -56,7 +54,6 @@ function EncounterSelectField({
       >
         <SelectTrigger
           id={id}
-          data-testid={testId}
           aria-invalid={Boolean(error)}
           className='w-full'
         >
@@ -106,7 +103,6 @@ export function EncounterFacilityField({
   return (
     <EncounterSelectField
       id='encounter-facility'
-      testId='encounter-create-facility'
       label={t('create.fields.facility')}
       placeholder={t('create.fields.facilityPlaceholder')}
       options={options}
@@ -146,7 +142,6 @@ export function EncounterClinicalAreaField({
   return (
     <EncounterSelectField
       id='encounter-clinical-area'
-      testId='encounter-create-clinicalArea'
       label={t('create.fields.clinicalArea')}
       placeholder={t('create.fields.clinicalAreaPlaceholder')}
       options={options}
@@ -181,7 +176,6 @@ export function EncounterTypeField({
   return (
     <EncounterSelectField
       id='encounter-type'
-      testId='encounter-create-type'
       label={t('create.fields.type')}
       placeholder={t('create.fields.typePlaceholder')}
       options={options}

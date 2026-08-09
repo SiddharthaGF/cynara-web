@@ -96,7 +96,7 @@ export function CreateFormCard({
   }
 
   return (
-    <div data-testid='create-form-card'>
+    <div>
       <Card className='border-primary/10 shadow-sm'>
         <CardHeader>
           <CardTitle className='flex items-center gap-2 font-heading text-lg'>

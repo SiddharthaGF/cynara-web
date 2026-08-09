@@ -34,7 +34,6 @@ export function DocumentFormAlerts({
         <Alert
           variant='destructive'
           className='mb-6'
-          data-testid='document-detail-forbidden'
         >
           <AlertDescription>{t('detail.forbiddenMutate')}</AlertDescription>
         </Alert>
@@ -48,7 +47,6 @@ export function DocumentFormAlerts({
         <Alert
           variant='destructive'
           className='mb-6'
-          data-testid='document-detail-stale'
         >
           <AlertDescription className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
             <span>{t('detail.stale')}</span>
@@ -67,7 +65,6 @@ export function DocumentFormAlerts({
         <Alert
           variant='destructive'
           className='mb-6'
-          data-testid='document-detail-action-error'
         >
           <AlertDescription>
             {actionError ?? saveError ?? transitionError}
@@ -76,10 +73,7 @@ export function DocumentFormAlerts({
       ) : null}
 
       {terminal ? (
-        <Alert
-          className='mb-6'
-          data-testid='document-detail-terminal'
-        >
+        <Alert className='mb-6'>
           <AlertDescription>{t('detail.terminalBanner')}</AlertDescription>
         </Alert>
       ) : null}

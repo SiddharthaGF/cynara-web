@@ -102,7 +102,6 @@ export function FormFieldControl({
           widthClass(presentation?.width),
           isConditional && 'opacity-60',
         )}
-        data-testid='preview-field'
         data-field-id={field.id}
       >
         <div className='flex flex-wrap items-center gap-2'>
@@ -147,7 +146,6 @@ export function FormFieldControl({
       <Field
         className={fieldClassName}
         orientation='horizontal'
-        data-testid='preview-field'
         data-field-id={field.id}
         data-invalid={invalid || undefined}
         data-disabled={!enabled || undefined}
@@ -194,7 +192,6 @@ export function FormFieldControl({
     <Field
       className={fieldClassName}
       orientation='vertical'
-      data-testid='preview-field'
       data-field-id={field.id}
       data-invalid={invalid || undefined}
       data-disabled={!enabled || undefined}

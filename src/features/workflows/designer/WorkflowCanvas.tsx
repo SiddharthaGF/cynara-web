@@ -275,7 +275,6 @@ function WorkflowCanvasInner({
     >
       <ContextMenuTrigger
         className='relative h-full w-full bg-background'
-        data-testid='workflow-canvas'
         {...longPress}
       >
         <ReactFlow

@@ -53,7 +53,6 @@ export function EncounterDetailCard({
           ? 'border-border/70 bg-muted/15 shadow-sm'
           : 'border-border/70 shadow-sm'
       }
-      data-testid='encounter-detail-view'
     >
       <CardHeader>
         <CardTitle className='font-heading text-lg'>
@@ -123,7 +122,6 @@ export function EncounterDetailCard({
         {canAct ? (
           <div className='flex flex-wrap gap-2 border-t border-border/70 pt-4'>
             <Button
-              data-testid='encounter-action-complete'
               onClick={onComplete}
               disabled={isTransitioning}
             >
@@ -132,7 +130,6 @@ export function EncounterDetailCard({
             </Button>
             <Button
               variant='outline'
-              data-testid='encounter-action-cancel'
               onClick={onCancel}
               disabled={isTransitioning}
             >
@@ -141,7 +138,6 @@ export function EncounterDetailCard({
             </Button>
             <Button
               variant='destructive'
-              data-testid='encounter-action-enter-in-error'
               onClick={onEnterInError}
               disabled={isTransitioning}
             >

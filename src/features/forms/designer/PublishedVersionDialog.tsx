@@ -44,10 +44,7 @@ export function PublishedVersionDialog({
         }
       }}
     >
-      <DialogContent
-        showCloseButton={false}
-        data-testid='form-published-dialog'
-      >
+      <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{t('publish.publishedTitle')}</DialogTitle>
           <DialogDescription>
@@ -76,7 +73,6 @@ export function PublishedVersionDialog({
           <Button
             type='button'
             onClick={onClose}
-            data-testid='form-published-back'
           >
             <ArrowLeft
               className='size-3.5'

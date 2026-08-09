@@ -85,14 +85,12 @@ const PatientSearchFormComponent = ({
       onSubmit={handleSubmit}
       role='search'
       aria-label={t('search.title')}
-      data-testid='patient-search-form'
     >
       <FieldGroup className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
         <Field>
           <FieldLabel htmlFor='mrn'>{t('search.mrn')}</FieldLabel>
           <Input
             id='mrn'
-            data-testid='patient-search-mrn'
             value={values.mrn}
             onChange={(e) => handleChange('mrn', e.target.value)}
             placeholder={t('search.mrnPlaceholder')}
@@ -103,7 +101,6 @@ const PatientSearchFormComponent = ({
           <FieldLabel htmlFor='givenName'>{t('search.givenName')}</FieldLabel>
           <Input
             id='givenName'
-            data-testid='patient-search-givenName'
             value={values.givenName}
             onChange={(e) => handleChange('givenName', e.target.value)}
             placeholder={t('search.givenNamePlaceholder')}
@@ -114,7 +111,6 @@ const PatientSearchFormComponent = ({
           <FieldLabel htmlFor='familyName'>{t('search.familyName')}</FieldLabel>
           <Input
             id='familyName'
-            data-testid='patient-search-familyName'
             value={values.familyName}
             onChange={(e) => handleChange('familyName', e.target.value)}
             placeholder={t('search.familyNamePlaceholder')}
@@ -125,7 +121,6 @@ const PatientSearchFormComponent = ({
           <FieldLabel htmlFor='nationalId'>{t('search.nationalId')}</FieldLabel>
           <Input
             id='nationalId'
-            data-testid='patient-search-nationalId'
             value={values.nationalId}
             onChange={(e) => handleChange('nationalId', e.target.value)}
             placeholder={t('search.nationalIdPlaceholder')}
@@ -134,17 +129,13 @@ const PatientSearchFormComponent = ({
         </Field>
       </FieldGroup>
       <div className='mt-4 flex items-center gap-2'>
-        <Button
-          type='submit'
-          data-testid='patient-search-submit'
-        >
+        <Button type='submit'>
           {isSearching ? <Spinner data-icon='inline-start' /> : null}
           {isSearching ? t('search.searching') : t('search.search')}
         </Button>
         <Button
           type='button'
           variant='ghost'
-          data-testid='patient-search-clear'
           onClick={handleClear}
         >
           {t('search.clear')}
@@ -181,10 +172,7 @@ export function PatientResultsTable({
 
   if (isLoading) {
     return (
-      <div
-        className='grid gap-3'
-        data-testid='patient-search-loading'
-      >
+      <div className='grid gap-3'>
         <Skeleton className='h-12 w-full' />
         <Skeleton className='h-12 w-full' />
         <Skeleton className='h-12 w-full' />
@@ -194,10 +182,7 @@ export function PatientResultsTable({
 
   if (patients.length === 0) {
     return (
-      <Empty
-        className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'
-        data-testid='patient-search-empty'
-      >
+      <Empty className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
         <EmptyHeader>
           <EmptyTitle className='text-lg'>{t('search.emptyTitle')}</EmptyTitle>
           <EmptyDescription>{t('search.emptyDescription')}</EmptyDescription>
@@ -206,7 +191,6 @@ export function PatientResultsTable({
           <Button
             variant='outline'
             nativeButton={false}
-            data-testid='patient-search-empty-register'
             render={
               <Link
                 to='/$locale/patients/register'
@@ -223,10 +207,7 @@ export function PatientResultsTable({
   }
 
   return (
-    <div
-      className='w-full overflow-hidden rounded-lg border border-border/60'
-      data-testid='patient-search-results'
-    >
+    <div className='w-full overflow-hidden rounded-lg border border-border/60'>
       <table
         data-slot='table'
         className='w-full min-w-[40rem] caption-bottom text-sm'
@@ -247,7 +228,6 @@ export function PatientResultsTable({
           {patients.map((patient) => (
             <TableRow
               key={patient.id}
-              data-testid='patient-search-row'
               data-patient-id={patient.id}
             >
               <TableCell>
@@ -278,7 +258,6 @@ export function PatientResultsTable({
                     <Button
                       variant='ghost'
                       size='sm'
-                      data-testid='patient-search-new-encounter'
                       onClick={() => onNewEncounter(patient)}
                     >
                       <ClipboardPlus className='size-4' />
@@ -289,7 +268,6 @@ export function PatientResultsTable({
                     variant='ghost'
                     size='sm'
                     nativeButton={false}
-                    data-testid='patient-search-view'
                     render={
                       <Link
                         to='/$locale/patients/$id'

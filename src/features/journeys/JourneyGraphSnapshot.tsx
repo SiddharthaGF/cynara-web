@@ -57,10 +57,7 @@ export function JourneyGraphSnapshot({
   }
 
   return (
-    <div
-      className='space-y-4'
-      data-testid='journey-graph-snapshot'
-    >
+    <div className='space-y-4'>
       <div>
         <p className='text-xs font-medium text-muted-foreground'>
           {t('snapshot.description', {

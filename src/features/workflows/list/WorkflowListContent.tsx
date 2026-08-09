@@ -37,10 +37,7 @@ export function WorkflowListContent({
   const { locale } = useParams({ from: '/$locale' });
 
   return (
-    <div
-      className='mx-auto max-w-6xl px-6 py-6 pb-12'
-      data-testid='workflow-list-content'
-    >
+    <div className='mx-auto max-w-6xl px-6 py-6 pb-12'>
       <PageBreadcrumbs
         className='mb-4'
         items={[

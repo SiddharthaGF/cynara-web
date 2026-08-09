@@ -25,7 +25,6 @@ export function PatientDetailAlerts({
         <Alert
           variant='destructive'
           className='mb-6'
-          data-testid='patient-detail-forbidden'
         >
           <AlertDescription>
             {t('permissions.forbiddenMutate')}

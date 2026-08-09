@@ -9,14 +9,16 @@ import { createPatientViaApi, uniqueMrn } from './fixtures/patients.ts';
 
 async function openPatientList(page: Page): Promise<void> {
   await page.goto('/en/patients/', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByTestId('patient-search-form')).toBeVisible({
+  await expect(
+    page.getByRole('search', { name: 'Find a patient' }),
+  ).toBeVisible({
     timeout: 30_000,
   });
 }
 
 async function pickBirthDate(page: Page, isoDate: string): Promise<void> {
   const [year, month] = isoDate.split('-');
-  await page.getByTestId('patient-register-birthDate').click();
+  await page.getByLabel('Date of birth').click();
   const popover = page.locator('[data-slot=popover-content]');
   await expect(popover).toBeVisible();
 
@@ -45,20 +47,24 @@ async function registerPatientInUi(
   await page.goto('/en/patients/register/', {
     waitUntil: 'networkidle',
   });
-  await expect(page.getByTestId('patient-register-form')).toBeVisible({
+  await expect(
+    page.getByRole('form', { name: 'Register a patient' }),
+  ).toBeVisible({
     timeout: 30_000,
   });
-  await expect(page.getByTestId('patient-register-submit')).toBeEnabled();
+  await expect(
+    page.getByRole('button', { name: 'Register patient' }),
+  ).toBeEnabled();
 
-  await page.getByTestId('patient-register-mrn').fill(input.mrn);
+  await page.getByLabel('Medical record number (MRN)').fill(input.mrn);
   await page
-    .getByTestId('patient-register-nationalId')
+    .getByLabel('National ID')
     .fill(input.nationalId ?? `NID-${input.mrn}`);
-  await page.getByTestId('patient-register-givenName').fill(input.givenName);
-  await page.getByTestId('patient-register-familyName').fill(input.familyName);
+  await page.getByLabel('First name').fill(input.givenName);
+  await page.getByLabel('Last name').fill(input.familyName);
   await pickBirthDate(page, input.birthDate);
 
-  const sexTrigger = page.getByTestId('patient-register-sex');
+  const sexTrigger = page.getByLabel('Sex');
   await sexTrigger.click();
   await page
     .locator('[data-slot=select-item]')
@@ -66,7 +72,7 @@ async function registerPatientInUi(
     .click();
   await expect(sexTrigger).toContainText('Female');
 
-  await page.getByTestId('patient-register-submit').click();
+  await page.getByRole('button', { name: 'Register patient' }).click();
 }
 
 test.describe('patient registration and search (CYN-50)', () => {
@@ -92,28 +98,33 @@ test.describe('patient registration and search (CYN-50)', () => {
       birthDate: '1990-01-01',
     });
 
-    await expect(page.getByTestId('patient-detail-view')).toBeVisible({
+    await expect(
+      page.getByRole('heading', { name: 'Ada Lovelace' }),
+    ).toBeVisible({
       timeout: 30_000,
     });
     await expect(
-      page.getByTestId('patient-detail-view').getByRole('code'),
+      page.getByRole('code').filter({ hasText: mrn }).first(),
     ).toHaveText(mrn);
     await expect(
-      page.getByTestId('patient-detail-view').getByRole('heading', {
-        name: 'Ada Lovelace',
-      }),
+      page.getByRole('heading', { name: 'Ada Lovelace' }),
     ).toBeVisible();
 
     await openPatientList(page);
-    await page.getByTestId('patient-search-mrn').fill(mrn);
-    await page.getByTestId('patient-search-submit').click();
+    await page.getByLabel('MRN').fill(mrn);
+    await page
+      .getByRole('search', { name: 'Find a patient' })
+      .getByRole('button', { name: 'Search' })
+      .click();
 
-    const row = page.getByTestId('patient-search-row').filter({ hasText: mrn });
+    const row = page.locator('[data-patient-id]').filter({ hasText: mrn });
     await expect(row).toBeVisible({ timeout: 20_000 });
-    await row.getByTestId('patient-search-view').click();
-    await expect(page.getByTestId('patient-detail-view')).toBeVisible();
+    await row.getByRole('button', { name: 'Open clinical record' }).click();
     await expect(
-      page.getByTestId('patient-detail-view').getByRole('code'),
+      page.getByRole('heading', { name: 'Ada Lovelace' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('code').filter({ hasText: mrn }).first(),
     ).toHaveText(mrn);
     const seeded = await createPatientViaApi(request, baseURL, {
       mrn: uniqueMrn('API'),
@@ -145,10 +156,9 @@ test.describe('patient registration and search (CYN-50)', () => {
       birthDate: '1985-06-15',
     });
 
-    await expect(page.getByTestId('patient-register-mrn-error')).toContainText(
-      /already exists|MRN/i,
-      { timeout: 20_000 },
-    );
+    await expect(
+      page.getByRole('alert').filter({ hasText: /already exists|MRN/i }),
+    ).toContainText(/already exists|MRN/i, { timeout: 20_000 });
     await expect(page).toHaveURL(/\/patients\/register\/?/);
   });
 
@@ -156,15 +166,19 @@ test.describe('patient registration and search (CYN-50)', () => {
     await page.goto('/en/patients/register/', {
       waitUntil: 'networkidle',
     });
-    await expect(page.getByTestId('patient-register-form')).toBeVisible({
+    await expect(
+      page.getByRole('form', { name: 'Register a patient' }),
+    ).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId('patient-register-submit')).toBeEnabled();
+    await expect(
+      page.getByRole('button', { name: 'Register patient' }),
+    ).toBeEnabled();
 
-    await page.getByTestId('patient-register-submit').click();
-    await expect(page.getByTestId('patient-register-mrn-error')).toHaveText(
-      'MRN is required.',
-    );
+    await page.getByRole('button', { name: 'Register patient' }).click();
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'MRN is required.' }),
+    ).toHaveText('MRN is required.');
     await expect(
       page.getByRole('alert').filter({ hasText: 'National ID is required.' }),
     ).toBeVisible();
@@ -201,25 +215,26 @@ test.describe('patient registration and search (CYN-50)', () => {
     await page.goto(`/en/patients/${created.id}/`, {
       waitUntil: 'domcontentloaded',
     });
-    await expect(page.getByTestId('patient-detail-view')).toBeVisible({
+    await expect(
+      page.getByRole('heading', { name: 'Katherine Johnson' }),
+    ).toBeVisible({
       timeout: 30_000,
     });
 
-    await page.getByTestId('patient-detail-edit').click();
-    await expect(page.getByTestId('patient-edit-form')).toBeVisible();
-    await expect(page.getByTestId('patient-edit-mrn')).toBeDisabled();
+    await page.getByRole('button', { name: 'Edit' }).click();
+    await expect(
+      page.getByRole('form', { name: 'Edit patient' }),
+    ).toBeVisible();
+    await expect(page.getByLabel('Medical record number')).toBeDisabled();
 
-    await page.getByTestId('patient-edit-givenName').fill('Kate');
-    await page.getByTestId('patient-edit-save').click();
+    await page.getByLabel('First name').fill('Kate');
+    await page.getByRole('button', { name: 'Save changes' }).click();
 
-    await expect(page.getByTestId('patient-detail-view')).toBeVisible({
+    await expect(
+      page.getByRole('heading', { name: 'Kate Johnson' }),
+    ).toBeVisible({
       timeout: 20_000,
     });
-    await expect(
-      page.getByTestId('patient-detail-view').getByRole('heading', {
-        name: 'Kate Johnson',
-      }),
-    ).toBeVisible();
   });
 
   test('keeps the chart tab in the URL across reloads', async ({
@@ -239,20 +254,20 @@ test.describe('patient registration and search (CYN-50)', () => {
     await page.goto(`/en/patients/${created.id}/`, {
       waitUntil: 'domcontentloaded',
     });
-    await expect(page.getByTestId('hc-tab-overview')).toBeVisible({
+    await expect(page.getByRole('tab', { name: 'Overview' })).toBeVisible({
       timeout: 30_000,
     });
     await expect(page).toHaveURL(/[?&]tab=overview/);
 
-    await page.getByTestId('hc-tab-documents').click();
+    await page.getByRole('tab', { name: 'Documents' }).click();
     await expect(page).toHaveURL(/[?&]tab=documents/);
-    await expect(page.getByTestId('patient-documents-timeline')).toBeVisible({
+    await expect(page.getByText('Document history')).toBeVisible({
       timeout: 20_000,
     });
 
     await page.reload({ waitUntil: 'domcontentloaded' });
     await expect(page).toHaveURL(/[?&]tab=documents/);
-    await expect(page.getByTestId('patient-documents-timeline')).toBeVisible({
+    await expect(page.getByText('Document history')).toBeVisible({
       timeout: 30_000,
     });
   });
@@ -278,26 +293,28 @@ test.describe('patient registration and search (CYN-50)', () => {
     }
 
     await openPatientList(page);
-    await expect(page.getByTestId('patient-search-pagination')).toBeVisible({
+    await expect(
+      page.getByRole('navigation', { name: 'pagination' }),
+    ).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId('patient-search-row')).toHaveCount(20);
+    await expect(page.locator('[data-patient-id]')).toHaveCount(20);
 
     const firstPageMrn = await page
-      .getByTestId('patient-search-row')
+      .locator('[data-patient-id]')
       .first()
       .locator('code')
       .innerText();
-    const range = page.getByTestId('patient-search-pagination').locator('p');
+    const range = page.getByText(/Showing/);
     await expect(range).toContainText('Showing 1–20 of');
 
-    await page.getByTestId('patient-search-page-next').click();
-    await expect(page.getByTestId('patient-search-page-prev')).toBeEnabled({
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page.getByRole('button', { name: 'Previous' })).toBeEnabled({
       timeout: 20_000,
     });
     await expect(range).toContainText('Showing 21–');
     await expect(
-      page.getByTestId('patient-search-row').first().locator('code'),
+      page.locator('[data-patient-id]').first().locator('code'),
     ).not.toHaveText(firstPageMrn);
   });
 });

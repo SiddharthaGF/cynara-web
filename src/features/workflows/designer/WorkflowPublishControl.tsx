@@ -152,10 +152,7 @@ export function WorkflowPublishControl({
 
   return (
     <>
-      <div
-        className='flex shrink-0 items-center gap-2'
-        data-testid='workflow-publish-control'
-      >
+      <div className='flex shrink-0 items-center gap-2'>
         <Badge
           variant={isReview ? 'secondary' : 'outline'}
           className='hidden gap-1.5 font-normal sm:inline-flex'
@@ -198,7 +195,6 @@ export function WorkflowPublishControl({
             setPublishError(null);
             setActiveDialog('publish');
           }}
-          data-testid='workflow-publish-trigger'
         >
           <Rocket
             className='size-3.5'

@@ -117,7 +117,6 @@ export function AdminErrorAlert({
     <Alert
       variant='destructive'
       className={cn('mb-6', className)}
-      data-testid='admin-load-error'
     >
       <AlertDescription>{message}</AlertDescription>
     </Alert>
@@ -134,10 +133,7 @@ export function AdminEmptyState({
   action?: ReactNode;
 }): JSX.Element {
   return (
-    <Empty
-      className='min-h-44 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'
-      data-testid='admin-empty-state'
-    >
+    <Empty className='min-h-44 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
       <EmptyHeader>
         <EmptyTitle className='text-lg'>{title}</EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>

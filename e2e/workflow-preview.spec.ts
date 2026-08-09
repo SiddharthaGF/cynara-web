@@ -137,7 +137,7 @@ test.describe('workflow preview simulation (CYN-72)', () => {
       waitUntil: 'domcontentloaded',
     });
 
-    const previewOpen = page.getByTestId('workflow-preview-open');
+    const previewOpen = page.getByRole('button', { name: 'Preview' });
     await expect(previewOpen).toBeVisible({ timeout: 30_000 });
     await previewOpen.click();
     await expect(page.getByRole('tab', { name: 'Simulation' })).toBeVisible({
@@ -204,10 +204,12 @@ test.describe('workflow preview simulation (CYN-72)', () => {
       waitUntil: 'domcontentloaded',
     });
 
-    await expect(page.getByTestId('workflow-preview-open')).toBeVisible({
+    await expect(
+      page.getByRole('button', { name: 'Vista previa' }),
+    ).toBeVisible({
       timeout: 30_000,
     });
-    await page.getByTestId('workflow-preview-open').click();
+    await page.getByRole('button', { name: 'Vista previa' }).click();
 
     const sheet = page.locator('[role="dialog"]:visible');
     await expect(sheet.getByRole('tab', { name: 'Simulación' })).toBeVisible({

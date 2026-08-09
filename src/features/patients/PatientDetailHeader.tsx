@@ -64,10 +64,7 @@ export function PatientDetailHeader({
         </div>
         <div className='flex flex-wrap items-center gap-2'>
           {canCreateEncounter ? (
-            <Button
-              data-testid='hc-new-encounter'
-              onClick={onNewEncounter}
-            >
+            <Button onClick={onNewEncounter}>
               <Plus className='size-4' />
               {t('detail.newEncounter')}
             </Button>
@@ -76,7 +73,6 @@ export function PatientDetailHeader({
             <>
               <Button
                 variant='outline'
-                data-testid='patient-detail-edit'
                 onClick={onEdit}
               >
                 <Pencil className='size-4' />
@@ -84,7 +80,6 @@ export function PatientDetailHeader({
               </Button>
               <Button
                 variant='destructive'
-                data-testid='patient-detail-delete'
                 onClick={onDelete}
                 disabled={isDeleting}
               >

@@ -24,10 +24,7 @@ export function PatientRegisterPage(): JSX.Element {
     return (
       <AppShell variant='catalog'>
         <div className='mx-auto max-w-2xl px-6 py-6 pb-12'>
-          <Empty
-            className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'
-            data-testid='patient-register-forbidden'
-          >
+          <Empty className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
             <EmptyHeader>
               <EmptyTitle className='text-lg'>
                 {t('permissions.forbiddenTitle')}

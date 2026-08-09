@@ -33,10 +33,7 @@ export function DocumentUnsavedDialog({
         }
       }}
     >
-      <DialogContent
-        className='sm:max-w-md'
-        data-testid='document-unsaved-dialog'
-      >
+      <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>{t('detail.unsavedTitle')}</DialogTitle>
           <DialogDescription>{t('detail.unsavedBody')}</DialogDescription>
@@ -52,7 +49,6 @@ export function DocumentUnsavedDialog({
           <Button
             type='button'
             variant='destructive'
-            data-testid='document-unsaved-discard'
             onClick={onDiscard}
           >
             {t('detail.discard')}

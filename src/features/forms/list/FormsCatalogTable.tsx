@@ -109,10 +109,7 @@ export function FormsCatalogTable({
 
   if (isLoading) {
     return (
-      <div
-        className='grid gap-3'
-        data-testid='forms-catalog-loading'
-      >
+      <div className='grid gap-3'>
         <Skeleton className='h-10 w-full' />
         <Skeleton className='h-12 w-full' />
         <Skeleton className='h-12 w-full' />
@@ -122,10 +119,7 @@ export function FormsCatalogTable({
   }
 
   return (
-    <div
-      className='flex min-w-0 flex-col gap-3'
-      data-testid='forms-catalog-table'
-    >
+    <div className='flex min-w-0 flex-col gap-3'>
       <div className='flex flex-col gap-2 sm:flex-row sm:items-center'>
         <div className='relative min-w-0 flex-1'>
           <Search
@@ -213,7 +207,6 @@ export function FormsCatalogTable({
                   return (
                     <TableRow
                       key={form.code}
-                      data-testid='forms-catalog-row'
                       data-form-code={form.code}
                     >
                       <TableCell className='font-medium'>{form.name}</TableCell>

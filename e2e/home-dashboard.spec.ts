@@ -12,35 +12,59 @@ test.describe('home dashboard and sidebar groups (UX phase 2)', () => {
   }) => {
     grantCapabilities(page, FULL_CAPABILITIES);
     await page.goto('/en/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('home-action-registerPatient')).toBeVisible({
+    await expect(
+      page.getByRole('link', { name: 'Register a patient' }),
+    ).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId('home-action-newEncounter')).toBeVisible();
-    await expect(page.getByTestId('home-action-createForm')).toBeVisible();
-    await expect(page.getByTestId('home-action-createWorkflow')).toBeVisible();
-    await expect(page.getByTestId('home-browse-patients')).toBeVisible();
-    await expect(page.getByTestId('home-browse-forms')).toBeVisible();
-    await expect(page.getByTestId('home-browse-administration')).toBeVisible();
-    await expect(page.getByTestId('home-browse-workflows')).toHaveCount(0);
+    await expect(
+      page.getByRole('link', { name: 'Start a consultation' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Design a form' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Design a workflow' }),
+    ).toBeVisible();
+    const content = page.getByRole('main');
+    await expect(
+      content.getByRole('button', { name: 'Patients' }),
+    ).toBeVisible();
+    await expect(content.getByRole('button', { name: 'Forms' })).toBeVisible();
+    await expect(
+      content.getByRole('button', { name: 'Administration' }),
+    ).toBeVisible();
+    await expect(
+      content.getByRole('button', { name: 'Workflows' }),
+    ).toHaveCount(0);
   });
 
   test('hides create actions without write capabilities', async ({ page }) => {
     grantCapabilities(page, ['patients.read', 'catalog.read']);
     await page.goto('/en/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('home-browse-patients')).toBeVisible({
-      timeout: 30_000,
-    });
-    await expect(page.getByTestId('home-action-registerPatient')).toHaveCount(
+    const content = page.getByRole('main');
+    await expect(content.getByRole('button', { name: 'Patients' })).toBeVisible(
+      {
+        timeout: 30_000,
+      },
+    );
+    await expect(
+      page.getByRole('link', { name: 'Register a patient' }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole('link', { name: 'Start a consultation' }),
+    ).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Design a form' })).toHaveCount(
       0,
     );
-    await expect(page.getByTestId('home-action-newEncounter')).toHaveCount(0);
-    await expect(page.getByTestId('home-action-createForm')).toHaveCount(0);
   });
 
   test('shows the empty state without any capabilities', async ({ page }) => {
     grantCapabilities(page, []);
     await page.goto('/en/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('home-empty')).toBeVisible({
+    await expect(
+      page.getByText('Nothing to do yet', { exact: true }),
+    ).toBeVisible({
       timeout: 30_000,
     });
   });
@@ -53,12 +77,12 @@ test.describe('home dashboard and sidebar groups (UX phase 2)', () => {
     ).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId('home-action-registerPatient')).toContainText(
-      'Registrar un paciente',
-    );
-    await expect(page.getByTestId('home-browse-patients')).toContainText(
-      'Pacientes',
-    );
+    await expect(
+      page.getByRole('link', { name: 'Registrar un paciente' }),
+    ).toContainText('Registrar un paciente');
+    await expect(
+      page.getByRole('main').getByRole('button', { name: 'Pacientes' }),
+    ).toContainText('Pacientes');
   });
 
   test('sidebar groups and entries follow capabilities', async ({ page }) => {
@@ -111,7 +135,9 @@ test.describe('home dashboard and sidebar groups (UX phase 2)', () => {
     });
     await page.getByRole('link', { name: 'Cynara' }).click();
     await expect(page).toHaveURL(/\/en\/?$/);
-    await expect(page.getByTestId('home-action-registerPatient')).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Register a patient' }),
+    ).toBeVisible();
   });
 
   test('root path lands on the home dashboard, not the forms catalog', async ({
@@ -121,9 +147,13 @@ test.describe('home dashboard and sidebar groups (UX phase 2)', () => {
     stubEmptyFormsCatalog(page);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await expect(page).toHaveURL(/\/en\/?$/);
-    await expect(page.getByTestId('home-action-registerPatient')).toBeVisible({
+    await expect(
+      page.getByRole('link', { name: 'Register a patient' }),
+    ).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId('home-action-createForm')).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Design a form' }),
+    ).toBeVisible();
   });
 });

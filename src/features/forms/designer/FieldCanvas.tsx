@@ -98,10 +98,7 @@ export function FieldCanvas({
           )}
         </div>
       ) : (
-        <ul
-          className='grid min-w-0 gap-0'
-          data-testid='designer-field-list'
-        >
+        <ul className='grid min-w-0 gap-0'>
           {readOnly ? null : (
             <QuestionInsertGap
               insertAt={0}

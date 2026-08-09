@@ -45,7 +45,7 @@ export function PublishConfirmDialog({
         }
       }}
     >
-      <DialogContent data-testid='form-publish-dialog'>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('publish.confirmTitle')}</DialogTitle>
           <DialogDescription>{t('publish.confirmBody')}</DialogDescription>
@@ -68,7 +68,6 @@ export function PublishConfirmDialog({
             type='button'
             disabled={isPending}
             onClick={onConfirm}
-            data-testid='form-publish-confirm'
           >
             {isPending ? (
               <Spinner data-icon='inline-start' />

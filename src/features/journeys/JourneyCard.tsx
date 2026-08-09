@@ -54,7 +54,6 @@ export function JourneyCard({
         'overflow-hidden rounded-xl border border-border/70',
         terminal && 'bg-muted/20',
       )}
-      data-testid='journey-card'
       data-status={journey.status}
       data-terminal={terminal ? 'true' : 'false'}
     >
@@ -62,7 +61,6 @@ export function JourneyCard({
         type='button'
         className='flex w-full items-center justify-between gap-3 px-4 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring'
         aria-expanded={expanded}
-        data-testid='journey-card-toggle'
         onClick={() => {
           setExpanded((value) => !value);
         }}
@@ -111,10 +109,7 @@ export function JourneyCard({
       </button>
 
       {expanded ? (
-        <div
-          className='space-y-5 border-t border-border/60 px-4 py-4'
-          data-testid='journey-card-expanded'
-        >
+        <div className='space-y-5 border-t border-border/60 px-4 py-4'>
           <dl className='grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2'>
             <JourneyField label={t('card.subject')}>
               {journey.subjectType === 'encounter' && journey.encounterId ? (
@@ -133,7 +128,6 @@ export function JourneyCard({
                     <Button
                       variant='outline'
                       size='sm'
-                      data-testid='journey-open-encounter'
                     >
                       {t('card.openEncounter')}
                     </Button>

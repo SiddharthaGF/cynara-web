@@ -36,7 +36,7 @@ export function WorkflowPublishDialog({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent data-testid='workflow-publish-dialog'>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('publish.confirmTitle')}</DialogTitle>
           <DialogDescription>{t('publish.confirmBody')}</DialogDescription>
@@ -61,7 +61,6 @@ export function WorkflowPublishDialog({
             type='button'
             disabled={isPending}
             onClick={onConfirm}
-            data-testid='workflow-publish-confirm'
           >
             {isPending ? (
               <Spinner data-icon='inline-start' />

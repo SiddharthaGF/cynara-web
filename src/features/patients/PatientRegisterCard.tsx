@@ -78,7 +78,7 @@ export function PatientRegisterCard({
       </CardHeader>
       <CardContent>
         <form
-          data-testid='patient-register-form'
+          aria-label={t('register.title')}
           onSubmit={(e) => {
             e.preventDefault();
             void form.handleSubmit();
@@ -100,7 +100,6 @@ export function PatientRegisterCard({
                     </FieldLabel>
                     <Input
                       id='mrn'
-                      data-testid='patient-register-mrn'
                       value={field.state.value}
                       onChange={(e) => {
                         field.handleChange(e.target.value);
@@ -117,11 +116,7 @@ export function PatientRegisterCard({
                       disabled={isRegistering}
                       autoComplete='off'
                     />
-                    {mrnError ? (
-                      <FieldError data-testid='patient-register-mrn-error'>
-                        {mrnError}
-                      </FieldError>
-                    ) : null}
+                    {mrnError ? <FieldError>{mrnError}</FieldError> : null}
                   </Field>
                 );
               }}
@@ -137,7 +132,6 @@ export function PatientRegisterCard({
                     </FieldLabel>
                     <Input
                       id='nationalId'
-                      data-testid='patient-register-nationalId'
                       value={field.state.value}
                       onChange={(e) => {
                         field.handleChange(e.target.value);
@@ -169,7 +163,6 @@ export function PatientRegisterCard({
                     </FieldLabel>
                     <Input
                       id='givenName'
-                      data-testid='patient-register-givenName'
                       value={field.state.value}
                       onChange={(e) => {
                         field.handleChange(e.target.value);
@@ -200,7 +193,6 @@ export function PatientRegisterCard({
                     </FieldLabel>
                     <Input
                       id='familyName'
-                      data-testid='patient-register-familyName'
                       value={field.state.value}
                       onChange={(e) => {
                         field.handleChange(e.target.value);
@@ -232,7 +224,6 @@ export function PatientRegisterCard({
                     <DatePickerInput
                       fieldType='date'
                       inputId='birthDate'
-                      data-testid='patient-register-birthDate'
                       value={field.state.value}
                       enabled={!isRegistering}
                       placeholder={t('register.fields.birthDatePlaceholder')}
@@ -258,7 +249,6 @@ export function PatientRegisterCard({
               {(field) => (
                 <PatientSexField
                   id='sex'
-                  testId='patient-register-sex'
                   label={t('register.fields.sex')}
                   labels={{
                     female: t('register.fields.sexFemale'),
@@ -287,7 +277,6 @@ export function PatientRegisterCard({
               {(canSubmit) => (
                 <Button
                   type='submit'
-                  data-testid='patient-register-submit'
                   disabled={isRegistering || !canSubmit}
                 >
                   {isRegistering ? <Spinner data-icon='inline-start' /> : null}

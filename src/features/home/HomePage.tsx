@@ -139,10 +139,7 @@ export function HomePage(): JSX.Element {
   const hasAnyAction = quickActions.length > 0 || browseEntries.length > 0;
 
   const emptyState = (
-    <Empty
-      className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'
-      data-testid='home-empty'
-    >
+    <Empty className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
       <EmptyHeader>
         <EmptyTitle className='text-lg'>{t('emptyTitle')}</EmptyTitle>
         <EmptyDescription>{t('emptyDescription')}</EmptyDescription>
@@ -174,7 +171,6 @@ export function HomePage(): JSX.Element {
                         key={action.key}
                         to={action.to}
                         params={{ locale }}
-                        data-testid={`home-action-${action.key}`}
                         className='group flex items-center gap-3 rounded-lg border border-border/60 px-3 py-2.5 text-sm font-medium transition-colors hover:border-primary/35 hover:bg-muted/40'
                       >
                         <Icon className='size-4 shrink-0 text-muted-foreground' />
@@ -208,7 +204,6 @@ export function HomePage(): JSX.Element {
                         variant='ghost'
                         size='sm'
                         nativeButton={false}
-                        data-testid={`home-browse-${entry.key}`}
                         render={
                           <Link
                             to={entry.to}

@@ -98,7 +98,6 @@ export function FormAiChatPanel({
     <PanelSurface
       className='ai-chat-shell w-full max-w-[22rem] xl:max-w-[24rem]'
       aria-label={t('ai.title')}
-      data-testid='ai-chat-panel'
     >
       <FormAiChatPanelBody
         aiSettingsOpen={aiSettingsOpen}

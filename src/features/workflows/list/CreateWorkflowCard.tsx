@@ -96,7 +96,7 @@ export function CreateWorkflowCard({
   }
 
   return (
-    <div data-testid='create-workflow-card'>
+    <div>
       <Card className='border-primary/10 shadow-sm'>
         <CardHeader>
           <CardTitle className='flex items-center gap-2 font-heading text-lg'>

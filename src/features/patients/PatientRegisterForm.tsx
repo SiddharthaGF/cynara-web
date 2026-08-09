@@ -95,7 +95,6 @@ export function PatientRegisterForm({
         <Alert
           variant='destructive'
           className='mb-6'
-          data-testid='patient-register-error'
         >
           <AlertDescription>{serverError}</AlertDescription>
         </Alert>

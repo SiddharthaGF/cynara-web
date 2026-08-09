@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 import {
   FULL_CAPABILITIES,
@@ -11,7 +11,7 @@ import { uniqueMrn } from './fixtures/patients.ts';
 
 async function pickBirthDate(page: Page, isoDate: string): Promise<void> {
   const [year, month] = isoDate.split('-');
-  await page.getByTestId('patient-register-birthDate').click();
+  await page.getByLabel('Date of birth').click();
   const popover = page.locator('[data-slot=popover-content]');
   await expect(popover).toBeVisible();
 
@@ -32,20 +32,22 @@ async function registerPatientInUi(
   input: { mrn: string; givenName: string; familyName: string },
 ): Promise<void> {
   await page.goto('/en/patients/register/', { waitUntil: 'networkidle' });
-  await expect(page.getByTestId('patient-register-form')).toBeVisible({
+  await expect(
+    page.getByRole('form', { name: 'Register a patient' }),
+  ).toBeVisible({
     timeout: 30_000,
   });
-  await expect(page.getByTestId('patient-register-submit')).toBeEnabled();
+  await expect(
+    page.getByRole('button', { name: 'Register patient' }),
+  ).toBeEnabled();
 
-  await page.getByTestId('patient-register-mrn').fill(input.mrn);
-  await page
-    .getByTestId('patient-register-nationalId')
-    .fill(`NID-${input.mrn}`);
-  await page.getByTestId('patient-register-givenName').fill(input.givenName);
-  await page.getByTestId('patient-register-familyName').fill(input.familyName);
+  await page.getByLabel('Medical record number (MRN)').fill(input.mrn);
+  await page.getByLabel('National ID').fill(`NID-${input.mrn}`);
+  await page.getByLabel('First name').fill(input.givenName);
+  await page.getByLabel('Last name').fill(input.familyName);
   await pickBirthDate(page, '1990-01-01');
 
-  const sexTrigger = page.getByTestId('patient-register-sex');
+  const sexTrigger = page.getByLabel('Sex');
   await sexTrigger.click();
   await page
     .locator('[data-slot=select-item]')
@@ -53,7 +55,12 @@ async function registerPatientInUi(
     .click();
   await expect(sexTrigger).toContainText('Female');
 
-  await page.getByTestId('patient-register-submit').click();
+  await page.getByRole('button', { name: 'Register patient' }).click();
+}
+
+/** The clinical document status badge rendered in the document page header. */
+function documentStatusBadge(page: Page): Locator {
+  return page.locator('header [data-slot=badge]');
 }
 
 test.describe('clinical workspace (CYN-58)', () => {
@@ -81,82 +88,93 @@ test.describe('clinical workspace (CYN-58)', () => {
       givenName: 'Florence',
       familyName: 'Nightingale',
     });
-    await expect(page.getByTestId('patient-detail-view')).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(
+      page.getByRole('heading', { name: 'Florence Nightingale' }),
+    ).toBeVisible({ timeout: 30_000 });
 
     await page.goto('/en/patients/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('patient-search-form')).toBeVisible({
-      timeout: 30_000,
-    });
-    await page.getByTestId('patient-search-mrn').fill(mrn);
-    await page.getByTestId('patient-search-submit').click();
-    const searchRow = page
-      .getByTestId('patient-search-row')
-      .filter({ hasText: mrn });
+    const searchForm = page.getByRole('search', { name: 'Find a patient' });
+    await expect(searchForm).toBeVisible({ timeout: 30_000 });
+    await searchForm.getByLabel('MRN').fill(mrn);
+    await searchForm
+      .getByRole('button', { name: 'Search', exact: true })
+      .click();
+    const searchRow = page.getByRole('row').filter({ hasText: mrn });
     await expect(searchRow).toBeVisible({ timeout: 20_000 });
-    await searchRow.getByTestId('patient-search-view').click();
-    await expect(page.getByTestId('patient-detail-view')).toBeVisible();
+    await searchRow
+      .getByRole('button', { name: 'Open clinical record' })
+      .click();
+    await expect(
+      page.getByRole('heading', { name: 'Florence Nightingale' }),
+    ).toBeVisible();
     const patientId = new URL(page.url()).pathname.split('/')[3];
 
     // The chart opens as a clinical record with breadcrumbs and tabs.
     const breadcrumb = page.locator('[data-slot=breadcrumb]');
     await expect(breadcrumb).toContainText('Patients');
     await expect(breadcrumb).toContainText('Florence Nightingale');
-    await expect(page.getByTestId('hc-tab-overview')).toBeVisible();
-    await expect(page.getByTestId('hc-tab-encounters')).toBeVisible();
-    await expect(page.getByTestId('hc-tab-documents')).toBeVisible();
-    await expect(page.getByTestId('hc-tab-journeys')).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Overview' })).toBeVisible();
     await expect(
-      page.getByTestId('patient-overview-encounter-empty'),
+      page.getByRole('tab', { name: 'Consultations' }),
+    ).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Documents' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Journey' })).toBeVisible();
+    await expect(
+      page
+        .locator('[data-slot=empty]')
+        .filter({ hasText: 'No open consultations' }),
     ).toBeVisible({ timeout: 20_000 });
 
     // New consultation in one click from the chart header.
-    await page.getByTestId('hc-new-encounter').click();
-    await expect(page.getByTestId('encounter-create-dialog')).toBeVisible();
+    await page
+      .locator('header')
+      .getByRole('button', { name: 'New consultation', exact: true })
+      .click();
+    const createDialog = page.getByRole('dialog', {
+      name: 'Create consultation',
+    });
+    await expect(createDialog).toBeVisible();
 
-    await page.getByTestId('encounter-create-facility').click();
+    await createDialog.getByLabel('Facility').click();
     await page
       .locator('[data-slot=select-item]')
       .filter({ hasText: taxonomy.facilityName })
       .click();
-    await page.getByTestId('encounter-create-clinicalArea').click();
+    await createDialog.getByLabel('Clinical area').click();
     await page
       .locator('[data-slot=select-item]')
       .filter({ hasText: taxonomy.clinicalAreaName })
       .click();
-    await page.getByTestId('encounter-create-type').click();
+    await createDialog.getByLabel('Consultation type').click();
     await page
       .locator('[data-slot=select-item]')
       .filter({ hasText: 'Ambulatory' })
       .click();
-    await page.getByTestId('encounter-create-submit').click();
+    await createDialog
+      .getByRole('button', { name: 'Create consultation' })
+      .click();
 
     // Creation navigates straight to the new consultation detail.
-    await expect(page.getByTestId('encounter-detail-view')).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(
+      page.getByRole('heading', { name: 'Consultation' }),
+    ).toBeVisible({ timeout: 30_000 });
     await expect(page.locator('[data-slot=breadcrumb]')).toContainText(
       'Consultation',
     );
     const encounterId = lastUrlSegment(page.url());
 
     // Start a configured clinical document from the encounter in one click.
-    await expect(page.getByTestId('encounter-documents-panel')).toBeVisible({
-      timeout: 30_000,
+    const documentsPanel = page.locator('[data-slot=card]').filter({
+      hasText: 'Clinical documents started within this consultation.',
     });
-    await expect(page.getByTestId('encounter-available-forms')).toBeVisible();
-    await page
-      .getByTestId('start-document-action')
-      .filter({ hasText: catalog.definitionName })
-      .click();
+    await expect(documentsPanel).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText('Available forms')).toBeVisible();
+    await page.getByRole('button', { name: catalog.definitionName }).click();
 
-    await expect(page.getByTestId('document-detail-view')).toBeVisible({
-      timeout: 30_000,
-    });
-    await expect(page.getByTestId('document-detail-status')).toContainText(
-      'In progress',
-    );
+    await expect(
+      page.getByRole('heading', { name: catalog.definitionName }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(documentStatusBadge(page)).toHaveText('In progress');
 
     // Fill the draft and save.
     await page
@@ -175,17 +193,15 @@ test.describe('clinical workspace (CYN-58)', () => {
         response.request().method() === 'PATCH' &&
         response.url().includes('/api/formResponses/'),
     );
-    await page.getByTestId('document-action-save').click();
+    await page.getByRole('button', { name: 'Save draft' }).click();
     await savedResponse;
-    await expect(page.getByTestId('document-detail-action-error')).toHaveCount(
-      0,
-    );
+    await expect(page.locator('[data-slot=alert]')).toHaveCount(0);
 
     // Reload: the draft is recovered from the saved form response.
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('document-detail-view')).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(
+      page.getByRole('heading', { name: catalog.definitionName }),
+    ).toBeVisible({ timeout: 30_000 });
     await expect(page.locator('#chief-complaint')).toHaveValue(
       'Fever and cough since yesterday',
     );
@@ -193,19 +209,29 @@ test.describe('clinical workspace (CYN-58)', () => {
     await expect(page.locator('#smoker')).toBeChecked();
 
     // Complete the document and verify the read-only historical rendering.
-    await page.getByTestId('document-action-complete').click();
-    await expect(page.getByTestId('document-transition-confirm')).toBeVisible();
-    await page.getByTestId('document-transition-confirm-submit').click();
+    await page.getByRole('button', { name: 'Complete', exact: true }).click();
+    const confirmDialog = page.getByRole('dialog', {
+      name: 'Complete this document?',
+    });
+    await expect(confirmDialog).toBeVisible();
+    await confirmDialog
+      .getByRole('button', { name: 'Complete document' })
+      .click();
 
-    await expect(page.getByTestId('document-detail-status')).toContainText(
-      'Completed',
-      { timeout: 30_000 },
-    );
-    await expect(page.getByTestId('document-detail-terminal')).toBeVisible();
-    await expect(page.getByTestId('document-action-complete')).toHaveCount(0);
+    await expect(documentStatusBadge(page)).toHaveText('Completed', {
+      timeout: 30_000,
+    });
+    await expect(
+      page
+        .locator('[data-slot=alert]')
+        .filter({ hasText: 'This document is closed' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Complete', exact: true }),
+    ).toHaveCount(0);
     await expect(page.locator('#chief-complaint')).toBeDisabled();
     await expect(page.locator('#smoker')).toBeDisabled();
-    await expect(page.getByTestId('document-detail-view')).toContainText(
+    await expect(page.getByText('Form version:')).toContainText(
       catalog.publishedVersion,
     );
 
@@ -213,11 +239,12 @@ test.describe('clinical workspace (CYN-58)', () => {
     await page.goto(`/en/patients/${patientId}/encounters/${encounterId}/`, {
       waitUntil: 'domcontentloaded',
     });
-    await expect(page.getByTestId('encounter-documents-panel')).toBeVisible({
-      timeout: 30_000,
+    const encounterDocuments = page.locator('[data-slot=card]').filter({
+      hasText: 'Clinical documents started within this consultation.',
     });
-    const listRow = page
-      .getByTestId('document-list-row')
+    await expect(encounterDocuments).toBeVisible({ timeout: 30_000 });
+    const listRow = encounterDocuments
+      .getByRole('listitem')
       .filter({ hasText: catalog.definitionName });
     await expect(listRow).toHaveAttribute('data-status', 'completed');
     await expect(listRow).toHaveAttribute('data-terminal', 'true');
@@ -225,15 +252,16 @@ test.describe('clinical workspace (CYN-58)', () => {
     await page.goto(`/en/patients/${patientId}/`, {
       waitUntil: 'domcontentloaded',
     });
-    await expect(page.getByTestId('hc-tab-documents')).toBeVisible({
+    await expect(page.getByRole('tab', { name: 'Documents' })).toBeVisible({
       timeout: 30_000,
     });
-    await page.getByTestId('hc-tab-documents').click();
-    await expect(page.getByTestId('patient-documents-timeline')).toBeVisible({
-      timeout: 30_000,
-    });
-    const timelineRow = page
-      .getByTestId('patient-documents-row')
+    await page.getByRole('tab', { name: 'Documents' }).click();
+    const timelinePanel = page
+      .locator('[data-slot=card]')
+      .filter({ hasText: 'Document history' });
+    await expect(timelinePanel).toBeVisible({ timeout: 30_000 });
+    const timelineRow = timelinePanel
+      .getByRole('listitem')
       .filter({ hasText: catalog.definitionName });
     await expect(timelineRow).toHaveAttribute('data-status', 'completed');
     await expect(timelineRow).toHaveAttribute('data-terminal', 'true');

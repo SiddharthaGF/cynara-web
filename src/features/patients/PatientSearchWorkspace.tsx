@@ -198,7 +198,6 @@ export function PatientSearchWorkspace({
             <div className='hidden md:block'>
               <Button
                 nativeButton={false}
-                data-testid='patient-register-open'
                 render={
                   <Link
                     to='/$locale/patients/register'
@@ -215,10 +214,7 @@ export function PatientSearchWorkspace({
       />
 
       {isForbidden ? (
-        <Empty
-          className='mb-6 min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'
-          data-testid='patient-search-forbidden'
-        >
+        <Empty className='mb-6 min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
           <EmptyHeader>
             <EmptyTitle className='text-lg'>
               {t('permissions.forbiddenTitle')}
@@ -234,7 +230,6 @@ export function PatientSearchWorkspace({
         <Alert
           variant='destructive'
           className='mb-6'
-          data-testid='patient-search-error'
         >
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -264,7 +259,6 @@ export function PatientSearchWorkspace({
                 <Alert
                   variant='destructive'
                   className='mb-4'
-                  data-testid='patient-search-create-forbidden'
                 >
                   <AlertDescription>{createForbidden}</AlertDescription>
                 </Alert>
@@ -294,7 +288,6 @@ export function PatientSearchWorkspace({
             size='icon-lg'
             nativeButton={false}
             className='shadow-lg'
-            data-testid='patient-register-open-mobile'
             aria-label={t('search.registerPatient')}
             render={
               <Link

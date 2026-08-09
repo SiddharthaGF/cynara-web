@@ -36,49 +36,65 @@ test.describe('encounter views and lifecycle (CYN-52)', () => {
     await page.goto(`/en/patients/${patient.id}/`, {
       waitUntil: 'domcontentloaded',
     });
-    await expect(page.getByTestId('hc-tab-encounters')).toBeVisible({
+    await expect(page.getByRole('tab', { name: 'Consultations' })).toBeVisible({
       timeout: 30_000,
     });
-    await page.getByTestId('hc-tab-encounters').click();
-    await expect(page.getByTestId('patient-encounters-panel')).toBeVisible({
+    await page.getByRole('tab', { name: 'Consultations' }).click();
+    const encountersPanel = page.locator('[data-slot=card]', {
+      hasText: 'Open visits and historical consultations for this patient.',
+    });
+    await expect(encountersPanel).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId('encounter-list-empty')).toBeVisible();
+    await expect(page.getByText('No consultations yet')).toBeVisible();
 
-    await page.getByTestId('encounter-create-open').click();
-    await expect(page.getByTestId('encounter-create-dialog')).toBeVisible();
+    await encountersPanel
+      .getByRole('button', { name: 'New consultation', exact: true })
+      .first()
+      .click();
+    await expect(
+      page.getByRole('dialog', { name: 'Create consultation' }),
+    ).toBeVisible();
 
-    await page.getByTestId('encounter-create-facility').click();
+    await page.getByLabel('Facility').click();
     await page
       .locator('[data-slot=select-item]')
       .filter({ hasText: taxonomy.facilityName })
       .click();
 
-    await page.getByTestId('encounter-create-clinicalArea').click();
+    await page.getByLabel('Clinical area').click();
     await page
       .locator('[data-slot=select-item]')
       .filter({ hasText: taxonomy.clinicalAreaName })
       .click();
 
-    await page.getByTestId('encounter-create-type').click();
+    await page.getByLabel('Consultation type').click();
     await page
       .locator('[data-slot=select-item]')
       .filter({ hasText: 'Ambulatory' })
       .click();
 
-    await page.getByTestId('encounter-create-submit').click();
+    await page
+      .getByRole('button', { name: 'Create consultation', exact: true })
+      .click();
 
     // Creation navigates straight to the new consultation detail.
-    await expect(page.getByTestId('encounter-detail-view')).toBeVisible({
+    await expect(
+      page.getByRole('heading', { name: 'Consultation', exact: true }),
+    ).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId('encounter-detail-status')).toContainText(
-      'Open',
-    );
-    await expect(page.getByTestId('encounter-action-complete')).toBeVisible();
-    await expect(page.getByTestId('encounter-action-cancel')).toBeVisible();
     await expect(
-      page.getByTestId('encounter-action-enter-in-error'),
+      page.getByRole('status').filter({ hasText: 'Open' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Complete', exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Cancel consultation', exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Entered in error', exact: true }),
     ).toBeVisible();
   });
 
@@ -108,36 +124,48 @@ test.describe('encounter views and lifecycle (CYN-52)', () => {
     await page.goto(`/en/patients/${patient.id}/encounters/${encounter.id}/`, {
       waitUntil: 'domcontentloaded',
     });
-    await expect(page.getByTestId('encounter-detail-view')).toBeVisible({
+    await expect(
+      page.getByRole('heading', { name: 'Consultation', exact: true }),
+    ).toBeVisible({
       timeout: 30_000,
     });
 
-    await page.getByTestId('encounter-action-complete').click();
+    await page.getByRole('button', { name: 'Complete', exact: true }).click();
     await expect(
-      page.getByTestId('encounter-transition-confirm'),
+      page.getByRole('dialog', { name: 'Complete this consultation?' }),
     ).toBeVisible();
-    await page.getByTestId('encounter-transition-confirm-submit').click();
+    await page
+      .getByRole('dialog', { name: 'Complete this consultation?' })
+      .getByRole('button', { name: 'Complete consultation', exact: true })
+      .click();
 
-    await expect(page.getByTestId('encounter-detail-status')).toContainText(
-      'Completed',
-      { timeout: 30_000 },
-    );
-    await expect(page.getByTestId('encounter-detail-historical')).toBeVisible();
-    await expect(page.getByTestId('encounter-action-complete')).toHaveCount(0);
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Completed' }),
+    ).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(
+      page.getByText(
+        'This encounter is closed. It remains readable for the clinical record.',
+      ),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Complete', exact: true }),
+    ).toHaveCount(0);
 
     await page.goto(`/en/patients/${patient.id}/`, {
       waitUntil: 'domcontentloaded',
     });
-    await expect(page.getByTestId('hc-tab-encounters')).toBeVisible({
+    await expect(page.getByRole('tab', { name: 'Consultations' })).toBeVisible({
       timeout: 30_000,
     });
-    await page.getByTestId('hc-tab-encounters').click();
-    await expect(
-      page.getByTestId('encounter-list-row').first(),
-    ).toHaveAttribute('data-historical', 'true');
-    await expect(
-      page.getByTestId('encounter-list-row').first(),
-    ).toHaveAttribute('data-status', 'completed');
+    await page.getByRole('tab', { name: 'Consultations' }).click();
+    const row = page
+      .getByRole('listitem')
+      .filter({ hasText: 'Emergency' })
+      .first();
+    await expect(row).toHaveAttribute('data-historical', 'true');
+    await expect(row).toHaveAttribute('data-status', 'completed');
   });
 
   test('shows stale error when completing with outdated row version', async ({
@@ -165,7 +193,9 @@ test.describe('encounter views and lifecycle (CYN-52)', () => {
     await page.goto(`/en/patients/${patient.id}/encounters/${encounter.id}/`, {
       waitUntil: 'domcontentloaded',
     });
-    await expect(page.getByTestId('encounter-detail-view')).toBeVisible({
+    await expect(
+      page.getByRole('heading', { name: 'Consultation', exact: true }),
+    ).toBeVisible({
       timeout: 30_000,
     });
 
@@ -176,10 +206,19 @@ test.describe('encounter views and lifecycle (CYN-52)', () => {
       encounter.rowVersion,
     );
 
-    await page.getByTestId('encounter-action-cancel').click();
-    await page.getByTestId('encounter-transition-confirm-submit').click();
+    await page
+      .getByRole('button', { name: 'Cancel consultation', exact: true })
+      .click();
+    await page
+      .getByRole('dialog', { name: 'Cancel this consultation?' })
+      .getByRole('button', { name: 'Cancel consultation', exact: true })
+      .click();
 
-    await expect(page.getByTestId('encounter-detail-stale')).toBeVisible({
+    await expect(
+      page.getByText(
+        'This consultation changed while you were working. Reload the latest version before continuing.',
+      ),
+    ).toBeVisible({
       timeout: 30_000,
     });
   });

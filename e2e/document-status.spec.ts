@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 import {
   FULL_CAPABILITIES,
@@ -35,9 +35,14 @@ function documentUrl(
   return `/en/patients/${patientId}/encounters/${encounterId}/documents/${documentId}`;
 }
 
+/** The document status badge rendered in the page header. */
+function statusBadge(page: Page): Locator {
+  return page.locator('header [data-slot=badge]');
+}
+
 async function openDocumentPage(page: Page, url: string): Promise<void> {
   await page.goto(url, { waitUntil: 'domcontentloaded' });
-  await expect(page.getByTestId('document-detail-view')).toBeVisible({
+  await expect(page.locator('#chief-complaint')).toBeVisible({
     timeout: 30_000,
   });
 }
@@ -105,11 +110,13 @@ test.describe('clinical document status (CYN-58)', () => {
       page,
       documentUrl(patient.id, encounter.id, completed.id),
     );
-    await expect(page.getByTestId('document-detail-status')).toContainText(
-      'Completed',
-    );
-    await expect(page.getByTestId('document-detail-terminal')).toBeVisible();
-    await expect(page.getByTestId('document-detail-view')).toContainText(
+    await expect(statusBadge(page)).toHaveText('Completed');
+    await expect(
+      page
+        .locator('[data-slot=alert]')
+        .filter({ hasText: 'This document is closed' }),
+    ).toBeVisible();
+    await expect(page.getByText('Form version:')).toContainText(
       catalog.publishedVersion,
     );
     await expect(page.locator('#chief-complaint')).toBeDisabled();
@@ -118,19 +125,21 @@ test.describe('clinical document status (CYN-58)', () => {
     );
     await expect(page.locator('#smoker')).toBeDisabled();
     await expect(page.locator('#smoker')).toBeChecked();
-    await expect(page.getByTestId('document-action-complete')).toHaveCount(0);
+    await expect(
+      page.getByRole('button', { name: 'Complete', exact: true }),
+    ).toHaveCount(0);
 
     await openDocumentPage(
       page,
       documentUrl(patient.id, encounter.id, inError.id),
     );
-    await expect(page.getByTestId('document-detail-status')).toContainText(
-      'Entered in error',
-    );
-    await expect(page.getByTestId('document-detail-terminal')).toBeVisible();
-    await expect(page.getByTestId('document-detail-view')).toContainText(
-      'Seeded duplicate record',
-    );
+    await expect(statusBadge(page)).toHaveText('Entered in error');
+    await expect(
+      page
+        .locator('[data-slot=alert]')
+        .filter({ hasText: 'This document is closed' }),
+    ).toBeVisible();
+    await expect(page.getByText('Seeded duplicate record')).toBeVisible();
     await expect(page.locator('#chief-complaint')).toBeDisabled();
   });
 
@@ -166,23 +175,23 @@ test.describe('clinical document status (CYN-58)', () => {
       documentUrl(patient.id, encounter.id, document.id),
     );
 
-    await page.getByTestId('document-action-complete').click();
+    await page.getByRole('button', { name: 'Complete', exact: true }).click();
     // The confirm dialog may open when the client-side guard raced the render;
     // Either way the server rejects the empty required field.
-    const dialog = page.getByTestId('document-transition-confirm');
+    const dialog = page.getByRole('dialog', {
+      name: 'Complete this document?',
+    });
     await dialog
       .waitFor({ state: 'visible', timeout: 5_000 })
       .catch(() => undefined);
     if (await dialog.isVisible()) {
-      await page.getByTestId('document-transition-confirm-submit').click();
+      await dialog.getByRole('button', { name: 'Complete document' }).click();
     }
 
-    await expect(page.getByTestId('document-detail-action-error')).toBeVisible({
+    await expect(page.locator('[data-slot=alert]').first()).toBeVisible({
       timeout: 20_000,
     });
-    await expect(page.getByTestId('document-detail-status')).toContainText(
-      'In progress',
-    );
+    await expect(statusBadge(page)).toHaveText('In progress');
   });
 
   test('shows a forbidden alert when the mutation is denied', async ({
@@ -240,14 +249,21 @@ test.describe('clinical document status (CYN-58)', () => {
       page,
       documentUrl(patient.id, encounter.id, document.id),
     );
-    await page.getByTestId('document-action-complete').click();
-    await expect(page.getByTestId('document-transition-confirm')).toBeVisible();
-    await page.getByTestId('document-transition-confirm-submit').click();
-
-    await expect(page.getByTestId('document-detail-forbidden')).toBeVisible({
-      timeout: 20_000,
+    await page.getByRole('button', { name: 'Complete', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Complete this document?',
     });
-    await expect(page.getByTestId('document-action-complete')).toHaveCount(0);
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Complete document' }).click();
+
+    await expect(
+      page.locator('[data-slot=alert]').filter({
+        hasText: 'You do not have permission to change this document',
+      }),
+    ).toBeVisible({ timeout: 20_000 });
+    await expect(
+      page.getByRole('button', { name: 'Complete', exact: true }),
+    ).toHaveCount(0);
   });
 
   test('shows a stale conflict when the document was modified elsewhere', async ({
@@ -295,13 +311,18 @@ test.describe('clinical document status (CYN-58)', () => {
       document.rowVersion,
     );
 
-    await page.getByTestId('document-action-complete').click();
-    await expect(page.getByTestId('document-transition-confirm')).toBeVisible();
-    await page.getByTestId('document-transition-confirm-submit').click();
-
-    await expect(page.getByTestId('document-detail-stale')).toBeVisible({
-      timeout: 20_000,
+    await page.getByRole('button', { name: 'Complete', exact: true }).click();
+    const dialog = page.getByRole('dialog', {
+      name: 'Complete this document?',
     });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Complete document' }).click();
+
+    await expect(
+      page
+        .locator('[data-slot=alert]')
+        .filter({ hasText: 'This document changed while you were working' }),
+    ).toBeVisible({ timeout: 20_000 });
   });
 
   test('blocks route access without clinical-documents.read', async ({
@@ -335,7 +356,7 @@ test.describe('clinical document status (CYN-58)', () => {
     await page.goto(documentUrl(patient.id, encounter.id, document.id), {
       waitUntil: 'domcontentloaded',
     });
-    await expect(page.getByTestId('access-denied')).toBeVisible({
+    await expect(page.getByText('Access denied', { exact: true })).toBeVisible({
       timeout: 30_000,
     });
   });
@@ -376,9 +397,15 @@ test.describe('clinical document status (CYN-58)', () => {
       page,
       documentUrl(patient.id, encounter.id, document.id),
     );
-    await expect(page.getByTestId('insufficient-permission')).toBeVisible();
-    await expect(page.getByTestId('document-action-complete')).toHaveCount(0);
-    await expect(page.getByTestId('document-action-save')).toHaveCount(0);
+    await expect(
+      page.locator('[data-slot=alert]').filter({ hasText: 'Read-only view' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Complete', exact: true }),
+    ).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Save draft' })).toHaveCount(
+      0,
+    );
     await expect(page.locator('#chief-complaint')).toBeDisabled();
     await expect(page.locator('#weight')).toBeDisabled();
     await expect(page.locator('#smoker')).toBeDisabled();
@@ -387,14 +414,16 @@ test.describe('clinical document status (CYN-58)', () => {
     await page.goto(`/en/patients/${patient.id}/encounters/${encounter.id}/`, {
       waitUntil: 'domcontentloaded',
     });
-    await expect(page.getByTestId('encounter-documents-panel')).toBeVisible({
+    const documentsPanel = page.locator('[data-slot=card]').filter({
+      hasText: 'Clinical documents started within this consultation.',
+    });
+    await expect(documentsPanel).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId('encounter-available-forms')).toHaveCount(0);
-    await expect(
-      page
-        .getByTestId('document-list-row')
-        .filter({ hasText: catalog.definitionName }),
-    ).toHaveAttribute('data-status', 'inProgress');
+    await expect(page.getByText('Available forms')).toHaveCount(0);
+    const listRow = documentsPanel
+      .getByRole('listitem')
+      .filter({ hasText: catalog.definitionName });
+    await expect(listRow).toHaveAttribute('data-status', 'inProgress');
   });
 });

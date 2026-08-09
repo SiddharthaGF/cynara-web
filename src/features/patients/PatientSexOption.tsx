@@ -48,7 +48,6 @@ function patientSexItems(
 
 export function PatientSexField({
   id,
-  testId,
   label,
   labels,
   value,
@@ -59,7 +58,6 @@ export function PatientSexField({
   onChange,
 }: {
   id: string;
-  testId: string;
   label: string;
   labels: Record<PatientSex, string>;
   value: string;
@@ -87,7 +85,6 @@ export function PatientSexField({
       >
         <SelectTrigger
           id={id}
-          data-testid={testId}
           aria-invalid={Boolean(error)}
           aria-required={required || undefined}
           className='w-full'

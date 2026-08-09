@@ -32,7 +32,6 @@ export function EncounterDetailAlerts({
         <Alert
           variant='destructive'
           className='mb-6'
-          data-testid='encounter-detail-forbidden'
         >
           <AlertDescription>{t('detail.forbiddenMutate')}</AlertDescription>
         </Alert>
@@ -46,7 +45,6 @@ export function EncounterDetailAlerts({
         <Alert
           variant='destructive'
           className='mb-6'
-          data-testid='encounter-detail-stale'
         >
           <AlertDescription className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
             <span>{t('detail.stale')}</span>
@@ -65,17 +63,13 @@ export function EncounterDetailAlerts({
         <Alert
           variant='destructive'
           className='mb-6'
-          data-testid='encounter-detail-action-error'
         >
           <AlertDescription>{actionError ?? transitionError}</AlertDescription>
         </Alert>
       ) : null}
 
       {historical ? (
-        <Alert
-          className='mb-6'
-          data-testid='encounter-detail-historical'
-        >
+        <Alert className='mb-6'>
           <AlertDescription>{t('detail.historicalBanner')}</AlertDescription>
         </Alert>
       ) : null}

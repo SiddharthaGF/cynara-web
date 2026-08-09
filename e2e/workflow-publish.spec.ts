@@ -206,7 +206,7 @@ async function openDesigner(page: Page, code: string): Promise<void> {
   await page.goto(`/en/workflows/${code}/designer`, {
     waitUntil: 'domcontentloaded',
   });
-  await expect(page.getByTestId('workflow-canvas')).toBeVisible({
+  await expect(page.locator('.react-flow')).toBeVisible({
     timeout: 30_000,
   });
 }
@@ -227,11 +227,11 @@ test.describe('Workflow lifecycle publishing', () => {
     );
     await openDesigner(page, code);
 
-    const publishTrigger = page.getByTestId('workflow-publish-trigger');
+    const publishTrigger = page.getByRole('button', { name: 'Publish' });
     await expect(publishTrigger).toBeVisible();
     await publishTrigger.click();
 
-    const publishDialog = page.getByTestId('workflow-publish-dialog');
+    const publishDialog = page.getByRole('dialog');
     await expect(publishDialog).toBeVisible();
     // The confirmation must explain the consequences of publishing.
     await expect(publishDialog).toContainText('Publish this workflow?');
@@ -239,13 +239,15 @@ test.describe('Workflow lifecycle publishing', () => {
       'Consultations already in progress keep following the version they started with',
     );
 
-    await page.getByTestId('workflow-publish-confirm').click();
+    await publishDialog.getByRole('button', { name: 'Publish' }).click();
 
-    const publishedDialog = page.getByTestId('workflow-published-dialog');
+    const publishedDialog = page.getByRole('dialog');
     await expect(publishedDialog).toBeVisible({ timeout: 30_000 });
     await expect(publishedDialog).toContainText('Workflow published');
 
-    await page.getByTestId('workflow-published-back').click();
+    await publishedDialog
+      .getByRole('button', { name: 'Back to workflows' })
+      .click();
     await expect(page).toHaveURL(/\/en\/workflows(\?.*)?$/);
 
     // The backend moved the version to published with no editable draft.
@@ -264,14 +266,14 @@ test.describe('Workflow lifecycle publishing', () => {
     page,
   }) => {
     await page.goto('/en/workflows', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('create-workflow-card')).toBeVisible();
+    await expect(page.getByLabel('Code')).toBeVisible();
 
     const code = `e2e-wfcreate-${Date.now()}`;
     await page.getByLabel('Code').fill(code);
     await page.getByLabel('Name').fill(`E2E create ${code}`);
     await page.getByRole('button', { name: 'Create workflow' }).click();
 
-    await expect(page.getByTestId('workflow-canvas')).toBeVisible({
+    await expect(page.locator('.react-flow')).toBeVisible({
       timeout: 30_000,
     });
     await expect(page).toHaveURL(new RegExp(`/en/workflows/${code}/designer`));
@@ -293,7 +295,7 @@ test.describe('Workflow lifecycle publishing', () => {
 
     await page.getByRole('menuitem', { name: 'Delete node' }).click();
 
-    const dialog = page.getByTestId('workflow-delete-confirm');
+    const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
     // The confirmation must explain the consequence of deleting a node.
     await expect(dialog).toContainText('Delete this node?');
@@ -302,13 +304,16 @@ test.describe('Workflow lifecycle publishing', () => {
     );
 
     // Cancel keeps the node in the graph.
-    await dialog.getByTestId('workflow-delete-confirm-cancel').click();
+    await dialog
+      .locator('[data-slot="dialog-footer"]')
+      .getByRole('button', { name: 'Close' })
+      .click();
     await expect(lowPriority).toHaveCount(1);
 
     // Confirming removes the node and its transitions.
     await lowPriority.click({ button: 'right' });
     await page.getByRole('menuitem', { name: 'Delete node' }).click();
-    await page.getByTestId('workflow-delete-confirm-submit').click();
+    await dialog.getByRole('button', { name: 'Delete node' }).click();
     await expect(lowPriority).toHaveCount(0);
   });
 
@@ -324,10 +329,8 @@ test.describe('Workflow lifecycle publishing', () => {
     await submitDraftForReview(request, baseURL!, definitionId);
     await openDesigner(page, code);
 
-    await expect(page.getByTestId('workflow-publish-control')).toContainText(
-      'In review',
-    );
-    await expect(page.getByTestId('workflow-publish-trigger')).toBeVisible();
+    await expect(page.getByText('In review', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Publish' })).toBeVisible();
 
     const backToDraft = page.getByRole('button', { name: 'Back to draft' });
     await expect(backToDraft).toBeVisible();
@@ -343,10 +346,9 @@ test.describe('Workflow lifecycle publishing', () => {
 
     // The draft is editable again: the lifecycle badge switches to Draft and
     // The canvas "Add" control (gated on read-only) reappears.
-    await expect(page.getByTestId('workflow-publish-control')).toContainText(
-      'Draft',
-      { timeout: 30_000 },
-    );
+    await expect(page.getByText('Draft', { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
     await expect(page.getByRole('button', { name: 'Add' })).toBeVisible({
       timeout: 30_000,
     });

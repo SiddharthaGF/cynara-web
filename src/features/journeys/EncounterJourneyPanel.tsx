@@ -37,10 +37,7 @@ export function EncounterJourneyPanel({
   );
 
   return (
-    <Card
-      className='mt-8 border-border/70 shadow-sm'
-      data-testid='encounter-journey-panel'
-    >
+    <Card className='mt-8 border-border/70 shadow-sm'>
       <CardHeader>
         <p className='mb-2 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
           {t('encounterPanel.eyebrow')}
@@ -66,15 +63,9 @@ export function EncounterJourneyPanel({
             patientId={patientId}
             locale={locale}
             language={i18n.language}
-            listTestId='encounter-journey-list'
-            forbiddenTestId='encounter-journey-forbidden'
-            emptyTestId='encounter-journey-empty'
           />
         ) : (
-          <p
-            className='rounded-lg border border-border/70 bg-muted/20 px-3 py-3 text-sm text-muted-foreground'
-            data-testid='encounter-journey-denied'
-          >
+          <p className='rounded-lg border border-border/70 bg-muted/20 px-3 py-3 text-sm text-muted-foreground'>
             {t('panel.denied')}
           </p>
         )}
