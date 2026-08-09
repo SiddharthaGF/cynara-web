@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select.tsx';
 
-export const BLOOD_TYPE_VALUES: PatientBloodType[] = [
+const BLOOD_TYPE_VALUES: PatientBloodType[] = [
   'a+',
   'a-',
   'b+',
