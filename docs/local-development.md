@@ -195,6 +195,35 @@ pnpm dev
 Browser requests will be proxied to the remote origin. CORS still has to allow
 the dev origin (`:5173`) — coordinate with whoever owns the remote API.
 
+## CYN-96 auth spike (disposable)
+
+An opt-in authorization-code + PKCE flow validates the BFF session pattern
+against the disposable CYN-95 identity spike. It is **off by default**; when
+`AUTH_MODE` is off the app behaves exactly as today.
+
+Prerequisites:
+
+- The backend spike must be extended first (cross-repo):
+  `SetAuthorizationEndpointUris`, `AllowAuthorizationCodeFlow`, passthrough, and
+  redirect URIs `http://localhost:5173/{en,es}/login` registered in
+  `cynara-api/spikes/Cynara.IdentitySpike`, then
+  `dotnet run --project spikes/Cynara.IdentitySpike` (listens on `:5295`).
+- Server env in `.dev.vars` (already present): `IDENTITY_ORIGIN`,
+  `AUTH_MODE=spike`, `AUTH_SESSION_SECRET`, `AUTH_CLIENT_ID`,
+  `AUTH_CLIENT_SECRET`, `AUTH_SCOPES`.
+- Client env: `VITE_AUTH_MODE=spike` in `.env` (mirrors the server toggle for
+  the browser bundle).
+
+```bash
+pnpm dev
+open http://localhost:5173/en/forms   # bounces to /en/login when signed out
+```
+
+Spike routes: `/$locale/login`, `/$locale/logout`, `/$locale/auth-spike`
+(protected evidence page calling `/api/me` through the BFF). See
+[`cyn-96-findings.md`](cyn-96-findings.md) for what works, what breaks, and the
+limitations (live E2E is pending the backend prerequisite).
+
 ## Generated API client
 
 The typed client in `src/api/generated/` is produced by `@hey-api/openapi-ts`
@@ -288,6 +317,13 @@ exactly what GitHub Actions ships.
 | `OPENAPI_SPEC`            | optional    | shell                                     | Path to an OpenAPI contract used by `pnpm api:generate` (overrides the sibling-checkout default).                                                                    |
 | `OPENAPI_SPEC_URL`        | optional    | shell / CI                                | URL of an OpenAPI contract used by `pnpm api:generate` (overrides `OPENAPI_SPEC`). The `API client drift` workflow sets this to the pinned contract ref.             |
 | `APP_ENV`                 | optional    | shell                                     | `development` / `production` / `testing`. Drives `environment.ts`. Falls back to `import.meta.env.DEV`.                                                              |
+| `IDENTITY_ORIGIN`         | spike only  | `.dev.vars`, wrangler dev vars            | Origin of the disposable CYN-96 identity/API spike (serves `/connect/*` + `/api/*`). Server-only.                                                                    |
+| `AUTH_MODE`               | spike only  | `.dev.vars`, wrangler dev vars            | `spike` enables the disposable auth flow; anything else/unset = production behavior. Server-only.                                                                    |
+| `AUTH_SESSION_SECRET`     | spike only  | `.dev.vars` (secret)                      | Password sealing the session cookie (32+ chars). Server-only; keep out of committed vars.                                                                            |
+| `AUTH_CLIENT_ID`          | spike only  | `.dev.vars`                               | Confidential client id registered in the identity spike (default `cynara-spike`).                                                                                    |
+| `AUTH_CLIENT_SECRET`      | spike only  | `.dev.vars` (secret)                      | Client secret for the token/revocation endpoints. Server-only.                                                                                                       |
+| `AUTH_SCOPES`             | spike only  | `.dev.vars`                               | Space-separated scopes requested at authorize (default `openid offline_access profile`).                                                                             |
+| `VITE_AUTH_MODE`          | spike only  | `.env` / shell                            | Client-bundle mirror of `AUTH_MODE` so hooks (e.g. `useCapabilities`) pick the BFF adapter only in spike mode.                                                       |
 | `CLOUDFLARE_API_TOKEN`    | deploy only | CI secret                                 | Wrangler deploy token with the **Edit Cloudflare Workers** template.                                                                                                 |
 | `CLOUDFLARE_ACCOUNT_ID`   | deploy only | CI secret                                 | Shown on the Workers project overview page.                                                                                                                          |
 | `CLOUDFLARE_PROJECT_NAME` | optional    | CI variable                               | Defaults to `cynara-web` if unset.                                                                                                                                   |

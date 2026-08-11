@@ -5,6 +5,7 @@ import { resolveBootLocale } from '@/lib/locale.ts';
 import type { AppLocale } from '@/lib/locale.ts';
 
 import apiEn from './locales/en/api.json';
+import authEn from './locales/en/auth.json';
 import commonEn from './locales/en/common.json';
 import designerEn from './locales/en/designer.json';
 import documentsEn from './locales/en/documents.json';
@@ -17,6 +18,7 @@ import patientsEn from './locales/en/patients.json';
 import validationEn from './locales/en/validation.json';
 import workflowsEn from './locales/en/workflows.json';
 import apiEs from './locales/es/api.json';
+import authEs from './locales/es/auth.json';
 import commonEs from './locales/es/common.json';
 import designerEs from './locales/es/designer.json';
 import documentsEs from './locales/es/documents.json';
@@ -32,6 +34,7 @@ import workflowsEs from './locales/es/workflows.json';
 const resources = {
   en: {
     api: apiEn,
+    auth: authEn,
     common: commonEn,
     forms: formsEn,
     designer: designerEn,
@@ -46,6 +49,7 @@ const resources = {
   },
   es: {
     api: apiEs,
+    auth: authEs,
     common: commonEs,
     forms: formsEs,
     designer: designerEs,
@@ -73,6 +77,7 @@ export function createI18n(
     defaultNS: 'common',
     ns: [
       'common',
+      'auth',
       'forms',
       'designer',
       'documents',

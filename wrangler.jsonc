@@ -25,6 +25,14 @@
       "vars": {
         "VITE_API_ORIGIN": "https://cynara-api.onrender.com",
         "VITE_HOSPITAL_CODE": "default",
+        // CYN-96 disposable auth spike (dev-only). AUTH_MODE deliberately
+        // stays OFF at the top-level [vars] so production deploys keep the
+        // current behavior; only the dev environment flips it on.
+        // AUTH_SESSION_SECRET and AUTH_CLIENT_SECRET are secrets: keep them
+        // in .dev.vars locally and in the Cloudflare dashboard (encrypted)
+        // for any real deployment — never in committed [vars].
+        "AUTH_MODE": "spike",
+        "IDENTITY_ORIGIN": "http://localhost:5295",
       },
     },
   },
