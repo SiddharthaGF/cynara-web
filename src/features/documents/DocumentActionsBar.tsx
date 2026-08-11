@@ -27,7 +27,6 @@ export function DocumentActionsBar({
   return (
     <div className='flex flex-wrap gap-2 border-t border-border/70 pt-4'>
       <Button
-        data-testid='document-action-save'
         onClick={onSave}
         disabled={busy}
       >
@@ -36,7 +35,6 @@ export function DocumentActionsBar({
         {isSaving ? t('detail.actions.saving') : t('detail.actions.save')}
       </Button>
       <Button
-        data-testid='document-action-complete'
         onClick={onComplete}
         disabled={busy}
       >
@@ -45,7 +43,6 @@ export function DocumentActionsBar({
       </Button>
       <Button
         variant='outline'
-        data-testid='document-action-cancel'
         onClick={() => {
           onTransition('cancel');
         }}
@@ -56,7 +53,6 @@ export function DocumentActionsBar({
       </Button>
       <Button
         variant='destructive'
-        data-testid='document-action-enter-in-error'
         onClick={() => {
           onTransition('enterInError');
         }}

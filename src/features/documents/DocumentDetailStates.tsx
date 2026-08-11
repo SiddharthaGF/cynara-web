@@ -16,7 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton.tsx';
 export function DocumentDetailLoading(): JSX.Element {
   return (
     <AppShell variant='catalog'>
-      <div className='mx-auto max-w-3xl px-6 py-10 pb-20'>
+      <div className='mx-auto max-w-3xl px-6 py-6 pb-12'>
         <Skeleton className='mb-4 h-8 w-48' />
         <Skeleton className='h-64 w-full' />
       </div>
@@ -41,7 +41,7 @@ export function DocumentDetailUnavailable({
 
   return (
     <AppShell variant='catalog'>
-      <div className='mx-auto max-w-3xl px-6 py-10 pb-20'>
+      <div className='mx-auto max-w-3xl px-6 py-6 pb-12'>
         <Empty className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
           <EmptyHeader>
             <EmptyTitle>{title}</EmptyTitle>
@@ -49,15 +49,19 @@ export function DocumentDetailUnavailable({
           </EmptyHeader>
         </Empty>
         <div className='mt-4'>
-          <Link
-            to='/$locale/patients/$id/encounters/$encounterId'
-            params={{ locale, id: patientId, encounterId }}
+          <Button
+            variant='ghost'
+            nativeButton={false}
+            render={
+              <Link
+                to='/$locale/patients/$id/encounters/$encounterId'
+                params={{ locale, id: patientId, encounterId }}
+              />
+            }
           >
-            <Button variant='ghost'>
-              <ArrowLeft className='size-4' />
-              {t('detail.backToEncounter')}
-            </Button>
-          </Link>
+            <ArrowLeft className='size-4' />
+            {t('detail.backToEncounter')}
+          </Button>
         </div>
       </div>
     </AppShell>
@@ -71,7 +75,7 @@ export function DocumentDetailShell({
 }): JSX.Element {
   return (
     <AppShell variant='catalog'>
-      <div className='mx-auto max-w-3xl px-6 py-10 pb-20'>{children}</div>
+      <div className='mx-auto max-w-3xl px-6 py-6 pb-12'>{children}</div>
     </AppShell>
   );
 }

@@ -1,7 +1,9 @@
 import { format, isValid, parse } from 'date-fns';
 import { enUS, es } from 'date-fns/locale';
+import type { TFunction } from 'i18next';
 import { CalendarIcon } from 'lucide-react';
-import { useState, type JSX } from 'react';
+import { useMemo, useState, type JSX } from 'react';
+import type { Labels } from 'react-day-picker';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
@@ -19,17 +21,24 @@ import {
 import type { ClinicalField, TimePreset } from '@/features/forms/types.ts';
 import { cn } from '@/lib/utils.ts';
 
+// Formatters for the Spanish day-picker labels. Built once at module scope
+// Because constructing an Intl formatter is comparatively expensive.
+const esMonthYearFormatter = new Intl.DateTimeFormat('es', {
+  month: 'long',
+  year: 'numeric',
+});
+const esWeekdayFormatter = new Intl.DateTimeFormat('es', { weekday: 'long' });
+
 interface DatePickerInputProps {
-  'fieldType': Extract<ClinicalField['type'], 'date' | 'datetime'>;
-  'value': unknown;
-  'enabled': boolean;
-  'placeholder': string | undefined;
-  'inputId'?: string;
-  'timePresets'?: TimePreset[];
-  'ariaInvalid'?: boolean;
-  'ariaRequired'?: boolean;
-  'data-testid'?: string;
-  'onChange': (value: unknown) => void;
+  fieldType: Extract<ClinicalField['type'], 'date' | 'datetime'>;
+  value: unknown;
+  enabled: boolean;
+  placeholder: string | undefined;
+  inputId?: string;
+  timePresets?: TimePreset[];
+  ariaInvalid?: boolean;
+  ariaRequired?: boolean;
+  onChange: (value: unknown) => void;
 }
 
 export function DatePickerInput({
@@ -41,7 +50,6 @@ export function DatePickerInput({
   timePresets,
   ariaInvalid = false,
   ariaRequired = false,
-  'data-testid': testId,
   onChange,
 }: DatePickerInputProps): JSX.Element {
   const { i18n, t } = useTranslation('common');
@@ -49,6 +57,12 @@ export function DatePickerInput({
   const [pendingDate, setPendingDate] = useState<Date | undefined>();
   const [pendingTime, setPendingTime] = useState('');
   const locale = i18n.language.startsWith('es') ? es : enUS;
+  // Calendar ARIA labels follow the active language instead of the default
+  // English strings shipped by react-day-picker.
+  const labels = useMemo(
+    () => localizedCalendarLabels(i18n.language, t),
+    [i18n.language, t],
+  );
   const storedDate = parseStoredDate(value, fieldType);
   const storedTime = fieldType === 'datetime' ? extractTimeValue(value) : '';
   const isValueEmpty = value === '' || value === undefined || value === null;
@@ -147,7 +161,6 @@ export function DatePickerInput({
                 <Button
                   type='button'
                   variant='outline'
-                  data-testid={testId}
                   aria-invalid={ariaInvalid || undefined}
                   aria-required={ariaRequired || undefined}
                   className={cn(
@@ -168,6 +181,7 @@ export function DatePickerInput({
                 mode='single'
                 selected={displayDate}
                 locale={locale}
+                labels={labels}
                 onSelect={handleDateSelect}
               />
             </PopoverContent>
@@ -209,7 +223,6 @@ export function DatePickerInput({
           <Button
             type='button'
             variant='outline'
-            data-testid={testId}
             aria-invalid={ariaInvalid || undefined}
             aria-required={ariaRequired || undefined}
             className={cn(
@@ -230,6 +243,7 @@ export function DatePickerInput({
           mode='single'
           selected={displayDate}
           locale={locale}
+          labels={labels}
           captionLayout='dropdown'
           startMonth={new Date(1900, 0)}
           endMonth={new Date(2100, 11)}
@@ -239,6 +253,34 @@ export function DatePickerInput({
       </PopoverContent>
     </Popover>
   );
+}
+
+/**
+ * ARIA labels for the day-picker in the active language. Only Spanish needs
+ * overrides — react-day-picker's defaults are already English.
+ */
+function localizedCalendarLabels(
+  language: string,
+  t: TFunction,
+): Partial<Labels> | undefined {
+  if (!language.toLowerCase().startsWith('es')) {
+    return undefined;
+  }
+  return {
+    labelPrevious: () => t('calendar.goToPreviousMonth'),
+    labelNext: () => t('calendar.goToNextMonth'),
+    labelMonthDropdown: () => t('calendar.chooseMonth'),
+    labelYearDropdown: () => t('calendar.chooseYear'),
+    labelNav: () => t('calendar.navigation'),
+    labelGrid: (date) =>
+      t('calendar.monthGrid', {
+        month: esMonthYearFormatter.format(date),
+      }),
+    labelWeekday: (date) =>
+      t('calendar.weekday', {
+        weekday: esWeekdayFormatter.format(date),
+      }),
+  };
 }
 
 function parseStoredDate(

@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils.ts';
 
 import { renderFieldInput } from './FormFieldInputs.tsx';
 import { getRepeaterChildValue, getScalarValue } from './formValues.ts';
+import { humanizeFieldLabel } from './labelFallback.ts';
 import { widthClass } from './layoutUtils.ts';
 import type { FormRendererContext } from './types.ts';
 
@@ -61,7 +62,7 @@ export function FormFieldControl({
     ] ?? [];
   const invalid = context.showValidation && errors.length > 0;
   const label = stripLegacyCalculatedLabelSuffix(
-    presentation?.label ?? field.id,
+    presentation?.label ?? humanizeFieldLabel(field.id),
   );
   const isCalculated = Boolean(context.model.rules.fields[field.id]?.calculate);
   const helpText = presentation?.helpText;
@@ -101,7 +102,6 @@ export function FormFieldControl({
           widthClass(presentation?.width),
           isConditional && 'opacity-60',
         )}
-        data-testid='preview-field'
         data-field-id={field.id}
       >
         <div className='flex flex-wrap items-center gap-2'>
@@ -146,7 +146,6 @@ export function FormFieldControl({
       <Field
         className={fieldClassName}
         orientation='horizontal'
-        data-testid='preview-field'
         data-field-id={field.id}
         data-invalid={invalid || undefined}
         data-disabled={!enabled || undefined}
@@ -193,13 +192,13 @@ export function FormFieldControl({
     <Field
       className={fieldClassName}
       orientation='vertical'
-      data-testid='preview-field'
       data-field-id={field.id}
       data-invalid={invalid || undefined}
       data-disabled={!enabled || undefined}
     >
       <FieldLabel
         htmlFor={inputId}
+        id={`${inputId}-label`}
         className={isCalculated ? 'font-normal' : undefined}
       >
         {labelNode}
@@ -213,6 +212,7 @@ export function FormFieldControl({
         handleChange,
         inputId,
         invalid,
+        `${inputId}-label`,
       )}
       <FieldFeedback
         helpText={helpText}

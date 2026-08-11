@@ -97,7 +97,8 @@ describe('transport adapter', () => {
   });
 
   describe('status mapping used by describeApiError', () => {
-    const translate = ((key: string): string => key) as TFunction;
+    const translate = ((key: string): string =>
+      key.replace(/^api:/, '')) as TFunction;
 
     it('maps each status to its message key', () => {
       const cases: [number, string][] = [

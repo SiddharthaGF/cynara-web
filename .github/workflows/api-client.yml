@@ -30,9 +30,11 @@ on:
 
 env:
   # Pinned cynara-api contract ref (SHA recommended — see header comment).
-  # `27bce5d` is the cynara-api main HEAD whose contract the committed
+  # `baace8b` is the cynara-api main HEAD whose contract the committed
   # src/api/generated output was generated against.
-  API_CONTRACT_REF: ${{ github.event.inputs.contract-ref || '27bce5d7503bfb1500e9f26f2606c482a9ccf318' }}
+  API_CONTRACT_REF:
+    ${{ github.event.inputs.contract-ref ||
+    'baace8bdf20c20f75677f6b519e388d5cd60cd90' }}
 
 concurrency:
   group: api-client-${{ github.event.pull_request.number || github.ref }}

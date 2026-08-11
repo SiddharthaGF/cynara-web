@@ -7,7 +7,7 @@ export const Route = createFileRoute('/')({
     const locale = resolvePreferredLocale();
     // oxlint-disable-next-line typescript/only-throw-error -- TanStack Router redirect
     throw redirect({
-      to: '/$locale/forms',
+      to: '/$locale',
       params: { locale },
       replace: true,
     });

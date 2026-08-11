@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
+@layer base {
+  @import '@xyflow/react/dist/style.css';
+}
 @import '@fontsource-variable/fraunces';
 @import '@fontsource-variable/dm-sans';
 
@@ -94,6 +97,7 @@
   --sidebar-accent-foreground: oklch(0.28 0.035 60);
   --sidebar-border: oklch(0.885 0.022 88);
   --sidebar-ring: oklch(0.52 0.08 168);
+  --canvas-grid: oklch(0.36 0.065 168 / 12%);
 }
 
 .dark {
@@ -133,6 +137,7 @@
   --sidebar-accent-foreground: oklch(0.935 0.012 92);
   --sidebar-border: oklch(0.935 0.012 92 / 12%);
   --sidebar-ring: oklch(0.62 0.09 148);
+  --canvas-grid: oklch(0.72 0.1 148 / 15%);
 }
 
 @layer base {
@@ -166,37 +171,17 @@
     text-wrap: balance;
   }
 
-  /* Subtle paper grain overlay */
-  .grain {
-    position: relative;
-  }
-
-  .grain::before {
-    content: '';
-    pointer-events: none;
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    opacity: 0.035;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 128px 128px;
-  }
-
-  .dark .grain::before {
-    opacity: 0.06;
-  }
-
   /* Ambient radial wash behind content */
   .ambient-bg {
     background-image:
       radial-gradient(
         ellipse 80% 50% at 20% -10%,
-        oklch(0.62 0.105 148 / 8%),
+        oklch(0.62 0.105 148 / 6%),
         transparent 60%
       ),
       radial-gradient(
         ellipse 60% 40% at 90% 100%,
-        oklch(0.36 0.065 168 / 6%),
+        oklch(0.36 0.065 168 / 4%),
         transparent 55%
       );
   }
@@ -205,12 +190,12 @@
     background-image:
       radial-gradient(
         ellipse 80% 50% at 20% -10%,
-        oklch(0.62 0.09 148 / 12%),
+        oklch(0.62 0.09 148 / 8%),
         transparent 60%
       ),
       radial-gradient(
         ellipse 60% 40% at 90% 100%,
-        oklch(0.36 0.065 168 / 10%),
+        oklch(0.36 0.065 168 / 6%),
         transparent 55%
       );
   }
@@ -1130,4 +1115,71 @@
       animation: inspector-fade-in 180ms ease-out;
     }
   }
+}
+
+/* ── React Flow canvas theme ───────────────────────────────────────
+   Map React Flow's themable surface onto the app tokens so edges,
+   controls, minimap, and selection stay consistent in both themes. */
+.react-flow {
+  --xy-edge-stroke: color-mix(
+    in oklab,
+    var(--muted-foreground) 45%,
+    var(--border)
+  );
+  --xy-edge-stroke-width: 1.5;
+  --xy-edge-stroke-selected: var(--primary);
+  --xy-connectionline-stroke: var(--primary);
+  --xy-connectionline-stroke-width: 1.5;
+  --xy-selection-background-color: color-mix(
+    in oklab,
+    var(--primary) 10%,
+    transparent
+  );
+  --xy-selection-border: 1px dotted var(--primary);
+  --xy-minimap-background-color: color-mix(
+    in oklab,
+    var(--card) 85%,
+    transparent
+  );
+  --xy-minimap-mask-background-color: color-mix(
+    in oklab,
+    var(--muted) 60%,
+    transparent
+  );
+  --xy-minimap-node-background-color: color-mix(
+    in oklab,
+    var(--muted-foreground) 50%,
+    transparent
+  );
+  --xy-minimap-node-stroke-color: var(--border);
+  --xy-controls-button-background-color: var(--card);
+  --xy-controls-button-background-color-hover: var(--muted);
+  --xy-controls-button-color: var(--foreground);
+  --xy-controls-button-color-hover: var(--foreground);
+  --xy-controls-button-border-color: var(--border);
+  --xy-controls-box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+  --xy-attribution-background-color: transparent;
+}
+
+/* Nodes are draggable canvas items, not text. Suppressing the native
+   long-press selection callout keeps a held press available for the custom
+   touch context menu instead of the iOS magnifier / Android text selection. */
+.react-flow__node {
+  -webkit-touch-callout: none;
+}
+
+/* Workflow transitions mirror node hover behavior: hovered edges gain a
+   primary-tinted, thicker stroke with a soft glow so they stand out from the
+   quiet canvas. The label chip reveal is driven from FlowEdge.tsx; the stroke
+   highlight is scoped to the inner `.workflow-edge` group so selected edges
+   keep their `--xy-edge-stroke-selected` color (higher-specificity xyflow
+   rule) while still picking up the glow and extra width. */
+.workflow-edge--hovered {
+  --xy-edge-stroke: color-mix(in oklab, var(--primary) 55%, var(--border));
+  --xy-edge-stroke-width: 2.5;
+}
+.workflow-edge--hovered .react-flow__edge-path {
+  filter: drop-shadow(
+    0 0 3px color-mix(in oklab, var(--primary) 40%, transparent)
+  );
 }

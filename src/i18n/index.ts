@@ -10,18 +10,24 @@ import designerEn from './locales/en/designer.json';
 import documentsEn from './locales/en/documents.json';
 import encountersEn from './locales/en/encounters.json';
 import formsEn from './locales/en/forms.json';
+import homeEn from './locales/en/home.json';
 import hospitalEn from './locales/en/hospital.json';
+import journeysEn from './locales/en/journeys.json';
 import patientsEn from './locales/en/patients.json';
 import validationEn from './locales/en/validation.json';
+import workflowsEn from './locales/en/workflows.json';
 import apiEs from './locales/es/api.json';
 import commonEs from './locales/es/common.json';
 import designerEs from './locales/es/designer.json';
 import documentsEs from './locales/es/documents.json';
 import encountersEs from './locales/es/encounters.json';
 import formsEs from './locales/es/forms.json';
+import homeEs from './locales/es/home.json';
 import hospitalEs from './locales/es/hospital.json';
+import journeysEs from './locales/es/journeys.json';
 import patientsEs from './locales/es/patients.json';
 import validationEs from './locales/es/validation.json';
+import workflowsEs from './locales/es/workflows.json';
 
 const resources = {
   en: {
@@ -31,9 +37,12 @@ const resources = {
     designer: designerEn,
     documents: documentsEn,
     encounters: encountersEn,
+    home: homeEn,
     hospital: hospitalEn,
+    journeys: journeysEn,
     patients: patientsEn,
     validation: validationEn,
+    workflows: workflowsEn,
   },
   es: {
     api: apiEs,
@@ -42,9 +51,12 @@ const resources = {
     designer: designerEs,
     documents: documentsEs,
     encounters: encountersEs,
+    home: homeEs,
     hospital: hospitalEs,
+    journeys: journeysEs,
     patients: patientsEs,
     validation: validationEs,
+    workflows: workflowsEs,
   },
 } as const;
 
@@ -66,9 +78,12 @@ export function createI18n(
       'documents',
       'encounters',
       'patients',
+      'home',
       'hospital',
+      'journeys',
       'validation',
       'api',
+      'workflows',
     ],
     interpolation: { escapeValue: false },
   });

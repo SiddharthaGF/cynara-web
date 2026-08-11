@@ -26,6 +26,8 @@ export interface MentionableFieldType {
   slug: string;
   label: string;
   description: string;
+  /** Lowercased haystack searched by the mention filter. Precomputed once. */
+  searchText: string;
 }
 
 export function fieldTypeSlug(type: FieldType, locale: string): string {
@@ -42,11 +44,15 @@ export function listMentionableFieldTypes(
 ): MentionableFieldType[] {
   return FIELD_TYPES.map((meta) => {
     const copy = labels[meta.type];
+    const label = copy?.label ?? meta.label;
+    const description = copy?.description ?? meta.description;
+    const slug = fieldTypeSlug(meta.type, locale);
     return {
       type: meta.type,
-      slug: fieldTypeSlug(meta.type, locale),
-      label: copy?.label ?? meta.label,
-      description: copy?.description ?? meta.description,
+      slug,
+      label,
+      description,
+      searchText: `${label} ${description} ${slug} ${meta.type}`.toLowerCase(),
     };
   });
 }
@@ -59,11 +65,7 @@ export function filterMentionableFieldTypes(
   if (needle.length === 0) {
     return types;
   }
-  return types.filter((item) => {
-    const haystack =
-      `${item.label} ${item.description} ${item.slug} ${item.type}`.toLowerCase();
-    return haystack.includes(needle);
-  });
+  return types.filter((item) => item.searchText.includes(needle));
 }
 
 /** Resolve a #slug (or raw FieldType) to a FieldType. */
@@ -102,16 +104,22 @@ export function extractMentionedFieldTypes(text: string): FieldType[] {
   return found;
 }
 
+export interface MentionTriggerState {
+  trigger: '@' | '#';
+  /** Text after the trigger up to the caret, e.g. "pe" in `@pe|`. */
+  query: string;
+}
+
 /** Detect which mention trigger is active at the caret, if any. */
-export function detectMentionTrigger(
+export function detectMentionState(
   value: string,
   caret: number,
-): '@' | '#' | null {
+): MentionTriggerState | null {
   const before = value.slice(0, Math.max(0, caret));
   const match = /(?:^|[\s([{])(?<trigger>[@#])(?<query>[^\s@#]*)$/.exec(before);
   const trigger = match?.groups?.trigger;
   if (trigger === '@' || trigger === '#') {
-    return trigger;
+    return { trigger, query: match?.groups?.query ?? '' };
   }
   return null;
 }

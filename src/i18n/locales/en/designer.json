@@ -25,30 +25,52 @@
     "reload": "Reload latest",
     "keepEditing": "Keep editing"
   },
-  "palette": {
-    "title": "Add question",
-    "description": "Click a type to insert it into the form.",
-    "close": "Close palette"
-  },
   "fieldGroups": {
     "basic": "Basic",
     "advanced": "Advanced",
     "clinical": "Clinical"
   },
   "fieldTypes": {
-    "text": { "label": "Short answer", "description": "Single line text" },
-    "textarea": { "label": "Paragraph", "description": "Multi-line text" },
-    "number": { "label": "Number", "description": "Decimal values" },
-    "integer": { "label": "Whole number", "description": "Integer values" },
-    "boolean": { "label": "Yes / No", "description": "Toggle or checkbox" },
-    "date": { "label": "Date", "description": "Calendar date" },
-    "datetime": { "label": "Date & time", "description": "Date and time" },
-    "time": { "label": "Time", "description": "Time of day" },
+    "text": {
+      "label": "Short answer",
+      "description": "Single line text"
+    },
+    "textarea": {
+      "label": "Paragraph",
+      "description": "Multi-line text"
+    },
+    "number": {
+      "label": "Number",
+      "description": "Decimal values"
+    },
+    "integer": {
+      "label": "Whole number",
+      "description": "Integer values"
+    },
+    "boolean": {
+      "label": "Yes / No",
+      "description": "Toggle or checkbox"
+    },
+    "date": {
+      "label": "Date",
+      "description": "Calendar date"
+    },
+    "datetime": {
+      "label": "Date & time",
+      "description": "Date and time"
+    },
+    "time": {
+      "label": "Time",
+      "description": "Time of day"
+    },
     "choice": {
       "label": "Choice",
       "description": "Single or multiple options"
     },
-    "group": { "label": "Section", "description": "Group related questions" },
+    "group": {
+      "label": "Section",
+      "description": "Group related questions"
+    },
     "repeater": {
       "label": "Repeatable section",
       "description": "Add rows dynamically"
@@ -75,22 +97,17 @@
     "fieldSettings": "Field settings",
     "actionsMenu": "Question actions",
     "deleteQuestion": "Delete question",
+    "deleteQuestionTitle": "Delete this question?",
+    "deleteQuestionDescription": "The question and its configuration will be removed from this draft. This action cannot be undone.",
+    "cancel": "Cancel",
     "insertQuestion": "Insert question here",
-    "insertQuestionShort": "Add",
     "insertQuestionTitle": "Add question",
     "insertQuestionHint": "Pick a type to insert it at this point."
   },
   "preview": {
     "shortAnswer": "Short answer text",
     "longAnswer": "Long answer text",
-    "validationRules": "Validation rules",
-    "validationRange": "Range",
-    "validationGlanceLabel": "Constraints: {{summary}}",
     "glance": {
-      "range": "{{min}}–{{max}}",
-      "minOnly": "≥ {{value}}",
-      "maxOnly": "≤ {{value}}",
-      "lengthRange": "{{min}}–{{max}} chars",
       "step": "step {{value}}",
       "decimals": "{{count}} dp",
       "conditionals_one": "{{count}} conditional",
@@ -125,8 +142,9 @@
     "close": "Close field settings",
     "questionNumber": "Question {{number}}",
     "codeLabel": "Code",
-    "presentation": "Appearance",
+    "presentation": "Format",
     "tabNavLabel": "Field sections",
+    "advancedOptions": "Advanced options",
     "scopeNote": "Changes autosave to the draft and appear to clinicians after publishing.",
     "placeholder": "Placeholder",
     "widget": "Widget",
@@ -158,7 +176,7 @@
     },
     "hidden": "Hidden by default",
     "timePresetNow": "Show \"Now\" quick-fill preset",
-    "clinicalConstraints": "Clinical data",
+    "clinicalConstraints": "Data",
     "clinicalDescription": "Clinical description",
     "clinicalDescriptionHelp": "Internal clinical description. It is not shown in the form.",
     "defaultValue": "Default value",
@@ -185,11 +203,9 @@
     "minItems": "Min repetitions",
     "maxItems": "Max repetitions",
     "clinicalBlock": "Clinical block",
-    "selectBlock": "Select block…",
     "version": "Version",
     "latestDraft": "Latest draft",
-    "rules": "Logic",
-    "conditionalLogic": "Conditional logic",
+    "rules": "Rules",
     "showWhen": "Visible when",
     "showWhenHelp": "Show this field when another field matches a value.",
     "enableWhen": "Enabled when",
@@ -198,8 +214,6 @@
     "requireWhenHelp": "Make this field required when the condition is true.",
     "calculate": "Calculate from",
     "calculateHelp": "Use another field to calculate this value. The field must be read only.",
-    "selectFieldCode": "Select field code…",
-    "selectSourceField": "Select source field…",
     "noCondition": "No condition",
     "noCalculation": "No calculation",
     "fieldCodePlaceholder": "Field code (ref)",
@@ -209,19 +223,36 @@
     "versionNotPublished": "Version {{version}} is not published.",
     "linkedTo": "Linked to {{name}} @ {{version}}",
     "tabs": {
-      "presentation": "Appearance",
-      "clinical": "Clinical data",
-      "rules": "Logic"
+      "presentation": "Format",
+      "clinical": "Data",
+      "rules": "Rules"
     }
+  },
+  "publish": {
+    "publish": "Publish",
+    "statusDraft": "Draft",
+    "statusReview": "In review",
+    "confirmTitle": "Publish this form?",
+    "confirmBody": "Publishing makes this version available to consultations. Existing documents keep the version they were started with. To change it later, publish a new version.",
+    "confirmAction": "Publish",
+    "cancel": "Cancel",
+    "backToDraft": "Back to draft",
+    "withdrawTitle": "Return to draft?",
+    "withdrawBody": "The version is unlocked and editable again. It will not be published.",
+    "withdrawAction": "Return to draft",
+    "publishedTitle": "Form published",
+    "publishedBody": "Version {{version}} is now available in consultations.",
+    "continueEditing": "Continue editing",
+    "backToForms": "Back to forms",
+    "saveFailed": "Fix the validation issues before publishing.",
+    "errorGeneric": "Could not publish the form. Try again.",
+    "errorNoDraft": "The form draft is no longer available. Reload the page and try again."
   },
   "formPreview": {
     "open": "Preview",
     "title": "Form preview",
     "close": "Close preview",
-    "description": "Interactive test run for {{code}} — values stay in this session only.",
     "disclaimer": "Preview mode uses simulated test data. Nothing here is saved as a clinical response.",
-    "simulationLabel": "Simulation",
-    "testDataBadge": "Test data only",
     "resetData": "Reset test data",
     "runValidation": "Run validation",
     "tabPreview": "Form",
@@ -233,22 +264,15 @@
     "copyJson": "Copy JSON",
     "downloadJson": "Download JSON",
     "jsonCopied": "Copied",
-    "viewportLabel": "Preview viewport",
     "viewportDesktop": "Desktop layout",
-    "viewportMobile": "Mobile layout",
-    "viewportPlain": "Plain layout (no frame)",
-    "viewportPlainShort": "Plain",
     "viewportDesktopShort": "Desktop",
+    "viewportMobile": "Mobile layout",
     "viewportMobileShort": "Mobile",
     "deviceLabBadge": "Device lab",
     "deviceDockHint": "Test data only — shared with the main preview.",
-    "viewportSheetHint": "Desktop and mobile open the device lab.",
     "openInDevice": "Open in device",
     "openInDeviceHint": "See how this form looks on desktop and mobile.",
     "deviceSwitcherLabel": "Preview device",
-    "deviceTitleDesktop": "Desktop device preview",
-    "deviceTitleMobile": "Mobile device preview",
-    "deviceDisclaimer": "Simulated device frame for layout testing. Test data is shared with the main preview.",
     "ruleInspection": "Rules & validation",
     "ruleInspectionHint": "Live rule evaluation against current test values.",
     "configWarnings_one": "{{count}} configuration warning",
@@ -273,7 +297,6 @@
       "required": "Required",
       "calculate": "Calculate"
     },
-    "hasConditionalRules": "Has conditional rules",
     "crossFieldValidation": "Cross-field validation",
     "addRow": "Add row",
     "removeRow": "Remove",
@@ -332,21 +355,18 @@
     "fieldSettings": {
       "fab": "Open field settings",
       "fabHint": "Inspect the selected question",
-      "description": "Presentation, clinical mapping, and rules for the selected question.",
       "sheetTitle": "Field settings",
       "sheetSubtitle": "Adjust UI, clinical map, and rules"
     },
     "ai": {
       "fab": "Open AI chat",
       "fabHint": "Ask the form assistant",
-      "description": "Chat with the assistant while keeping the canvas editable.",
       "sheetTitle": "Cynara",
       "sheetSubtitle": "Chat with the form assistant"
     }
   },
   "ai": {
     "open": "AI chat",
-    "eyebrow": "Form assistant",
     "title": "Cynara",
     "description": "Describe what clinicians need to capture. Ask for corrections in this thread — the canvas stays editable.",
     "emptyTitle": "How can I help?",
@@ -388,9 +408,7 @@
     "applying": "Generating schema changes…",
     "phaseSchemaLong": "Generating schema changes… this can take several minutes for large forms",
     "applied": "Applied to draft",
-    "unchanged": "No changes applied to the draft",
     "errorTimeout": "Generating a large form can take several minutes. If you wait more than 10 minutes without seeing changes, click Retry or simplify your request.",
-    "thinkingLabel": "Thought",
     "you": "You",
     "assistant": "Cynara",
     "model": "Model: {{model}}",

@@ -16,22 +16,23 @@ async function openDesigner(page: Page, formCode: string): Promise<void> {
   await page.goto(`/en/forms/${formCode}/designer/`, {
     waitUntil: 'domcontentloaded',
   });
-  await expect(page.getByTestId('designer-field-list')).toBeVisible({
+  // Question cards keep `data-field-id`; the seeded draft has exactly one.
+  await expect(page.locator('[data-field-id]').first()).toBeVisible({
     timeout: 30_000,
   });
-  await expect(page.getByTestId('designer-field')).toHaveCount(1);
-  await expect(page.getByTestId('designer-field').first()).toContainText(
+  await expect(page.locator('[data-field-id]')).toHaveCount(1);
+  await expect(page.locator('[data-field-id]').first()).toContainText(
     'Clinical notes',
   );
 }
 
 async function openChatAndType(page: Page, prompt: string): Promise<void> {
-  const chat = page.getByTestId('ai-chat-panel');
+  const chat = page.getByRole('complementary', { name: 'Cynara' });
   if ((await chat.count()) === 0) {
-    await page.getByTestId('ai-chat-open').click();
+    await page.getByRole('button', { name: 'AI chat' }).click();
   }
   await expect(chat).toBeVisible({ timeout: 10_000 });
-  const input = page.getByTestId('ai-chat-input');
+  const input = page.getByPlaceholder('Ask anything… @ question · # type');
   await input.click();
   await input.fill(prompt);
 }
@@ -42,7 +43,7 @@ async function sendPromptAndExpectApplied(
 ): Promise<void> {
   await openChatAndType(page, prompt);
   await page.getByRole('button', { name: 'Send' }).click();
-  const chat = page.getByTestId('ai-chat-panel');
+  const chat = page.getByRole('complementary', { name: 'Cynara' });
   await expect(chat.getByText(ASSISTANT_MESSAGE).last()).toBeVisible({
     timeout: 60_000,
   });
@@ -111,12 +112,12 @@ test.describe('FormAi stream hardening (real app, mocked stream)', () => {
     const oversizePrompt = `${paragraph}\n\n${' '.repeat(200)}${paragraph}\n\n${paragraph}`;
     expect(oversizePrompt.length).toBeGreaterThan(1500);
 
-    const chat = page.getByTestId('ai-chat-panel');
+    const chat = page.getByRole('complementary', { name: 'Cynara' });
     if ((await chat.count()) === 0) {
-      await page.getByTestId('ai-chat-open').click();
+      await page.getByRole('button', { name: 'AI chat' }).click();
     }
     await expect(chat).toBeVisible({ timeout: 10_000 });
-    const input = page.getByTestId('ai-chat-input');
+    const input = page.getByPlaceholder('Ask anything… @ question · # type');
     await input.click();
     await input.fill(oversizePrompt);
     await page.getByRole('button', { name: 'Send' }).click();

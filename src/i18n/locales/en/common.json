@@ -1,28 +1,44 @@
 {
   "appName": "Cynara",
-  "clinicalForms": "Clinical Forms",
   "nav": {
-    "modules": "Modules",
+    "home": "Home",
+    "care": "Care",
     "forms": "Forms",
     "workflows": "Workflows",
     "patients": "Patients",
-    "design": "Designer",
-    "settings": "Settings",
-    "administration": "Administration"
+    "configuration": "Configuration",
+    "administration": "Administration",
+    "sidebar": "Primary navigation"
+  },
+  "search": {
+    "trigger": "Search"
+  },
+  "user": {
+    "menuLabel": "Account",
+    "signedInAs": "Signed in as {{actorId}}",
+    "workspaceSettings": "Workspace settings"
+  },
+  "commandPalette": {
+    "title": "Command palette",
+    "description": "Search for a page or patient",
+    "placeholder": "Search or jump to…",
+    "goTo": "Go to",
+    "patients": "Search patients",
+    "noResults": "No results found.",
+    "minQuery": "Type at least 2 characters to search patients.",
+    "noPatientResults": "No patients match that search.",
+    "patientError": "Patient search is unavailable right now."
   },
   "meta": {
-    "title": "Cynara — Clinical Forms",
-    "description": "Design clinical intake and assessment forms for hospitals — visually, with autosave and validation."
+    "title": "Cynara",
+    "description": "Clinical workspace for patient records, consultations, clinical forms, and care workflows."
   },
   "theme": {
-    "switchToLight": "Switch to light mode",
-    "switchToDark": "Switch to dark mode",
     "light": "Light",
     "dark": "Dark",
     "system": "System"
   },
   "locale": {
-    "switch": "Change language",
     "en": "English",
     "es": "Español"
   },
@@ -52,9 +68,13 @@
   },
   "actions": {
     "save": "Save",
-    "back": "Back",
     "close": "Close",
     "forms": "Forms"
+  },
+  "breadcrumb": {
+    "patients": "Patients",
+    "clinicalRecord": "Clinical record",
+    "encounter": "Consultation"
   },
   "access": {
     "checking": "Checking your access…",
@@ -73,8 +93,7 @@
   "yes": "Yes",
   "no": "No",
   "placeholders": {
-    "selectDate": "Select date…",
-    "selectDateTime": "Select date & time…"
+    "selectDate": "Select date…"
   },
   "numberInput": {
     "increase": "Increase value",
@@ -82,12 +101,17 @@
   },
   "timeInput": {
     "openPicker": "Open time picker",
-    "selectTime": "Select time",
-    "hours": "Hours",
-    "minutes": "Minutes",
-    "seconds": "Seconds",
     "presets": {
       "now": "Now"
     }
+  },
+  "calendar": {
+    "goToPreviousMonth": "Go to the previous month",
+    "goToNextMonth": "Go to the next month",
+    "chooseMonth": "Choose the month",
+    "chooseYear": "Choose the year",
+    "navigation": "Calendar navigation",
+    "monthGrid": "Calendar for {{month}}",
+    "weekday": "{{weekday}}"
   }
 }

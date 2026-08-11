@@ -14,7 +14,7 @@ import {
 /**
  * Read model for the patient registry. Derived from the generated contract
  * type with the fields the app relies on as always-present promoted to
- * required.
+ * required. Blood type is captured at registration and immutable.
  */
 export type PatientDto = Required<PatientDtoContract>;
 export type PatientListResponse = PatientListResponseContract & {
@@ -23,6 +23,9 @@ export type PatientListResponse = PatientListResponseContract & {
 
 /** Sex values accepted by cynara-api. */
 export type PatientSex = NonNullable<PatientDtoContract['sex']>;
+
+/** ABO/Rh blood type accepted by cynara-api, in clinical notation. */
+export type PatientBloodType = NonNullable<PatientDtoContract['bloodType']>;
 
 /** Lifecycle status returned by the registry. */
 export type PatientStatus = NonNullable<PatientDtoContract['status']>;
@@ -36,6 +39,7 @@ export interface CreatePatientInput {
   familyName: string;
   birthDate: string;
   sex: PatientSex;
+  bloodType: PatientBloodType;
 }
 
 export interface PatchPatientInput {
@@ -44,6 +48,7 @@ export interface PatchPatientInput {
   familyName: string;
   birthDate: string;
   sex: PatientSex;
+  bloodType: PatientBloodType;
   rowVersion: number;
 }
 
@@ -82,6 +87,7 @@ export async function createPatient(
     familyName: input.familyName,
     birthDate: input.birthDate,
     sex: input.sex,
+    bloodType: input.bloodType,
   };
   if (input.nationalId !== undefined) {
     body.nationalId = input.nationalId;
@@ -103,6 +109,7 @@ export async function patchPatient(
     familyName: input.familyName,
     birthDate: input.birthDate,
     sex: input.sex,
+    bloodType: input.bloodType,
     rowVersion: input.rowVersion,
   };
   if (input.nationalId !== undefined) {

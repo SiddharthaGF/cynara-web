@@ -2,6 +2,7 @@ import {
   type FormEvent,
   type JSX,
   type KeyboardEvent,
+  useCallback,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -9,25 +10,18 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  Mention,
-  MentionContent,
-  MentionLabel,
-  MentionTextarea,
-} from '@/components/ui/mention.tsx';
-import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import type { FieldType, FormDraftModel } from '@/features/forms/types.ts';
 import { useIsMobile } from '@/hooks/use-mobile.ts';
 
 import { FIELD_TYPE_KEYS } from '../fieldTypeMeta.ts';
 import { ChatComposerActions } from './ChatComposerActions.tsx';
-import { FieldMentionList, TypeMentionList } from './ChatMentionLists.tsx';
+import { ChatComposerMention } from './ChatComposerMention.tsx';
 import {
   filterMentionableFields,
   listMentionableFields,
 } from './fieldMentions.ts';
 import {
-  detectMentionTrigger,
+  detectMentionState,
   filterMentionableFieldTypes,
   listMentionableFieldTypes,
 } from './fieldTypeMentions.ts';
@@ -40,13 +34,14 @@ interface ChatComposerProps {
   disabled: boolean;
   /** Send / Enter may fire (includes queue-while-busy). */
   canSubmit: boolean;
-  canRetry: boolean;
   isBusy: boolean;
   onChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onRetry: () => void;
   onStop: () => void;
 }
+
+/** Items rendered while the mention menu has no typed query. */
+const MAX_VISIBLE_MENTIONS = 50;
 
 export function ChatComposer({
   value,
@@ -55,11 +50,9 @@ export function ChatComposer({
   modelLabel,
   disabled,
   canSubmit,
-  canRetry,
   isBusy,
   onChange,
   onSubmit,
-  onRetry,
   onStop,
 }: ChatComposerProps): JSX.Element {
   const { t } = useTranslation('designer');
@@ -69,6 +62,8 @@ export function ChatComposer({
   const [activeTrigger, setActiveTrigger] = useState<'@' | '#'>('@');
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  /** Last known caret position, kept for render-time mention detection. */
+  const caretRef = useRef<number | null>(null);
   /**
    * DiceUI stores `trigger` in useState and does not sync prop changes, so we
    * remount when switching @ ↔ #. Guard + restore so remount does not wipe text
@@ -140,45 +135,50 @@ export function ChatComposer({
   }, [disabled, activeTrigger, isMobile]);
 
   function syncTriggerFromCaret(nextValue: string, caret: number): void {
-    const detected = detectMentionTrigger(nextValue, caret);
+    caretRef.current = caret;
+    const detected = detectMentionState(nextValue, caret);
     if (!detected) {
       return;
     }
-    if (detected !== activeTrigger) {
+    if (detected.trigger !== activeTrigger) {
       triggerRemountRef.current = { text: nextValue, caret };
-      setActiveTrigger(detected);
+      setActiveTrigger(detected.trigger);
       return;
     }
-    setActiveTrigger(detected);
+    setActiveTrigger(detected.trigger);
   }
 
-  function handleFilter(options: string[], term: string): string[] {
-    if (activeTrigger === '#') {
+  const handleFilter = useCallback(
+    (options: string[], term: string): string[] => {
+      if (activeTrigger === '#') {
+        const matched = new Set(
+          filterMentionableFieldTypes(
+            options
+              .map((slug) => typeBySlug.get(slug))
+              .filter(
+                (item): item is NonNullable<typeof item> => item !== undefined,
+              ),
+            term,
+          ).map((item) => item.slug),
+        );
+        return options.filter((slug) => matched.has(slug));
+      }
+
       const matched = new Set(
-        filterMentionableFieldTypes(
+        filterMentionableFields(
           options
-            .map((slug) => typeBySlug.get(slug))
+            .map((id) => fieldById.get(id))
             .filter(
-              (item): item is NonNullable<typeof item> => item !== undefined,
+              (field): field is NonNullable<typeof field> =>
+                field !== undefined,
             ),
           term,
-        ).map((item) => item.slug),
+        ).map((field) => field.id),
       );
-      return options.filter((slug) => matched.has(slug));
-    }
-
-    const matched = new Set(
-      filterMentionableFields(
-        options
-          .map((id) => fieldById.get(id))
-          .filter(
-            (field): field is NonNullable<typeof field> => field !== undefined,
-          ),
-        term,
-      ).map((field) => field.id),
-    );
-    return options.filter((id) => matched.has(id));
-  }
+      return options.filter((id) => matched.has(id));
+    },
+    [activeTrigger, fieldById, typeBySlug],
+  );
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>): void {
     syncTriggerFromCaret(
@@ -209,6 +209,33 @@ export function ChatComposer({
       : t('ai.mention.composerHint');
   }
 
+  // While the menu is open with no typed query, cap how many items are
+  // Registered/rendered: DiceUI re-renders every item on each arrow key, so an
+  // Unbounded field list stalls navigation. Once the user types a query, render
+  // The full list so any matching field stays reachable through the filter.
+  const mentionState = useMemo(
+    () =>
+      caretRef.current === null
+        ? null
+        : detectMentionState(value, caretRef.current),
+    [value],
+  );
+  const hasActiveQuery = mentionState !== null && mentionState.query.length > 0;
+  const visibleFields = useMemo(
+    () =>
+      hasActiveQuery
+        ? mentionableFields
+        : mentionableFields.slice(0, MAX_VISIBLE_MENTIONS),
+    [mentionableFields, hasActiveQuery],
+  );
+  const visibleTypes = useMemo(
+    () =>
+      hasActiveQuery
+        ? mentionableTypes
+        : mentionableTypes.slice(0, MAX_VISIBLE_MENTIONS),
+    [mentionableTypes, hasActiveQuery],
+  );
+
   return (
     <form
       className='w-full'
@@ -218,12 +245,37 @@ export function ChatComposer({
         ref={wrapRef}
         className='ai-chat-composer'
       >
-        <Mention
-          key={activeTrigger}
-          trigger={activeTrigger}
-          loop
+        <ChatComposerMention
+          value={value}
           disabled={disabled}
-          inputValue={value}
+          activeTrigger={activeTrigger}
+          inputRef={inputRef}
+          mentionedValues={mentionedValues}
+          isTypeMode={isTypeMode}
+          visibleFields={visibleFields}
+          visibleTypes={visibleTypes}
+          emptyLabel={emptyLabel}
+          menuHint={menuHint}
+          label={isTypeMode ? t('ai.mention.typeLabel') : t('ai.mention.label')}
+          placeholder={
+            isMobile ? t('ai.placeholderShort') : t('ai.placeholder')
+          }
+          onMentionedValuesChange={setMentionedValues}
+          onMentionOpenChange={setMentionOpen}
+          onFilter={handleFilter}
+          onKeyDown={handleKeyDown}
+          onClick={(event) => {
+            syncTriggerFromCaret(
+              event.currentTarget.value,
+              event.currentTarget.selectionStart ?? 0,
+            );
+          }}
+          onKeyUp={(event) => {
+            syncTriggerFromCaret(
+              event.currentTarget.value,
+              event.currentTarget.selectionStart ?? 0,
+            );
+          }}
           onInputValueChange={(next) => {
             // Remount for @↔# can emit ''; keep parent text until restore runs.
             const pending = triggerRemountRef.current;
@@ -235,78 +287,35 @@ export function ChatComposer({
               setMentionedValues([]);
               setMentionOpen(false);
             }
+            // DiceUI writes the new value to the DOM before invoking this, so
+            // The caret is already final here — capture it synchronously so the
+            // Render-time query detection never lags a keystroke behind.
+            const el = document.activeElement;
+            if (
+              el instanceof HTMLTextAreaElement ||
+              el instanceof HTMLInputElement
+            ) {
+              caretRef.current = el.selectionStart ?? next.length;
+            }
             requestAnimationFrame(() => {
-              const el = document.activeElement;
+              const nextEl = document.activeElement;
               if (
-                el instanceof HTMLTextAreaElement ||
-                el instanceof HTMLInputElement
+                nextEl instanceof HTMLTextAreaElement ||
+                nextEl instanceof HTMLInputElement
               ) {
-                syncTriggerFromCaret(next, el.selectionStart ?? next.length);
+                syncTriggerFromCaret(
+                  next,
+                  nextEl.selectionStart ?? next.length,
+                );
               }
             });
           }}
-          value={mentionedValues}
-          onValueChange={setMentionedValues}
-          onOpenChange={setMentionOpen}
-          onFilter={handleFilter}
-          className='w-full'
-        >
-          <MentionLabel className='sr-only'>
-            {isTypeMode ? t('ai.mention.typeLabel') : t('ai.mention.label')}
-          </MentionLabel>
-          <ScrollArea className='ai-chat-composer-scroll w-full'>
-            <MentionTextarea
-              // DiceUI does not bind inputValue to the DOM; seed on remount.
-              ref={inputRef}
-              data-testid='ai-chat-input'
-              defaultValue={value}
-              placeholder={
-                isMobile ? t('ai.placeholderShort') : t('ai.placeholder')
-              }
-              disabled={disabled}
-              onKeyDown={handleKeyDown}
-              onClick={(event) => {
-                syncTriggerFromCaret(
-                  event.currentTarget.value,
-                  event.currentTarget.selectionStart ?? 0,
-                );
-              }}
-              onKeyUp={(event) => {
-                syncTriggerFromCaret(
-                  event.currentTarget.value,
-                  event.currentTarget.selectionStart ?? 0,
-                );
-              }}
-              className='ai-chat-mention-input border-0 bg-transparent px-1 py-2 text-sm leading-6 shadow-none focus-visible:ring-0'
-            />
-          </ScrollArea>
-          <MentionContent
-            side='top'
-            sideOffset={8}
-            className='ai-chat-mention-menu w-[min(100%,20rem)] overflow-hidden p-1.5'
-          >
-            {isTypeMode ? (
-              <TypeMentionList
-                types={mentionableTypes}
-                emptyLabel={emptyLabel}
-                menuHint={menuHint}
-              />
-            ) : (
-              <FieldMentionList
-                fields={mentionableFields}
-                emptyLabel={emptyLabel}
-                menuHint={menuHint}
-              />
-            )}
-          </MentionContent>
-        </Mention>
+        />
 
         <ChatComposerActions
-          canRetry={canRetry}
           canSubmit={canSubmit}
           isBusy={isBusy}
           composerHint={composerHint}
-          onRetry={onRetry}
           onStop={onStop}
         />
       </div>

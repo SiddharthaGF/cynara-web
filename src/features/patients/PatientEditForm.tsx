@@ -8,6 +8,7 @@ import { describeApiError } from '@/api/error-message.ts';
 import {
   isDuplicateMrnError,
   isForbiddenPatientError,
+  type PatientBloodType,
   type PatientDto,
 } from '@/api/patients.ts';
 import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
@@ -21,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
 import { DatePickerInput } from '@/features/forms/renderer/DatePickerInput.tsx';
+import { PatientBloodTypeField } from '@/features/patients/PatientBloodTypeField.tsx';
 import {
   validatePatientIdentity,
   type PatientFieldErrors,
@@ -35,6 +37,7 @@ interface EditFormValues {
   familyName: string;
   birthDate: string;
   sex: string;
+  bloodType: string;
 }
 
 function patientToFormValues(patient: PatientDto): EditFormValues {
@@ -44,6 +47,7 @@ function patientToFormValues(patient: PatientDto): EditFormValues {
     familyName: patient.familyName,
     birthDate: patient.birthDate,
     sex: patient.sex,
+    bloodType: patient.bloodType,
   };
 }
 
@@ -77,6 +81,7 @@ export function PatientEditForm({
         familyName: value.familyName,
         birthDate: value.birthDate,
         sex: value.sex,
+        bloodType: value.bloodType,
       };
       const errors = validatePatientIdentity(identity, t, {
         requireMrn: false,
@@ -93,6 +98,7 @@ export function PatientEditForm({
           familyName: value.familyName.trim(),
           birthDate: value.birthDate.trim(),
           sex: value.sex as 'female' | 'male' | 'unknown',
+          bloodType: value.bloodType as PatientBloodType,
           nationalId: value.nationalId.trim() || null,
           rowVersion: patient.rowVersion,
         });
@@ -113,7 +119,7 @@ export function PatientEditForm({
 
   return (
     <form
-      data-testid='patient-edit-form'
+      aria-label={t('detail.editTitle')}
       onSubmit={(e) => {
         e.preventDefault();
         void form.handleSubmit();
@@ -124,7 +130,6 @@ export function PatientEditForm({
         <Alert
           variant='destructive'
           className='mb-4'
-          data-testid='patient-edit-error'
         >
           <AlertDescription>{serverError}</AlertDescription>
         </Alert>
@@ -139,7 +144,6 @@ export function PatientEditForm({
             disabled
             readOnly
             aria-readonly='true'
-            data-testid='patient-edit-mrn'
           />
           <p className='text-xs text-muted-foreground'>
             {t('detail.mrnImmutable')}
@@ -156,7 +160,6 @@ export function PatientEditForm({
                 </FieldLabel>
                 <Input
                   id='edit-nationalId'
-                  data-testid='patient-edit-nationalId'
                   value={field.state.value}
                   onChange={(e) => {
                     field.handleChange(e.target.value);
@@ -185,7 +188,6 @@ export function PatientEditForm({
                 </FieldLabel>
                 <Input
                   id='edit-givenName'
-                  data-testid='patient-edit-givenName'
                   value={field.state.value}
                   onChange={(e) => {
                     field.handleChange(e.target.value);
@@ -213,7 +215,6 @@ export function PatientEditForm({
                 </FieldLabel>
                 <Input
                   id='edit-familyName'
-                  data-testid='patient-edit-familyName'
                   value={field.state.value}
                   onChange={(e) => {
                     field.handleChange(e.target.value);
@@ -242,7 +243,6 @@ export function PatientEditForm({
                 <DatePickerInput
                   fieldType='date'
                   inputId='edit-birthDate'
-                  data-testid='patient-edit-birthDate'
                   value={field.state.value}
                   enabled={!isEditing}
                   placeholder={t('register.fields.birthDatePlaceholder')}
@@ -265,7 +265,6 @@ export function PatientEditForm({
           {(field) => (
             <PatientSexField
               id='edit-sex'
-              testId='patient-edit-sex'
               label={t('detail.fields.sex')}
               labels={{
                 female: t('detail.sexOptions.female'),
@@ -282,6 +281,22 @@ export function PatientEditForm({
             />
           )}
         </form.Field>
+
+        <form.Field name='bloodType'>
+          {(field) => (
+            <PatientBloodTypeField
+              id='edit-bloodType'
+              label={t('detail.fields.bloodType')}
+              value={field.state.value}
+              error={fieldErrors.bloodType}
+              disabled={isEditing}
+              onChange={(val) => {
+                field.handleChange(val);
+                setFieldErrors((prev) => ({ ...prev, bloodType: undefined }));
+              }}
+            />
+          )}
+        </form.Field>
       </FieldGroup>
 
       <div className='mt-6 flex items-center gap-3'>
@@ -289,7 +304,6 @@ export function PatientEditForm({
           {(canSubmit) => (
             <Button
               type='submit'
-              data-testid='patient-edit-save'
               disabled={isEditing || !canSubmit}
             >
               {isEditing ? <Spinner data-icon='inline-start' /> : null}
@@ -304,7 +318,7 @@ export function PatientEditForm({
           disabled={isEditing}
           onClick={onCancel}
         >
-          {t('search.clear')}
+          {t('detail.cancel')}
         </Button>
       </div>
     </form>

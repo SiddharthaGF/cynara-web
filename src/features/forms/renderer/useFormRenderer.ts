@@ -67,14 +67,16 @@ export function useFormRenderer({
     [model, values],
   );
 
-  const fieldErrors = useMemo(() => {
-    if (!showValidation) {
-      return {};
-    }
-    return collectFieldErrors(model, values, evaluation, (issue) =>
-      translateFieldValidationIssue(issue, t),
-    );
-  }, [evaluation, model, showValidation, t, values]);
+  // Errors are computed on every value change so action handlers can check
+  // `hasValidationErrors` synchronously right after `triggerValidation()`.
+  // Display stays gated on `showValidation`.
+  const fieldErrors = useMemo(
+    () =>
+      collectFieldErrors(model, values, evaluation, (issue) =>
+        translateFieldValidationIssue(issue, t),
+      ),
+    [evaluation, model, t, values],
+  );
 
   const resetValues = useCallback(() => {
     setValues(initialValues ?? createInitialValues(model));

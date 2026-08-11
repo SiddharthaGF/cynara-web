@@ -4,7 +4,7 @@ import {
   jsonApiResponse,
   stubFetchWithCapture,
 } from '@/api/__tests__/hospital-test-utils.ts';
-import { listFormVersionPickerOptions } from '@/api/forms.ts';
+import { listFormVersionPickerOptions } from '@/api/formVersionPicker.ts';
 
 describe('form version picker façade', () => {
   afterEach(() => {

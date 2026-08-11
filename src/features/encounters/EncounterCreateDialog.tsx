@@ -1,6 +1,6 @@
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { DEFAULT_ACTOR_ID } from '@/api/client.ts';
@@ -20,18 +20,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog.tsx';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field.tsx';
-import { Input } from '@/components/ui/input.tsx';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
 import {
-  ENCOUNTER_TYPES,
+  EncounterClinicalAreaField,
+  EncounterFacilityField,
+  EncounterTypeField,
+} from '@/features/encounters/EncounterCreateFields.tsx';
+import {
   validateEncounterCreate,
   type EncounterCreateFields,
   type EncounterFieldErrors,
@@ -46,7 +41,6 @@ const INITIAL_VALUES: EncounterCreateFields = {
   facilityId: '',
   clinicalAreaId: '',
   type: '',
-  responsibleProfessionalId: DEFAULT_ACTOR_ID,
 };
 
 interface EncounterCreateDialogProps {
@@ -99,7 +93,8 @@ export function EncounterCreateDialog({
         facilityId: value.facilityId,
         clinicalAreaId: value.clinicalAreaId,
         type: value.type as EncounterType,
-        responsibleProfessionalId: value.responsibleProfessionalId.trim(),
+        // The responsible professional is the signed-in actor (not a free-text field).
+        responsibleProfessionalId: DEFAULT_ACTOR_ID,
       };
 
       try {
@@ -119,15 +114,6 @@ export function EncounterCreateDialog({
     },
   });
 
-  useEffect(() => {
-    if (!open) {
-      form.reset();
-      setFacilityId('');
-      setFieldErrors({});
-      setServerError(null);
-    }
-  }, [open, form]);
-
   const taxonomyEmpty =
     !facilitiesLoading && facilities.length === 0 && facilitiesError === null;
 
@@ -136,20 +122,14 @@ export function EncounterCreateDialog({
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent
-        className='sm:max-w-md'
-        data-testid='encounter-create-dialog'
-      >
+      <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>{t('create.title')}</DialogTitle>
           <DialogDescription>{t('create.description')}</DialogDescription>
         </DialogHeader>
 
         {serverError !== null && serverError !== '' ? (
-          <Alert
-            variant='destructive'
-            data-testid='encounter-create-error'
-          >
+          <Alert variant='destructive'>
             <AlertDescription>{serverError}</AlertDescription>
           </Alert>
         ) : null}
@@ -161,199 +141,59 @@ export function EncounterCreateDialog({
         ) : null}
 
         {taxonomyEmpty ? (
-          <Alert data-testid='encounter-create-taxonomy-empty'>
+          <Alert>
             <AlertDescription>
               {t('create.errors.taxonomyEmpty')}
             </AlertDescription>
           </Alert>
         ) : null}
 
+        {/* Client-only SPA form; preventDefault avoids a native submit reload. */}
+        {/* react-doctor-disable-next-line react-doctor/no-prevent-default */}
         <form
           className='grid gap-4'
-          data-testid='encounter-create-form'
           onSubmit={(event) => {
             event.preventDefault();
             void form.handleSubmit();
           }}
         >
           <form.Field name='facilityId'>
-            {(field) => {
-              const facilityItems = facilities.map((facility) => ({
-                value: facility.id,
-                label: facility.name,
-              }));
-              return (
-                <Field data-invalid={Boolean(fieldErrors.facilityId)}>
-                  <FieldLabel htmlFor='encounter-facility'>
-                    {t('create.fields.facility')}
-                  </FieldLabel>
-                  <Select
-                    items={facilityItems}
-                    value={field.state.value || null}
-                    onValueChange={(next: string | null = '') => {
-                      const value = next ?? '';
-                      field.handleChange(value);
-                      setFacilityId(value);
-                      form.setFieldValue('clinicalAreaId', '');
-                    }}
-                    disabled={isCreating || facilitiesLoading || taxonomyEmpty}
-                  >
-                    <SelectTrigger
-                      id='encounter-facility'
-                      data-testid='encounter-create-facility'
-                      aria-invalid={Boolean(fieldErrors.facilityId)}
-                      className='w-full'
-                    >
-                      <SelectValue
-                        placeholder={t('create.fields.facilityPlaceholder')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {facilityItems.map((facility) => (
-                        <SelectItem
-                          key={facility.value}
-                          value={facility.value}
-                        >
-                          {facility.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldErrors.facilityId ? (
-                    <FieldError>{fieldErrors.facilityId}</FieldError>
-                  ) : null}
-                </Field>
-              );
-            }}
+            {(field) => (
+              <EncounterFacilityField
+                field={field}
+                facilities={facilities}
+                facilitiesLoading={facilitiesLoading}
+                isCreating={isCreating}
+                taxonomyEmpty={taxonomyEmpty}
+                error={fieldErrors.facilityId}
+                onFacilityChange={(value) => {
+                  setFacilityId(value);
+                  form.setFieldValue('clinicalAreaId', '');
+                }}
+              />
+            )}
           </form.Field>
 
           <form.Field name='clinicalAreaId'>
-            {(field) => {
-              const areaItems = clinicalAreas.map((area) => ({
-                value: area.id,
-                label: area.name,
-              }));
-              return (
-                <Field data-invalid={Boolean(fieldErrors.clinicalAreaId)}>
-                  <FieldLabel htmlFor='encounter-clinical-area'>
-                    {t('create.fields.clinicalArea')}
-                  </FieldLabel>
-                  <Select
-                    items={areaItems}
-                    value={field.state.value || null}
-                    onValueChange={(next: string | null) => {
-                      field.handleChange(next ?? '');
-                    }}
-                    disabled={
-                      isCreating ||
-                      !facilityId ||
-                      areasLoading ||
-                      clinicalAreas.length === 0
-                    }
-                  >
-                    <SelectTrigger
-                      id='encounter-clinical-area'
-                      data-testid='encounter-create-clinicalArea'
-                      aria-invalid={Boolean(fieldErrors.clinicalAreaId)}
-                      className='w-full'
-                    >
-                      <SelectValue
-                        placeholder={t('create.fields.clinicalAreaPlaceholder')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {areaItems.map((area) => (
-                        <SelectItem
-                          key={area.value}
-                          value={area.value}
-                        >
-                          {area.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldErrors.clinicalAreaId ? (
-                    <FieldError>{fieldErrors.clinicalAreaId}</FieldError>
-                  ) : null}
-                </Field>
-              );
-            }}
+            {(field) => (
+              <EncounterClinicalAreaField
+                field={field}
+                clinicalAreas={clinicalAreas}
+                areasLoading={areasLoading}
+                isCreating={isCreating}
+                facilityId={facilityId}
+                error={fieldErrors.clinicalAreaId}
+              />
+            )}
           </form.Field>
 
           <form.Field name='type'>
-            {(field) => {
-              const typeItems = ENCOUNTER_TYPES.map((type) => ({
-                value: type,
-                label: t(`types.${type}`),
-              }));
-              return (
-                <Field data-invalid={Boolean(fieldErrors.type)}>
-                  <FieldLabel htmlFor='encounter-type'>
-                    {t('create.fields.type')}
-                  </FieldLabel>
-                  <Select
-                    items={typeItems}
-                    value={field.state.value || null}
-                    onValueChange={(next: string | null) => {
-                      field.handleChange(next ?? '');
-                    }}
-                    disabled={isCreating}
-                  >
-                    <SelectTrigger
-                      id='encounter-type'
-                      data-testid='encounter-create-type'
-                      aria-invalid={Boolean(fieldErrors.type)}
-                      className='w-full'
-                    >
-                      <SelectValue
-                        placeholder={t('create.fields.typePlaceholder')}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {typeItems.map((type) => (
-                        <SelectItem
-                          key={type.value}
-                          value={type.value}
-                        >
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldErrors.type ? (
-                    <FieldError>{fieldErrors.type}</FieldError>
-                  ) : null}
-                </Field>
-              );
-            }}
-          </form.Field>
-
-          <form.Field name='responsibleProfessionalId'>
             {(field) => (
-              <Field
-                data-invalid={Boolean(fieldErrors.responsibleProfessionalId)}
-              >
-                <FieldLabel htmlFor='encounter-professional'>
-                  {t('create.fields.professional')}
-                </FieldLabel>
-                <Input
-                  id='encounter-professional'
-                  data-testid='encounter-create-professional'
-                  value={field.state.value}
-                  disabled={isCreating}
-                  aria-invalid={Boolean(fieldErrors.responsibleProfessionalId)}
-                  placeholder={t('create.fields.professionalPlaceholder')}
-                  onChange={(event) => {
-                    field.handleChange(event.target.value);
-                  }}
-                  onBlur={field.handleBlur}
-                />
-                {fieldErrors.responsibleProfessionalId ? (
-                  <FieldError>
-                    {fieldErrors.responsibleProfessionalId}
-                  </FieldError>
-                ) : null}
-              </Field>
+              <EncounterTypeField
+                field={field}
+                isCreating={isCreating}
+                error={fieldErrors.type}
+              />
             )}
           </form.Field>
 
@@ -370,7 +210,6 @@ export function EncounterCreateDialog({
             </Button>
             <Button
               type='submit'
-              data-testid='encounter-create-submit'
               disabled={isCreating || taxonomyEmpty}
             >
               {isCreating ? <Spinner data-icon='inline-start' /> : null}

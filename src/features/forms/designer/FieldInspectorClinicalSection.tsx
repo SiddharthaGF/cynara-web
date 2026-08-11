@@ -8,6 +8,7 @@ import type {
 } from '@/features/forms/types.ts';
 import { useSyncedTanstackForm } from '@/lib/useSyncedTanstackForm.ts';
 
+import { AdvancedOptions } from './AdvancedOptions.tsx';
 import {
   ClinicalChoiceConstraintFields,
   ClinicalCommonFields,
@@ -57,14 +58,16 @@ export function FieldInspectorClinicalSection({
         <ClinicalDescriptionField {...sectionProps} />
         <ClinicalDefaultValueFields {...sectionProps} />
         <ClinicalCommonFields {...sectionProps} />
-        <ClinicalTextConstraintFields {...sectionProps} />
-        <ClinicalNumberConstraintFields {...sectionProps} />
         <ClinicalChoiceConstraintFields {...sectionProps} />
-        <ClinicalRepeaterConstraintFields {...sectionProps} />
         <ClinicalComponentRefFields
           {...sectionProps}
           components={components}
         />
+        <AdvancedOptions title={t('inspector.advancedOptions')}>
+          <ClinicalTextConstraintFields {...sectionProps} />
+          <ClinicalNumberConstraintFields {...sectionProps} />
+          <ClinicalRepeaterConstraintFields {...sectionProps} />
+        </AdvancedOptions>
       </FieldGroup>
     </FieldSet>
   );

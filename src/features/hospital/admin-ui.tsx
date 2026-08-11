@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { AlertTriangle, ArrowLeft, Ban } from 'lucide-react';
+import { AlertTriangle, ArrowLeft } from 'lucide-react';
 import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -75,20 +75,16 @@ export function AdminPageHeader({
 }): JSX.Element {
   const { t } = useTranslation('hospital');
   return (
-    <header className='grid gap-6 md:grid-cols-[1fr_auto] md:items-end'>
-      <div>
-        <p className='mb-3 inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
-          <Ban className='size-3' />
-          {t('shared.eyebrow')}
-        </p>
-        <h1 className='font-display text-balance text-4xl font-semibold tracking-tight md:text-5xl'>
+    <header className='mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'>
+      <div className='min-w-0'>
+        <h1 className='font-display text-balance text-2xl font-semibold tracking-tight md:text-3xl'>
           {title}
         </h1>
-        <p className='mt-3 max-w-lg text-base leading-relaxed text-muted-foreground'>
+        <p className='mt-1.5 max-w-xl text-sm leading-relaxed text-muted-foreground'>
           {subtitle}
         </p>
       </div>
-      <div className='flex flex-col items-start gap-3 md:items-end'>
+      <div className='flex shrink-0 flex-wrap items-center gap-2'>
         {count === undefined ? null : (
           <span className='text-sm text-muted-foreground'>
             {t('shared.activeCount', { count })}
@@ -121,7 +117,6 @@ export function AdminErrorAlert({
     <Alert
       variant='destructive'
       className={cn('mb-6', className)}
-      data-testid='admin-load-error'
     >
       <AlertDescription>{message}</AlertDescription>
     </Alert>
@@ -138,10 +133,7 @@ export function AdminEmptyState({
   action?: ReactNode;
 }): JSX.Element {
   return (
-    <Empty
-      className='min-h-44 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'
-      data-testid='admin-empty-state'
-    >
+    <Empty className='min-h-44 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
       <EmptyHeader>
         <EmptyTitle className='text-lg'>{title}</EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>
@@ -237,6 +229,7 @@ export function AdminBackLink({ locale }: { locale: string }): JSX.Element {
     <Button
       variant='ghost'
       size='sm'
+      nativeButton={false}
       className='mb-6 text-muted-foreground'
       render={
         <Link

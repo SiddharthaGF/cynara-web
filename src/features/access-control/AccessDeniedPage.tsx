@@ -34,11 +34,8 @@ export function AccessDeniedPage(): JSX.Element {
 
   return (
     <AppShell variant='catalog'>
-      <div className='mx-auto flex min-h-[60svh] w-full max-w-2xl items-center px-6 py-10 pb-20'>
-        <Empty
-          className='min-h-64 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'
-          data-testid='access-denied'
-        >
+      <div className='mx-auto flex min-h-[60svh] w-full max-w-2xl items-center px-6 py-6 pb-12'>
+        <Empty className='min-h-64 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
           <EmptyHeader>
             <EmptyMedia variant='icon'>
               <ShieldX className='size-4 text-destructive' />
@@ -49,15 +46,19 @@ export function AccessDeniedPage(): JSX.Element {
             <EmptyDescription>{t('access.deniedDescription')}</EmptyDescription>
           </EmptyHeader>
           {backTarget ? (
-            <Link
-              to={backTarget}
-              params={{ locale }}
+            <Button
+              variant='outline'
+              nativeButton={false}
+              render={
+                <Link
+                  to={backTarget}
+                  params={{ locale }}
+                />
+              }
             >
-              <Button variant='outline'>
-                <ArrowLeft className='size-4' />
-                {t('access.backToStart')}
-              </Button>
-            </Link>
+              <ArrowLeft className='size-4' />
+              {t('access.backToStart')}
+            </Button>
           ) : null}
         </Empty>
       </div>

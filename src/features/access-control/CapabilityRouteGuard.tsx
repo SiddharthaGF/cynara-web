@@ -18,7 +18,7 @@ export function CapabilityRouteGuard({
   const matches = useRouterState({ select: (state) => state.matches });
   const currentMatch = matches.at(-1);
   const required = currentMatch?.routeId
-    ? capabilityRequirementForRoute(String(currentMatch.routeId))
+    ? capabilityRequirementForRoute(currentMatch.routeId)
     : null;
   const capabilities = useCapabilities();
 

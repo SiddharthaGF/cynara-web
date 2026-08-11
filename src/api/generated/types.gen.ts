@@ -4,6 +4,19 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+/**
+ * Advance contract for a running pipeline. The server evaluates the
+ * outgoing transition guards/conditions against Cynara.Application.Modules.Workflows.AdvancePipelineRequest.InputValues
+ * (declared workflow inputs) and picks the branch; clients cannot choose
+ * the next node directly.
+ */
+export type AdvancePipelineRequest = {
+    rowVersion: number;
+    inputValues?: {
+        [key: string]: unknown;
+    } | null;
+};
+
 export type AiProviderSettingCollectionResponseDocument = {
     links: ResourceCollectionTopLevelLinks;
     data: Array<DataInAiProviderSettingResponse>;
@@ -697,6 +710,14 @@ export type CapabilityAssignmentDto = {
  */
 export type CapabilityAssignmentListResponse = {
     items?: Array<CapabilityAssignmentDto>;
+};
+
+/**
+ * Claim contract for an open task. The `RowVersion` must match the
+ * latest persisted value.
+ */
+export type ClaimTaskRequest = {
+    rowVersion: number;
 };
 
 /**
@@ -1842,6 +1863,33 @@ export type IdentifierInRequest = {
 };
 
 /**
+ * One patient journey: a pipeline bound to a patient or encounter record,
+ * rendered from the exact published workflow version at start time with the
+ * immutable progression history.
+ */
+export type JourneyDto = {
+    pipelineId?: string;
+    workflowCode?: string;
+    workflowVersion?: string;
+    workflowVersionId?: string;
+    workflowSchemaVersion?: string;
+    subjectType?: string;
+    subjectId?: string;
+    patientId?: string;
+    encounterId?: string | null;
+    status?: string;
+    currentNodeId?: string;
+    startedAt?: string;
+    endedAt?: string | null;
+    /**
+     * The workflow graph exactly as pinned at pipeline start, projected from
+     * the immutable published version for historical rendering.
+     */
+    graph?: WorkflowGraphDto;
+    history?: Array<PipelineHistoryDto>;
+};
+
+/**
  * One error object inside a Cynara.Api.JsonApi.OpenApi.JsonApiErrorDocument.
  */
 export type JsonApiError = {
@@ -1932,6 +1980,7 @@ export type PatientDto = {
     familyName?: string;
     birthDate?: string;
     sex?: 'female' | 'male' | 'unknown';
+    bloodType?: 'a+' | 'a-' | 'b+' | 'b-' | 'ab+' | 'ab-' | 'o+' | 'o-';
     status?: 'active' | 'retired';
     rowVersion?: number;
     deletedAt?: string | null;
@@ -1939,8 +1988,67 @@ export type PatientDto = {
     updatedAt?: string;
 };
 
+/**
+ * The full pipeline journey for one patient record, ordered by start time.
+ */
+export type PatientJourneyResponse = {
+    patientId?: string;
+    journeys?: Array<JourneyDto>;
+};
+
 export type PatientListResponse = PaginationMeta & {
     patients: Array<PatientDto>;
+};
+
+/**
+ * Public read and write shapes for workflow pipelines and their
+ * append-only progression history.
+ */
+export type PipelineDto = {
+    readonly id?: string;
+    workflowCode?: string;
+    workflowVersion?: string;
+    workflowVersionId?: string;
+    workflowSchemaVersion?: string;
+    subjectType?: string;
+    subjectId?: string;
+    patientId?: string;
+    encounterId?: string | null;
+    status?: string;
+    currentNodeId?: string;
+    startedAt?: string;
+    endedAt?: string | null;
+    rowVersion?: number;
+    createdAt?: string;
+    updatedAt?: string;
+};
+
+/**
+ * One append-only progression event on a pipeline.
+ */
+export type PipelineHistoryDto = {
+    readonly id?: string;
+    pipelineId?: string;
+    sequence?: number;
+    action?: string;
+    actorId?: string | null;
+    occurredAt?: string;
+    metadataJson?: string | null;
+};
+
+/**
+ * Append-only progression history response for one pipeline.
+ */
+export type PipelineHistoryResponse = {
+    pipelineId?: string;
+    history?: Array<PipelineHistoryDto>;
+};
+
+/**
+ * Collection response for pipeline listings.
+ */
+export type PipelineListResponse = {
+    pipelines?: Array<PipelineDto>;
 };
 
 export type PrimaryAiProviderSettingResponseDocument = {
@@ -2472,6 +2580,55 @@ export type SecondaryWorkflowDefinitionResponseDocument = {
     meta?: Meta;
 };
 
+/**
+ * Start contract for a pipeline. Resolves the published workflow version
+ * (the supplied semver, or the latest published when omitted) within the
+ * resolved hospital and pins it for the pipeline lifetime.
+ */
+export type StartPipelineRequest = {
+    workflowCode: string;
+    workflowVersion?: string | null;
+    subjectType: string;
+    subjectId: string;
+};
+
+/**
+ * Public read and write shapes for clinical tasks.
+ */
+export type TaskDto = {
+    readonly id?: string;
+    pipelineId?: string;
+    workflowVersionId?: string;
+    nodeId?: string;
+    name?: string;
+    description?: string | null;
+    status?: string;
+    assignedActor?: string | null;
+    assignedRole?: string | null;
+    assignedDiscipline?: string | null;
+    patientId?: string;
+    encounterId?: string | null;
+    formCode?: string | null;
+    formVersion?: string | null;
+    dueAt?: string | null;
+    claimedBy?: string | null;
+    claimedAt?: string | null;
+    completedBy?: string | null;
+    completedAt?: string | null;
+    canceledBy?: string | null;
+    canceledAt?: string | null;
+    rowVersion?: number;
+    createdAt?: string;
+    updatedAt?: string;
+};
+
+/**
+ * Collection response for task listings.
+ */
+export type TaskListResponse = {
+    tasks?: Array<TaskDto>;
+};
+
 export type ToManyClinicalAreaInResponse = {
     links?: RelationshipLinks;
     data?: Array<ClinicalAreaIdentifierInResponse>;
@@ -2632,6 +2789,26 @@ export type ToOneWorkflowDefinitionInResponse = {
     meta?: Meta;
 };
 
+/**
+ * Lifecycle contract for completing, canceling, or entering a pipeline in
+ * error. The `RowVersion` must match; optional `Reason` is
+ * recorded in the progression history.
+ */
+export type TransitionPipelineRequest = {
+    rowVersion: number;
+    reason?: string | null;
+};
+
+/**
+ * Lifecycle contract for completing or canceling a task. The
+ * `RowVersion` must match; optional `Reason` is recorded in the
+ * audit event.
+ */
+export type TransitionTaskRequest = {
+    rowVersion: number;
+    reason?: string | null;
+};
+
 export type UpdateAiProviderSettingRequestDocument = {
     data: Omit<DataInUpdateAiProviderSettingRequest, 'type'> & {
         type: 'updateAiProviderSettingRequestDocument';
@@ -2760,6 +2937,35 @@ export type WorkflowDefinitionIdentifierResponseDocument = {
 };
 
 export type WorkflowDefinitionResourceType = 'workflowDefinitions';
+
+/**
+ * Projection of one edge of the pinned workflow graph. Transition
+ * conditions are intentionally not exposed to clients.
+ */
+export type WorkflowEdgeDto = {
+    from?: string;
+    to?: string;
+    label?: string | null;
+};
+
+/**
+ * The workflow graph exactly as pinned at pipeline start, projected from
+ * the immutable published version for historical rendering.
+ */
+export type WorkflowGraphDto = {
+    nodes?: Array<WorkflowNodeDto>;
+    edges?: Array<WorkflowEdgeDto>;
+};
+
+/**
+ * Projection of one node of the pinned workflow graph. Conditions are
+ * omitted; the branch taken is recorded in the progression history.
+ */
+export type WorkflowNodeDto = {
+    readonly id?: string;
+    type?: string;
+    name?: string | null;
+};
 
 export type WorkflowVersionCollectionResponseDocument = {
     links: ResourceCollectionTopLevelLinks;
@@ -2970,6 +3176,33 @@ export type HospitalWorkspaceDtoWritable = {
 };
 
 /**
+ * One patient journey: a pipeline bound to a patient or encounter record,
+ * rendered from the exact published workflow version at start time with the
+ * immutable progression history.
+ */
+export type JourneyDtoWritable = {
+    pipelineId?: string;
+    workflowCode?: string;
+    workflowVersion?: string;
+    workflowVersionId?: string;
+    workflowSchemaVersion?: string;
+    subjectType?: string;
+    subjectId?: string;
+    patientId?: string;
+    encounterId?: string | null;
+    status?: string;
+    currentNodeId?: string;
+    startedAt?: string;
+    endedAt?: string | null;
+    /**
+     * The workflow graph exactly as pinned at pipeline start, projected from
+     * the immutable published version for historical rendering.
+     */
+    graph?: WorkflowGraphDtoWritable;
+    history?: Array<PipelineHistoryDtoWritable>;
+};
+
+/**
  * Public read and write shapes for the patient registry.
  */
 export type PatientDtoWritable = {
@@ -2979,6 +3212,7 @@ export type PatientDtoWritable = {
     familyName?: string;
     birthDate?: string;
     sex?: 'female' | 'male' | 'unknown';
+    bloodType?: 'a+' | 'a-' | 'b+' | 'b-' | 'ab+' | 'ab-' | 'o+' | 'o-';
     status?: 'active' | 'retired';
     rowVersion?: number;
     deletedAt?: string | null;
@@ -2986,8 +3220,119 @@ export type PatientDtoWritable = {
     updatedAt?: string;
 };
 
+/**
+ * The full pipeline journey for one patient record, ordered by start time.
+ */
+export type PatientJourneyResponseWritable = {
+    patientId?: string;
+    journeys?: Array<JourneyDtoWritable>;
+};
+
 export type PatientListResponseWritable = PaginationMeta & {
     patients: Array<PatientDtoWritable>;
+};
+
+/**
+ * Public read and write shapes for workflow pipelines and their
+ * append-only progression history.
+ */
+export type PipelineDtoWritable = {
+    workflowCode?: string;
+    workflowVersion?: string;
+    workflowVersionId?: string;
+    workflowSchemaVersion?: string;
+    subjectType?: string;
+    subjectId?: string;
+    patientId?: string;
+    encounterId?: string | null;
+    status?: string;
+    currentNodeId?: string;
+    startedAt?: string;
+    endedAt?: string | null;
+    rowVersion?: number;
+    createdAt?: string;
+    updatedAt?: string;
+};
+
+/**
+ * One append-only progression event on a pipeline.
+ */
+export type PipelineHistoryDtoWritable = {
+    pipelineId?: string;
+    sequence?: number;
+    action?: string;
+    actorId?: string | null;
+    occurredAt?: string;
+    metadataJson?: string | null;
+};
+
+/**
+ * Append-only progression history response for one pipeline.
+ */
+export type PipelineHistoryResponseWritable = {
+    pipelineId?: string;
+    history?: Array<PipelineHistoryDtoWritable>;
+};
+
+/**
+ * Collection response for pipeline listings.
+ */
+export type PipelineListResponseWritable = {
+    pipelines?: Array<PipelineDtoWritable>;
+};
+
+/**
+ * Public read and write shapes for clinical tasks.
+ */
+export type TaskDtoWritable = {
+    pipelineId?: string;
+    workflowVersionId?: string;
+    nodeId?: string;
+    name?: string;
+    description?: string | null;
+    status?: string;
+    assignedActor?: string | null;
+    assignedRole?: string | null;
+    assignedDiscipline?: string | null;
+    patientId?: string;
+    encounterId?: string | null;
+    formCode?: string | null;
+    formVersion?: string | null;
+    dueAt?: string | null;
+    claimedBy?: string | null;
+    claimedAt?: string | null;
+    completedBy?: string | null;
+    completedAt?: string | null;
+    canceledBy?: string | null;
+    canceledAt?: string | null;
+    rowVersion?: number;
+    createdAt?: string;
+    updatedAt?: string;
+};
+
+/**
+ * Collection response for task listings.
+ */
+export type TaskListResponseWritable = {
+    tasks?: Array<TaskDtoWritable>;
+};
+
+/**
+ * The workflow graph exactly as pinned at pipeline start, projected from
+ * the immutable published version for historical rendering.
+ */
+export type WorkflowGraphDtoWritable = {
+    nodes?: Array<WorkflowNodeDtoWritable>;
+    edges?: Array<WorkflowEdgeDto>;
+};
+
+/**
+ * Projection of one node of the pinned workflow graph. Conditions are
+ * omitted; the branch taken is recorded in the progression history.
+ */
+export type WorkflowNodeDtoWritable = {
+    type?: string;
+    name?: string | null;
 };
 
 export type GetAiProviderSettingCollectionData = {
@@ -11804,6 +12149,689 @@ export type SoftDeletePatientResponses = {
 };
 
 export type SoftDeletePatientResponse = SoftDeletePatientResponses[keyof SoftDeletePatientResponses];
+
+export type ListPipelinesData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: {
+        subjectType?: string;
+        subjectId?: string;
+        status?: string;
+        patientId?: string;
+        encounterId?: string;
+    };
+    url: '/api/pipelines';
+};
+
+export type ListPipelinesErrors = {
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+};
+
+export type ListPipelinesError = ListPipelinesErrors[keyof ListPipelinesErrors];
+
+export type ListPipelinesResponses = {
+    /**
+     * OK
+     */
+    200: PipelineListResponse;
+};
+
+export type ListPipelinesResponse = ListPipelinesResponses[keyof ListPipelinesResponses];
+
+export type StartPipelineData = {
+    /**
+     * Start contract for a pipeline. Resolves the published workflow version
+     * (the supplied semver, or the latest published when omitted) within the
+     * resolved hospital and pins it for the pipeline lifetime.
+     */
+    body: StartPipelineRequest;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/pipelines';
+};
+
+export type StartPipelineErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type StartPipelineError = StartPipelineErrors[keyof StartPipelineErrors];
+
+export type StartPipelineResponses = {
+    /**
+     * Created
+     */
+    201: PipelineDto;
+};
+
+export type StartPipelineResponse = StartPipelineResponses[keyof StartPipelineResponses];
+
+export type GetPipelineJourneyData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: {
+        patientId?: string;
+        encounterId?: string;
+    };
+    url: '/api/pipelines/journey';
+};
+
+export type GetPipelineJourneyErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+};
+
+export type GetPipelineJourneyError = GetPipelineJourneyErrors[keyof GetPipelineJourneyErrors];
+
+export type GetPipelineJourneyResponses = {
+    /**
+     * OK
+     */
+    200: PatientJourneyResponse;
+};
+
+export type GetPipelineJourneyResponse = GetPipelineJourneyResponses[keyof GetPipelineJourneyResponses];
+
+export type GetPipelineData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/pipelines/{id}';
+};
+
+export type GetPipelineErrors = {
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+};
+
+export type GetPipelineError = GetPipelineErrors[keyof GetPipelineErrors];
+
+export type GetPipelineResponses = {
+    /**
+     * OK
+     */
+    200: PipelineDto;
+};
+
+export type GetPipelineResponse = GetPipelineResponses[keyof GetPipelineResponses];
+
+export type AdvancePipelineData = {
+    /**
+     * Advance contract for a running pipeline. The server evaluates the
+     * outgoing transition guards/conditions against Cynara.Application.Modules.Workflows.AdvancePipelineRequest.InputValues
+     * (declared workflow inputs) and picks the branch; clients cannot choose
+     * the next node directly.
+     */
+    body: AdvancePipelineRequest;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/pipelines/{id}/advance';
+};
+
+export type AdvancePipelineErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type AdvancePipelineError = AdvancePipelineErrors[keyof AdvancePipelineErrors];
+
+export type AdvancePipelineResponses = {
+    /**
+     * OK
+     */
+    200: PipelineDto;
+};
+
+export type AdvancePipelineResponse = AdvancePipelineResponses[keyof AdvancePipelineResponses];
+
+export type CancelPipelineData = {
+    /**
+     * Lifecycle contract for completing, canceling, or entering a pipeline in
+     * error. The `RowVersion` must match; optional `Reason` is
+     * recorded in the progression history.
+     */
+    body: TransitionPipelineRequest;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/pipelines/{id}/cancel';
+};
+
+export type CancelPipelineErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type CancelPipelineError = CancelPipelineErrors[keyof CancelPipelineErrors];
+
+export type CancelPipelineResponses = {
+    /**
+     * OK
+     */
+    200: PipelineDto;
+};
+
+export type CancelPipelineResponse = CancelPipelineResponses[keyof CancelPipelineResponses];
+
+export type CompletePipelineData = {
+    /**
+     * Lifecycle contract for completing, canceling, or entering a pipeline in
+     * error. The `RowVersion` must match; optional `Reason` is
+     * recorded in the progression history.
+     */
+    body: TransitionPipelineRequest;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/pipelines/{id}/complete';
+};
+
+export type CompletePipelineErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type CompletePipelineError = CompletePipelineErrors[keyof CompletePipelineErrors];
+
+export type CompletePipelineResponses = {
+    /**
+     * OK
+     */
+    200: PipelineDto;
+};
+
+export type CompletePipelineResponse = CompletePipelineResponses[keyof CompletePipelineResponses];
+
+export type EnterInErrorPipelineData = {
+    /**
+     * Lifecycle contract for completing, canceling, or entering a pipeline in
+     * error. The `RowVersion` must match; optional `Reason` is
+     * recorded in the progression history.
+     */
+    body: TransitionPipelineRequest;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/pipelines/{id}/enter-in-error';
+};
+
+export type EnterInErrorPipelineErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type EnterInErrorPipelineError = EnterInErrorPipelineErrors[keyof EnterInErrorPipelineErrors];
+
+export type EnterInErrorPipelineResponses = {
+    /**
+     * OK
+     */
+    200: PipelineDto;
+};
+
+export type EnterInErrorPipelineResponse = EnterInErrorPipelineResponses[keyof EnterInErrorPipelineResponses];
+
+export type GetPipelineHistoryData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/pipelines/{id}/history';
+};
+
+export type GetPipelineHistoryErrors = {
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+};
+
+export type GetPipelineHistoryError = GetPipelineHistoryErrors[keyof GetPipelineHistoryErrors];
+
+export type GetPipelineHistoryResponses = {
+    /**
+     * OK
+     */
+    200: PipelineHistoryResponse;
+};
+
+export type GetPipelineHistoryResponse = GetPipelineHistoryResponses[keyof GetPipelineHistoryResponses];
+
+export type ListTasksData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: {
+        status?: string;
+        patientId?: string;
+        encounterId?: string;
+        pipelineId?: string;
+        assignedActor?: string;
+        assignedRole?: string;
+        assignedDiscipline?: string;
+    };
+    url: '/api/tasks';
+};
+
+export type ListTasksErrors = {
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+};
+
+export type ListTasksError = ListTasksErrors[keyof ListTasksErrors];
+
+export type ListTasksResponses = {
+    /**
+     * OK
+     */
+    200: TaskListResponse;
+};
+
+export type ListTasksResponse = ListTasksResponses[keyof ListTasksResponses];
+
+export type GetTaskData = {
+    body?: never;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tasks/{id}';
+};
+
+export type GetTaskErrors = {
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+};
+
+export type GetTaskError = GetTaskErrors[keyof GetTaskErrors];
+
+export type GetTaskResponses = {
+    /**
+     * OK
+     */
+    200: TaskDto;
+};
+
+export type GetTaskResponse = GetTaskResponses[keyof GetTaskResponses];
+
+export type CancelTaskData = {
+    /**
+     * Lifecycle contract for completing or canceling a task. The
+     * `RowVersion` must match; optional `Reason` is recorded in the
+     * audit event.
+     */
+    body: TransitionTaskRequest;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tasks/{id}/cancel';
+};
+
+export type CancelTaskErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type CancelTaskError = CancelTaskErrors[keyof CancelTaskErrors];
+
+export type CancelTaskResponses = {
+    /**
+     * OK
+     */
+    200: TaskDto;
+};
+
+export type CancelTaskResponse = CancelTaskResponses[keyof CancelTaskResponses];
+
+export type ClaimTaskData = {
+    /**
+     * Claim contract for an open task. The `RowVersion` must match the
+     * latest persisted value.
+     */
+    body: ClaimTaskRequest;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tasks/{id}/claim';
+};
+
+export type ClaimTaskErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type ClaimTaskError = ClaimTaskErrors[keyof ClaimTaskErrors];
+
+export type ClaimTaskResponses = {
+    /**
+     * OK
+     */
+    200: TaskDto;
+};
+
+export type ClaimTaskResponse = ClaimTaskResponses[keyof ClaimTaskResponses];
+
+export type CompleteTaskData = {
+    /**
+     * Lifecycle contract for completing or canceling a task. The
+     * `RowVersion` must match; optional `Reason` is recorded in the
+     * audit event.
+     */
+    body: TransitionTaskRequest;
+    headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/tasks/{id}/complete';
+};
+
+export type CompleteTaskErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type CompleteTaskError = CompleteTaskErrors[keyof CompleteTaskErrors];
+
+export type CompleteTaskResponses = {
+    /**
+     * OK
+     */
+    200: TaskDto;
+};
+
+export type CompleteTaskResponse = CompleteTaskResponses[keyof CompleteTaskResponses];
 
 export type GetWorkflowDefinitionCollectionData = {
     body?: never;

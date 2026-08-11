@@ -1,7 +1,7 @@
-import { Link, useNavigate } from '@tanstack/react-router';
-import { FileText, Plus } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
+import { FileText } from 'lucide-react';
 import type { JSX } from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { ClinicalDocumentDto } from '@/api/clinical-documents.ts';
@@ -33,7 +33,7 @@ import {
   formatClinicalDocumentDateTime,
   formatClinicalDocumentStatus,
 } from '@/features/documents/clinicalDocumentForm.ts';
-import { StartDocumentDialog } from '@/features/documents/StartDocumentDialog.tsx';
+import { EncounterAvailableForms } from '@/features/documents/EncounterAvailableForms.tsx';
 import { useEncounterDocuments } from '@/features/documents/useClinicalDocumentsCatalog.ts';
 import { useDocumentDefinitions } from '@/features/hospital/useDocumentCatalogAdmin.ts';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
@@ -53,12 +53,10 @@ export function EncounterDocumentsPanel({
 }: EncounterDocumentsPanelProps): JSX.Element {
   const { t, i18n } = useTranslation(['documents', 'api']);
   const { can } = useCapabilities();
-  const navigate = useNavigate();
   const { documents, isLoading, error, isForbidden } = useEncounterDocuments(
     encounter.id,
   );
   const definitionLookup = useDocumentDefinitions({ includeRetired: true });
-  const [startOpen, setStartOpen] = useState(false);
 
   const definitionNames = useMemo(
     () =>
@@ -76,53 +74,39 @@ export function EncounterDocumentsPanel({
   const canStart = encounterOpen && !isForbidden && canWrite;
 
   return (
-    <Card
-      className='mt-8 border-border/70 shadow-sm'
-      data-testid='encounter-documents-panel'
-    >
-      <CardHeader className='flex flex-row items-start justify-between gap-4 space-y-0'>
-        <div>
-          <p className='mb-2 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
-            {t('list.eyebrow')}
-          </p>
-          <CardTitle className='flex items-center gap-2 font-heading text-lg'>
-            <FileText className='size-4 text-muted-foreground' />
-            {t('list.title')}
-          </CardTitle>
-          <CardDescription className='mt-1'>
-            {t('list.subtitle')}
-          </CardDescription>
-        </div>
-        {canStart ? (
-          <Button
-            size='sm'
-            data-testid='start-document-open'
-            onClick={() => {
-              setStartOpen(true);
-            }}
-          >
-            <Plus className='size-3.5' />
-            {t('list.create')}
-          </Button>
-        ) : null}
+    <Card className='mt-8 border-border/70 shadow-sm'>
+      <CardHeader>
+        <p className='mb-2 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
+          {t('list.eyebrow')}
+        </p>
+        <CardTitle className='flex items-center gap-2 font-heading text-lg'>
+          <FileText className='size-4 text-muted-foreground' />
+          {t('list.title')}
+        </CardTitle>
+        <CardDescription className='mt-1'>{t('list.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
         {isForbidden ? (
-          <Alert
-            variant='destructive'
-            data-testid='document-list-forbidden'
-          >
+          <Alert variant='destructive'>
             <AlertDescription>{t('list.forbidden')}</AlertDescription>
           </Alert>
         ) : null}
 
         {!isForbidden && error ? (
-          <Alert
-            variant='destructive'
-            data-testid='document-list-error'
-          >
+          <Alert variant='destructive'>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
+        ) : null}
+
+        {canStart ? (
+          <EncounterAvailableForms
+            patientId={patientId}
+            encounterId={encounter.id}
+            facilityId={encounter.facilityId}
+            clinicalAreaId={encounter.clinicalAreaId}
+            locale={locale}
+            onForbidden={onForbidden}
+          />
         ) : null}
 
         {isLoading ? (
@@ -133,10 +117,7 @@ export function EncounterDocumentsPanel({
         ) : null}
 
         {!isLoading && !isForbidden && !error && documents.length === 0 ? (
-          <Empty
-            className='min-h-36 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-8'
-            data-testid='document-list-empty'
-          >
+          <Empty className='min-h-36 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-8'>
             <EmptyHeader>
               <EmptyTitle>{t('list.emptyTitle')}</EmptyTitle>
               <EmptyDescription>{t('list.emptyDescription')}</EmptyDescription>
@@ -145,10 +126,7 @@ export function EncounterDocumentsPanel({
         ) : null}
 
         {!isLoading && documents.length > 0 ? (
-          <ul
-            className='divide-y divide-border/70 rounded-xl border border-border/70'
-            data-testid='document-list'
-          >
+          <ul className='divide-y divide-border/70 rounded-xl border border-border/70'>
             {documents.map((document) => (
               <DocumentListRow
                 key={document.id}
@@ -165,27 +143,6 @@ export function EncounterDocumentsPanel({
           </ul>
         ) : null}
       </CardContent>
-
-      <StartDocumentDialog
-        encounterId={encounter.id}
-        facilityId={encounter.facilityId}
-        clinicalAreaId={encounter.clinicalAreaId}
-        open={startOpen}
-        onOpenChange={setStartOpen}
-        onForbidden={onForbidden}
-        onCreated={(documentId) => {
-          setStartOpen(false);
-          void navigate({
-            to: '/$locale/patients/$id/encounters/$encounterId/documents/$documentId',
-            params: {
-              locale,
-              id: patientId,
-              encounterId: encounter.id,
-              documentId,
-            },
-          });
-        }}
-      />
     </Card>
   );
 }
@@ -216,7 +173,6 @@ function DocumentListRow({
           ? 'flex flex-col gap-3 bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
           : 'flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
       }
-      data-testid='document-list-row'
       data-status={document.status}
       data-terminal={terminal ? 'true' : 'false'}
     >
@@ -238,10 +194,6 @@ function DocumentListRow({
           {t('list.columns.createdAt')}:{' '}
           {formatClinicalDocumentDateTime(document.createdAt, language)}
         </p>
-        <p className='truncate text-sm text-muted-foreground'>
-          {t('list.columns.author')}:{' '}
-          {document.authorId ?? t('list.unknownAuthor')}
-        </p>
       </div>
       <Link
         to='/$locale/patients/$id/encounters/$encounterId/documents/$documentId'
@@ -255,7 +207,6 @@ function DocumentListRow({
         <Button
           variant='outline'
           size='sm'
-          data-testid='document-list-open'
         >
           {t('list.viewDetail')}
         </Button>

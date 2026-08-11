@@ -1,15 +1,34 @@
-import { UserCircle, Pencil, Trash2 } from 'lucide-react';
+import { UserCircle } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { PatientDto } from '@/api/patients.ts';
-import { Button } from '@/components/ui/button.tsx';
-import { Spinner } from '@/components/ui/spinner.tsx';
 import {
+  formatPatientBloodType,
   formatPatientDateTime,
   formatPatientSex,
   formatPatientStatus,
 } from '@/features/patients/patientForm.ts';
+
+/** Age in whole years as of today, or null when the birth date is missing. */
+function patientAgeYears(birthDate: string | null | undefined): number | null {
+  if (!birthDate) {
+    return null;
+  }
+  const birth = new Date(`${birthDate}T00:00:00`);
+  if (Number.isNaN(birth.getTime())) {
+    return null;
+  }
+  const now = new Date();
+  let years = now.getFullYear() - birth.getFullYear();
+  const beforeBirthdayThisYear =
+    now.getMonth() < birth.getMonth() ||
+    (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate());
+  if (beforeBirthdayThisYear) {
+    years -= 1;
+  }
+  return years;
+}
 
 function PatientInfoRow({
   label,
@@ -30,62 +49,24 @@ function PatientInfoRow({
 
 interface PatientViewProps {
   patient: PatientDto;
-  onEdit: () => void;
-  onDelete: () => void;
-  isDeleting: boolean;
-  canMutate: boolean;
 }
 
-export function PatientView({
-  patient,
-  onEdit,
-  onDelete,
-  isDeleting,
-  canMutate,
-}: PatientViewProps): JSX.Element {
+export function PatientView({ patient }: PatientViewProps): JSX.Element {
   const { t, i18n } = useTranslation(['patients', 'api']);
+  const ageYears = patientAgeYears(patient.birthDate);
 
   return (
-    <div
-      className='space-y-6'
-      data-testid='patient-detail-view'
-    >
-      <div className='flex items-center justify-between gap-3'>
-        <div className='flex items-center gap-3'>
-          <div className='flex size-10 items-center justify-center rounded-full bg-primary/10'>
-            <UserCircle className='size-5 text-primary' />
-          </div>
-          <div>
-            <h2 className='font-heading text-lg font-medium'>
-              {patient.givenName} {patient.familyName}
-            </h2>
-            <code className='text-sm text-muted-foreground'>{patient.mrn}</code>
-          </div>
+    <div className='space-y-6'>
+      <div className='flex items-center gap-3'>
+        <div className='flex size-10 items-center justify-center rounded-full bg-primary/10'>
+          <UserCircle className='size-5 text-primary' />
         </div>
-        {canMutate ? (
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              data-testid='patient-detail-edit'
-              onClick={onEdit}
-            >
-              <Pencil className='size-3.5' />
-              {t('detail.edit')}
-            </Button>
-            <Button
-              variant='destructive'
-              size='sm'
-              data-testid='patient-detail-delete'
-              onClick={onDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? <Spinner data-icon='inline-start' /> : null}
-              <Trash2 className='size-3.5' />
-              {t('detail.delete')}
-            </Button>
-          </div>
-        ) : null}
+        <div>
+          <p className='font-heading text-lg font-medium'>
+            {patient.givenName} {patient.familyName}
+          </p>
+          <code className='text-sm text-muted-foreground'>{patient.mrn}</code>
+        </div>
       </div>
 
       <div className='grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4'>
@@ -94,20 +75,22 @@ export function PatientView({
           value={patient.mrn}
         />
         <PatientInfoRow
-          label={t('detail.fields.givenName')}
-          value={patient.givenName}
-        />
-        <PatientInfoRow
-          label={t('detail.fields.familyName')}
-          value={patient.familyName}
-        />
-        <PatientInfoRow
           label={t('detail.fields.birthDate')}
           value={patient.birthDate}
         />
+        {ageYears === null ? null : (
+          <PatientInfoRow
+            label={t('detail.fields.age')}
+            value={String(ageYears)}
+          />
+        )}
         <PatientInfoRow
           label={t('detail.fields.sex')}
           value={formatPatientSex(patient.sex, t)}
+        />
+        <PatientInfoRow
+          label={t('detail.fields.bloodType')}
+          value={formatPatientBloodType(patient.bloodType)}
         />
         <PatientInfoRow
           label={t('detail.fields.nationalId')}

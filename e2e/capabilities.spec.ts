@@ -34,13 +34,29 @@ async function refetchCapabilitiesOnFocus(page: Page): Promise<void> {
   });
 }
 
+function patientSearchForm(page: Page) {
+  return page.getByRole('search', { name: 'Find a patient' });
+}
+
+/** The "Register patient" action in the page header (desktop nav action). */
+function headerRegisterAction(page: Page) {
+  return page
+    .locator('header')
+    .getByRole('button', { name: 'Register patient' });
+}
+
+/** The floating mobile-only "Register patient" action. */
+function mobileRegisterAction(page: Page) {
+  return page.getByLabel('Register patient');
+}
+
 test.describe('capability-aware navigation and clinical actions (CYN-54)', () => {
   test('denies direct navigation without the required capability', async ({
     page,
   }) => {
     grantCapabilities(page, []);
     await page.goto('/en/patients/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('access-denied')).toBeVisible({
+    await expect(page.getByText('Access denied', { exact: true })).toBeVisible({
       timeout: 30_000,
     });
   });
@@ -50,7 +66,7 @@ test.describe('capability-aware navigation and clinical actions (CYN-54)', () =>
   }) => {
     grantCapabilities(page, ['catalog.read']);
     await page.goto('/en/patients/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('access-denied')).toBeVisible({
+    await expect(page.getByText('Access denied', { exact: true })).toBeVisible({
       timeout: 30_000,
     });
     await expect(page.getByRole('link', { name: 'Forms' })).toBeVisible();
@@ -63,34 +79,32 @@ test.describe('capability-aware navigation and clinical actions (CYN-54)', () =>
     grantCapabilities(page, ['patients.read', 'patients.write']);
     stubEmptyPatients(page);
     await page.goto('/en/patients/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('patient-search-form')).toBeVisible({
+    await expect(patientSearchForm(page)).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId('patient-register-open')).toBeVisible();
-    await expect(page.getByTestId('patient-register-open-mobile')).toBeHidden();
+    await expect(headerRegisterAction(page)).toBeVisible();
+    await expect(mobileRegisterAction(page)).toBeHidden();
   });
 
   test('hides the register action without patients.write', async ({ page }) => {
     grantCapabilities(page, ['patients.read']);
     stubEmptyPatients(page);
     await page.goto('/en/patients/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('patient-search-form')).toBeVisible({
+    await expect(patientSearchForm(page)).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId('patient-register-open')).toHaveCount(0);
-    await expect(page.getByTestId('patient-register-open-mobile')).toHaveCount(
-      0,
-    );
+    await expect(headerRegisterAction(page)).toHaveCount(0);
+    await expect(mobileRegisterAction(page)).toHaveCount(0);
   });
 
   test('hides the create-form card without catalog.write', async ({ page }) => {
     grantCapabilities(page, ['catalog.read']);
     stubEmptyFormsCatalog(page);
     await page.goto('/en/forms/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('form-list-content')).toBeVisible({
+    await expect(page.getByRole('heading', { name: 'Forms' })).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId('create-form-card')).toHaveCount(0);
+    await expect(page.getByText('New draft')).toHaveCount(0);
   });
 
   test('redirects the legacy /forms path into the locale tree', async ({
@@ -99,8 +113,8 @@ test.describe('capability-aware navigation and clinical actions (CYN-54)', () =>
     grantCapabilities(page, FULL_CAPABILITIES);
     stubEmptyFormsCatalog(page);
     await page.goto('/forms', { waitUntil: 'domcontentloaded' });
-    await expect(page).toHaveURL(/\/en\/forms\/?$/);
-    await expect(page.getByTestId('form-list-content')).toBeVisible({
+    await expect(page).toHaveURL(/\/en\/forms\/?(\?.*)?$/);
+    await expect(page.getByRole('heading', { name: 'Forms' })).toBeVisible({
       timeout: 30_000,
     });
   });
@@ -112,15 +126,15 @@ test.describe('capability-aware navigation and clinical actions (CYN-54)', () =>
     await mockCapabilities(page, grants);
     stubEmptyPatients(page);
     await page.goto('/en/patients/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('patient-search-form')).toBeVisible({
+    await expect(patientSearchForm(page)).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId('patient-register-open')).toBeVisible();
+    await expect(headerRegisterAction(page)).toBeVisible();
 
     grants.codes = ['patients.read'];
     await refetchCapabilitiesOnFocus(page);
 
-    await expect(page.getByTestId('patient-register-open')).toHaveCount(0, {
+    await expect(headerRegisterAction(page)).toHaveCount(0, {
       timeout: 30_000,
     });
   });
@@ -130,14 +144,14 @@ test.describe('capability-aware navigation and clinical actions (CYN-54)', () =>
     await mockCapabilities(page, grants);
     stubEmptyPatients(page);
     await page.goto('/en/patients/', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('patient-search-form')).toBeVisible({
+    await expect(patientSearchForm(page)).toBeVisible({
       timeout: 30_000,
     });
 
     grants.codes = [];
     await page.reload({ waitUntil: 'domcontentloaded' });
 
-    await expect(page.getByTestId('access-denied')).toBeVisible({
+    await expect(page.getByText('Access denied', { exact: true })).toBeVisible({
       timeout: 30_000,
     });
   });

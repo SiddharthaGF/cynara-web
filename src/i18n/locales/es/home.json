@@ -1,0 +1,41 @@
+{
+  "eyebrow": "Inicio",
+  "title": "¿Qué querés hacer hoy?",
+  "subtitle": "Retomá donde lo dejaste o empezá algo nuevo.",
+  "startSection": "Empezar algo nuevo",
+  "browseSection": "Ir a",
+  "recent": {
+    "forms": "Formularios recientes",
+    "workflows": "Flujos recientes",
+    "encounters": "Consultas activas",
+    "emptyForms": "Todavía no hay formularios. Creá uno para empezar.",
+    "emptyWorkflows": "Todavía no hay flujos. Creá uno para empezar.",
+    "emptyEncounters": "No hay consultas abiertas en este momento."
+  },
+  "actions": {
+    "registerPatient": {
+      "title": "Registrar un paciente",
+      "description": "Creá un registro de paciente para comenzar su atención."
+    },
+    "newEncounter": {
+      "title": "Nueva consulta",
+      "description": "Abrí una consulta para un paciente existente."
+    },
+    "createForm": {
+      "title": "Diseñar un formulario",
+      "description": "Creá un formulario clínico para recopilar datos estructurados."
+    },
+    "createWorkflow": {
+      "title": "Diseñar un flujo",
+      "description": "Modelá una vía de atención para las trayectorias de pacientes."
+    }
+  },
+  "browse": {
+    "patients": "Pacientes",
+    "forms": "Formularios",
+    "workflows": "Flujos de trabajo",
+    "administration": "Administración"
+  },
+  "emptyTitle": "Nada que hacer todavía",
+  "emptyDescription": "Tu cuenta no tiene permisos para iniciar ninguna acción. Pedile a un administrador que te otorgue las capacidades que necesitás."
+}

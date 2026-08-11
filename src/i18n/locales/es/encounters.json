@@ -1,74 +1,67 @@
 {
   "list": {
-    "eyebrow": "Encuentros clínicos",
-    "title": "Encuentros",
+    "eyebrow": "Consultas clínicas",
+    "title": "Consultas",
     "subtitle": "Visitas abiertas e históricas de este paciente.",
-    "create": "Nuevo encuentro",
-    "emptyTitle": "Aún no hay encuentros",
-    "emptyDescription": "Crea un encuentro para empezar a documentar esta visita.",
-    "loadError": "No se pudieron cargar los encuentros.",
-    "forbidden": "No tienes permiso para ver los encuentros de este paciente.",
-    "viewDetail": "Abrir",
-    "historicalHint": "Histórico",
+    "create": "Nueva consulta",
+    "emptyTitle": "Aún no hay consultas",
+    "emptyDescription": "Crea una consulta para empezar a documentar esta visita.",
+    "forbidden": "No tienes permiso para ver las consultas de este paciente.",
+    "viewDetail": "Abrir consulta",
+    "historicalHint": "Histórica",
     "columns": {
-      "type": "Tipo",
-      "status": "Estado",
       "startedAt": "Inicio",
-      "endedAt": "Fin",
-      "professional": "Responsable"
+      "endedAt": "Fin"
     }
   },
   "create": {
-    "title": "Crear encuentro",
-    "description": "Abre un nuevo encuentro clínico para este paciente.",
-    "submit": "Crear encuentro",
+    "title": "Crear consulta",
+    "description": "Abre una nueva consulta clínica para este paciente.",
+    "submit": "Crear consulta",
     "submitting": "Creando…",
     "cancel": "Cancelar",
-    "success": "Encuentro creado.",
     "fields": {
       "facility": "Instalación",
       "facilityPlaceholder": "Seleccionar instalación",
       "clinicalArea": "Área clínica",
       "clinicalAreaPlaceholder": "Seleccionar área clínica",
-      "type": "Tipo de encuentro",
-      "typePlaceholder": "Seleccionar tipo",
-      "professional": "Profesional responsable",
-      "professionalPlaceholder": "ej. id-clinico"
+      "type": "Tipo de consulta",
+      "typePlaceholder": "Seleccionar tipo"
     },
     "errors": {
       "facilityRequired": "La instalación es obligatoria.",
       "clinicalAreaRequired": "El área clínica es obligatoria.",
-      "typeRequired": "El tipo de encuentro es obligatorio.",
-      "typeInvalid": "Elige un tipo de encuentro válido.",
-      "professionalRequired": "El profesional responsable es obligatorio.",
-      "professionalTooLong": "El profesional responsable debe tener 128 caracteres o menos.",
-      "taxonomyEmpty": "No hay instalaciones activas. Pide a un administrador que configure la taxonomía clínica.",
-      "createFailed": "No se pudo crear el encuentro."
+      "typeRequired": "El tipo de consulta es obligatorio.",
+      "typeInvalid": "Elige un tipo de consulta válido.",
+      "taxonomyEmpty": "No hay instalaciones activas. Pide a un administrador que configure la taxonomía clínica."
     }
   },
   "detail": {
-    "eyebrow": "Encuentro",
-    "title": "Detalle del encuentro",
+    "eyebrow": "Consulta",
+    "title": "Consulta",
     "backToPatient": "Volver al paciente",
-    "loadError": "No se pudo cargar el detalle del encuentro.",
-    "notFound": "No se encontró el encuentro.",
-    "forbidden": "No tienes permiso para ver este encuentro.",
-    "forbiddenMutate": "No tienes permiso para modificar este encuentro.",
-    "stale": "Este encuentro cambió mientras trabajabas. Recarga la versión más reciente antes de continuar.",
+    "loadError": "No se pudo cargar la consulta.",
+    "notFound": "No se encontró la consulta.",
+    "forbidden": "No tienes permiso para ver esta consulta.",
+    "forbiddenMutate": "No tienes permiso para modificar esta consulta.",
+    "stale": "Esta consulta cambió mientras trabajabas. Recarga la versión más reciente antes de continuar.",
     "reload": "Recargar",
-    "historicalBanner": "Este encuentro está cerrado. Permanece legible en el historial clínico.",
+    "historicalBanner": "Esta consulta está cerrada. Permanece legible en el historial clínico.",
     "actions": {
       "complete": "Completar",
-      "cancel": "Cancelar encuentro",
-      "enterInError": "Registrado por error"
+      "cancel": "Cancelar consulta",
+      "enterInError": "Registrada por error"
     },
     "confirm": {
-      "completeTitle": "¿Completar este encuentro?",
-      "completeBody": "El encuentro pasará a completado y ya no podrá transicionarse.",
-      "cancelTitle": "¿Cancelar este encuentro?",
-      "cancelBody": "El encuentro se marcará como cancelado y seguirá visible históricamente.",
-      "enterInErrorTitle": "¿Marcar como registrado por error?",
-      "enterInErrorBody": "Úsalo cuando el encuentro se abrió por equivocación. El registro sigue siendo consultable.",
+      "completeTitle": "¿Completar esta consulta?",
+      "completeBody": "La consulta pasará a completada y ya no podrá transicionarse.",
+      "cancelTitle": "¿Cancelar esta consulta?",
+      "cancelBody": "La consulta se marcará como cancelada y seguirá visible históricamente.",
+      "enterInErrorTitle": "¿Marcar como registrada por error?",
+      "enterInErrorBody": "Úsalo cuando la consulta se abrió por equivocación. El registro sigue siendo consultable.",
+      "completeAction": "Completar consulta",
+      "cancelAction": "Cancelar consulta",
+      "enterInErrorAction": "Marcar como registrada por error",
       "confirm": "Confirmar",
       "dismiss": "Mantener abierto"
     },
@@ -83,7 +76,8 @@
       "createdAt": "Creado",
       "updatedAt": "Actualizado",
       "rowVersion": "Versión"
-    }
+    },
+    "technicalDetails": "Detalles técnicos"
   },
   "permissions": {
     "forbiddenTitle": "Acceso denegado"

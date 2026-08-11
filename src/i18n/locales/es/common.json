@@ -1,28 +1,44 @@
 {
   "appName": "Cynara",
-  "clinicalForms": "Formularios clínicos",
   "nav": {
-    "modules": "Módulos",
+    "home": "Inicio",
+    "care": "Atención",
     "forms": "Formularios",
     "workflows": "Flujos de trabajo",
     "patients": "Pacientes",
-    "design": "Diseñador",
-    "settings": "Ajustes",
-    "administration": "Administración"
+    "configuration": "Configuración",
+    "administration": "Administración",
+    "sidebar": "Navegación principal"
+  },
+  "search": {
+    "trigger": "Buscar"
+  },
+  "user": {
+    "menuLabel": "Cuenta",
+    "signedInAs": "Sesión iniciada como {{actorId}}",
+    "workspaceSettings": "Configuración del espacio de trabajo"
+  },
+  "commandPalette": {
+    "title": "Paleta de comandos",
+    "description": "Buscá una página o un paciente",
+    "placeholder": "Buscar o ir a…",
+    "goTo": "Ir a",
+    "patients": "Buscar pacientes",
+    "noResults": "No se encontraron resultados.",
+    "minQuery": "Escribí al menos 2 caracteres para buscar pacientes.",
+    "noPatientResults": "No hay pacientes que coincidan con la búsqueda.",
+    "patientError": "La búsqueda de pacientes no está disponible en este momento."
   },
   "meta": {
-    "title": "Cynara — Formularios clínicos",
-    "description": "Diseña formularios clínicos de ingreso y evaluación para hospitales — visualmente, con autoguardado y validación."
+    "title": "Cynara",
+    "description": "Espacio de trabajo clínico para registros de pacientes, consultas, formularios clínicos y flujos de atención."
   },
   "theme": {
-    "switchToLight": "Cambiar a modo claro",
-    "switchToDark": "Cambiar a modo oscuro",
     "light": "Claro",
     "dark": "Oscuro",
     "system": "Sistema"
   },
   "locale": {
-    "switch": "Cambiar idioma",
     "en": "Inglés",
     "es": "Español"
   },
@@ -52,9 +68,13 @@
   },
   "actions": {
     "save": "Guardar",
-    "back": "Volver",
     "close": "Cerrar",
     "forms": "Formularios"
+  },
+  "breadcrumb": {
+    "patients": "Pacientes",
+    "clinicalRecord": "Historia clínica",
+    "encounter": "Consulta"
   },
   "access": {
     "checking": "Verificando tu acceso…",
@@ -73,8 +93,7 @@
   "yes": "Sí",
   "no": "No",
   "placeholders": {
-    "selectDate": "Seleccionar fecha…",
-    "selectDateTime": "Seleccionar fecha y hora…"
+    "selectDate": "Seleccionar fecha…"
   },
   "numberInput": {
     "increase": "Aumentar valor",
@@ -82,12 +101,17 @@
   },
   "timeInput": {
     "openPicker": "Abrir selector de hora",
-    "selectTime": "Seleccionar hora",
-    "hours": "Horas",
-    "minutes": "Minutos",
-    "seconds": "Segundos",
     "presets": {
       "now": "Ahora"
     }
+  },
+  "calendar": {
+    "goToPreviousMonth": "Ir al mes anterior",
+    "goToNextMonth": "Ir al mes siguiente",
+    "chooseMonth": "Elegir mes",
+    "chooseYear": "Elegir año",
+    "navigation": "Navegación del calendario",
+    "monthGrid": "Calendario de {{month}}",
+    "weekday": "{{weekday}}"
   }
 }

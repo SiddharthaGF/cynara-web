@@ -55,7 +55,7 @@ stale. The `API client drift` workflow runs it in CI.
 `cynara-api`:
 
 - The workflow's `API_CONTRACT_REF` defaults to a pinned SHA of `cynara-api`
-  (`27bce5d7503bfb1500e9f26f2606c482a9ccf318` — the `main` HEAD whose contract
+  (`baace8bdf20c20f75677f6b519e388d5cd60cd90` — the `main` HEAD whose contract
   the committed output was generated against).
 - Before depending on a contract change, pin the workflow to the known-good SHA
   and regenerate + commit the output in the same change, so the drift gate

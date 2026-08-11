@@ -26,6 +26,7 @@ const INITIAL_VALUES: PatientIdentityFields = {
   familyName: '',
   birthDate: '',
   sex: '',
+  bloodType: '',
 };
 
 interface PatientRegisterFormProps {
@@ -67,6 +68,7 @@ export function PatientRegisterForm({
         familyName: value.familyName.trim(),
         birthDate: value.birthDate.trim(),
         sex: value.sex as CreatePatientInput['sex'],
+        bloodType: value.bloodType as CreatePatientInput['bloodType'],
       };
 
       try {
@@ -95,7 +97,6 @@ export function PatientRegisterForm({
         <Alert
           variant='destructive'
           className='mb-6'
-          data-testid='patient-register-error'
         >
           <AlertDescription>{serverError}</AlertDescription>
         </Alert>

@@ -50,15 +50,19 @@ export function EncounterTransitionConfirmDialog({
 
   let title = '';
   let body = '';
+  let confirmLabel = t('detail.confirm.confirm');
   if (kind === 'complete') {
     title = t('detail.confirm.completeTitle');
     body = t('detail.confirm.completeBody');
+    confirmLabel = t('detail.confirm.completeAction');
   } else if (kind === 'cancel') {
     title = t('detail.confirm.cancelTitle');
     body = t('detail.confirm.cancelBody');
+    confirmLabel = t('detail.confirm.cancelAction');
   } else if (kind === 'enterInError') {
     title = t('detail.confirm.enterInErrorTitle');
     body = t('detail.confirm.enterInErrorBody');
+    confirmLabel = t('detail.confirm.enterInErrorAction');
   }
 
   return (
@@ -70,7 +74,7 @@ export function EncounterTransitionConfirmDialog({
         }
       }}
     >
-      <DialogContent data-testid='encounter-transition-confirm'>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{body}</DialogDescription>
@@ -90,12 +94,11 @@ export function EncounterTransitionConfirmDialog({
           </Button>
           <Button
             variant={kind === 'enterInError' ? 'destructive' : 'default'}
-            data-testid='encounter-transition-confirm-submit'
             disabled={isPending}
             onClick={onConfirm}
           >
             {isPending ? <Spinner data-icon='inline-start' /> : null}
-            {t('detail.confirm.confirm')}
+            {confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

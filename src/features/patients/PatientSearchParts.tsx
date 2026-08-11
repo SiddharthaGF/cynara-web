@@ -1,8 +1,7 @@
 import { Link } from '@tanstack/react-router';
-import { UserCircle } from 'lucide-react';
-import { m, useReducedMotion } from 'motion/react';
+import { ClipboardPlus, UserCircle, UserPlus } from 'lucide-react';
 import type { JSX } from 'react';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { PatientDto } from '@/api/patients.ts';
@@ -15,10 +14,10 @@ import {
 } from '@/components/ui/empty.tsx';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import { ScrollArea } from '@/components/ui/scroll-area.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
 import {
+  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -30,8 +29,9 @@ import {
   formatPatientStatus,
 } from '@/features/patients/patientForm.ts';
 import type { ListPatientsParams } from '@/features/patients/usePatientsCatalog.ts';
+import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
-interface SearchFormValues {
+export interface SearchFormValues {
   mrn: string;
   givenName: string;
   familyName: string;
@@ -39,23 +39,20 @@ interface SearchFormValues {
 }
 
 interface PatientSearchFormProps {
+  initialValues: SearchFormValues;
   onSearch: (params: ListPatientsParams) => void;
   onClear: () => void;
   isSearching: boolean;
 }
 
-export function PatientSearchForm({
+const PatientSearchFormComponent = ({
+  initialValues,
   onSearch,
   onClear,
   isSearching,
-}: PatientSearchFormProps): JSX.Element {
+}: PatientSearchFormProps): JSX.Element => {
   const { t } = useTranslation('patients');
-  const [values, setValues] = useState<SearchFormValues>({
-    mrn: '',
-    givenName: '',
-    familyName: '',
-    nationalId: '',
-  });
+  const [values, setValues] = useState<SearchFormValues>(initialValues);
 
   function handleChange(field: keyof SearchFormValues, value: string): void {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -89,14 +86,12 @@ export function PatientSearchForm({
       onSubmit={handleSubmit}
       role='search'
       aria-label={t('search.title')}
-      data-testid='patient-search-form'
     >
       <FieldGroup className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
         <Field>
           <FieldLabel htmlFor='mrn'>{t('search.mrn')}</FieldLabel>
           <Input
             id='mrn'
-            data-testid='patient-search-mrn'
             value={values.mrn}
             onChange={(e) => handleChange('mrn', e.target.value)}
             placeholder={t('search.mrnPlaceholder')}
@@ -107,7 +102,6 @@ export function PatientSearchForm({
           <FieldLabel htmlFor='givenName'>{t('search.givenName')}</FieldLabel>
           <Input
             id='givenName'
-            data-testid='patient-search-givenName'
             value={values.givenName}
             onChange={(e) => handleChange('givenName', e.target.value)}
             placeholder={t('search.givenNamePlaceholder')}
@@ -118,7 +112,6 @@ export function PatientSearchForm({
           <FieldLabel htmlFor='familyName'>{t('search.familyName')}</FieldLabel>
           <Input
             id='familyName'
-            data-testid='patient-search-familyName'
             value={values.familyName}
             onChange={(e) => handleChange('familyName', e.target.value)}
             placeholder={t('search.familyNamePlaceholder')}
@@ -129,7 +122,6 @@ export function PatientSearchForm({
           <FieldLabel htmlFor='nationalId'>{t('search.nationalId')}</FieldLabel>
           <Input
             id='nationalId'
-            data-testid='patient-search-nationalId'
             value={values.nationalId}
             onChange={(e) => handleChange('nationalId', e.target.value)}
             placeholder={t('search.nationalIdPlaceholder')}
@@ -138,17 +130,13 @@ export function PatientSearchForm({
         </Field>
       </FieldGroup>
       <div className='mt-4 flex items-center gap-2'>
-        <Button
-          type='submit'
-          data-testid='patient-search-submit'
-        >
+        <Button type='submit'>
           {isSearching ? <Spinner data-icon='inline-start' /> : null}
           {isSearching ? t('search.searching') : t('search.search')}
         </Button>
         <Button
           type='button'
           variant='ghost'
-          data-testid='patient-search-clear'
           onClick={handleClear}
         >
           {t('search.clear')}
@@ -156,28 +144,36 @@ export function PatientSearchForm({
       </div>
     </form>
   );
-}
+};
+
+export const PatientSearchForm = memo(PatientSearchFormComponent);
 
 interface PatientResultsTableProps {
   patients: PatientDto[];
   isLoading: boolean;
   locale: string;
+  /** Opens the encounter-create dialog for a patient directly from a search row. */
+  onNewEncounter: (patient: PatientDto) => void;
+  /** Registry framing shows an inline register action in the empty state. */
+  register?: boolean;
+  canRegister?: boolean;
 }
 
 export function PatientResultsTable({
   patients,
   isLoading,
   locale,
+  onNewEncounter,
+  register = false,
+  canRegister = false,
 }: PatientResultsTableProps): JSX.Element {
-  const { t } = useTranslation('patients');
-  const reduceMotion = useReducedMotion();
+  const { t } = useTranslation(['patients', 'encounters']);
+  const { can } = useCapabilities();
+  const canCreateEncounter = can('write', 'Encounter');
 
   if (isLoading) {
     return (
-      <div
-        className='grid gap-3'
-        data-testid='patient-search-loading'
-      >
+      <div className='grid gap-3'>
         <Skeleton className='h-12 w-full' />
         <Skeleton className='h-12 w-full' />
         <Skeleton className='h-12 w-full' />
@@ -187,27 +183,33 @@ export function PatientResultsTable({
 
   if (patients.length === 0) {
     return (
-      <Empty
-        className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'
-        data-testid='patient-search-empty'
-      >
+      <Empty className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
         <EmptyHeader>
           <EmptyTitle className='text-lg'>{t('search.emptyTitle')}</EmptyTitle>
           <EmptyDescription>{t('search.emptyDescription')}</EmptyDescription>
         </EmptyHeader>
+        {register && canRegister ? (
+          <Button
+            variant='outline'
+            nativeButton={false}
+            render={
+              <Link
+                to='/$locale/patients/register'
+                params={{ locale }}
+              />
+            }
+          >
+            <UserPlus className='size-4' />
+            {t('search.registerPatient')}
+          </Button>
+        ) : null}
       </Empty>
     );
   }
 
   return (
-    <ScrollArea
-      className='w-full rounded-lg border border-border/60 [&_[data-slot=scroll-area-viewport]]:max-h-80'
-      data-testid='patient-search-results'
-    >
-      <table
-        data-slot='table'
-        className='w-full min-w-[40rem] caption-bottom text-sm'
-      >
+    <div className='overflow-hidden rounded-lg border border-border/60'>
+      <Table className='min-w-[40rem]'>
         <TableHeader>
           <TableRow>
             <TableHead>{t('search.columns.mrn')}</TableHead>
@@ -216,27 +218,15 @@ export function PatientResultsTable({
             <TableHead>{t('detail.fields.sex')}</TableHead>
             <TableHead>{t('search.columns.status')}</TableHead>
             <TableHead className='text-right'>
-              <span className='sr-only'>Actions</span>
+              <span className='sr-only'>{t('search.columns.actions')}</span>
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {patients.map((patient, index) => (
-            <m.tr
+          {patients.map((patient) => (
+            <TableRow
               key={patient.id}
-              data-testid='patient-search-row'
               data-patient-id={patient.id}
-              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : {
-                      duration: 0.3,
-                      delay: 0.04 * index,
-                      ease: [0.22, 1, 0.36, 1],
-                    }
-              }
             >
               <TableCell>
                 <code className='text-sm font-medium'>{patient.mrn}</code>
@@ -261,24 +251,37 @@ export function PatientResultsTable({
                 </span>
               </TableCell>
               <TableCell className='text-right'>
-                <Link
-                  to='/$locale/patients/$id'
-                  params={{ locale, id: patient.id }}
-                >
+                <div className='flex items-center justify-end gap-1'>
+                  {canCreateEncounter ? (
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => onNewEncounter(patient)}
+                    >
+                      <ClipboardPlus className='size-4' />
+                      {t('encounters:list.create')}
+                    </Button>
+                  ) : null}
                   <Button
                     variant='ghost'
                     size='sm'
-                    data-testid='patient-search-view'
+                    nativeButton={false}
+                    render={
+                      <Link
+                        to='/$locale/patients/$id'
+                        params={{ locale, id: patient.id }}
+                      />
+                    }
                   >
                     <UserCircle className='size-4' />
                     {t('search.viewDetail')}
                   </Button>
-                </Link>
+                </div>
               </TableCell>
-            </m.tr>
+            </TableRow>
           ))}
         </TableBody>
-      </table>
-    </ScrollArea>
+      </Table>
+    </div>
   );
 }

@@ -28,6 +28,7 @@ import type {
 } from '@/features/forms/types.ts';
 import { useSyncedTanstackForm } from '@/lib/useSyncedTanstackForm.ts';
 
+import { AdvancedOptions } from './AdvancedOptions.tsx';
 import {
   presentationFormValuesToPatch,
   presentationToFormValues,
@@ -121,73 +122,75 @@ export function FieldInspectorPresentationSection({
           </form.Field>
         ) : null}
 
-        <form.Field name='width'>
-          {(fieldApi) => (
-            <Field>
-              <FieldLabel>{t('inspector.width')}</FieldLabel>
-              <Select
-                value={fieldApi.state.value}
-                onValueChange={(value) => {
-                  if (value) {
-                    fieldApi.handleChange(value);
-                  }
-                }}
-              >
-                <SelectTrigger className='w-full'>
-                  <SelectValue>
-                    <WidthOptionLabel width={fieldApi.state.value} />
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {WIDTH_OPTIONS.map((width) => (
-                    <SelectItem
-                      key={width}
-                      value={width}
-                    >
-                      <WidthOptionLabel width={width} />
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          )}
-        </form.Field>
+        <AdvancedOptions title={t('inspector.advancedOptions')}>
+          <form.Field name='width'>
+            {(fieldApi) => (
+              <Field>
+                <FieldLabel>{t('inspector.width')}</FieldLabel>
+                <Select
+                  value={fieldApi.state.value}
+                  onValueChange={(value) => {
+                    if (value) {
+                      fieldApi.handleChange(value);
+                    }
+                  }}
+                >
+                  <SelectTrigger className='w-full'>
+                    <SelectValue>
+                      <WidthOptionLabel width={fieldApi.state.value} />
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WIDTH_OPTIONS.map((width) => (
+                      <SelectItem
+                        key={width}
+                        value={width}
+                      >
+                        <WidthOptionLabel width={width} />
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
+          </form.Field>
 
-        {field.type === 'time' || field.type === 'datetime' ? (
-          <form.Field name='timePresetNow'>
+          {field.type === 'time' || field.type === 'datetime' ? (
+            <form.Field name='timePresetNow'>
+              {(fieldApi) => (
+                <Field orientation='horizontal'>
+                  <Checkbox
+                    id={`${field.id}-time-preset-now`}
+                    checked={fieldApi.state.value}
+                    onCheckedChange={(checked) => {
+                      fieldApi.handleChange(checked);
+                    }}
+                  />
+                  <FieldLabel htmlFor={`${field.id}-time-preset-now`}>
+                    {t('inspector.timePresetNow')}
+                  </FieldLabel>
+                </Field>
+              )}
+            </form.Field>
+          ) : null}
+
+          <form.Field name='hidden'>
             {(fieldApi) => (
               <Field orientation='horizontal'>
                 <Checkbox
-                  id={`${field.id}-time-preset-now`}
+                  id={`${field.id}-hidden`}
                   checked={fieldApi.state.value}
                   onCheckedChange={(checked) => {
                     fieldApi.handleChange(checked);
                   }}
                 />
-                <FieldLabel htmlFor={`${field.id}-time-preset-now`}>
-                  {t('inspector.timePresetNow')}
+                <FieldLabel htmlFor={`${field.id}-hidden`}>
+                  {t('inspector.hidden')}
                 </FieldLabel>
               </Field>
             )}
           </form.Field>
-        ) : null}
-
-        <form.Field name='hidden'>
-          {(fieldApi) => (
-            <Field orientation='horizontal'>
-              <Checkbox
-                id={`${field.id}-hidden`}
-                checked={fieldApi.state.value}
-                onCheckedChange={(checked) => {
-                  fieldApi.handleChange(checked);
-                }}
-              />
-              <FieldLabel htmlFor={`${field.id}-hidden`}>
-                {t('inspector.hidden')}
-              </FieldLabel>
-            </Field>
-          )}
-        </form.Field>
+        </AdvancedOptions>
       </FieldGroup>
     </FieldSet>
   );

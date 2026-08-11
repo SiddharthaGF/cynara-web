@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { FileText } from 'lucide-react';
+import { FileText, Plus } from 'lucide-react';
 import type { JSX } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -37,13 +37,16 @@ import { useDocumentDefinitions } from '@/features/hospital/useDocumentCatalogAd
 interface PatientDocumentsTimelineProps {
   patientId: string;
   locale: string;
+  /** Opens the "New consultation" flow; documents only start inside an encounter. */
+  onNewEncounter?: () => void;
 }
 
 export function PatientDocumentsTimeline({
   patientId,
   locale,
+  onNewEncounter,
 }: PatientDocumentsTimelineProps): JSX.Element {
-  const { t, i18n } = useTranslation(['documents', 'api']);
+  const { t, i18n } = useTranslation(['documents', 'api', 'encounters']);
   const { documents, isLoading, error, isForbidden } =
     usePatientDocuments(patientId);
   const definitionLookup = useDocumentDefinitions({ includeRetired: true });
@@ -60,10 +63,7 @@ export function PatientDocumentsTimeline({
   );
 
   return (
-    <Card
-      className='mt-8 border-border/70 shadow-sm'
-      data-testid='patient-documents-timeline'
-    >
+    <Card className='mt-8 border-border/70 shadow-sm'>
       <CardHeader>
         <p className='mb-2 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
           {t('timeline.eyebrow')}
@@ -78,19 +78,13 @@ export function PatientDocumentsTimeline({
       </CardHeader>
       <CardContent>
         {isForbidden ? (
-          <Alert
-            variant='destructive'
-            data-testid='patient-documents-forbidden'
-          >
+          <Alert variant='destructive'>
             <AlertDescription>{t('list.forbidden')}</AlertDescription>
           </Alert>
         ) : null}
 
         {!isForbidden && error ? (
-          <Alert
-            variant='destructive'
-            data-testid='patient-documents-error'
-          >
+          <Alert variant='destructive'>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : null}
@@ -103,24 +97,27 @@ export function PatientDocumentsTimeline({
         ) : null}
 
         {!isLoading && !isForbidden && !error && documents.length === 0 ? (
-          <Empty
-            className='min-h-36 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-8'
-            data-testid='patient-documents-empty'
-          >
+          <Empty className='min-h-36 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-8'>
             <EmptyHeader>
               <EmptyTitle>{t('timeline.emptyTitle')}</EmptyTitle>
               <EmptyDescription>
                 {t('timeline.emptyDescription')}
               </EmptyDescription>
             </EmptyHeader>
+            {onNewEncounter ? (
+              <Button
+                variant='outline'
+                onClick={onNewEncounter}
+              >
+                <Plus className='size-4' />
+                {t('encounters:list.create')}
+              </Button>
+            ) : null}
           </Empty>
         ) : null}
 
         {!isLoading && documents.length > 0 ? (
-          <ul
-            className='divide-y divide-border/70 rounded-xl border border-border/70'
-            data-testid='patient-documents-list'
-          >
+          <ul className='divide-y divide-border/70 rounded-xl border border-border/70'>
             {documents.map((document) => (
               <TimelineRow
                 key={document.id}
@@ -161,7 +158,6 @@ function TimelineRow({
           ? 'flex flex-col gap-3 bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
           : 'flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
       }
-      data-testid='patient-documents-row'
       data-status={document.status}
       data-terminal={terminal ? 'true' : 'false'}
     >
@@ -183,9 +179,6 @@ function TimelineRow({
           {t('list.columns.createdAt')}:{' '}
           {formatClinicalDocumentDateTime(document.createdAt, language)}
         </p>
-        <p className='truncate text-sm text-muted-foreground'>
-          {t('list.columns.encounter')}: {document.encounterId}
-        </p>
       </div>
       <Link
         to='/$locale/patients/$id/encounters/$encounterId/documents/$documentId'
@@ -199,7 +192,6 @@ function TimelineRow({
         <Button
           variant='outline'
           size='sm'
-          data-testid='patient-documents-open'
         >
           {t('list.viewDetail')}
         </Button>

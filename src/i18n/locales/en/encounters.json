@@ -1,74 +1,67 @@
 {
   "list": {
-    "eyebrow": "Clinical encounters",
-    "title": "Encounters",
-    "subtitle": "Open visits and historical encounters for this patient.",
-    "create": "New encounter",
-    "emptyTitle": "No encounters yet",
-    "emptyDescription": "Create an encounter to start documenting this visit.",
-    "loadError": "Failed to load encounters.",
-    "forbidden": "You do not have permission to view encounters for this patient.",
-    "viewDetail": "Open",
+    "eyebrow": "Clinical consultations",
+    "title": "Consultations",
+    "subtitle": "Open visits and historical consultations for this patient.",
+    "create": "New consultation",
+    "emptyTitle": "No consultations yet",
+    "emptyDescription": "Create a consultation to start documenting this visit.",
+    "forbidden": "You do not have permission to view consultations for this patient.",
+    "viewDetail": "Open consultation",
     "historicalHint": "Historical",
     "columns": {
-      "type": "Type",
-      "status": "Status",
       "startedAt": "Started",
-      "endedAt": "Ended",
-      "professional": "Responsible"
+      "endedAt": "Ended"
     }
   },
   "create": {
-    "title": "Create encounter",
-    "description": "Open a new clinical encounter for this patient.",
-    "submit": "Create encounter",
+    "title": "Create consultation",
+    "description": "Open a new clinical consultation for this patient.",
+    "submit": "Create consultation",
     "submitting": "Creating…",
     "cancel": "Cancel",
-    "success": "Encounter created.",
     "fields": {
       "facility": "Facility",
       "facilityPlaceholder": "Select facility",
       "clinicalArea": "Clinical area",
       "clinicalAreaPlaceholder": "Select clinical area",
-      "type": "Encounter type",
-      "typePlaceholder": "Select type",
-      "professional": "Responsible professional",
-      "professionalPlaceholder": "e.g. clinician-id"
+      "type": "Consultation type",
+      "typePlaceholder": "Select type"
     },
     "errors": {
       "facilityRequired": "Facility is required.",
       "clinicalAreaRequired": "Clinical area is required.",
-      "typeRequired": "Encounter type is required.",
+      "typeRequired": "Consultation type is required.",
       "typeInvalid": "Choose a valid encounter type.",
-      "professionalRequired": "Responsible professional is required.",
-      "professionalTooLong": "Responsible professional must be 128 characters or fewer.",
-      "taxonomyEmpty": "No active facilities are available. Ask an administrator to configure the clinical taxonomy.",
-      "createFailed": "Failed to create encounter."
+      "taxonomyEmpty": "No active facilities are available. Ask an administrator to configure the clinical taxonomy."
     }
   },
   "detail": {
-    "eyebrow": "Encounter",
-    "title": "Encounter details",
+    "eyebrow": "Consultation",
+    "title": "Consultation",
     "backToPatient": "Back to patient",
     "loadError": "Failed to load encounter details.",
-    "notFound": "Encounter was not found.",
-    "forbidden": "You do not have permission to view this encounter.",
-    "forbiddenMutate": "You do not have permission to change this encounter.",
-    "stale": "This encounter changed while you were working. Reload the latest version before continuing.",
+    "notFound": "Consultation was not found.",
+    "forbidden": "You do not have permission to view this consultation.",
+    "forbiddenMutate": "You do not have permission to change this consultation.",
+    "stale": "This consultation changed while you were working. Reload the latest version before continuing.",
     "reload": "Reload",
     "historicalBanner": "This encounter is closed. It remains readable for the clinical record.",
     "actions": {
       "complete": "Complete",
-      "cancel": "Cancel encounter",
+      "cancel": "Cancel consultation",
       "enterInError": "Entered in error"
     },
     "confirm": {
-      "completeTitle": "Complete this encounter?",
-      "completeBody": "The encounter will move to completed and can no longer be transitioned.",
-      "cancelTitle": "Cancel this encounter?",
-      "cancelBody": "The encounter will be marked canceled and remain historically visible.",
+      "completeTitle": "Complete this consultation?",
+      "completeBody": "The consultation will move to completed and can no longer be transitioned.",
+      "cancelTitle": "Cancel this consultation?",
+      "cancelBody": "The consultation will be marked canceled and remain historically visible.",
       "enterInErrorTitle": "Mark as entered in error?",
-      "enterInErrorBody": "Use this when the encounter was opened by mistake. The record stays queryable.",
+      "enterInErrorBody": "Use this when the consultation was opened by mistake. The record stays queryable.",
+      "completeAction": "Complete consultation",
+      "cancelAction": "Cancel consultation",
+      "enterInErrorAction": "Mark as entered in error",
       "confirm": "Confirm",
       "dismiss": "Keep open"
     },
@@ -83,7 +76,8 @@
       "createdAt": "Created",
       "updatedAt": "Updated",
       "rowVersion": "Version"
-    }
+    },
+    "technicalDetails": "Technical details"
   },
   "permissions": {
     "forbiddenTitle": "Access denied"

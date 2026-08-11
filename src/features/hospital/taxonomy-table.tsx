@@ -118,7 +118,6 @@ export function TaxonomyTable({
                       variant='ghost'
                       size='sm'
                       onClick={() => onEdit(item)}
-                      data-testid='admin-row-edit'
                     >
                       <Pencil className='size-4' />
                       <span className='sr-only'>{t('shared.edit')}</span>
@@ -128,7 +127,6 @@ export function TaxonomyTable({
                       size='sm'
                       disabled={isRetired}
                       onClick={() => onRetire(item)}
-                      data-testid='admin-row-retire'
                     >
                       <Archive className='size-4' />
                       <span className='sr-only'>{t('shared.retire')}</span>
@@ -144,26 +142,27 @@ export function TaxonomyTable({
   };
 
   return (
-    <table
-      data-slot='table'
-      data-testid='admin-table'
-      className='w-full min-w-[40rem] caption-bottom text-sm'
-    >
-      <TableHeader>
-        <TableRow className='hover:bg-transparent'>
-          <TableHead>{t('shared.columnCode')}</TableHead>
-          <TableHead>{t('shared.columnName')}</TableHead>
-          {isNested ? <TableHead>{parentLabel}</TableHead> : null}
-          <TableHead>{t('shared.columnStatus')}</TableHead>
-          <TableHead>{t('shared.columnUpdated')}</TableHead>
-          {canWrite ? (
-            <TableHead className='text-right'>
-              <span className='sr-only'>{t('shared.edit')}</span>
-            </TableHead>
-          ) : null}
-        </TableRow>
-      </TableHeader>
-      <TableBody>{renderBody()}</TableBody>
-    </table>
+    <div className='overflow-x-auto'>
+      <table
+        data-slot='table'
+        className='w-full min-w-[40rem] caption-bottom text-sm'
+      >
+        <TableHeader>
+          <TableRow className='hover:bg-transparent'>
+            <TableHead>{t('shared.columnCode')}</TableHead>
+            <TableHead>{t('shared.columnName')}</TableHead>
+            {isNested ? <TableHead>{parentLabel}</TableHead> : null}
+            <TableHead>{t('shared.columnStatus')}</TableHead>
+            <TableHead>{t('shared.columnUpdated')}</TableHead>
+            {canWrite ? (
+              <TableHead className='text-right'>
+                <span className='sr-only'>{t('shared.edit')}</span>
+              </TableHead>
+            ) : null}
+          </TableRow>
+        </TableHeader>
+        <TableBody>{renderBody()}</TableBody>
+      </table>
+    </div>
   );
 }

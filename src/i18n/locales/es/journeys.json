@@ -1,0 +1,77 @@
+{
+  "panel": {
+    "eyebrow": "Trayectoria del paciente",
+    "title": "Trayectoria",
+    "subtitle": "La trayectoria de atención de este paciente y sus consultas.",
+    "emptyTitle": "Aún no hay trayectorias",
+    "emptyDescription": "Un plan de atención aparecerá aquí cuando se inicie para este paciente o una de sus consultas.",
+    "emptyAction": "Nueva consulta",
+    "forbidden": "No tiene permiso para ver la trayectoria de atención de este paciente.",
+    "denied": "No tiene permiso para ver trayectorias de atención."
+  },
+  "encounterPanel": {
+    "eyebrow": "Trayectoria de la consulta",
+    "title": "Trayectoria",
+    "subtitle": "La trayectoria de atención de esta consulta.",
+    "emptyTitle": "Aún no hay trayectorias",
+    "emptyDescription": "Un plan de atención aparecerá aquí cuando se inicie para esta consulta.",
+    "forbidden": "No tiene permiso para ver la trayectoria de atención de esta consulta."
+  },
+  "status": {
+    "running": "En curso",
+    "completed": "Completado",
+    "canceled": "Cancelado",
+    "enteredInError": "Marcado con error"
+  },
+  "node": {
+    "start": "Inicio",
+    "end": "Fin",
+    "task": "Tarea",
+    "decision": "Decisión",
+    "unnamed": "{{type}} sin título"
+  },
+  "card": {
+    "carePath": "Plan de cuidados",
+    "version": "Versión {{version}}",
+    "subject": "Sujeto",
+    "subjectEncounter": "Consulta",
+    "subjectPatient": "Paciente",
+    "startedAt": "Iniciado",
+    "endedAt": "Finalizado",
+    "currentStep": "Paso actual",
+    "nextStep": "Siguiente paso",
+    "finalStep": "Paso final",
+    "openEncounter": "Abrir consulta",
+    "versionUnknown": "publicada"
+  },
+  "details": {
+    "title": "Detalles del flujo",
+    "workflow": "Flujo de trabajo",
+    "version": "Versión",
+    "schemaVersion": "Versión del esquema"
+  },
+  "timeline": {
+    "title": "Historial de la atención",
+    "event_pipeline.started": "Trayectoria iniciada",
+    "event_pipeline.advanced": "Avanzó a {{node}}",
+    "event_pipeline.completed": "Completado",
+    "event_pipeline.canceled": "Cancelado",
+    "event_pipeline.entered-in-error": "Marcado con error",
+    "event_unknown": "Evento de progresión",
+    "via": "vía {{label}}",
+    "reason": "Motivo",
+    "empty": "No se registraron eventos de progresión."
+  },
+  "snapshot": {
+    "title": "Diagrama de la trayectoria",
+    "description": "Representada desde la versión publicada {{version}} al iniciarse.",
+    "path": "Camino recorrido",
+    "nodes": "Pasos del diagrama",
+    "edges": "Transiciones",
+    "state_completed": "Completado",
+    "state_current": "Actual",
+    "state_pending": "Pendiente",
+    "edge": "{{from}} → {{to}}",
+    "noGraph": "La instantánea del flujo de trabajo no está disponible."
+  }
+}

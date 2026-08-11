@@ -17,6 +17,8 @@ export interface FormListParams {
   includeRetired?: boolean;
   status?: string;
   sort?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface FormVersionListParams {
@@ -39,6 +41,7 @@ export interface WorkflowVersionListParams {
 
 export interface JourneyListParams {
   patientId?: string;
+  encounterId?: string;
   status?: string;
 }
 

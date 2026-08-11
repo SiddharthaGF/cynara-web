@@ -26,8 +26,8 @@ export function FormPreviewTrigger({
         size='sm'
         className='gap-1.5'
         disabled={disabled}
-        data-testid='form-preview-open'
         onClick={onOpen}
+        aria-label={t('formPreview.open')}
       >
         <FlaskConical className='size-3.5' />
         <span className='hidden sm:inline'>{t('formPreview.open')}</span>

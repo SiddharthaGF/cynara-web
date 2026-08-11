@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { ClipboardList, Plus } from 'lucide-react';
 import type { JSX } from 'react';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { EncounterDto } from '@/api/encounters.ts';
@@ -23,7 +22,6 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
-import { EncounterCreateDialog } from '@/features/encounters/EncounterCreateDialog.tsx';
 import {
   encounterStatusBadgeVariant,
   formatEncounterDateTime,
@@ -36,25 +34,22 @@ import { useCapabilities } from '@/hooks/use-capabilities.ts';
 interface PatientEncountersPanelProps {
   patientId: string;
   locale: string;
-  onForbidden: (message: string) => void;
+  /** Opens the encounter-create dialog owned by the patient chart page. */
+  onNewEncounter: () => void;
 }
 
 export function PatientEncountersPanel({
   patientId,
   locale,
-  onForbidden,
+  onNewEncounter,
 }: PatientEncountersPanelProps): JSX.Element {
   const { t, i18n } = useTranslation(['encounters', 'api']);
   const { can } = useCapabilities();
   const { encounters, isLoading, error, isForbidden } =
     usePatientEncounters(patientId);
-  const [createOpen, setCreateOpen] = useState(false);
 
   return (
-    <Card
-      className='mt-8 border-border/70 shadow-sm'
-      data-testid='patient-encounters-panel'
-    >
+    <Card className='mt-8 border-border/70 shadow-sm'>
       <CardHeader className='flex flex-row items-start justify-between gap-4 space-y-0'>
         <div>
           <p className='mb-2 text-xs font-medium tracking-[0.2em] text-accent uppercase'>
@@ -71,10 +66,7 @@ export function PatientEncountersPanel({
         {!isForbidden && can('write', 'Encounter') ? (
           <Button
             size='sm'
-            data-testid='encounter-create-open'
-            onClick={() => {
-              setCreateOpen(true);
-            }}
+            onClick={onNewEncounter}
           >
             <Plus className='size-3.5' />
             {t('list.create')}
@@ -83,19 +75,13 @@ export function PatientEncountersPanel({
       </CardHeader>
       <CardContent>
         {isForbidden ? (
-          <Alert
-            variant='destructive'
-            data-testid='encounter-list-forbidden'
-          >
+          <Alert variant='destructive'>
             <AlertDescription>{t('list.forbidden')}</AlertDescription>
           </Alert>
         ) : null}
 
         {!isForbidden && error ? (
-          <Alert
-            variant='destructive'
-            data-testid='encounter-list-error'
-          >
+          <Alert variant='destructive'>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : null}
@@ -108,22 +94,26 @@ export function PatientEncountersPanel({
         ) : null}
 
         {!isLoading && !isForbidden && !error && encounters.length === 0 ? (
-          <Empty
-            className='min-h-36 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-8'
-            data-testid='encounter-list-empty'
-          >
+          <Empty className='min-h-36 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-8'>
             <EmptyHeader>
               <EmptyTitle>{t('list.emptyTitle')}</EmptyTitle>
               <EmptyDescription>{t('list.emptyDescription')}</EmptyDescription>
             </EmptyHeader>
+            {!isForbidden && can('write', 'Encounter') ? (
+              <Button
+                size='sm'
+                className='mt-4'
+                onClick={onNewEncounter}
+              >
+                <Plus className='size-3.5' />
+                {t('list.create')}
+              </Button>
+            ) : null}
           </Empty>
         ) : null}
 
         {!isLoading && encounters.length > 0 ? (
-          <ul
-            className='divide-y divide-border/70 rounded-xl border border-border/70'
-            data-testid='encounter-list'
-          >
+          <ul className='divide-y divide-border/70 rounded-xl border border-border/70'>
             {encounters.map((encounter) => (
               <EncounterListRow
                 key={encounter.id}
@@ -136,16 +126,6 @@ export function PatientEncountersPanel({
           </ul>
         ) : null}
       </CardContent>
-
-      <EncounterCreateDialog
-        patientId={patientId}
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        onForbidden={onForbidden}
-        onCreated={() => {
-          setCreateOpen(false);
-        }}
-      />
     </Card>
   );
 }
@@ -171,7 +151,6 @@ function EncounterListRow({
           ? 'flex flex-col gap-3 bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
           : 'flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
       }
-      data-testid='encounter-list-row'
       data-status={encounter.status}
       data-historical={historical ? 'true' : 'false'}
     >
@@ -196,27 +175,24 @@ function EncounterListRow({
             ? ` · ${t('list.columns.endedAt')}: ${formatEncounterDateTime(encounter.endedAt, language)}`
             : null}
         </p>
-        <p className='truncate text-sm text-muted-foreground'>
-          {t('list.columns.professional')}:{' '}
-          {encounter.responsibleProfessionalId}
-        </p>
       </div>
-      <Link
-        to='/$locale/patients/$id/encounters/$encounterId'
-        params={{
-          locale,
-          id: patientId,
-          encounterId: encounter.id,
-        }}
+      <Button
+        variant='outline'
+        size='sm'
+        nativeButton={false}
+        render={
+          <Link
+            to='/$locale/patients/$id/encounters/$encounterId'
+            params={{
+              locale,
+              id: patientId,
+              encounterId: encounter.id,
+            }}
+          />
+        }
       >
-        <Button
-          variant='outline'
-          size='sm'
-          data-testid='encounter-list-open'
-        >
-          {t('list.viewDetail')}
-        </Button>
-      </Link>
+        {t('list.viewDetail')}
+      </Button>
     </li>
   );
 }

@@ -33,6 +33,7 @@ export function renderFieldInput(
   onChange: (value: unknown) => void,
   inputId?: string,
   invalid = false,
+  labelledById?: string,
 ): JSX.Element {
   const widget = presentation?.widget;
   const ariaInvalid = invalid || undefined;
@@ -159,6 +160,7 @@ export function renderFieldInput(
         onChange,
         inputId,
         invalid,
+        labelledById,
       );
     }
     case 'group':
@@ -181,6 +183,7 @@ function renderChoiceInput(
   onChange: (value: unknown) => void,
   inputId: string | undefined,
   invalid: boolean,
+  labelledById?: string,
 ): JSX.Element {
   const options = field.options ?? [];
   const ariaInvalid = invalid || undefined;
@@ -190,7 +193,7 @@ function renderChoiceInput(
     return (
       <div
         role='radiogroup'
-        aria-labelledby={inputId ? `${inputId}-legend` : undefined}
+        aria-labelledby={labelledById}
         aria-invalid={ariaInvalid}
         data-slot='radio-group'
         className='grid gap-3'

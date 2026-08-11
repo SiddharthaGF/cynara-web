@@ -152,7 +152,7 @@ export function AdminTaxonomyScreen({
   };
 
   return (
-    <div className='mx-auto max-w-5xl px-6 py-10 pb-20'>
+    <div className='mx-auto max-w-5xl px-6 py-6 pb-12'>
       <AdminBackLink locale={locale} />
 
       <AdminPageHeader
@@ -162,7 +162,6 @@ export function AdminTaxonomyScreen({
         actions={
           canWrite ? (
             <Button
-              data-testid='admin-add-open'
               onClick={() => {
                 mutations.create.reset();
                 setCreateOpen(true);
@@ -176,10 +175,7 @@ export function AdminTaxonomyScreen({
       />
 
       {isForbidden ? (
-        <Empty
-          className='mt-6 min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'
-          data-testid='admin-forbidden'
-        >
+        <Empty className='mt-6 min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
           <EmptyHeader>
             <EmptyTitle className='text-lg'>
               {t('access.deniedTitle')}

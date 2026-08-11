@@ -1,0 +1,41 @@
+{
+  "eyebrow": "Home",
+  "title": "What do you want to do today?",
+  "subtitle": "Pick up where you left off or start something new.",
+  "startSection": "Start something new",
+  "browseSection": "Go to",
+  "recent": {
+    "forms": "Recent forms",
+    "workflows": "Recent workflows",
+    "encounters": "Active consultations",
+    "emptyForms": "No forms yet. Create one to get started.",
+    "emptyWorkflows": "No workflows yet. Create one to get started.",
+    "emptyEncounters": "No open consultations right now."
+  },
+  "actions": {
+    "registerPatient": {
+      "title": "Register a patient",
+      "description": "Create a new patient record to start their care."
+    },
+    "newEncounter": {
+      "title": "Start a consultation",
+      "description": "Open a new consultation for an existing patient."
+    },
+    "createForm": {
+      "title": "Design a form",
+      "description": "Create a clinical form to collect structured data."
+    },
+    "createWorkflow": {
+      "title": "Design a workflow",
+      "description": "Model a care pathway for patient journeys."
+    }
+  },
+  "browse": {
+    "patients": "Patients",
+    "forms": "Forms",
+    "workflows": "Workflows",
+    "administration": "Administration"
+  },
+  "emptyTitle": "Nothing to do yet",
+  "emptyDescription": "Your account doesn't have permissions to start any action. Ask an administrator to grant the capabilities you need."
+}

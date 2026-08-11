@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
@@ -40,23 +40,21 @@ export function DocumentTransitionConfirmDialog({
   const open = kind !== null;
   const [reason, setReason] = useState('');
 
-  useEffect(() => {
-    if (!open) {
-      setReason('');
-    }
-  }, [open]);
-
   let title = '';
   let body = '';
+  let confirmLabel = t('detail.confirm.confirm');
   if (kind === 'complete') {
     title = t('detail.confirm.completeTitle');
     body = t('detail.confirm.completeBody');
+    confirmLabel = t('detail.confirm.completeAction');
   } else if (kind === 'cancel') {
     title = t('detail.confirm.cancelTitle');
     body = t('detail.confirm.cancelBody');
+    confirmLabel = t('detail.confirm.cancelAction');
   } else if (kind === 'enterInError') {
     title = t('detail.confirm.enterInErrorTitle');
     body = t('detail.confirm.enterInErrorBody');
+    confirmLabel = t('detail.confirm.enterInErrorAction');
   }
 
   const reasonRequired = kind === 'enterInError';
@@ -72,7 +70,7 @@ export function DocumentTransitionConfirmDialog({
         }
       }}
     >
-      <DialogContent data-testid='document-transition-confirm'>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{body}</DialogDescription>
@@ -89,7 +87,6 @@ export function DocumentTransitionConfirmDialog({
             </FieldLabel>
             <Input
               id='document-transition-reason'
-              data-testid='document-transition-reason'
               value={reason}
               disabled={isPending}
               aria-invalid={showReasonError}
@@ -120,7 +117,6 @@ export function DocumentTransitionConfirmDialog({
           </Button>
           <Button
             variant={kind === 'enterInError' ? 'destructive' : 'default'}
-            data-testid='document-transition-confirm-submit'
             disabled={isPending || showReasonError}
             onClick={() => {
               if (reasonRequired) {
@@ -131,7 +127,7 @@ export function DocumentTransitionConfirmDialog({
             }}
           >
             {isPending ? <Spinner data-icon='inline-start' /> : null}
-            {t('detail.confirm.confirm')}
+            {confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

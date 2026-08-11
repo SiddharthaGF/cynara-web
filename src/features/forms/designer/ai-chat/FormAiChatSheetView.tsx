@@ -6,7 +6,7 @@ import {
   PanelHeader,
   PanelHeaderCloseButton,
 } from '@/components/panel/index.ts';
-import { Sheet, SheetContent } from '@/components/ui/sheet.tsx';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet.tsx';
 import { cn } from '@/lib/utils.ts';
 
 import { FormAiChatActions } from './FormAiChatActions.tsx';
@@ -51,6 +51,9 @@ export function FormAiChatSheetView({
           showCloseButton={false}
           className={cn(PANEL_SHEET_CLASSNAME, 'h-full')}
         >
+          <SheetTitle className='sr-only'>
+            {t('mobile.ai.sheetTitle')}
+          </SheetTitle>
           <PanelHeader
             surface='mobile'
             title={t('mobile.ai.sheetTitle')}

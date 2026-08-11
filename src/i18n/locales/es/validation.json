@@ -11,7 +11,6 @@
     "CLINICAL_VERSION_MISMATCH": "La versión del esquema UI no coincide con la clínica."
   },
   "panel": {
-    "allPassed": "Todas las comprobaciones pasaron — la estructura del formulario es válida.",
     "issuesToFix_one": "{{count}} problema por corregir",
     "issuesToFix_other": "{{count}} problemas por corregir"
   },

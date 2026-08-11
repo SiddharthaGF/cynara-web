@@ -4,6 +4,17 @@ const JSON_API_MEDIA = 'application/vnd.api+json';
 const ACTOR = 'designer-user';
 const HOSPITAL = process.env.VITE_HOSPITAL_CODE ?? 'default';
 
+/** ABO/Rh blood type accepted by cynara-api, in clinical notation. */
+export type PatientBloodType =
+  | 'a+'
+  | 'a-'
+  | 'b+'
+  | 'b-'
+  | 'ab+'
+  | 'ab-'
+  | 'o+'
+  | 'o-';
+
 export interface CreatedPatient {
   id: string;
   mrn: string;
@@ -18,6 +29,7 @@ export function uniqueMrn(prefix = 'E2E'): string {
 /**
  * Create a patient against the real cynara-api (via Vite origin or absolute
  * VITE_API_ORIGIN). Uses the same media type and headers as the web client.
+ * Blood type is required by the API; `o+` is the default fixture value.
  */
 export async function createPatientViaApi(
   request: APIRequestContext,
@@ -28,6 +40,7 @@ export async function createPatientViaApi(
     familyName?: string;
     birthDate?: string;
     sex?: string;
+    bloodType?: PatientBloodType;
     nationalId?: string | null;
   } = {},
 ): Promise<CreatedPatient> {
@@ -42,6 +55,7 @@ export async function createPatientViaApi(
       familyName,
       birthDate: input.birthDate ?? '1990-01-01',
       sex: input.sex ?? 'female',
+      bloodType: input.bloodType ?? 'o+',
       nationalId: input.nationalId ?? null,
     },
     headers: {

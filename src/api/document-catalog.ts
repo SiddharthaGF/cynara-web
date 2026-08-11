@@ -8,9 +8,16 @@ import {
   type DataInDocumentDefinitionResponse,
   type DocumentDefinitionStatus,
 } from '@/api/generated';
-import { buildPaginatedQuery, relationshipId } from '@/api/json-api-utils.ts';
+import {
+  buildPaginatedQuery,
+  fetchAllCollectionPages,
+  relationshipId,
+} from '@/api/json-api-utils.ts';
 
 const DOCUMENT_DEFINITIONS = 'documentDefinitions';
+
+/** Page size requested from the catalog; large enough for one round trip. */
+const DEFINITIONS_PAGE_SIZE = 100;
 
 /**
  * Flat read model for a clinical document catalog entry. Resolved from the
@@ -80,7 +87,7 @@ function documentDefinitionQuery(
       'discipline',
     ],
     sort: 'code',
-    pageSize: 100,
+    pageSize: DEFINITIONS_PAGE_SIZE,
   });
   if (params.includeRetired) {
     query.includeRetired = 'true';
@@ -116,13 +123,18 @@ function mapDocumentDefinition(
 export async function listDocumentDefinitions(
   params: ListDocumentDefinitionsParams = {},
 ): Promise<DocumentDefinitionDto[]> {
-  const { data } = await sdkGetDocumentDefinitionCollection({
-    headers: contractHeaders(),
-    query: {
-      query: documentDefinitionQuery(params),
+  const collection = await fetchAllCollectionPages(
+    documentDefinitionQuery(params),
+    DEFINITIONS_PAGE_SIZE,
+    async (query) => {
+      const { data } = await sdkGetDocumentDefinitionCollection({
+        headers: contractHeaders(),
+        query: { query },
+      });
+      return data;
     },
-  });
-  return data.data.map(mapDocumentDefinition);
+  );
+  return collection.data.map(mapDocumentDefinition);
 }
 
 /**
