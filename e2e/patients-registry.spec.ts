@@ -72,6 +72,14 @@ async function registerPatientInUi(
     .click();
   await expect(sexTrigger).toContainText('Female');
 
+  const bloodTypeTrigger = page.getByLabel('Blood type');
+  await bloodTypeTrigger.click();
+  await page
+    .locator('[data-slot=select-item]')
+    .filter({ hasText: 'O+' })
+    .click();
+  await expect(bloodTypeTrigger).toContainText('O+');
+
   await page.getByRole('button', { name: 'Register patient' }).click();
 }
 
