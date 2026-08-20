@@ -1,21 +1,13 @@
 import { Link, createFileRoute, useParams } from '@tanstack/react-router';
-import { ArrowLeft, KeyRound, LoaderCircle } from 'lucide-react';
-import {
-  useEffect,
-  useRef,
-  useState,
-  type FormEvent,
-  type JSX,
-  type ReactNode,
-} from 'react';
+import { KeyRound, LoaderCircle } from 'lucide-react';
+import { useEffect, useRef, useState, type FormEvent, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { CynaraMark } from '@/components/cynara-mark.tsx';
+import { AuthScreen } from '@/components/auth-screen.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { Card, CardContent } from '@/components/ui/card.tsx';
+import { Field, FieldLabel } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import { Label } from '@/components/ui/label.tsx';
-import { isAuthSpikeMode } from '@/lib/auth-mode.ts';
+import { AUTH_AUTHORIZE_PATH } from '@/lib/auth-authorize.ts';
 import { isAppLocale, type AppLocale } from '@/lib/locale.ts';
 import { loginCallback, loginStart } from '@/server/auth.ts';
 
@@ -24,7 +16,25 @@ interface LoginSearch {
   code?: string;
   state?: string;
   error?: string;
-  errorDescription?: string;
+  clientId?: string;
+  requestUri?: string;
+}
+
+function isSafeOpaque(value: unknown, maxLength: number): value is string {
+  if (
+    typeof value !== 'string' ||
+    value.length === 0 ||
+    value.length > maxLength
+  ) {
+    return false;
+  }
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.codePointAt(index) ?? 0;
+    if (code < 32 || code === 127) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function parseLoginSearch(search: Record<string, unknown>): LoginSearch {
@@ -34,10 +44,12 @@ function parseLoginSearch(search: Record<string, unknown>): LoginSearch {
     code: typeof search.code === 'string' ? search.code : undefined,
     state: typeof search.state === 'string' ? search.state : undefined,
     error: typeof search.error === 'string' ? search.error : undefined,
-    errorDescription:
-      typeof search.error_description === 'string'
-        ? search.error_description
-        : undefined,
+    clientId: isSafeOpaque(search.client_id, 256)
+      ? search.client_id
+      : undefined,
+    requestUri: isSafeOpaque(search.request_uri, 2048)
+      ? search.request_uri
+      : undefined,
   };
 }
 
@@ -51,13 +63,14 @@ function LoginPage(): JSX.Element {
   const { locale: rawLocale } = useParams({ from: '/$locale' });
   const locale: AppLocale = isAppLocale(rawLocale) ? rawLocale : 'en';
   const search = Route.useSearch();
-  const [hospitalCode, setHospitalCode] = useState('hosp-a');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const callbackRan = useRef(false);
 
   const { code, state } = search;
   const isCallback = typeof code === 'string' && typeof state === 'string';
+  const isAuthorizationHandoff =
+    isSafeOpaque(search.clientId, 256) && isSafeOpaque(search.requestUri, 2048);
 
   // Handles the identity-provider redirect back: exchange code + state once.
   // The successful exchange navigates to the originally requested path.
@@ -105,7 +118,7 @@ function LoginPage(): JSX.Element {
     try {
       const redirectTo = search.redirectTo ?? `/${locale}`;
       const result = await loginStart({
-        data: { kind: 'start', locale, redirectTo, hospitalCode },
+        data: { kind: 'start', locale, redirectTo },
       });
       // Full-page navigation to the identity provider; it redirects back to this route with ?code&state.
       window.location.assign(result.authorizeUrl);
@@ -117,28 +130,121 @@ function LoginPage(): JSX.Element {
     }
   }
 
-  if (!isAuthSpikeMode()) {
-    return (
-      <AuthCard>
-        <h1 className='font-display text-xl font-semibold'>
-          {t('login.disabledTitle')}
-        </h1>
-        <p className='text-sm leading-relaxed text-muted-foreground'>
-          {t('login.disabledDescription')}
+  const loginContent = (() => {
+    if (isCallback) {
+      return (
+        <p className='flex items-center gap-2 text-sm text-muted-foreground'>
+          <LoaderCircle className='size-4 animate-spin' />
+          {t('login.signingIn')}
         </p>
-        <BackToStart locale={locale} />
-      </AuthCard>
+      );
+    }
+    if (isAuthorizationHandoff) {
+      return (
+        <form
+          method='post'
+          action={AUTH_AUTHORIZE_PATH}
+          className='grid gap-3'
+          onSubmit={() => {
+            setIsSubmitting(true);
+          }}
+        >
+          <input
+            type='hidden'
+            name='client_id'
+            value={search.clientId}
+          />
+          <input
+            type='hidden'
+            name='request_uri'
+            value={search.requestUri}
+          />
+          <Field>
+            <FieldLabel htmlFor='email'>{t('login.email')}</FieldLabel>
+            <Input
+              id='email'
+              name='email'
+              type='email'
+              autoComplete='username'
+              autoFocus
+              required
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor='password'>{t('login.password')}</FieldLabel>
+            <Input
+              id='password'
+              name='password'
+              type='password'
+              autoComplete='current-password'
+              required
+            />
+          </Field>
+          <Button
+            type='submit'
+            disabled={isSubmitting}
+            className='mt-1 w-full justify-center'
+          >
+            {isSubmitting ? (
+              <LoaderCircle
+                data-icon='inline-start'
+                className='animate-spin'
+              />
+            ) : (
+              <KeyRound data-icon='inline-start' />
+            )}
+            {isSubmitting ? t('login.signingIn') : t('login.submit')}
+          </Button>
+        </form>
+      );
+    }
+    return (
+      <form
+        onSubmit={(event) => {
+          void handleStart(event);
+        }}
+        className='grid gap-3'
+      >
+        <p className='text-sm text-muted-foreground'>
+          {t('login.credentialsManaged')}
+        </p>
+        <Button
+          type='submit'
+          disabled={isSubmitting}
+          className='mt-1 w-full justify-center'
+        >
+          {isSubmitting ? (
+            <LoaderCircle
+              data-icon='inline-start'
+              className='animate-spin'
+            />
+          ) : (
+            <KeyRound data-icon='inline-start' />
+          )}
+          {isSubmitting ? t('login.submitting') : t('login.submit')}
+        </Button>
+      </form>
     );
-  }
+  })();
 
   return (
-    <AuthCard>
-      <h1 className='font-display text-xl font-semibold'>{t('login.title')}</h1>
-      <p className='text-sm leading-relaxed text-muted-foreground'>
-        {t('login.description')}
-      </p>
-
-      {search.error ? (
+    <AuthScreen
+      locale={locale}
+      title={t('login.title')}
+      description={t('login.description')}
+      footer={
+        isCallback ? null : (
+          <Link
+            to='/$locale/recovery'
+            params={{ locale }}
+            className='text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50'
+          >
+            {t('login.forgotPassword')}
+          </Link>
+        )
+      }
+    >
+      {search.error && !isAuthorizationHandoff ? (
         <p
           role='alert'
           className='rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive'
@@ -146,88 +252,24 @@ function LoginPage(): JSX.Element {
           {t('login.identityDenied')}
         </p>
       ) : null}
+      {search.error === 'invalid_credentials' && isAuthorizationHandoff ? (
+        <p
+          role='alert'
+          className='rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive'
+        >
+          {t('login.invalidCredentials')}
+        </p>
+      ) : null}
       {error ? (
         <p
           role='alert'
           className='rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive'
         >
-          {t('login.callbackFailed', { detail: error })}
+          {t('login.callbackFailed')}
         </p>
       ) : null}
 
-      {isCallback ? (
-        <p className='flex items-center gap-2 text-sm text-muted-foreground'>
-          <LoaderCircle className='size-4 animate-spin' />
-          {t('login.signingIn')}
-        </p>
-      ) : (
-        <form
-          onSubmit={(event) => {
-            void handleStart(event);
-          }}
-          className='grid gap-3'
-        >
-          <div className='grid gap-1.5'>
-            <Label htmlFor='hospital-code'>{t('login.hospitalLabel')}</Label>
-            <Input
-              id='hospital-code'
-              name='hospitalCode'
-              value={hospitalCode}
-              onChange={(event) => setHospitalCode(event.target.value)}
-              placeholder={t('login.hospitalPlaceholder')}
-              autoComplete='organization'
-              required
-            />
-          </div>
-          <Button
-            type='submit'
-            disabled={isSubmitting}
-            className='mt-1 justify-center'
-          >
-            {isSubmitting ? (
-              <LoaderCircle className='size-4 animate-spin' />
-            ) : (
-              <KeyRound className='size-4' />
-            )}
-            {isSubmitting ? t('login.submitting') : t('login.submit')}
-          </Button>
-        </form>
-      )}
-    </AuthCard>
-  );
-}
-
-function AuthCard({
-  children,
-}: Readonly<{ children: ReactNode }>): JSX.Element {
-  return (
-    <main className='flex min-h-svh items-center justify-center px-6 py-10'>
-      <Card className='w-full max-w-sm'>
-        <CardContent className='gap-4'>
-          <CynaraMark className='size-10' />
-          {children}
-        </CardContent>
-      </Card>
-    </main>
-  );
-}
-
-function BackToStart({ locale }: { locale: AppLocale }): JSX.Element {
-  const { t } = useTranslation('auth');
-  return (
-    <Button
-      variant='outline'
-      className='mt-2 justify-center'
-      nativeButton={false}
-      render={
-        <Link
-          to='/$locale/forms'
-          params={{ locale }}
-        />
-      }
-    >
-      <ArrowLeft className='size-4' />
-      {t('login.backToStart')}
-    </Button>
+      {loginContent}
+    </AuthScreen>
   );
 }

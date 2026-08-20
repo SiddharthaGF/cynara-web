@@ -10,10 +10,9 @@ import {
   readAuthSessionData,
   type AuthSessionManager,
 } from '@/server/auth-session.ts';
-import { resolveAuthModeServer } from '@/server/env.ts';
 
 /**
- * Global Start configuration for the CYN-96 auth spike. Mounted by
+ * Global Start configuration. Mounted by
  * `createStartHandler` (see src/server.ts); `startInstance` is also imported
  * by the generated route tree so server-function context types pick up the
  * middleware below.
@@ -21,9 +20,7 @@ import { resolveAuthModeServer } from '@/server/env.ts';
  * - CSRF: rejects cross-site server-function requests (Sec-Fetch-Site /
  *   Origin / Referer validation). Page navigations are exempt so the
  *   identity provider redirect back to /$locale/login works.
- * - Session: threads `{ auth: { session, hospitalCode } }` into server
- *   function context when a sealed auth cookie exists. Anonymous requests
- *   and AUTH_MODE=off get `{ auth: null }` and never mint a session cookie.
+ * - Session: threads the sealed auth cookie into server-function context.
  */
 
 const csrfMiddleware = createCsrfMiddleware({
@@ -34,7 +31,7 @@ const csrfMiddleware = createCsrfMiddleware({
 
 export interface AuthSessionContext {
   session: AuthSessionManager;
-  hospitalCode: string;
+  hospitalCode: string | null;
 }
 
 export interface AuthRequestContext {
@@ -45,15 +42,13 @@ const sessionMiddleware = createMiddleware({
   type: 'request',
 }).server(async ({ next }) => {
   let auth: AuthSessionContext | null = null;
-  if (resolveAuthModeServer() === 'spike') {
-    const session = await getAuthSession();
-    const data = session ? readAuthSessionData(session) : null;
-    if (session && data) {
-      auth = {
-        session,
-        hospitalCode: data.hospitalCode,
-      };
-    }
+  const session = await getAuthSession();
+  const data = session ? readAuthSessionData(session) : null;
+  if (session && data) {
+    auth = {
+      session,
+      hospitalCode: data.hospitalCode,
+    };
   }
   return next({ context: { auth } satisfies AuthRequestContext });
 });

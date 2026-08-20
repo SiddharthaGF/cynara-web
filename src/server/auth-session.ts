@@ -8,8 +8,8 @@ import {
 import { getSessionSecret } from '@/server/env.ts';
 
 /**
- * Sealed, stateless session for the CYN-96 auth spike. The refresh token and
- * hospital context live inside an httpOnly, SameSite=Lax cookie sealed with
+ * Sealed, stateless session. The refresh token and selected hospital context
+ * live inside an httpOnly, SameSite=Lax cookie sealed with
  * AUTH_SESSION_SECRET (aes-256-cbc + sha256 HMAC). No workerd memory is used:
  * every request unseals the cookie, and every rotation re-seals it.
  *
@@ -23,8 +23,8 @@ export interface AuthSessionData {
   sid: string;
   /** OpenIddict refresh token (rotated on every refresh grant). */
   refreshToken: string;
-  /** Hospital selected at login; never taken from browser input afterwards. */
-  hospitalCode: string;
+  /** Hospital selected after membership verification; never trusted from the browser. */
+  hospitalCode: string | null;
   /** Absolute expiry (ms) enforced by the sealed session lifetime. */
   expiresAt: number;
 }
@@ -110,7 +110,7 @@ export function readAuthSessionData(
   if (
     typeof sid === 'string' &&
     typeof refreshToken === 'string' &&
-    typeof hospitalCode === 'string' &&
+    (hospitalCode === null || typeof hospitalCode === 'string') &&
     typeof expiresAt === 'number'
   ) {
     return { sid, refreshToken, hospitalCode, expiresAt };
@@ -154,7 +154,6 @@ export interface PkceTransactionData {
   redirectUri: string;
   /** Internal path to return to after login. */
   redirectTo: string;
-  hospitalCode: string;
   locale: string;
 }
 
@@ -175,17 +174,15 @@ export async function getPkceTransaction(): Promise<
 export function readPkceTransactionData(
   manager: PkceTransactionManager,
 ): PkceTransactionData | null {
-  const { state, verifier, redirectUri, redirectTo, hospitalCode, locale } =
-    manager.data;
+  const { state, verifier, redirectUri, redirectTo, locale } = manager.data;
   if (
     typeof state === 'string' &&
     typeof verifier === 'string' &&
     typeof redirectUri === 'string' &&
     typeof redirectTo === 'string' &&
-    typeof hospitalCode === 'string' &&
     typeof locale === 'string'
   ) {
-    return { state, verifier, redirectUri, redirectTo, hospitalCode, locale };
+    return { state, verifier, redirectUri, redirectTo, locale };
   }
   return null;
 }

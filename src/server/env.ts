@@ -1,10 +1,5 @@
-import { getRequestUrl } from '@tanstack/react-start/server';
-
-import type { AuthMode } from '@/lib/auth-mode.ts';
-import { normalizeAuthMode } from '@/lib/auth-mode.ts';
-
 /**
- * Server-only environment resolution for the CYN-96 auth spike. The SSR
+ * Server-only environment resolution. The SSR
  * runtime is workerd: it ignores process.env and reads Cloudflare bindings
  * first (matching src/lib/api-origin.ts). These values must never be
  * referenced from client-rendered code — the identity origin, session
@@ -12,12 +7,13 @@ import { normalizeAuthMode } from '@/lib/auth-mode.ts';
  */
 
 interface EnvLike {
-  AUTH_MODE?: string;
   IDENTITY_ORIGIN?: string;
   AUTH_SESSION_SECRET?: string;
   AUTH_CLIENT_ID?: string;
   AUTH_CLIENT_SECRET?: string;
   AUTH_SCOPES?: string;
+  APP_ORIGIN?: string;
+  VITE_HOSPITAL_CODE?: string;
 }
 
 function readServerEnv(): EnvLike {
@@ -38,18 +34,14 @@ function normalize(value: string | undefined): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
-export function resolveAuthModeServer(): AuthMode {
-  return normalizeAuthMode(readServerEnv().AUTH_MODE);
-}
-
-/** Origin of the disposable identity/API spike (serves /connect/* and /api/*). */
+/** Origin of the Cynara API and identity endpoints. */
 export function getIdentityOrigin(): string {
   const origin = normalize(readServerEnv().IDENTITY_ORIGIN);
   if (!origin) {
     throw new Error(
       'Cannot resolve the identity origin: IDENTITY_ORIGIN is not set. ' +
         'Add it to .dev.vars (local dev) or the wrangler vars / Cloudflare ' +
-        'dashboard for the CYN-96 spike.',
+        'dashboard for the application.',
     );
   }
   return origin.replace(/\/$/u, '');
@@ -61,7 +53,7 @@ export function getSessionSecret(): string {
 }
 
 export function getAuthClientId(): string {
-  return normalize(readServerEnv().AUTH_CLIENT_ID) ?? 'cynara-spike';
+  return normalize(readServerEnv().AUTH_CLIENT_ID) ?? 'cynara-web';
 }
 
 export function getAuthClientSecret(): string {
@@ -81,5 +73,14 @@ export function getAuthScopes(): string {
  * extra configuration.
  */
 export function getAppOrigin(): string {
-  return getRequestUrl().origin;
+  const origin = normalize(readServerEnv().APP_ORIGIN);
+  if (!origin) {
+    throw new Error('APP_ORIGIN is required for the authorization callback.');
+  }
+  return origin.replace(/\/$/u, '');
+}
+
+/** Configuration preference only; callers must validate membership server-side. */
+export function getConfiguredHospitalCode(): string {
+  return normalize(readServerEnv().VITE_HOSPITAL_CODE) ?? 'default';
 }

@@ -6,6 +6,7 @@ import {
 } from '@/api/client.ts';
 import {
   clearAuthSession,
+  getAuthSession,
   readAuthSessionData,
   rotateAuthSession,
   type AuthSessionManager,
@@ -17,7 +18,7 @@ import {
 } from '@/server/env.ts';
 
 /**
- * BFF API proxy for the CYN-96 auth spike. Each call mints a fresh access
+ * BFF API proxy. Each call mints a fresh access
  * token with the refresh-token grant, rotates the sealed session cookie with
  * the new refresh token, injects Bearer + session-derived X-Hospital-Code,
  * and maps non-2xx responses to the app's ApiError contract. One 401 is
@@ -110,6 +111,44 @@ export async function mintAccessToken(
 interface AttemptOptions {
   path: string;
   init?: RequestInit;
+  initFactory?: () => RequestInit;
+}
+
+function resolveAttemptInit(
+  options: Pick<AttemptOptions, 'init' | 'initFactory'>,
+): RequestInit | undefined {
+  return options.initFactory?.() ?? options.init;
+}
+
+function hasNonReplayableBody(init: RequestInit | undefined): boolean {
+  return (
+    typeof ReadableStream !== 'undefined' &&
+    init?.body instanceof ReadableStream
+  );
+}
+
+export function isRequestInitReplayable(
+  init: RequestInit | undefined,
+): boolean {
+  return !hasNonReplayableBody(init);
+}
+
+export function createReplayableRequestInitFactory(
+  request: Request,
+  headers: Headers,
+): () => RequestInit {
+  return () => {
+    const clone = request.clone();
+    return {
+      method: request.method,
+      headers: new Headers(headers),
+      body:
+        request.method === 'GET' || request.method === 'HEAD'
+          ? undefined
+          : clone.body,
+      signal: request.signal,
+    };
+  };
 }
 
 /**
@@ -122,20 +161,17 @@ async function mintOrClear(
 ): Promise<MintedToken> {
   try {
     return await mintAccessToken(data.refreshToken);
-  } catch (error) {
+  } catch {
     await clearAuthSession();
-    throw new ApiError(
-      401,
-      'Unauthorized',
-      error instanceof Error ? error.message : 'Session refresh failed',
-    );
+    throw new ApiError(401, 'Unauthorized', 'Session refresh failed');
   }
 }
 
 async function attemptWithToken(
   session: AuthSessionManager,
-  { path, init }: AttemptOptions,
+  { path, ...options }: AttemptOptions,
 ): Promise<Response> {
+  const init = resolveAttemptInit(options);
   const data = readAuthSessionData(session);
   if (!data) {
     await clearAuthSession();
@@ -144,15 +180,23 @@ async function attemptWithToken(
 
   const minted = await mintOrClear(data);
 
+  const refreshToken = minted.refreshToken ?? data.refreshToken;
   await rotateAuthSession({
-    refreshToken: minted.refreshToken ?? data.refreshToken,
+    refreshToken,
     hospitalCode: data.hospitalCode,
     expiresAt: data.expiresAt,
   });
+  // Keep the caller's manager aligned with the sealed cookie. A later
+  // Operation in this request may need the rotated token.
+  session.data.refreshToken = refreshToken;
 
   const headers = new Headers(init?.headers);
   headers.set('Authorization', `Bearer ${minted.accessToken}`);
-  headers.set(HOSPITAL_HEADER_NAME, data.hospitalCode);
+  if (data.hospitalCode) {
+    headers.set(HOSPITAL_HEADER_NAME, data.hospitalCode);
+  } else {
+    headers.delete(HOSPITAL_HEADER_NAME);
+  }
   headers.set('Accept', JSON_API_MEDIA);
   if (init?.method && init.method !== 'GET' && !headers.has('Content-Type')) {
     headers.set('Content-Type', JSON_API_MEDIA);
@@ -183,7 +227,15 @@ export async function callApiWithAuth(
 
   // Exactly one retry with a freshly minted token.
   // A second 401 means the session is invalid: Clear it and throw 401.
-  const retried = await attemptWithToken(session, options);
+  if (!options.initFactory && !isRequestInitReplayable(options.init)) {
+    await clearAuthSession();
+    throw new ApiError(401, 'Unauthorized', 'Session expired or invalid');
+  }
+  const currentSession = await getAuthSession();
+  if (!currentSession) {
+    throw new ApiError(401, 'Unauthorized', 'Session expired or invalid');
+  }
+  const retried = await attemptWithToken(currentSession, options);
   if (retried.ok) {
     return retried;
   }

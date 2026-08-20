@@ -15,6 +15,7 @@ import {
   getPkceTransaction,
   readAuthSessionData,
   readPkceTransactionData,
+  rotateAuthSession,
   setPkceTransaction,
   type PkceTransactionData,
 } from '@/server/auth-session.ts';
@@ -23,22 +24,29 @@ import {
   getAuthClientId,
   getAuthClientSecret,
   getAuthScopes,
+  getConfiguredHospitalCode,
   getIdentityOrigin,
 } from '@/server/env.ts';
 import { requireAuthMiddleware } from '@/start.ts';
 
 /**
- * Auth server functions for the CYN-96 disposable spike: authorization-code +
- * PKCE login, refresh-token logout, and a protected /api/me call through the
- * BFF. Tokens never reach browser JS; the refresh token lives in the sealed
- * httpOnly session cookie.
+ * Auth server functions. OAuth tokens and the client secret stay in server
+ * functions; the browser only receives safe session/bootstrap data.
  */
 
 export interface AuthenticatedUser {
-  actorId: string;
+  actorId: string | null;
   capabilities: string[];
-  email?: string | null;
-  hospital?: string | null;
+}
+
+export interface HospitalMembership {
+  code: string;
+  name: string;
+}
+
+export interface AuthStatus {
+  authenticated: boolean;
+  hospitalCode: string | null;
 }
 
 export type LoginInput =
@@ -46,7 +54,6 @@ export type LoginInput =
       kind: 'start';
       locale: AppLocale;
       redirectTo: string;
-      hospitalCode: string;
     }
   | { kind: 'callback'; code: string; state: string };
 
@@ -54,6 +61,10 @@ const MAX_REDIRECT_LENGTH = 2048;
 const MAX_CODE_LENGTH = 2048;
 const MAX_STATE_LENGTH = 256;
 const HOSPITAL_CODE_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$/u;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
 
 /**
  * Internal-only redirect target: a same-origin path. Rejects protocol-relative
@@ -76,7 +87,16 @@ export function isSafeRedirectPath(value: string): boolean {
 
 /** Auth-flow pages that the route guard must not bounce to login. */
 export function isAuthRoutePath(pathname: string): boolean {
-  return /^\/(?:en|es)\/(?:login|logout)(?:\/|$)/u.test(pathname);
+  return /^\/(?:en|es)\/(?:login|logout|recovery|reset)(?:\/|$)/u.test(
+    pathname,
+  );
+}
+
+export function buildAuthorizeUrl(
+  appOrigin: string,
+  params: URLSearchParams,
+): string {
+  return `${appOrigin.replace(/\/$/u, '')}/auth/authorize?${params.toString()}`;
 }
 
 export function parseLoginInput(value: unknown): LoginInput {
@@ -90,7 +110,7 @@ export function parseLoginInput(value: unknown): LoginInput {
   const record = value as Record<string, unknown>;
   const { kind } = record;
   if (kind === 'start') {
-    const { locale, redirectTo, hospitalCode } = record;
+    const { locale, redirectTo } = record;
     if (!isAppLocale(locale)) {
       throw new ApiError(400, 'Invalid login request', 'Unknown locale');
     }
@@ -101,13 +121,7 @@ export function parseLoginInput(value: unknown): LoginInput {
         'Unsafe redirect target',
       );
     }
-    if (
-      typeof hospitalCode !== 'string' ||
-      !HOSPITAL_CODE_PATTERN.test(hospitalCode)
-    ) {
-      throw new ApiError(400, 'Invalid login request', 'Invalid hospital code');
-    }
-    return { kind: 'start', locale, redirectTo, hospitalCode };
+    return { kind: 'start', locale, redirectTo };
   }
   if (kind === 'callback') {
     const { code, state } = record;
@@ -255,26 +269,105 @@ function unwrapJsonApiData(body: unknown): Record<string, unknown> {
   return {};
 }
 
-function adaptMeResponse(body: unknown): AuthenticatedUser {
+function adaptCapabilitiesResponse(body: unknown): AuthenticatedUser {
   const data = unwrapJsonApiData(body);
-  const { actorId: rawActorId, userId, capabilities, email, hospital } = data;
-  let actorId: string | null = null;
-  if (typeof rawActorId === 'string') {
-    actorId = rawActorId;
-  } else if (typeof userId === 'string') {
-    actorId = userId;
-  }
-  if (actorId === null || actorId.length === 0) {
-    throw new ApiError(502, 'Invalid /api/me response', 'No actor resolved');
-  }
+  const { actorId, capabilities } = data;
   return {
-    actorId,
+    actorId: typeof actorId === 'string' ? actorId : null,
     capabilities: Array.isArray(capabilities)
       ? capabilities.filter((item): item is string => typeof item === 'string')
       : [],
-    email: typeof email === 'string' ? email : null,
-    hospital: typeof hospital === 'string' ? hospital : null,
   };
+}
+
+function parseHospitals(body: unknown): HospitalMembership[] {
+  if (!Array.isArray(body)) {
+    throw new ApiError(
+      502,
+      'Invalid hospital response',
+      'Invalid membership list',
+    );
+  }
+  return body.flatMap((item): HospitalMembership[] => {
+    if (!isRecord(item)) {
+      return [];
+    }
+    const record = item;
+    return typeof record.code === 'string' && typeof record.name === 'string'
+      ? [{ code: record.code, name: record.name }]
+      : [];
+  });
+}
+
+export function choosePreferredHospital(
+  memberships: readonly HospitalMembership[],
+  configuredCode: string,
+): string | null {
+  return (
+    memberships.find((membership) => membership.code === configuredCode)?.code ??
+    memberships[0]?.code ??
+    null
+  );
+}
+
+export function resolveSelectedHospital(
+  selectedCode: string | null,
+  memberships: readonly HospitalMembership[],
+  configuredCode: string,
+): string | null {
+  return selectedCode && memberships.some((item) => item.code === selectedCode)
+    ? selectedCode
+    : choosePreferredHospital(memberships, configuredCode);
+}
+
+async function loadHospitalMemberships(
+  session: Parameters<typeof callApiWithAuth>[0],
+): Promise<HospitalMembership[]> {
+  const response = await callApiWithAuth(session, {
+    path: '/api/me/hospitals',
+    init: { method: 'GET' },
+  });
+  if (!response.ok) {
+    throw await mapApiResponseError(response);
+  }
+  return parseHospitals(await response.json());
+}
+
+interface WorkspaceSelectionResult {
+  hospitalCode: string | null;
+  memberships: HospitalMembership[];
+}
+
+async function ensureSelectedHospitalForSession(
+  session: Parameters<typeof callApiWithAuth>[0],
+): Promise<WorkspaceSelectionResult> {
+  const current = readAuthSessionData(session);
+  if (!current) {
+    throw new ApiError(401, 'Unauthorized', 'Invalid session');
+  }
+
+  const memberships = await loadHospitalMemberships(session);
+  // Membership loading can refresh the access token and synchronize the
+  // Caller's session manager. Never persist the pre-load refresh token.
+  const latest = readAuthSessionData(session);
+  if (!latest) {
+    throw new ApiError(401, 'Unauthorized', 'Invalid session');
+  }
+  const hospitalCode = resolveSelectedHospital(
+    latest.hospitalCode,
+    memberships,
+    getConfiguredHospitalCode(),
+  );
+
+  if (hospitalCode !== latest.hospitalCode) {
+    await rotateAuthSession({
+      refreshToken: latest.refreshToken,
+      hospitalCode,
+      expiresAt: latest.expiresAt,
+    });
+  }
+
+  return { hospitalCode, memberships };
 }
 
 /** Begins authorization-code + PKCE: validates input, seals a transaction, builds the authorize URL. */
@@ -299,7 +392,6 @@ export const loginStart = createServerFn({ method: 'POST' })
       verifier,
       redirectUri,
       redirectTo: data.redirectTo,
-      hospitalCode: data.hospitalCode,
       locale: data.locale,
     };
     await setPkceTransaction(transaction);
@@ -314,7 +406,7 @@ export const loginStart = createServerFn({ method: 'POST' })
       scope: getAuthScopes(),
     });
     return {
-      authorizeUrl: `${getIdentityOrigin()}/connect/authorize?${params.toString()}`,
+      authorizeUrl: buildAuthorizeUrl(getAppOrigin(), params),
     };
   });
 
@@ -354,14 +446,17 @@ export const loginCallback = createServerFn({ method: 'POST' })
       verifier: tx.verifier,
     });
 
-    await createAuthSession({
+    const session = await createAuthSession({
       refreshToken: token.refreshToken,
-      hospitalCode: tx.hospitalCode,
+      hospitalCode: null,
       expiresAt: Date.now() + AUTH_SESSION_MAX_AGE_SECONDS * 1000,
     });
+    await ensureSelectedHospitalForSession(session);
     await clearPkceTransaction();
 
-    return { redirectTo: tx.redirectTo };
+    return {
+      redirectTo: tx.redirectTo,
+    };
   });
 
 /** Logs out: best-effort refresh-token revocation, then clears the session and any transaction. */
@@ -378,21 +473,152 @@ export const logout = createServerFn({ method: 'POST' }).handler(
   },
 );
 
-/** Protected: resolves the authenticated actor and capabilities through the BFF /api/me. */
-export const getMe = createServerFn({ method: 'GET' })
+export const getAuthStatus = createServerFn({ method: 'GET' }).handler(
+  ({ context }): AuthStatus => ({
+    authenticated: context.auth?.session !== undefined,
+    hospitalCode: context.auth?.hospitalCode ?? null,
+  }),
+);
+
+/** Protected tenant-exempt membership bootstrap. */
+export const getHospitals = createServerFn({ method: 'GET' })
   .middleware([requireAuthMiddleware])
-  .handler(async ({ context }): Promise<AuthenticatedUser> => {
+  .handler(async ({ context }): Promise<HospitalMembership[]> => {
     const { auth } = context;
     const session = auth?.session;
     if (!session) {
       throw new ApiError(401, 'Unauthorized', 'No active session');
     }
+    return loadHospitalMemberships(session);
+  });
+
+/** Selects the configured or first backend-verified membership for the session. */
+export const ensureSelectedHospital = createServerFn({ method: 'POST' })
+  .middleware([requireAuthMiddleware])
+  .handler(async ({ context }): Promise<WorkspaceSelectionResult> => {
+    const session = context.auth?.session;
+    if (!session) {
+      throw new ApiError(401, 'Unauthorized', 'No active session');
+    }
+    return ensureSelectedHospitalForSession(session);
+  });
+
+/** Selects a membership only after verifying it against the backend list. */
+export const selectHospital = createServerFn({ method: 'POST' })
+  .middleware([requireAuthMiddleware])
+  .validator((value: unknown) => {
+    if (typeof value !== 'string' || !HOSPITAL_CODE_PATTERN.test(value)) {
+      throw new ApiError(400, 'Invalid hospital', 'Invalid hospital selection');
+    }
+    return value;
+  })
+  .handler(async ({ context, data }): Promise<{ redirectTo: string }> => {
+    const session = context.auth?.session;
+    if (!session) {
+      throw new ApiError(401, 'Unauthorized', 'No active session');
+    }
+    const hospitals = await loadHospitalMemberships(session);
+    if (!hospitals.some((item) => item.code === data)) {
+      throw new ApiError(403, 'Forbidden', 'Hospital membership required');
+    }
+    const current = readAuthSessionData(session);
+    if (!current) {
+      throw new ApiError(401, 'Unauthorized', 'Invalid session');
+    }
+    await rotateAuthSession(selectHospitalSessionData(current, data));
+    return { redirectTo: '/' };
+  });
+
+export function selectHospitalSessionData(
+  session: Readonly<{
+    refreshToken: string;
+    hospitalCode: string | null;
+    expiresAt: number;
+  }>,
+  hospitalCode: string,
+): {
+  refreshToken: string;
+  hospitalCode: string;
+  expiresAt: number;
+} {
+  return {
+    refreshToken: session.refreshToken,
+    hospitalCode,
+    expiresAt: session.expiresAt,
+  };
+}
+
+export const getCapabilities = createServerFn({ method: 'GET' })
+  .middleware([requireAuthMiddleware])
+  .handler(async ({ context }): Promise<AuthenticatedUser> => {
+    const session = context.auth?.session;
+    if (!session) {
+      throw new ApiError(401, 'Unauthorized', 'No active session');
+    }
     const response = await callApiWithAuth(session, {
-      path: '/api/me',
+      path: '/api/me/capabilities',
       init: { method: 'GET' },
     });
     if (!response.ok) {
       throw await mapApiResponseError(response);
     }
-    return adaptMeResponse(await response.json());
+    return adaptCapabilitiesResponse(await response.json());
   });
+
+export const requestPasswordRecovery = createServerFn({ method: 'POST' })
+  .validator((value: unknown) => {
+    if (typeof value !== 'string' || value.trim().length === 0) {
+      throw new ApiError(400, 'Invalid account', 'Account is required');
+    }
+    return value.trim();
+  })
+  .handler(async ({ data }): Promise<void> => {
+    await postAccount('/connect/account/recovery', { account: data });
+  });
+
+export const resetPassword = createServerFn({ method: 'POST' })
+  .validator((value: unknown) => {
+    if (typeof value !== 'object' || value === null) {
+      throw new ApiError(400, 'Invalid reset request', 'Invalid reset request');
+    }
+    if (!isRecord(value)) {
+      throw new ApiError(400, 'Invalid reset request', 'Invalid reset request');
+    }
+    const input = value;
+    if (
+      typeof input.account !== 'string' ||
+      typeof input.token !== 'string' ||
+      typeof input.newPassword !== 'string'
+    ) {
+      throw new ApiError(400, 'Invalid reset request', 'Invalid reset request');
+    }
+    return {
+      account: input.account,
+      token: input.token,
+      newPassword: input.newPassword,
+    };
+  })
+  .handler(async ({ data }): Promise<void> => {
+    await postAccount('/connect/account/reset', data);
+  });
+
+async function postAccount(
+  path: string,
+  body: Record<string, string>,
+): Promise<void> {
+  const response = await fetch(`${getIdentityOrigin()}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      'Request failed',
+      'The request could not be completed.',
+    );
+  }
+}

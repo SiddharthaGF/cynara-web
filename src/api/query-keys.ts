@@ -96,6 +96,7 @@ function key(...segments: readonly unknown[]): readonly unknown[] {
 const FORMS_ALL = ['forms'];
 const COMPONENTS_ALL = ['components'];
 const WORKSPACE_ALL = ['workspace'];
+const HOSPITALS_ALL = ['hospitals'];
 const FACILITIES_ALL = ['facilities'];
 const CLINICAL_AREAS_ALL = ['clinicalAreas'];
 const DISCIPLINES_ALL = ['disciplines'];
@@ -130,6 +131,10 @@ export const queryKeys = {
   workspace: {
     all: WORKSPACE_ALL,
     detail: () => key('workspace', 'detail'),
+  },
+  hospitals: {
+    all: HOSPITALS_ALL,
+    memberships: () => key('hospitals', 'memberships'),
   },
   facilities: {
     all: FACILITIES_ALL,

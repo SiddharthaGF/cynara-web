@@ -4,7 +4,6 @@ import { useLayoutEffect } from 'react';
 
 import { CapabilityRouteGuard } from '@/features/access-control/CapabilityRouteGuard.tsx';
 import { i18nInstance } from '@/i18n/index.ts';
-import { isAuthSpikeMode } from '@/lib/auth-mode.ts';
 import { getDocumentMeta } from '@/lib/document-meta.ts';
 import {
   DEFAULT_LOCALE,
@@ -13,7 +12,14 @@ import {
   persistLocale,
 } from '@/lib/locale.ts';
 import type { AppLocale } from '@/lib/locale.ts';
-import { getMe, isAuthRoutePath } from '@/server/auth.ts';
+import { getSelectedMembership } from '@/lib/workspace-membership.ts';
+import {
+  getAuthStatus,
+  ensureSelectedHospital,
+  isAuthRoutePath,
+  type HospitalMembership,
+} from '@/server/auth.ts';
+import { getSidebarOpen } from '@/server/sidebar-state.ts';
 
 async function syncI18nLocale(locale: AppLocale): Promise<void> {
   if (i18nInstance.language !== locale) {
@@ -35,26 +41,43 @@ export const Route = createFileRoute('/$locale')({
     const { locale } = params;
     await syncI18nLocale(locale);
 
-    // CYN-96 spike: server-side session guard. Auth-flow pages are exempt.
-    // Everything else must resolve an authenticated actor through the BFF.
-    // Otherwise it bounces to /$locale/login keeping the current path.
-    if (isAuthSpikeMode() && !isAuthRoutePath(location.pathname)) {
-      try {
-        await getMe();
-      } catch {
+    let memberships: HospitalMembership[] = [];
+    let sidebarOpen = true;
+
+    if (!isAuthRoutePath(location.pathname)) {
+      const auth = await getAuthStatus();
+      if (!auth.authenticated) {
         // oxlint-disable-next-line typescript/only-throw-error -- TanStack Router redirect
         throw redirect({
           to: '/$locale/login',
           params: { locale },
-          search: {
-            redirectTo: `${location.pathname}${location.searchStr}`,
-          },
+          search: { redirectTo: `${location.pathname}${location.searchStr}` },
           replace: true,
         });
       }
+      const {
+        hospitalCode,
+        memberships: selectedMemberships,
+      } = await ensureSelectedHospital();
+      memberships = selectedMemberships;
+      sidebarOpen = await getSidebarOpen();
+
+      return {
+        locale,
+        hospitalCode,
+        memberships,
+        workspace: getSelectedMembership(memberships, hospitalCode),
+        sidebarOpen,
+      };
     }
 
-    return { locale };
+    return {
+      locale,
+      hospitalCode: null,
+      memberships,
+      workspace: null,
+      sidebarOpen,
+    };
   },
   head: ({ params }) => {
     const locale = isAppLocale(params.locale) ? params.locale : DEFAULT_LOCALE;

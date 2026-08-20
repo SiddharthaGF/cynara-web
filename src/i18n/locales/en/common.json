@@ -15,8 +15,19 @@
   },
   "user": {
     "menuLabel": "Account",
+    "account": "Account",
+    "accountDescription": "Signed-in account",
     "signedInAs": "Signed in as {{actorId}}",
     "workspaceSettings": "Workspace settings"
+  },
+  "workspace": {
+    "context": "Workspace",
+    "current": "Current workspace",
+    "switch": "Switch workspace",
+    "loading": "Loading workspaces…",
+    "loadFailed": "Could not load workspaces.",
+    "switchFailed": "Could not switch workspace. Try again.",
+    "noMemberships": "No workspaces are available for this account."
   },
   "commandPalette": {
     "title": "Command palette",
@@ -44,6 +55,7 @@
   },
   "settings": {
     "open": "Settings",
+    "switchHospital": "Switch workspace",
     "language": "Language",
     "theme": "Theme",
     "ai": {

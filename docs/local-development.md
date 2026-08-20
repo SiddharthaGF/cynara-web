@@ -79,8 +79,8 @@ SSR falls back to the production origin, so the locally created E2E forms are
 never found. The workflow therefore writes a `.dev.vars` that points the SSR
 runtime at the locally booted API before running Playwright.
 
-`.env.example` ships `VITE_API_ORIGIN=http://localhost:5000`. To override, copy
-it to `.env` and edit:
+`.env.example` ships `VITE_API_ORIGIN=http://127.0.0.1:5000` for the local API.
+To use another explicit origin, copy it to `.env` and edit:
 
 ```bash
 cp .env.example .env
@@ -195,34 +195,22 @@ pnpm dev
 Browser requests will be proxied to the remote origin. CORS still has to allow
 the dev origin (`:5173`) — coordinate with whoever owns the remote API.
 
-## CYN-96 auth spike (disposable)
+## Authentication
 
-An opt-in authorization-code + PKCE flow validates the BFF session pattern
-against the disposable CYN-95 identity spike. It is **off by default**; when
-`AUTH_MODE` is off the app behaves exactly as today.
+The client uses authorization-code + PKCE against the Cynara API. TanStack Start
+exchanges the callback code and stores access and refresh tokens only in a
+sealed httpOnly cookie. Browser API calls use the same-origin BFF, which
+refreshes and rotates tokens server-side.
 
-Prerequisites:
-
-- The backend spike must be extended first (cross-repo):
-  `SetAuthorizationEndpointUris`, `AllowAuthorizationCodeFlow`, passthrough, and
-  redirect URIs `http://localhost:5173/{en,es}/login` registered in
-  `cynara-api/spikes/Cynara.IdentitySpike`, then
-  `dotnet run --project spikes/Cynara.IdentitySpike` (listens on `:5295`).
-- Server env in `.dev.vars` (already present): `IDENTITY_ORIGIN`,
-  `AUTH_MODE=spike`, `AUTH_SESSION_SECRET`, `AUTH_CLIENT_ID`,
-  `AUTH_CLIENT_SECRET`, `AUTH_SCOPES`.
-- Client env: `VITE_AUTH_MODE=spike` in `.env` (mirrors the server toggle for
-  the browser bundle).
+After sign-in, `GET /api/me/hospitals` lets the server select the configured
+local workspace when available, or the first membership otherwise. The verified
+selection is stored server-side before tenant-scoped routes load. Use the
+workspace switcher to change workspace.
 
 ```bash
 pnpm dev
-open http://localhost:5173/en/forms   # bounces to /en/login when signed out
+open http://localhost:5173/en/forms
 ```
-
-Spike routes: `/$locale/login`, `/$locale/logout`, `/$locale/auth-spike`
-(protected evidence page calling `/api/me` through the BFF). See
-[`cyn-96-findings.md`](cyn-96-findings.md) for what works, what breaks, and the
-limitations (live E2E is pending the backend prerequisite).
 
 ## Generated API client
 
@@ -317,13 +305,12 @@ exactly what GitHub Actions ships.
 | `OPENAPI_SPEC`            | optional    | shell                                     | Path to an OpenAPI contract used by `pnpm api:generate` (overrides the sibling-checkout default).                                                                    |
 | `OPENAPI_SPEC_URL`        | optional    | shell / CI                                | URL of an OpenAPI contract used by `pnpm api:generate` (overrides `OPENAPI_SPEC`). The `API client drift` workflow sets this to the pinned contract ref.             |
 | `APP_ENV`                 | optional    | shell                                     | `development` / `production` / `testing`. Drives `environment.ts`. Falls back to `import.meta.env.DEV`.                                                              |
-| `IDENTITY_ORIGIN`         | spike only  | `.dev.vars`, wrangler dev vars            | Origin of the disposable CYN-96 identity/API spike (serves `/connect/*` + `/api/*`). Server-only.                                                                    |
-| `AUTH_MODE`               | spike only  | `.dev.vars`, wrangler dev vars            | `spike` enables the disposable auth flow; anything else/unset = production behavior. Server-only.                                                                    |
-| `AUTH_SESSION_SECRET`     | spike only  | `.dev.vars` (secret)                      | Password sealing the session cookie (32+ chars). Server-only; keep out of committed vars.                                                                            |
-| `AUTH_CLIENT_ID`          | spike only  | `.dev.vars`                               | Confidential client id registered in the identity spike (default `cynara-spike`).                                                                                    |
-| `AUTH_CLIENT_SECRET`      | spike only  | `.dev.vars` (secret)                      | Client secret for the token/revocation endpoints. Server-only.                                                                                                       |
-| `AUTH_SCOPES`             | spike only  | `.dev.vars`                               | Space-separated scopes requested at authorize (default `openid offline_access profile`).                                                                             |
-| `VITE_AUTH_MODE`          | spike only  | `.env` / shell                            | Client-bundle mirror of `AUTH_MODE` so hooks (e.g. `useCapabilities`) pick the BFF adapter only in spike mode.                                                       |
+| `APP_ORIGIN`              | yes         | `.dev.vars`, deployment config            | Public web origin registered for the authorization callback. Server-only.                                                                                            |
+| `IDENTITY_ORIGIN`         | yes         | `.dev.vars`, deployment config            | Cynara API origin serving `/connect/*` and `/api/*`. Server-only.                                                                                                    |
+| `AUTH_SESSION_SECRET`     | yes         | secret store                              | Password sealing the session cookie (32+ chars). Server-only; keep out of committed vars.                                                                            |
+| `AUTH_CLIENT_ID`          | yes         | `.dev.vars`, deployment config            | Confidential `cynara-web` client id.                                                                                                                                 |
+| `AUTH_CLIENT_SECRET`      | yes         | secret store                              | Client secret for token and revocation endpoints. Server-only.                                                                                                       |
+| `AUTH_SCOPES`             | optional    | `.dev.vars`, deployment config            | Space-separated scopes requested at authorize (default `openid offline_access profile`).                                                                             |
 | `CLOUDFLARE_API_TOKEN`    | deploy only | CI secret                                 | Wrangler deploy token with the **Edit Cloudflare Workers** template.                                                                                                 |
 | `CLOUDFLARE_ACCOUNT_ID`   | deploy only | CI secret                                 | Shown on the Workers project overview page.                                                                                                                          |
 | `CLOUDFLARE_PROJECT_NAME` | optional    | CI variable                               | Defaults to `cynara-web` if unset.                                                                                                                                   |

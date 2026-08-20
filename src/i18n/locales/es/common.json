@@ -15,8 +15,19 @@
   },
   "user": {
     "menuLabel": "Cuenta",
+    "account": "Cuenta",
+    "accountDescription": "Cuenta activa",
     "signedInAs": "Sesión iniciada como {{actorId}}",
     "workspaceSettings": "Configuración del espacio de trabajo"
+  },
+  "workspace": {
+    "context": "Espacio de trabajo",
+    "current": "Espacio de trabajo actual",
+    "switch": "Cambiar de espacio de trabajo",
+    "loading": "Cargando espacios de trabajo…",
+    "loadFailed": "No se pudieron cargar los espacios de trabajo.",
+    "switchFailed": "No se pudo cambiar de espacio de trabajo. Intentá de nuevo.",
+    "noMemberships": "Esta cuenta no tiene espacios de trabajo disponibles."
   },
   "commandPalette": {
     "title": "Paleta de comandos",
@@ -44,6 +55,7 @@
   },
   "settings": {
     "open": "Ajustes",
+    "switchHospital": "Cambiar de espacio de trabajo",
     "language": "Idioma",
     "theme": "Tema",
     "ai": {

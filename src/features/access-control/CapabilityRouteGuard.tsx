@@ -1,5 +1,6 @@
 import { useRouterState } from '@tanstack/react-router';
 import type { JSX, ReactNode } from 'react';
+import { useEffect } from 'react';
 
 import { AccessDeniedPage } from '@/features/access-control/AccessDeniedPage.tsx';
 import { AccessLoadingState } from '@/features/access-control/AccessLoadingState.tsx';
@@ -20,7 +21,23 @@ export function CapabilityRouteGuard({
   const required = currentMatch?.routeId
     ? capabilityRequirementForRoute(currentMatch.routeId)
     : null;
-  const capabilities = useCapabilities();
+  const capabilities = useCapabilities(
+    required !== null && required.length > 0,
+  );
+  const location = useRouterState({ select: (state) => state.location });
+
+  useEffect(() => {
+    if (!capabilities.isUnauthorized || typeof window === 'undefined') {
+      return;
+    }
+    const locale =
+      /^\/(?<locale>en|es)(?:\/|$)/u.exec(location.pathname)?.groups?.locale ??
+      'en';
+    const returnTo = `${location.pathname}${location.searchStr}`;
+    window.location.assign(
+      `/${locale}/login?redirectTo=${encodeURIComponent(returnTo)}`,
+    );
+  }, [capabilities.isUnauthorized, location.pathname, location.searchStr]);
 
   if (required === null || required.length === 0) {
     return <>{children}</>;
@@ -30,7 +47,11 @@ export function CapabilityRouteGuard({
     return <AccessLoadingState />;
   }
 
-  if (capabilities.isError && !capabilities.hasData) {
+  if (capabilities.isUnauthorized) {
+    return <AccessLoadingState />;
+  }
+
+  if (capabilities.isError && !capabilities.hasData && !capabilities.isDenied) {
     return <AccessUnavailablePage />;
   }
 

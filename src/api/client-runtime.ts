@@ -1,7 +1,5 @@
 import {
-  ACTOR_HEADER_NAME,
   ApiError,
-  DEFAULT_ACTOR_ID,
   HOSPITAL_HEADER_NAME,
   JSON_API_MEDIA,
   buildErrorFromJsonApi,
@@ -151,16 +149,7 @@ export function createClientConfig(override?: Config): Config {
     querySerializer: cynaraQuerySerializer,
     headers: {
       'Accept': JSON_API_MEDIA,
-      // CYN-55: several mutation endpoints (POST /api/patients,
-      // POST /api/encounters, ...) omit their requestBody schema, so the
-      // Generated SDK would otherwise send the generic JSON media type, which
-      // The API rejects with 415. The legacy client always sent the JSON:API
-      // Media type for these JSON:API endpoints, so default to it here.
-      // Operations that declare their own content type (JSON:API ext, AI
-      // Chat) override it per call.
       'Content-Type': JSON_API_MEDIA,
-      [HOSPITAL_HEADER_NAME]: resolveHospitalCode(),
-      [ACTOR_HEADER_NAME]: DEFAULT_ACTOR_ID,
     },
   };
 }

@@ -44,13 +44,11 @@ describe('transport adapter', () => {
   });
 
   describe('createClientConfig', () => {
-    it('injects tenant, actor, and JSON:API accept/content headers by default', () => {
+    it('injects only JSON:API media headers by default', () => {
       const config = createClientConfig();
       expect(config.headers).toMatchObject({
         'Accept': 'application/vnd.api+json',
         'Content-Type': 'application/vnd.api+json',
-        'X-Hospital-Code': 'test-hospital',
-        'X-Actor-Id': 'designer-user',
       });
       expect(config.throwOnError).toBeTruthy();
       expect(config.fetch).toBeTypeOf('function');
@@ -147,7 +145,7 @@ describe('transport adapter', () => {
     it('throws the mapped ApiError with tenant headers on the request', async () => {
       stubFetch((request) => {
         expect(request.headers.get('X-Hospital-Code')).toBe('test-hospital');
-        expect(request.headers.get('X-Actor-Id')).toBe('designer-user');
+        expect(request.headers.get('X-Actor-Id')).toBeNull();
         return jsonApiResponse(
           {
             errors: [
