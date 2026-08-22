@@ -5,29 +5,6 @@ export type ClientOptions = {
 };
 
 /**
- * Body of a password-recovery request.
- */
-export type AccountRecoveryRequest = {
-    account?: string | null;
-};
-
-/**
- * Uniform recovery/reset response payload.
- */
-export type AccountRecoveryResponse = {
-    detail?: string;
-};
-
-/**
- * Body of a password-reset request.
- */
-export type AccountResetRequest = {
-    account?: string | null;
-    token?: string | null;
-    newPassword?: string | null;
-};
-
-/**
  * Advance contract for a running pipeline. The server evaluates the
  * outgoing transition guards/conditions against Cynara.Application.Modules.Workflows.AdvancePipelineRequest.InputValues
  * (declared workflow inputs) and picks the branch; clients cannot choose
@@ -1843,18 +1820,6 @@ export type FormVersionResourceType = 'formVersions';
 export type FormVersionStatus = 'draft' | 'review' | 'published' | 'retired';
 
 /**
- * Public membership listing shape returned by
- * `GET /api/me/hospitals`. Exposes exactly the hospital `code` and
- * `name`; never the hospital id, status, or the user's actor identifier,
- * so clients can build a hospital chooser without leaking tenant or
- * membership internals.
- */
-export type HospitalMembershipDto = {
-    code?: string;
-    name?: string;
-};
-
-/**
  * Resolved tenant workspace returned by GET /api/workspace. Bound to the X-Hospital-Code header from the request context; clients cannot select a different tenant.
  */
 export type HospitalWorkspaceDto = {
@@ -3370,53 +3335,6 @@ export type WorkflowNodeDtoWritable = {
     name?: string | null;
 };
 
-export type PostConnectAccountRecoveryData = {
-    /**
-     * Body of a password-recovery request.
-     */
-    body?: AccountRecoveryRequest;
-    path?: never;
-    query?: never;
-    url: '/connect/account/recovery';
-};
-
-export type PostConnectAccountRecoveryResponses = {
-    /**
-     * OK
-     */
-    200: AccountRecoveryResponse;
-};
-
-export type PostConnectAccountRecoveryResponse = PostConnectAccountRecoveryResponses[keyof PostConnectAccountRecoveryResponses];
-
-export type PostConnectAccountResetData = {
-    /**
-     * Body of a password-reset request.
-     */
-    body?: AccountResetRequest;
-    path?: never;
-    query?: never;
-    url: '/connect/account/reset';
-};
-
-export type PostConnectAccountResetErrors = {
-    /**
-     * Bad Request
-     */
-    400: AccountRecoveryResponse;
-};
-
-export type PostConnectAccountResetError = PostConnectAccountResetErrors[keyof PostConnectAccountResetErrors];
-
-export type PostConnectAccountResetResponses = {
-    /**
-     * OK
-     */
-    200: AccountRecoveryResponse;
-};
-
-export type PostConnectAccountResetResponse = PostConnectAccountResetResponses[keyof PostConnectAccountResetResponses];
-
 export type GetAiProviderSettingCollectionData = {
     body?: never;
     headers: {
@@ -3424,6 +3342,10 @@ export type GetAiProviderSettingCollectionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -3467,6 +3389,10 @@ export type HeadAiProviderSettingCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -3505,6 +3431,10 @@ export type PostAiProviderSettingData = {
      */
     body: CreateAiProviderSettingRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -3564,6 +3494,10 @@ export type DeleteAiProviderSettingData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -3603,6 +3537,10 @@ export type GetAiProviderSettingData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -3655,6 +3593,10 @@ export type HeadAiProviderSettingData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -3702,6 +3644,10 @@ export type PatchAiProviderSettingData = {
      */
     body: UpdateAiProviderSettingRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -3766,6 +3712,10 @@ export type GetAuditEventCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -3808,6 +3758,10 @@ export type HeadAuditEventCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -3846,6 +3800,10 @@ export type PostAuditEventData = {
      */
     body: CreateAuditEventRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -3905,6 +3863,10 @@ export type DeleteAuditEventData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -3944,6 +3906,10 @@ export type GetAuditEventData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -3996,6 +3962,10 @@ export type HeadAuditEventData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -4043,6 +4013,10 @@ export type PatchAuditEventData = {
      */
     body: UpdateAuditEventRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -4099,37 +4073,13 @@ export type PatchAuditEventResponses = {
 
 export type PatchAuditEventResponse = PatchAuditEventResponses[keyof PatchAuditEventResponses];
 
-export type GetConnectAuthorizeData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/connect/authorize';
-};
-
-export type GetConnectAuthorizeResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
-
-export type PostConnectAuthorizeData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/connect/authorize';
-};
-
-export type PostConnectAuthorizeResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
-
 export type ListCapabilityAssignmentsData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -4152,6 +4102,10 @@ export type ListCapabilityAssignmentsResponse = ListCapabilityAssignmentsRespons
 export type GrantCapabilityData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -4187,6 +4141,10 @@ export type GrantCapabilityResponse = GrantCapabilityResponses[keyof GrantCapabi
 export type RevokeCapabilityData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -4226,6 +4184,10 @@ export type GetMyCapabilitiesData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -4247,6 +4209,10 @@ export type GetMyCapabilitiesResponse = GetMyCapabilitiesResponses[keyof GetMyCa
 export type ListClinicalAreasData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -4272,6 +4238,10 @@ export type ListClinicalAreasResponse = ListClinicalAreasResponses[keyof ListCli
 export type CreateClinicalAreaData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -4311,6 +4281,10 @@ export type CreateClinicalAreaResponse = CreateClinicalAreaResponses[keyof Creat
 export type PatchClinicalAreaData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -4353,6 +4327,10 @@ export type RetireClinicalAreaData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -4390,6 +4368,10 @@ export type ListClinicalDocumentsData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -4416,6 +4398,10 @@ export type ListClinicalDocumentsResponse = ListClinicalDocumentsResponses[keyof
 export type StartClinicalDocumentData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -4456,6 +4442,10 @@ export type GetClinicalDocumentData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -4488,6 +4478,10 @@ export type GetClinicalDocumentResponse = GetClinicalDocumentResponses[keyof Get
 export type CancelClinicalDocumentData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -4530,6 +4524,10 @@ export type CompleteClinicalDocumentData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -4570,6 +4568,10 @@ export type CompleteClinicalDocumentResponse = CompleteClinicalDocumentResponses
 export type EnterClinicalDocumentInErrorData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -4616,6 +4618,10 @@ export type GetComponentDefinitionCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -4658,6 +4664,10 @@ export type HeadComponentDefinitionCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -4696,6 +4706,10 @@ export type PostComponentDefinitionData = {
      */
     body: CreateComponentDefinitionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -4755,6 +4769,10 @@ export type DeleteComponentDefinitionData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -4794,6 +4812,10 @@ export type GetComponentDefinitionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -4846,6 +4868,10 @@ export type HeadComponentDefinitionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -4893,6 +4919,10 @@ export type PatchComponentDefinitionData = {
      */
     body: UpdateComponentDefinitionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -4953,6 +4983,10 @@ export type CreateComponentDraftData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -4987,6 +5021,10 @@ export type CreateComponentDraftResponses = {
 export type SoftDeleteComponentDraftData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -5028,6 +5066,10 @@ export type GetComponentDefinitionVersionsData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -5080,6 +5122,10 @@ export type HeadComponentDefinitionVersionsData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -5127,6 +5173,10 @@ export type DeleteComponentDefinitionVersionsRelationshipData = {
      */
     body: ToManyComponentVersionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -5180,6 +5230,10 @@ export type GetComponentDefinitionVersionsRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -5231,6 +5285,10 @@ export type HeadComponentDefinitionVersionsRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -5278,6 +5336,10 @@ export type PatchComponentDefinitionVersionsRelationshipData = {
      */
     body: ToManyComponentVersionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -5329,6 +5391,10 @@ export type PostComponentDefinitionVersionsRelationshipData = {
      */
     body: ToManyComponentVersionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -5382,6 +5448,10 @@ export type GetComponentVersionCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -5424,6 +5494,10 @@ export type HeadComponentVersionCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -5462,6 +5536,10 @@ export type PostComponentVersionData = {
      */
     body: CreateComponentVersionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -5521,6 +5599,10 @@ export type DeleteComponentVersionData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -5560,6 +5642,10 @@ export type GetComponentVersionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -5612,6 +5698,10 @@ export type HeadComponentVersionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -5659,6 +5749,10 @@ export type PatchComponentVersionData = {
      */
     body: UpdateComponentVersionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -5723,6 +5817,10 @@ export type GetComponentVersionComponentDefinitionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -5774,6 +5872,10 @@ export type HeadComponentVersionComponentDefinitionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -5822,6 +5924,10 @@ export type GetComponentVersionComponentDefinitionRelationshipData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -5874,6 +5980,10 @@ export type HeadComponentVersionComponentDefinitionRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -5921,6 +6031,10 @@ export type PatchComponentVersionComponentDefinitionRelationshipData = {
      */
     body: ToOneComponentDefinitionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -5970,6 +6084,10 @@ export type PublishComponentVersionData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -6003,6 +6121,10 @@ export type RetireComponentVersionData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -6034,6 +6156,10 @@ export type ListDisciplinesData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -6058,6 +6184,10 @@ export type ListDisciplinesResponse = ListDisciplinesResponses[keyof ListDiscipl
 export type CreateDisciplineData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -6097,6 +6227,10 @@ export type CreateDisciplineResponse = CreateDisciplineResponses[keyof CreateDis
 export type PatchDisciplineData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -6139,6 +6273,10 @@ export type RetireDisciplineData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -6179,6 +6317,10 @@ export type GetDocumentDefinitionCollectionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -6222,6 +6364,10 @@ export type HeadDocumentDefinitionCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -6260,6 +6406,10 @@ export type PostDocumentDefinitionData = {
      */
     body: CreateDocumentDefinitionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -6319,6 +6469,10 @@ export type DeleteDocumentDefinitionData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -6358,6 +6512,10 @@ export type GetDocumentDefinitionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -6410,6 +6568,10 @@ export type HeadDocumentDefinitionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -6457,6 +6619,10 @@ export type PatchDocumentDefinitionData = {
      */
     body: UpdateDocumentDefinitionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -6521,6 +6687,10 @@ export type GetDocumentDefinitionClinicalAreaData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -6572,6 +6742,10 @@ export type HeadDocumentDefinitionClinicalAreaData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -6620,6 +6794,10 @@ export type GetDocumentDefinitionClinicalAreaRelationshipData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -6672,6 +6850,10 @@ export type HeadDocumentDefinitionClinicalAreaRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -6719,6 +6901,10 @@ export type PatchDocumentDefinitionClinicalAreaRelationshipData = {
      */
     body: ToOneClinicalAreaInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -6772,6 +6958,10 @@ export type GetDocumentDefinitionDisciplineData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -6823,6 +7013,10 @@ export type HeadDocumentDefinitionDisciplineData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -6871,6 +7065,10 @@ export type GetDocumentDefinitionDisciplineRelationshipData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -6923,6 +7121,10 @@ export type HeadDocumentDefinitionDisciplineRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -6970,6 +7172,10 @@ export type PatchDocumentDefinitionDisciplineRelationshipData = {
      */
     body: ToOneDisciplineInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -7023,6 +7229,10 @@ export type GetDocumentDefinitionFacilityData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -7074,6 +7284,10 @@ export type HeadDocumentDefinitionFacilityData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -7122,6 +7336,10 @@ export type GetDocumentDefinitionFacilityRelationshipData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -7174,6 +7392,10 @@ export type HeadDocumentDefinitionFacilityRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -7221,6 +7443,10 @@ export type PatchDocumentDefinitionFacilityRelationshipData = {
      */
     body: ToOneFacilityInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -7274,6 +7500,10 @@ export type GetDocumentDefinitionFormDefinitionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -7325,6 +7555,10 @@ export type HeadDocumentDefinitionFormDefinitionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -7373,6 +7607,10 @@ export type GetDocumentDefinitionFormDefinitionRelationshipData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -7425,6 +7663,10 @@ export type HeadDocumentDefinitionFormDefinitionRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -7472,6 +7714,10 @@ export type PatchDocumentDefinitionFormDefinitionRelationshipData = {
      */
     body: ToOneFormDefinitionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -7525,6 +7771,10 @@ export type GetDocumentDefinitionFormVersionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -7576,6 +7826,10 @@ export type HeadDocumentDefinitionFormVersionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -7624,6 +7878,10 @@ export type GetDocumentDefinitionFormVersionRelationshipData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -7676,6 +7934,10 @@ export type HeadDocumentDefinitionFormVersionRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -7723,6 +7985,10 @@ export type PatchDocumentDefinitionFormVersionRelationshipData = {
      */
     body: ToOneFormVersionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -7772,6 +8038,10 @@ export type PostApiDocumentDefinitionsByIdRetireData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -7809,6 +8079,10 @@ export type ListEncountersData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -7835,6 +8109,10 @@ export type ListEncountersResponse = ListEncountersResponses[keyof ListEncounter
 export type CreateEncounterData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -7875,6 +8153,10 @@ export type GetEncounterData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -7907,6 +8189,10 @@ export type GetEncounterResponse = GetEncounterResponses[keyof GetEncounterRespo
 export type CancelEncounterData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -7949,6 +8235,10 @@ export type CompleteEncounterData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -7989,6 +8279,10 @@ export type CompleteEncounterResponse = CompleteEncounterResponses[keyof Complet
 export type EnterEncounterInErrorData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -8031,6 +8325,10 @@ export type ListFacilitiesData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -8054,6 +8352,10 @@ export type ListFacilitiesResponse = ListFacilitiesResponses[keyof ListFacilitie
 export type CreateFacilityData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -8089,6 +8391,10 @@ export type CreateFacilityResponse = CreateFacilityResponses[keyof CreateFacilit
 export type PatchFacilityData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -8131,6 +8437,10 @@ export type RetireFacilityData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -8168,6 +8478,10 @@ export type GetFormAiStatusData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -8189,6 +8503,10 @@ export type GetFormAiStatusResponse = GetFormAiStatusResponses[keyof GetFormAiSt
 export type PostFormAiChatData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -8222,6 +8540,10 @@ export type PostFormAiChatResponse = PostFormAiChatResponses[keyof PostFormAiCha
 export type PostFormAiChatStreamData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -8257,6 +8579,10 @@ export type GetFormDefinitionCollectionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -8300,6 +8626,10 @@ export type HeadFormDefinitionCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -8338,6 +8668,10 @@ export type PostFormDefinitionData = {
      */
     body: CreateFormDefinitionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -8397,6 +8731,10 @@ export type DeleteFormDefinitionData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -8436,6 +8774,10 @@ export type GetFormDefinitionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -8488,6 +8830,10 @@ export type HeadFormDefinitionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -8535,6 +8881,10 @@ export type PatchFormDefinitionData = {
      */
     body: UpdateFormDefinitionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -8595,6 +8945,10 @@ export type PostApiFormDefinitionsByIdCreateDraftData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -8629,6 +8983,10 @@ export type PostApiFormDefinitionsByIdCreateDraftResponses = {
 export type DeleteApiFormDefinitionsByIdSoftDeleteDraftData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -8672,6 +9030,10 @@ export type GetFormDefinitionVersionsData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -8724,6 +9086,10 @@ export type HeadFormDefinitionVersionsData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -8771,6 +9137,10 @@ export type DeleteFormDefinitionVersionsRelationshipData = {
      */
     body: ToManyFormVersionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -8824,6 +9194,10 @@ export type GetFormDefinitionVersionsRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -8875,6 +9249,10 @@ export type HeadFormDefinitionVersionsRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -8922,6 +9300,10 @@ export type PatchFormDefinitionVersionsRelationshipData = {
      */
     body: ToManyFormVersionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -8973,6 +9355,10 @@ export type PostFormDefinitionVersionsRelationshipData = {
      */
     body: ToManyFormVersionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -9026,6 +9412,10 @@ export type GetFormResponseRevisionCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -9068,6 +9458,10 @@ export type HeadFormResponseRevisionCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -9106,6 +9500,10 @@ export type PostFormResponseRevisionData = {
      */
     body: CreateFormResponseRevisionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -9165,6 +9563,10 @@ export type DeleteFormResponseRevisionData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -9204,6 +9606,10 @@ export type GetFormResponseRevisionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -9256,6 +9662,10 @@ export type HeadFormResponseRevisionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -9303,6 +9713,10 @@ export type PatchFormResponseRevisionData = {
      */
     body: UpdateFormResponseRevisionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -9367,6 +9781,10 @@ export type GetFormResponseRevisionFormResponseData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -9418,6 +9836,10 @@ export type HeadFormResponseRevisionFormResponseData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -9466,6 +9888,10 @@ export type GetFormResponseRevisionFormResponseRelationshipData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -9518,6 +9944,10 @@ export type HeadFormResponseRevisionFormResponseRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -9565,6 +9995,10 @@ export type PatchFormResponseRevisionFormResponseRelationshipData = {
      */
     body: ToOneFormResponseInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -9618,6 +10052,10 @@ export type GetFormResponseCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -9660,6 +10098,10 @@ export type HeadFormResponseCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -9698,6 +10140,10 @@ export type PostFormResponseData = {
      */
     body: CreateFormResponseRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -9757,6 +10203,10 @@ export type DeleteFormResponseData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -9796,6 +10246,10 @@ export type GetFormResponseData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -9848,6 +10302,10 @@ export type HeadFormResponseData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -9895,6 +10353,10 @@ export type PatchFormResponseData = {
      */
     body: UpdateFormResponseRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -9955,6 +10417,10 @@ export type CompleteFormResponseData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -9995,6 +10461,10 @@ export type GetFormResponseFormVersionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -10047,6 +10517,10 @@ export type HeadFormResponseFormVersionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -10095,6 +10569,10 @@ export type GetFormResponseFormVersionRelationshipData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -10147,6 +10625,10 @@ export type HeadFormResponseFormVersionRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -10194,6 +10676,10 @@ export type PatchFormResponseFormVersionRelationshipData = {
      */
     body: ToOneFormVersionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -10247,6 +10733,10 @@ export type GetFormResponseRevisionsData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -10298,6 +10788,10 @@ export type HeadFormResponseRevisionsData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -10345,6 +10839,10 @@ export type DeleteFormResponseRevisionsRelationshipData = {
      */
     body: ToManyFormResponseRevisionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -10398,6 +10896,10 @@ export type GetFormResponseRevisionsRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -10449,6 +10951,10 @@ export type HeadFormResponseRevisionsRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -10496,6 +11002,10 @@ export type PatchFormResponseRevisionsRelationshipData = {
      */
     body: ToManyFormResponseRevisionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -10547,6 +11057,10 @@ export type PostFormResponseRevisionsRelationshipData = {
      */
     body: ToManyFormResponseRevisionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -10600,6 +11114,10 @@ export type GetFormVersionCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -10642,6 +11160,10 @@ export type HeadFormVersionCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -10680,6 +11202,10 @@ export type PostFormVersionData = {
      */
     body: CreateFormVersionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -10739,6 +11265,10 @@ export type DeleteFormVersionData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -10778,6 +11308,10 @@ export type GetFormVersionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -10830,6 +11364,10 @@ export type HeadFormVersionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -10877,6 +11415,10 @@ export type PatchFormVersionData = {
      */
     body: UpdateFormVersionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -10941,6 +11483,10 @@ export type GetFormVersionFormDefinitionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -10992,6 +11538,10 @@ export type HeadFormVersionFormDefinitionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -11040,6 +11590,10 @@ export type GetFormVersionFormDefinitionRelationshipData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -11092,6 +11646,10 @@ export type HeadFormVersionFormDefinitionRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -11139,6 +11697,10 @@ export type PatchFormVersionFormDefinitionRelationshipData = {
      */
     body: ToOneFormDefinitionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -11188,6 +11750,10 @@ export type PostApiFormVersionsByIdPublishData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -11224,6 +11790,10 @@ export type PostApiFormVersionsByIdPublishResponses = {
 export type PostApiFormVersionsByIdRejectReviewData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -11267,6 +11837,10 @@ export type PostApiFormVersionsByIdRetireData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -11301,6 +11875,10 @@ export type PostApiFormVersionsByIdRetireResponses = {
 export type PostApiFormVersionsByIdSubmitReviewData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -11339,6 +11917,10 @@ export type PostApiFormVersionsByIdWithdrawReviewData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -11372,25 +11954,13 @@ export type PostApiFormVersionsByIdWithdrawReviewResponses = {
     200: unknown;
 };
 
-export type GetMyHospitalsData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/me/hospitals';
-};
-
-export type GetMyHospitalsResponses = {
-    /**
-     * OK
-     */
-    200: Array<HospitalMembershipDto>;
-};
-
-export type GetMyHospitalsResponse = GetMyHospitalsResponses[keyof GetMyHospitalsResponses];
-
 export type SearchPatientsData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -11421,6 +11991,10 @@ export type SearchPatientsResponse = SearchPatientsResponses[keyof SearchPatient
 export type CreatePatientData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -11457,6 +12031,10 @@ export type GetPatientData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -11489,6 +12067,10 @@ export type GetPatientResponse = GetPatientResponses[keyof GetPatientResponses];
 export type PatchPatientData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -11531,6 +12113,10 @@ export type SoftDeletePatientData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -11567,6 +12153,10 @@ export type SoftDeletePatientResponse = SoftDeletePatientResponses[keyof SoftDel
 export type ListPipelinesData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -11609,6 +12199,10 @@ export type StartPipelineData = {
      */
     body: StartPipelineRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -11653,6 +12247,10 @@ export type GetPipelineJourneyData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -11694,6 +12292,10 @@ export type GetPipelineJourneyResponse = GetPipelineJourneyResponses[keyof GetPi
 export type GetPipelineData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -11737,6 +12339,10 @@ export type AdvancePipelineData = {
      */
     body: AdvancePipelineRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -11788,6 +12394,10 @@ export type CancelPipelineData = {
     body: TransitionPipelineRequest;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -11837,6 +12447,10 @@ export type CompletePipelineData = {
      */
     body: TransitionPipelineRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -11888,6 +12502,10 @@ export type EnterInErrorPipelineData = {
     body: TransitionPipelineRequest;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -11933,6 +12551,10 @@ export type GetPipelineHistoryData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -11969,6 +12591,10 @@ export type GetPipelineHistoryResponse = GetPipelineHistoryResponses[keyof GetPi
 export type ListTasksData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -12008,6 +12634,10 @@ export type ListTasksResponse = ListTasksResponses[keyof ListTasksResponses];
 export type GetTaskData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -12050,6 +12680,10 @@ export type CancelTaskData = {
      */
     body: TransitionTaskRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -12099,6 +12733,10 @@ export type ClaimTaskData = {
      */
     body: ClaimTaskRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -12150,6 +12788,10 @@ export type CompleteTaskData = {
     body: TransitionTaskRequest;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -12191,20 +12833,6 @@ export type CompleteTaskResponses = {
 
 export type CompleteTaskResponse = CompleteTaskResponses[keyof CompleteTaskResponses];
 
-export type PostConnectTokenData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/connect/token';
-};
-
-export type PostConnectTokenResponses = {
-    /**
-     * OK
-     */
-    200: unknown;
-};
-
 export type GetWorkflowDefinitionCollectionData = {
     body?: never;
     headers: {
@@ -12212,6 +12840,10 @@ export type GetWorkflowDefinitionCollectionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -12255,6 +12887,10 @@ export type HeadWorkflowDefinitionCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -12293,6 +12929,10 @@ export type PostWorkflowDefinitionData = {
      */
     body?: CreateWorkflowDefinitionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -12352,6 +12992,10 @@ export type DeleteWorkflowDefinitionData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -12391,6 +13035,10 @@ export type GetWorkflowDefinitionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -12443,6 +13091,10 @@ export type HeadWorkflowDefinitionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -12490,6 +13142,10 @@ export type PatchWorkflowDefinitionData = {
      */
     body?: UpdateWorkflowDefinitionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -12550,6 +13206,10 @@ export type CreateWorkflowDraftData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -12584,6 +13244,10 @@ export type CreateWorkflowDraftResponses = {
 export type SoftDeleteWorkflowDraftData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -12625,6 +13289,10 @@ export type GetWorkflowDefinitionVersionsData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -12677,6 +13345,10 @@ export type HeadWorkflowDefinitionVersionsData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -12724,6 +13396,10 @@ export type DeleteWorkflowDefinitionVersionsRelationshipData = {
      */
     body: ToManyWorkflowVersionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -12777,6 +13453,10 @@ export type GetWorkflowDefinitionVersionsRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -12828,6 +13508,10 @@ export type HeadWorkflowDefinitionVersionsRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -12875,6 +13559,10 @@ export type PatchWorkflowDefinitionVersionsRelationshipData = {
      */
     body: ToManyWorkflowVersionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -12926,6 +13614,10 @@ export type PostWorkflowDefinitionVersionsRelationshipData = {
      */
     body: ToManyWorkflowVersionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -12979,6 +13671,10 @@ export type GetWorkflowVersionCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -13021,6 +13717,10 @@ export type HeadWorkflowVersionCollectionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -13059,6 +13759,10 @@ export type PostWorkflowVersionData = {
      */
     body?: CreateWorkflowVersionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -13118,6 +13822,10 @@ export type DeleteWorkflowVersionData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -13157,6 +13865,10 @@ export type GetWorkflowVersionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -13209,6 +13921,10 @@ export type HeadWorkflowVersionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -13256,6 +13972,10 @@ export type PatchWorkflowVersionData = {
      */
     body?: UpdateWorkflowVersionRequestDocument;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -13316,6 +14036,10 @@ export type PublishWorkflowVersionData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -13352,6 +14076,10 @@ export type PublishWorkflowVersionResponses = {
 export type RejectWorkflowReviewData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -13395,6 +14123,10 @@ export type RetireWorkflowVersionData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -13429,6 +14161,10 @@ export type RetireWorkflowVersionResponses = {
 export type SubmitWorkflowReviewData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -13466,6 +14202,10 @@ export type SubmitWorkflowReviewResponses = {
 export type WithdrawWorkflowReviewData = {
     body?: never;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -13507,6 +14247,10 @@ export type GetWorkflowVersionWorkflowDefinitionData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -13559,6 +14303,10 @@ export type HeadWorkflowVersionWorkflowDefinitionData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -13607,6 +14355,10 @@ export type GetWorkflowVersionWorkflowDefinitionRelationshipData = {
          * A list of ETags, resulting in HTTP status 304 without a body, if one of them matches the current fingerprint.
          */
         'If-None-Match'?: string;
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -13659,6 +14411,10 @@ export type HeadWorkflowVersionWorkflowDefinitionRelationshipData = {
          */
         'If-None-Match'?: string;
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -13706,6 +14462,10 @@ export type PatchWorkflowVersionWorkflowDefinitionRelationshipData = {
      */
     body: ToOneWorkflowDefinitionInRequest;
     headers: {
+        /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
@@ -13755,6 +14515,10 @@ export type GetWorkspaceData = {
     body?: never;
     headers: {
         /**
+         * Optional actor identity recorded on mutating workflows and audit events. Not an authentication gate in this maquette.
+         */
+        'X-Actor-Id'?: string;
+        /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
         'X-Hospital-Code': string;
@@ -13794,6 +14558,7 @@ export type PatchWorkspaceData = {
      */
     body?: UpdateHospitalWorkspaceRequest;
     headers: {
+        'X-Actor-Id'?: string;
         /**
          * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
          */
