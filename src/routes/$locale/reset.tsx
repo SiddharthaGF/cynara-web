@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button.tsx';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { isAppLocale } from '@/lib/locale.ts';
-import { resetPassword } from '@/server/auth.ts';
+import { resetPassword } from '@/server/account-recovery.ts';
 
 interface ResetSearch {
   account?: string;

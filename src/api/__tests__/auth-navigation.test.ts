@@ -5,7 +5,7 @@ import {
   createAuthorizeProxyRequest,
   proxyAuthorizeRequest,
 } from '@/server/auth-authorize-proxy.ts';
-import { buildAuthorizeUrl } from '@/server/auth.ts';
+import { buildAuthorizeUrl } from '@/server/identity-provider.ts';
 
 describe('frontend authorization navigation', () => {
   afterEach(() => {
@@ -60,8 +60,8 @@ describe('frontend authorization navigation', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        Cookie: 'backend-secret',
-        Host: 'evil.example',
+        'Cookie': 'backend-secret',
+        'Host': 'evil.example',
       },
       body: new URLSearchParams({
         client_id: 'cynara-web',

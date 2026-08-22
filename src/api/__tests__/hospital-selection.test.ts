@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import { parseLoginInput } from '@/server/auth.ts';
 import {
   choosePreferredHospital,
-  parseLoginInput,
   resolveSelectedHospital,
   type HospitalMembership,
-} from '@/server/auth.ts';
+} from '@/server/hospital-workspace.ts';
 
 describe('automatic hospital selection', () => {
   const memberships: HospitalMembership[] = [
@@ -26,7 +26,9 @@ describe('automatic hospital selection', () => {
   });
 
   it('replaces a stale selected workspace with a valid preferred membership', () => {
-    expect(resolveSelectedHospital('removed', memberships, 'beta')).toBe('beta');
+    expect(resolveSelectedHospital('removed', memberships, 'beta')).toBe(
+      'beta',
+    );
   });
 
   it('keeps an empty membership list unselected', () => {

@@ -20,7 +20,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar.tsx';
 import { getHospitals, selectHospital } from '@/server/auth.ts';
-import type { HospitalMembership } from '@/server/auth.ts';
+import type { HospitalMembership } from '@/server/hospital-workspace.ts';
 
 interface WorkspaceSwitcherProps {
   workspaceCode: string | null;

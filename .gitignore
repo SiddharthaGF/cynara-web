@@ -47,3 +47,5 @@ worker-configuration.d.ts
 /blob-report/
 /playwright/.cache/
 
+# Codegraph
+.codegraph/

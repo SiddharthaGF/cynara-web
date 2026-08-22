@@ -39,7 +39,9 @@ export async function createAuthorizeProxyRequest(
   let body: string | undefined = undefined;
   if (request.method === 'POST') {
     const contentType = request.headers.get('content-type') ?? '';
-    if (!contentType.toLowerCase().startsWith('application/x-www-form-urlencoded')) {
+    if (
+      !contentType.toLowerCase().startsWith('application/x-www-form-urlencoded')
+    ) {
       throw new AuthorizeProxyRequestError(
         415,
         'Authorization requests must use form encoding.',

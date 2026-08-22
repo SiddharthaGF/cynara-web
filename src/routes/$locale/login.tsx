@@ -84,7 +84,7 @@ function LoginPage(): JSX.Element {
     ) {
       callbackRan.current = true;
       setIsSubmitting(true);
-      void (async () => {
+      void (async (): Promise<void> => {
         try {
           const result = await loginCallback({
             data: { kind: 'callback', code, state },
@@ -106,7 +106,7 @@ function LoginPage(): JSX.Element {
         }
       })();
     }
-    return () => {
+    return (): void => {
       cancelled = true;
     };
   }, [isCallback, code, state]);
@@ -130,7 +130,7 @@ function LoginPage(): JSX.Element {
     }
   }
 
-  const loginContent = (() => {
+  const loginContent = ((): JSX.Element => {
     if (isCallback) {
       return (
         <p className='flex items-center gap-2 text-sm text-muted-foreground'>

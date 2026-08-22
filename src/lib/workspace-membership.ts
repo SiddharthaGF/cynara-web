@@ -1,4 +1,4 @@
-import type { HospitalMembership } from '@/server/auth.ts';
+import type { HospitalMembership } from '@/server/hospital-workspace.ts';
 
 export function getSelectedMembership(
   memberships: readonly HospitalMembership[],

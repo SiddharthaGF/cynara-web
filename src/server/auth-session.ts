@@ -2,7 +2,7 @@ import {
   clearSession,
   getCookie,
   getRequestProtocol,
-  useSession,
+  useSession as createServerSession,
 } from '@tanstack/react-start/server';
 
 import { getSessionSecret } from '@/server/env.ts';
@@ -30,10 +30,10 @@ export interface AuthSessionData {
 }
 
 // SessionManager/SessionConfig are not re-exported from the installed
-// @tanstack/react-start/server, so derive their shapes from useSession.
-export type AuthSessionConfig = Parameters<typeof useSession>[0];
+// @tanstack/react-start/server, so derive their shapes from createServerSession.
+export type AuthSessionConfig = Parameters<typeof createServerSession>[0];
 export type AuthSessionManager = Awaited<
-  ReturnType<typeof useSession<AuthSessionData>>
+  ReturnType<typeof createServerSession<AuthSessionData>>
 >;
 
 export const AUTH_SESSION_NAME = 'cynara-auth';
@@ -95,7 +95,7 @@ export async function getAuthSession(): Promise<
   }
   // Session unsealing silently replaces tampered or expired cookies.
   // A fresh anonymous session results; Missing data means signed-out.
-  return useSession<AuthSessionData>(getSessionConfig());
+  return createServerSession<AuthSessionData>(getSessionConfig());
 }
 
 /**
@@ -127,7 +127,8 @@ export async function createAuthSession(
   data: Omit<AuthSessionData, 'sid'>,
 ): Promise<AuthSessionManager> {
   await clearAuthSession();
-  const manager = await useSession<AuthSessionData>(getSessionConfig());
+  const manager =
+    await createServerSession<AuthSessionData>(getSessionConfig());
   await manager.update({ ...data, sid: manager.id ?? '' });
   return manager;
 }
@@ -136,7 +137,8 @@ export async function createAuthSession(
 export async function rotateAuthSession(
   data: Omit<AuthSessionData, 'sid'>,
 ): Promise<AuthSessionManager> {
-  const manager = await useSession<AuthSessionData>(getSessionConfig());
+  const manager =
+    await createServerSession<AuthSessionData>(getSessionConfig());
   await manager.update({ ...data, sid: manager.data.sid });
   return manager;
 }
@@ -158,7 +160,7 @@ export interface PkceTransactionData {
 }
 
 export type PkceTransactionManager = Awaited<
-  ReturnType<typeof useSession<PkceTransactionData>>
+  ReturnType<typeof createServerSession<PkceTransactionData>>
 >;
 
 export async function getPkceTransaction(): Promise<
@@ -167,7 +169,7 @@ export async function getPkceTransaction(): Promise<
   if (getCookie(PKCE_TRANSACTION_NAME) === undefined) {
     return undefined;
   }
-  return useSession<PkceTransactionData>(getTransactionConfig());
+  return createServerSession<PkceTransactionData>(getTransactionConfig());
 }
 
 /** Narrows the sealed PKCE transaction data; null when fields are missing. */
@@ -189,8 +191,12 @@ export function readPkceTransactionData(
 
 export async function setPkceTransaction(
   data: PkceTransactionData,
-): Promise<Awaited<ReturnType<typeof useSession<PkceTransactionData>>>> {
-  const manager = await useSession<PkceTransactionData>(getTransactionConfig());
+): Promise<
+  Awaited<ReturnType<typeof createServerSession<PkceTransactionData>>>
+> {
+  const manager = await createServerSession<PkceTransactionData>(
+    getTransactionConfig(),
+  );
   await manager.update(data);
   return manager;
 }

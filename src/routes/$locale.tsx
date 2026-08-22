@@ -14,11 +14,11 @@ import {
 import type { AppLocale } from '@/lib/locale.ts';
 import { getSelectedMembership } from '@/lib/workspace-membership.ts';
 import {
-  getAuthStatus,
   ensureSelectedHospital,
+  getAuthStatus,
   isAuthRoutePath,
-  type HospitalMembership,
 } from '@/server/auth.ts';
+import type { HospitalMembership } from '@/server/hospital-workspace.ts';
 import { getSidebarOpen } from '@/server/sidebar-state.ts';
 
 async function syncI18nLocale(locale: AppLocale): Promise<void> {
@@ -55,10 +55,8 @@ export const Route = createFileRoute('/$locale')({
           replace: true,
         });
       }
-      const {
-        hospitalCode,
-        memberships: selectedMemberships,
-      } = await ensureSelectedHospital();
+      const { hospitalCode, memberships: selectedMemberships } =
+        await ensureSelectedHospital();
       memberships = selectedMemberships;
       sidebarOpen = await getSidebarOpen();
 

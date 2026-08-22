@@ -4,7 +4,7 @@ import {
   createReplayableRequestInitFactory,
   isRequestInitReplayable,
 } from '@/server/api-proxy.ts';
-import { selectHospitalSessionData } from '@/server/auth.ts';
+import { selectHospitalSessionData } from '@/server/hospital-workspace.ts';
 
 describe('authenticated BFF regressions', () => {
   it('preserves the refresh token rotated during automatic hospital selection', () => {

@@ -24,7 +24,7 @@ function LogoutPage(): JSX.Element {
 
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
+    void (async (): Promise<void> => {
       try {
         await logout();
         if (!cancelled) {
@@ -36,7 +36,7 @@ function LogoutPage(): JSX.Element {
         }
       }
     })();
-    return () => {
+    return (): void => {
       cancelled = true;
     };
   }, []);
