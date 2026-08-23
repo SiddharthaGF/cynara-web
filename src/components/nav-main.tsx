@@ -42,7 +42,10 @@ export function NavMain({
           <SidebarGroup>
             <CollapsibleTrigger
               render={
-                <SidebarGroupLabel className='cursor-pointer'>
+                <SidebarGroupLabel
+                  className='cursor-pointer'
+                  render={<button type='button' />}
+                >
                   {t(group.labelKey)}
                   <ChevronRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
                 </SidebarGroupLabel>
