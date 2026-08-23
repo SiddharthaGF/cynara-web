@@ -1,10 +1,9 @@
 import type { APIRequestContext } from '@playwright/test';
 
+import { apiHeaders, apiOrigin } from '../lib/auth';
 import {
-  apiOrigin,
   completeClinicalDocumentViaApi,
   enterClinicalDocumentInErrorViaApi,
-  headers,
   seedWorkspaceDocument,
   startClinicalDocumentViaApi,
   updateFormResponseViaApi,
@@ -148,7 +147,7 @@ export async function seedDocumentCatalog(
       name: `Workspace discipline ${suffix}`,
       clinicalAreaId: taxonomy.clinicalAreaId,
     },
-    headers: headers(),
+    headers: await apiHeaders(),
   });
   if (!disciplineResponse.ok()) {
     throw new Error(
@@ -170,7 +169,7 @@ export async function seedDocumentCatalog(
         },
       },
     },
-    headers: headers(),
+    headers: await apiHeaders(),
   });
   if (!formResponse.ok()) {
     throw new Error(
@@ -183,7 +182,7 @@ export async function seedDocumentCatalog(
 
   const definitionDocument = await request.get(
     `${origin}/api/formDefinitions/${formDefinitionId}?include=versions`,
-    { headers: headers() },
+    { headers: await apiHeaders() },
   );
   if (!definitionDocument.ok()) {
     throw new Error(
@@ -203,7 +202,7 @@ export async function seedDocumentCatalog(
 
   const submitted = await request.post(
     `${origin}/api/formVersions/${formVersionId}/submit-review?rowVersion=${draft.attributes.rowVersion}`,
-    { headers: headers() },
+    { headers: await apiHeaders() },
   );
   if (!submitted.ok()) {
     throw new Error(
@@ -214,7 +213,7 @@ export async function seedDocumentCatalog(
 
   const published = await request.post(
     `${origin}/api/formVersions/${formVersionId}/publish?rowVersion=${afterReview.data.attributes.rowVersion}`,
-    { headers: headers() },
+    { headers: await apiHeaders() },
   );
   if (!published.ok()) {
     throw new Error(
@@ -260,7 +259,7 @@ export async function seedDocumentCatalog(
           },
         },
       },
-      headers: headers(),
+      headers: await apiHeaders(),
     },
   );
   if (!definitionResponse.ok()) {

@@ -1,7 +1,5 @@
 import {
-  ACTOR_HEADER_NAME,
   ApiError,
-  DEFAULT_ACTOR_ID,
   HOSPITAL_HEADER_NAME,
   JSON_API_MEDIA,
   buildErrorFromJsonApi,
@@ -10,6 +8,7 @@ import {
   type RequestContext,
 } from '@/api/client.ts';
 import type { Config } from '@/api/generated/client';
+import { attachSessionAuth } from '@/api/server-auth-hook';
 import { getApiOrigin } from '@/lib/api-origin.ts';
 
 /**
@@ -101,7 +100,22 @@ const cynaraFetch: typeof fetch = async (input, init) => {
     if (contentType?.toLowerCase().startsWith('application/vnd.api+json;')) {
       headers.set('Content-Type', 'application/vnd.api+json');
     }
-    const normalized = new Request(request, { headers });
+    let normalized = new Request(request, { headers });
+    if (typeof window === 'undefined') {
+      // Server-side SDK calls (route loaders) bypass the BFF proxy and hit
+      // The API origin directly, so they must carry the session's bearer
+      // Token themselves. Browser calls go through the same-origin proxy,
+      // Which injects auth server-side.
+      const authedInit = await attachSessionAuth({
+        method: request.method,
+        headers,
+        body: request.body,
+        signal: request.signal,
+      });
+      normalized = new Request(normalized, {
+        headers: new Headers(authedInit.headers),
+      });
+    }
     const response = await fetch(normalized);
     if (!response.ok) {
       const bodyText = await response.text();
@@ -151,16 +165,7 @@ export function createClientConfig(override?: Config): Config {
     querySerializer: cynaraQuerySerializer,
     headers: {
       'Accept': JSON_API_MEDIA,
-      // CYN-55: several mutation endpoints (POST /api/patients,
-      // POST /api/encounters, ...) omit their requestBody schema, so the
-      // Generated SDK would otherwise send the generic JSON media type, which
-      // The API rejects with 415. The legacy client always sent the JSON:API
-      // Media type for these JSON:API endpoints, so default to it here.
-      // Operations that declare their own content type (JSON:API ext, AI
-      // Chat) override it per call.
       'Content-Type': JSON_API_MEDIA,
-      [HOSPITAL_HEADER_NAME]: resolveHospitalCode(),
-      [ACTOR_HEADER_NAME]: DEFAULT_ACTOR_ID,
     },
   };
 }

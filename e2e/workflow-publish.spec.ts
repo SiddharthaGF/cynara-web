@@ -1,22 +1,18 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 import type { APIRequestContext, Page } from '@playwright/test';
 
 import {
   FULL_CAPABILITIES,
   grantCapabilities,
 } from './fixtures/capabilities.ts';
+import { test } from './fixtures/test';
+import { apiHeaders, apiOrigin } from './lib/auth';
 
 const WORKFLOW_CAPABILITIES = [
   ...FULL_CAPABILITIES,
   'workflows.read',
   'workflows.write',
 ];
-
-const JSON_API = 'application/vnd.api+json';
-const ACTOR = 'designer-user';
 
 /**
  * Guarded workflow used by every publish assertion: `start -> triage ->
@@ -65,38 +61,6 @@ const INITIAL_WORKFLOW_SCHEMA = {
   ],
 };
 
-function apiHeaders(): Record<string, string> {
-  return {
-    'Accept': JSON_API,
-    'Content-Type': JSON_API,
-    'X-Actor-Id': ACTOR,
-    'X-Hospital-Code': process.env.VITE_HOSPITAL_CODE ?? 'default',
-  };
-}
-
-/**
- * Resolve the cynara-api origin. Playwright runs outside Vite, so it cannot
- * see the `.dev.vars` that the dev server reads; parse it as a fallback so
- * fixture CRUD goes straight to the API instead of the Vite dev server.
- */
-function apiOrigin(baseURL: string): string {
-  const envOrigin = process.env.VITE_API_ORIGIN;
-  if (envOrigin) {
-    return envOrigin.replace(/\/$/u, '');
-  }
-  try {
-    const devVarsPath = path.resolve(process.cwd(), '.dev.vars');
-    const devVars = readFileSync(devVarsPath, 'utf8');
-    const match = /^VITE_API_ORIGIN\s*=\s*(.+?)\s*$/mu.exec(devVars);
-    if (match?.[1]) {
-      return match[1].replace(/\/$/u, '');
-    }
-  } catch {
-    // `.dev.vars` is optional; fall back to the Vite dev server base URL.
-  }
-  return baseURL;
-}
-
 /** Creates a unique guarded workflow against the real API. */
 async function createWorkflowViaApi(
   request: APIRequestContext,
@@ -116,7 +80,7 @@ async function createWorkflowViaApi(
           type: 'workflowDefinitions',
         },
       },
-      headers: apiHeaders(),
+      headers: await apiHeaders(),
     },
   );
   if (!response.ok()) {
@@ -142,7 +106,7 @@ async function getWorkflowVersionStatuses(
 ): Promise<string[]> {
   const document = await request.get(
     `${apiOrigin(baseURL)}/api/workflowDefinitions/${definitionId}?include=versions`,
-    { headers: apiHeaders() },
+    { headers: await apiHeaders() },
   );
   if (!document.ok()) {
     throw new Error(
@@ -168,7 +132,7 @@ async function submitDraftForReview(
 ): Promise<void> {
   const document = await request.get(
     `${apiOrigin(baseURL)}/api/workflowDefinitions/${definitionId}?include=versions`,
-    { headers: apiHeaders() },
+    { headers: await apiHeaders() },
   );
   if (!document.ok()) {
     throw new Error(
@@ -193,7 +157,7 @@ async function submitDraftForReview(
   }
   const response = await request.post(
     `${apiOrigin(baseURL)}/api/workflowVersions/${editable.id}/submit-review?rowVersion=${editable.attributes.rowVersion}`,
-    { headers: apiHeaders() },
+    { headers: await apiHeaders() },
   );
   if (!response.ok()) {
     throw new Error(

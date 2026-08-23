@@ -1,10 +1,11 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 
 import {
   FULL_CAPABILITIES,
   grantCapabilities,
   stubEmptyFormsCatalog,
 } from './fixtures/capabilities.ts';
+import { test } from './fixtures/test';
 
 test.describe('home dashboard and sidebar groups (UX phase 2)', () => {
   test('shows quick actions and browse links with full capabilities', async ({
@@ -104,7 +105,9 @@ test.describe('home dashboard and sidebar groups (UX phase 2)', () => {
     await expect(
       sidebar.getByRole('link', { name: 'Administration' }),
     ).toBeVisible();
-    const groupLabels = sidebar.locator('[data-slot="sidebar-group-label"]');
+    // Group labels render through the collapsible trigger in the current
+    // shell markup.
+    const groupLabels = sidebar.locator('[data-slot="collapsible-trigger"]');
     await expect(groupLabels.filter({ hasText: 'Care' })).toBeVisible();
     await expect(
       groupLabels.filter({ hasText: 'Configuration' }),

@@ -79,8 +79,8 @@ SSR falls back to the production origin, so the locally created E2E forms are
 never found. The workflow therefore writes a `.dev.vars` that points the SSR
 runtime at the locally booted API before running Playwright.
 
-`.env.example` ships `VITE_API_ORIGIN=http://localhost:5000`. To override, copy
-it to `.env` and edit:
+`.env.example` ships `VITE_API_ORIGIN=http://127.0.0.1:5000` for the local API.
+To use another explicit origin, copy it to `.env` and edit:
 
 ```bash
 cp .env.example .env
@@ -195,6 +195,23 @@ pnpm dev
 Browser requests will be proxied to the remote origin. CORS still has to allow
 the dev origin (`:5173`) — coordinate with whoever owns the remote API.
 
+## Authentication
+
+The client uses authorization-code + PKCE against the Cynara API. TanStack Start
+exchanges the callback code and stores access and refresh tokens only in a
+sealed httpOnly cookie. Browser API calls use the same-origin BFF, which
+refreshes and rotates tokens server-side.
+
+After sign-in, `GET /api/me/hospitals` lets the server select the configured
+local workspace when available, or the first membership otherwise. The verified
+selection is stored server-side before tenant-scoped routes load. Use the
+workspace switcher to change workspace.
+
+```bash
+pnpm dev
+open http://localhost:5173/en/forms
+```
+
 ## Generated API client
 
 The typed client in `src/api/generated/` is produced by `@hey-api/openapi-ts`
@@ -288,6 +305,12 @@ exactly what GitHub Actions ships.
 | `OPENAPI_SPEC`            | optional    | shell                                     | Path to an OpenAPI contract used by `pnpm api:generate` (overrides the sibling-checkout default).                                                                    |
 | `OPENAPI_SPEC_URL`        | optional    | shell / CI                                | URL of an OpenAPI contract used by `pnpm api:generate` (overrides `OPENAPI_SPEC`). The `API client drift` workflow sets this to the pinned contract ref.             |
 | `APP_ENV`                 | optional    | shell                                     | `development` / `production` / `testing`. Drives `environment.ts`. Falls back to `import.meta.env.DEV`.                                                              |
+| `APP_ORIGIN`              | yes         | `.dev.vars`, deployment config            | Public web origin registered for the authorization callback. Server-only.                                                                                            |
+| `IDENTITY_ORIGIN`         | yes         | `.dev.vars`, deployment config            | Cynara API origin serving `/connect/*` and `/api/*`. Server-only.                                                                                                    |
+| `AUTH_SESSION_SECRET`     | yes         | secret store                              | Password sealing the session cookie (32+ chars). Server-only; keep out of committed vars.                                                                            |
+| `AUTH_CLIENT_ID`          | yes         | `.dev.vars`, deployment config            | Confidential `cynara-web` client id.                                                                                                                                 |
+| `AUTH_CLIENT_SECRET`      | yes         | secret store                              | Client secret for token and revocation endpoints. Server-only.                                                                                                       |
+| `AUTH_SCOPES`             | optional    | `.dev.vars`, deployment config            | Space-separated scopes requested at authorize (default `openid offline_access profile`).                                                                             |
 | `CLOUDFLARE_API_TOKEN`    | deploy only | CI secret                                 | Wrangler deploy token with the **Edit Cloudflare Workers** template.                                                                                                 |
 | `CLOUDFLARE_ACCOUNT_ID`   | deploy only | CI secret                                 | Shown on the Workers project overview page.                                                                                                                          |
 | `CLOUDFLARE_PROJECT_NAME` | optional    | CI variable                               | Defaults to `cynara-web` if unset.                                                                                                                                   |

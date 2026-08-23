@@ -25,6 +25,7 @@
       "vars": {
         "VITE_API_ORIGIN": "https://cynara-api.onrender.com",
         "VITE_HOSPITAL_CODE": "default",
+        "IDENTITY_ORIGIN": "https://cynara-api.onrender.com",
       },
     },
   },

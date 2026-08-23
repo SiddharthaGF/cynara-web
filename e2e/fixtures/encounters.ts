@@ -1,21 +1,6 @@
 import type { APIRequestContext } from '@playwright/test';
 
-const JSON_API_MEDIA = 'application/vnd.api+json';
-const ACTOR = 'designer-user';
-const HOSPITAL = process.env.VITE_HOSPITAL_CODE ?? 'default';
-
-function apiOrigin(baseURL: string): string {
-  return process.env.VITE_API_ORIGIN?.replace(/\/$/u, '') || baseURL;
-}
-
-function headers(): Record<string, string> {
-  return {
-    'Accept': JSON_API_MEDIA,
-    'Content-Type': JSON_API_MEDIA,
-    'X-Actor-Id': ACTOR,
-    'X-Hospital-Code': HOSPITAL,
-  };
-}
+import { apiHeaders, apiOrigin } from '../lib/auth';
 
 export interface EncounterTaxonomyRefs {
   facilityId: string;
@@ -47,7 +32,7 @@ export async function seedEncounterTaxonomy(
       code: `fac-${suffix}`,
       name: `Facility ${suffix}`,
     },
-    headers: headers(),
+    headers: await apiHeaders(),
   });
   if (!facilityResponse.ok()) {
     throw new Error(
@@ -65,7 +50,7 @@ export async function seedEncounterTaxonomy(
       name: `Area ${suffix}`,
       facilityId: facility.id,
     },
-    headers: headers(),
+    headers: await apiHeaders(),
   });
   if (!areaResponse.ok()) {
     throw new Error(
@@ -103,7 +88,7 @@ export async function createEncounterViaApi(
       responsibleProfessionalId:
         input.responsibleProfessionalId ?? 'designer-user',
     },
-    headers: headers(),
+    headers: await apiHeaders(),
   });
 
   if (!response.ok()) {
@@ -138,7 +123,7 @@ export async function completeEncounterViaApi(
     `${origin}/api/encounters/${encounterId}/complete`,
     {
       data: { rowVersion },
-      headers: headers(),
+      headers: await apiHeaders(),
     },
   );
 

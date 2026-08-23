@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 
+import { ApiError } from '@/api/client.ts';
 import {
   getEffectiveCapabilities,
   isCapabilitiesForbiddenError,
@@ -13,7 +14,7 @@ import {
   type CapabilitySubject,
 } from '@/lib/capabilities.ts';
 
-export function useCapabilities(): {
+export function useCapabilities(enabled = true): {
   capabilities: string[];
   actorId: string | null;
   ability: AppAbility;
@@ -22,6 +23,7 @@ export function useCapabilities(): {
   isFetching: boolean;
   isError: boolean;
   isDenied: boolean;
+  isUnauthorized: boolean;
   error: Error | null;
   can: (action: CapabilityAction, subject: CapabilitySubject) => boolean;
   refresh: () => void;
@@ -30,6 +32,7 @@ export function useCapabilities(): {
   const query = useQuery({
     queryKey: queryKeys.capabilities.current(),
     queryFn: getEffectiveCapabilities,
+    enabled,
     // Authorization state must never go stale: always refetch on mount and
     // On window focus so changed assignments take effect immediately.
     staleTime: 0,
@@ -66,6 +69,8 @@ export function useCapabilities(): {
     isFetching: query.isFetching,
     isError: query.isError,
     isDenied: isCapabilitiesForbiddenError(query.error),
+    isUnauthorized:
+      query.error instanceof ApiError && query.error.status === 401,
     error: query.error ?? null,
     can,
     refresh,

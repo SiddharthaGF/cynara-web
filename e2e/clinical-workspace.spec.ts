@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 import {
@@ -8,6 +8,7 @@ import {
 import { seedDocumentCatalog } from './fixtures/documents.ts';
 import { seedEncounterTaxonomy } from './fixtures/encounters.ts';
 import { uniqueMrn } from './fixtures/patients.ts';
+import { test } from './fixtures/test';
 
 async function pickBirthDate(page: Page, isoDate: string): Promise<void> {
   const [year, month] = isoDate.split('-');
@@ -117,10 +118,13 @@ test.describe('clinical workspace (CYN-58)', () => {
     ).toBeVisible();
     const patientId = new URL(page.url()).pathname.split('/')[3];
 
-    // The chart opens as a clinical record with breadcrumbs and tabs.
-    const breadcrumb = page.locator('[data-slot=breadcrumb]');
-    await expect(breadcrumb).toContainText('Patients');
-    await expect(breadcrumb).toContainText('Florence Nightingale');
+    // The chart opens as a clinical record with breadcrumbs and tabs. Both
+    // the site header and the chart render breadcrumbs; scope to the chart's.
+    const chartBreadcrumb = page
+      .locator('[data-slot=breadcrumb]')
+      .filter({ hasText: 'Florence Nightingale' });
+    await expect(chartBreadcrumb).toContainText('Patients');
+    await expect(chartBreadcrumb).toContainText('Florence Nightingale');
     await expect(page.getByRole('tab', { name: 'Overview' })).toBeVisible();
     await expect(
       page.getByRole('tab', { name: 'Consultations' }),
@@ -166,9 +170,11 @@ test.describe('clinical workspace (CYN-58)', () => {
     await expect(
       page.getByRole('heading', { name: 'Consultation' }),
     ).toBeVisible({ timeout: 30_000 });
-    await expect(page.locator('[data-slot=breadcrumb]')).toContainText(
-      'Consultation',
-    );
+    await expect(
+      page
+        .locator('[data-slot=breadcrumb]')
+        .filter({ hasText: 'Consultation' }),
+    ).toBeVisible();
     const encounterId = lastUrlSegment(page.url());
 
     // Start a configured clinical document from the encounter in one click.

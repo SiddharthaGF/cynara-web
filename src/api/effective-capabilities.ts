@@ -8,13 +8,14 @@ import {
 /**
  * Effective capability set for the current actor within the resolved hospital.
  * Derived from the generated contract type with fields promoted to required.
+ *
+ * The generated transport targets the same-origin BFF in the browser. The BFF
+ * strips browser-supplied authorization headers and injects the sealed session.
  */
 export type EffectiveCapabilitiesDto = Required<MeCapabilitiesResponseContract>;
 
 export async function getEffectiveCapabilities(): Promise<EffectiveCapabilitiesDto> {
-  const { data } = await getMyCapabilities({
-    headers: contractHeaders(),
-  });
+  const { data } = await getMyCapabilities({ headers: contractHeaders() });
   return requireDto(data);
 }
 

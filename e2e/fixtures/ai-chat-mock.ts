@@ -1,5 +1,6 @@
 import type { APIRequestContext, Page } from '@playwright/test';
 
+import { apiHeaders, apiOrigin } from '../lib/auth';
 import {
   APPLIED_CLINICAL,
   APPLIED_RULES,
@@ -10,9 +11,6 @@ import {
   INITIAL_RULES,
   INITIAL_UI,
 } from './form-schemas.ts';
-
-const JSON_API = 'application/vnd.api+json';
-const ACTOR = 'designer-user';
 
 function sseEvent(payload: unknown): string {
   return `data: ${JSON.stringify(payload)}\n\n`;
@@ -96,9 +94,9 @@ export async function createFormViaApi(
   request: APIRequestContext,
   baseURL: string,
 ): Promise<CreatedForm> {
-  const apiOrigin = process.env.VITE_API_ORIGIN?.replace(/\/$/u, '') || baseURL;
+  const origin = apiOrigin(baseURL);
   const code = `e2e-ai-${Date.now()}`;
-  const response = await request.post(`${apiOrigin}/api/formDefinitions`, {
+  const response = await request.post(`${origin}/api/formDefinitions`, {
     data: {
       data: {
         attributes: {
@@ -111,12 +109,7 @@ export async function createFormViaApi(
         type: 'formDefinitions',
       },
     },
-    headers: {
-      'Accept': JSON_API,
-      'Content-Type': JSON_API,
-      'X-Actor-Id': ACTOR,
-      'X-Hospital-Code': process.env.VITE_HOSPITAL_CODE ?? 'default',
-    },
+    headers: await apiHeaders(),
   });
 
   if (!response.ok()) {

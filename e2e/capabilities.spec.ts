@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import {
@@ -7,6 +7,7 @@ import {
   stubEmptyFormsCatalog,
   stubEmptyPatients,
 } from './fixtures/capabilities.ts';
+import { test } from './fixtures/test';
 
 async function mockCapabilities(
   page: Page,
@@ -69,8 +70,13 @@ test.describe('capability-aware navigation and clinical actions (CYN-54)', () =>
     await expect(page.getByText('Access denied', { exact: true })).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByRole('link', { name: 'Forms' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Patients' })).toHaveCount(0);
+    const sidebar = page.getByRole('navigation', {
+      name: 'Primary navigation',
+    });
+    await expect(sidebar.getByRole('link', { name: 'Forms' })).toBeVisible();
+    await expect(sidebar.getByRole('link', { name: 'Patients' })).toHaveCount(
+      0,
+    );
   });
 
   test('shows the register action when patients.write is granted', async ({

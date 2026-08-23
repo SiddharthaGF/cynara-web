@@ -58,7 +58,27 @@ function resolveApiOriginServer(): string | undefined {
 }
 
 function resolveApiOriginClient(): string | undefined {
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
   const raw: string | undefined = import.meta.env.VITE_API_ORIGIN;
+  return normalizeOrigin(raw);
+}
+
+/**
+ * Resolves the public API origin for browser form actions. Unlike ordinary
+ * BFF-backed navigation, this action must post directly to the identity
+ * server, so it must not fall back to the frontend window origin.
+ */
+function resolveConfiguredApiOrigin(): string | undefined {
+  const cloudflareEnv = (
+    globalThis as { Cloudflare?: { env?: { VITE_API_ORIGIN?: string } } }
+  ).Cloudflare?.env?.VITE_API_ORIGIN;
+  const nodeEnv = (
+    globalThis as { process?: { env?: { VITE_API_ORIGIN?: string } } }
+  ).process?.env?.VITE_API_ORIGIN;
+  const raw: string | undefined =
+    cloudflareEnv ?? nodeEnv ?? import.meta.env.VITE_API_ORIGIN;
   return normalizeOrigin(raw);
 }
 
@@ -104,6 +124,20 @@ export function getApiOrigin(): string {
 
 export function buildApiUrl(path: string): string {
   return new URL(path, `${getApiOrigin()}/`).href;
+}
+
+export function getConfiguredApiOrigin(): string {
+  const origin = resolveConfiguredApiOrigin();
+  if (!origin) {
+    throw new ApiOriginUnavailableError([
+      { name: 'configured VITE_API_ORIGIN', value: origin },
+    ]);
+  }
+  return origin;
+}
+
+export function buildConfiguredApiUrl(path: string): string {
+  return new URL(path, `${getConfiguredApiOrigin()}/`).href;
 }
 
 export function resolveHospitalCode(): string {
