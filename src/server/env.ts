@@ -49,7 +49,15 @@ export function getIdentityOrigin(): string {
 
 /** Sealed-session password. Must be 32+ characters. */
 export function getSessionSecret(): string {
-  return normalize(readServerEnv().AUTH_SESSION_SECRET) ?? '';
+  const secret = normalize(readServerEnv().AUTH_SESSION_SECRET);
+  if (!secret) {
+    throw new Error(
+      'Cannot seal the auth session: AUTH_SESSION_SECRET is not set. ' +
+        'Add it to .dev.vars (local dev) or set it with ' +
+        '`wrangler secret put AUTH_SESSION_SECRET` for the deployment.',
+    );
+  }
+  return secret;
 }
 
 export function getAuthClientId(): string {
