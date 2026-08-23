@@ -6,6 +6,7 @@ import {
   Hospital,
   Layers,
   ListTree,
+  Users,
 } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { AppShell } from '@/components/app-shell.tsx';
 import { PageBreadcrumbs } from '@/components/page-breadcrumbs.tsx';
 import { PageHeader } from '@/components/page-header.tsx';
+import { DEFAULT_USER_PAGE_SIZE } from '@/features/users/userListSearch.ts';
 import { useCapabilities } from '@/hooks/use-capabilities.ts';
 
 interface HubSection {
@@ -21,7 +23,8 @@ interface HubSection {
     | '/$locale/admin/facilities'
     | '/$locale/admin/clinical-areas'
     | '/$locale/admin/disciplines'
-    | '/$locale/admin/documents';
+    | '/$locale/admin/documents'
+    | '/$locale/admin/users';
   icon: typeof Hospital;
   titleKey: string;
   descriptionKey: string;
@@ -58,6 +61,12 @@ const HUB_SECTIONS: readonly HubSection[] = [
     titleKey: 'hub.sections.documents.title',
     descriptionKey: 'hub.sections.documents.description',
   },
+  {
+    to: '/$locale/admin/users',
+    icon: Users,
+    titleKey: 'hub.sections.users.title',
+    descriptionKey: 'hub.sections.users.description',
+  },
 ];
 
 export function AdminHubPage(): JSX.Element {
@@ -67,12 +76,17 @@ export function AdminHubPage(): JSX.Element {
 
   const canReadWorkspace = can('read', 'Workspace');
   const canReadCatalog = can('read', 'Catalog');
+  const canReadUsers = can('read', 'User');
 
-  const sections = HUB_SECTIONS.filter((section) =>
-    section.to === '/$locale/admin/workspace'
-      ? canReadWorkspace
-      : canReadCatalog,
-  );
+  const sections = HUB_SECTIONS.filter((section) => {
+    if (section.to === '/$locale/admin/workspace') {
+      return canReadWorkspace;
+    }
+    if (section.to === '/$locale/admin/users') {
+      return canReadUsers;
+    }
+    return canReadCatalog;
+  });
 
   return (
     <AppShell variant='catalog'>
@@ -107,6 +121,11 @@ export function AdminHubPage(): JSX.Element {
                 <Link
                   to={section.to}
                   params={{ locale }}
+                  search={
+                    section.to === '/$locale/admin/users'
+                      ? { page: 1, pageSize: DEFAULT_USER_PAGE_SIZE }
+                      : undefined
+                  }
                   className='group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring'
                 >
                   <Icon className='size-4 shrink-0 text-muted-foreground' />

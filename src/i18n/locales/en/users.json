@@ -1,0 +1,69 @@
+{
+  "title": "User directory",
+  "subtitle": "Manage user accounts within your access scope.",
+  "search": {
+    "title": "Search users",
+    "qLabel": "Search",
+    "qPlaceholder": "Email or username",
+    "submit": "Search",
+    "clear": "Clear"
+  },
+  "hospitalFilter": {
+    "label": "Hospital code",
+    "placeholder": "e.g. hospital-norte",
+    "platformHint": "Optional: narrow results to one specific hospital."
+  },
+  "table": {
+    "email": "Email",
+    "hospitals": "Hospitals"
+  },
+  "empty": {
+    "title": "No users found",
+    "description": "Try a different search term or adjust the filters."
+  },
+  "forbidden": {
+    "title": "Access denied",
+    "description": "You do not have permission to view the user directory."
+  },
+  "error": {
+    "title": "Could not load users",
+    "retry": "Retry"
+  },
+  "stale": {
+    "refreshing": "Refreshing…"
+  },
+  "pagination": {
+    "pageRange": "Showing {{start}}–{{end}} of {{total}}",
+    "previousPage": "Previous",
+    "nextPage": "Next"
+  },
+  "detail": {
+    "title": "User detail",
+    "subtitle": "Account information within your access scope.",
+    "identity": "Identity",
+    "email": "Email",
+    "userName": "Username",
+    "memberships": "Memberships",
+    "membershipsDescription": "Membership records inside the viewer's scope.",
+    "hospital": "Hospital",
+    "actorId": "Actor ID",
+    "memberSince": "Member since",
+    "flags": {
+      "emailConfirmed": "Email confirmed",
+      "lockoutEnabled": "Lockout enabled",
+      "lockoutEnd": "Lockout end"
+    },
+    "capabilities": "Effective capabilities",
+    "capabilitiesDescription": "Union of effective grants as returned by the server.",
+    "none": "None"
+  },
+  "notFound": {
+    "title": "User not found",
+    "description": "The requested user is not available within your access scope.",
+    "backToDirectory": "Back to directory"
+  },
+  "scope": {
+    "platform": "Results span every hospital you have access to.",
+    "hospital": "Showing users from your hospital workspace."
+  }
+}

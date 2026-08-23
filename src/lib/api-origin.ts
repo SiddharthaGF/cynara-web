@@ -108,6 +108,15 @@ const resolveHospitalCodeOrigin = createIsomorphicFn()
   .server(resolveHospitalCodeServer)
   .client(resolveHospitalCodeClient);
 
+/**
+ * Raw tenant hint without the `'default'` fallback. Returns `undefined`
+ * when the deployment carries no pinned hospital context, which is the
+ * platform-scope signal used by the user directory presentation.
+ */
+export function getRawHospitalCode(): string | undefined {
+  return resolveHospitalCodeOrigin();
+}
+
 export function getApiOrigin(): string {
   const candidate = resolveApiOrigin();
   const seen: ApiOriginCandidate[] = [

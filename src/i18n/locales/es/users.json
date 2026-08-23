@@ -1,0 +1,69 @@
+{
+  "title": "Directorio de usuarios",
+  "subtitle": "Administra cuentas de usuario dentro de tu alcance de acceso.",
+  "search": {
+    "title": "Buscar usuarios",
+    "qLabel": "Búsqueda",
+    "qPlaceholder": "Correo o nombre de usuario",
+    "submit": "Buscar",
+    "clear": "Limpiar"
+  },
+  "hospitalFilter": {
+    "label": "Código de hospital",
+    "placeholder": "p. ej. hospital-norte",
+    "platformHint": "Opcional: limita los resultados a un hospital específico."
+  },
+  "table": {
+    "email": "Correo electrónico",
+    "hospitals": "Hospitales"
+  },
+  "empty": {
+    "title": "No se encontraron usuarios",
+    "description": "Prueba con otro término de búsqueda o ajusta los filtros."
+  },
+  "forbidden": {
+    "title": "Acceso denegado",
+    "description": "No tienes permiso para ver el directorio de usuarios."
+  },
+  "error": {
+    "title": "No se pudieron cargar los usuarios",
+    "retry": "Reintentar"
+  },
+  "stale": {
+    "refreshing": "Actualizando…"
+  },
+  "pagination": {
+    "pageRange": "Mostrando {{start}}–{{end}} de {{total}}",
+    "previousPage": "Anterior",
+    "nextPage": "Siguiente"
+  },
+  "detail": {
+    "title": "Detalle de usuario",
+    "subtitle": "Información de la cuenta dentro de tu alcance de acceso.",
+    "identity": "Identidad",
+    "email": "Correo electrónico",
+    "userName": "Nombre de usuario",
+    "memberships": "Membresías",
+    "membershipsDescription": "Registros de membresía dentro del alcance de quien consulta.",
+    "hospital": "Hospital",
+    "actorId": "ID de actor",
+    "memberSince": "Miembro desde",
+    "flags": {
+      "emailConfirmed": "Correo confirmado",
+      "lockoutEnabled": "Bloqueo habilitado",
+      "lockoutEnd": "Fin del bloqueo"
+    },
+    "capabilities": "Capacidades efectivas",
+    "capabilitiesDescription": "Unión de las capacidades efectivas tal como las devuelve el servidor.",
+    "none": "Sin registros"
+  },
+  "notFound": {
+    "title": "Usuario no encontrado",
+    "description": "El usuario solicitado no está disponible dentro de tu alcance de acceso.",
+    "backToDirectory": "Volver al directorio"
+  },
+  "scope": {
+    "platform": "Los resultados abarcan todos los hospitales a los que tienes acceso.",
+    "hospital": "Mostrando usuarios de tu espacio de trabajo hospitalario."
+  }
+}

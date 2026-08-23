@@ -15,6 +15,7 @@ import homeEn from './locales/en/home.json';
 import hospitalEn from './locales/en/hospital.json';
 import journeysEn from './locales/en/journeys.json';
 import patientsEn from './locales/en/patients.json';
+import usersEn from './locales/en/users.json';
 import validationEn from './locales/en/validation.json';
 import workflowsEn from './locales/en/workflows.json';
 import apiEs from './locales/es/api.json';
@@ -28,6 +29,7 @@ import homeEs from './locales/es/home.json';
 import hospitalEs from './locales/es/hospital.json';
 import journeysEs from './locales/es/journeys.json';
 import patientsEs from './locales/es/patients.json';
+import usersEs from './locales/es/users.json';
 import validationEs from './locales/es/validation.json';
 import workflowsEs from './locales/es/workflows.json';
 
@@ -44,6 +46,7 @@ const resources = {
     hospital: hospitalEn,
     journeys: journeysEn,
     patients: patientsEn,
+    users: usersEn,
     validation: validationEn,
     workflows: workflowsEn,
   },
@@ -59,6 +62,7 @@ const resources = {
     hospital: hospitalEs,
     journeys: journeysEs,
     patients: patientsEs,
+    users: usersEs,
     validation: validationEs,
     workflows: workflowsEs,
   },
@@ -83,6 +87,7 @@ export function createI18n(
       'documents',
       'encounters',
       'patients',
+      'users',
       'home',
       'hospital',
       'journeys',
