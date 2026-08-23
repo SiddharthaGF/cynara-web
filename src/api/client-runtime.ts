@@ -8,6 +8,7 @@ import {
   type RequestContext,
 } from '@/api/client.ts';
 import type { Config } from '@/api/generated/client';
+import { attachSessionAuth } from '@/api/server-auth-hook';
 import { getApiOrigin } from '@/lib/api-origin.ts';
 
 /**
@@ -99,7 +100,22 @@ const cynaraFetch: typeof fetch = async (input, init) => {
     if (contentType?.toLowerCase().startsWith('application/vnd.api+json;')) {
       headers.set('Content-Type', 'application/vnd.api+json');
     }
-    const normalized = new Request(request, { headers });
+    let normalized = new Request(request, { headers });
+    if (typeof window === 'undefined') {
+      // Server-side SDK calls (route loaders) bypass the BFF proxy and hit
+      // The API origin directly, so they must carry the session's bearer
+      // Token themselves. Browser calls go through the same-origin proxy,
+      // Which injects auth server-side.
+      const authedInit = await attachSessionAuth({
+        method: request.method,
+        headers,
+        body: request.body,
+        signal: request.signal,
+      });
+      normalized = new Request(normalized, {
+        headers: new Headers(authedInit.headers),
+      });
+    }
     const response = await fetch(normalized);
     if (!response.ok) {
       const bodyText = await response.text();

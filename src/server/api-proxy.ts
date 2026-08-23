@@ -31,6 +31,8 @@ export interface MintedToken {
   accessToken: string;
   /** Present when the identity provider rotates the refresh token. */
   refreshToken?: string;
+  /** Absolute expiry (ms) with a safety margin already applied. */
+  accessTokenExpiresAt?: number;
 }
 
 export interface TokenEndpointResponse {
@@ -105,6 +107,11 @@ export async function mintAccessToken(
     accessToken: body.access_token,
     refreshToken:
       typeof body.refresh_token === 'string' ? body.refresh_token : undefined,
+    // Renew one minute before actual expiry.
+    accessTokenExpiresAt:
+      typeof body.expires_in === 'number' && body.expires_in > 60
+        ? Date.now() + (body.expires_in - 60) * 1000
+        : undefined,
   };
 }
 
@@ -152,19 +159,135 @@ export function createReplayableRequestInitFactory(
 }
 
 /**
- * Mints an access token for the session's refresh token. On refresh failure
- * the session is cleared and a 401 ApiError is raised (the refresh token is
- * invalid, expired, or revoked).
+ * Concurrent proxied calls (parallel loaders, guard + query fan-out) unseal
+ * the same cookie and would otherwise redeem the same refresh token twice;
+ * the second redemption fails because OpenIddict revokes redeemed tokens on
+ * rotation. Two layers keep that surface near zero:
+ *
+ * 1. Single-flight per refresh-token value: concurrent callers share one
+ *    in-flight grant instead of racing duplicates.
+ * 2. A per-session access-token cache (keyed by the app session id, never
+ *    written back into the sealed cookie): repeated proxied calls reuse a
+ *    still-valid access token, so redemptions happen only when it expires.
  */
-async function mintOrClear(
-  data: Readonly<{ refreshToken: string }>,
-): Promise<MintedToken> {
-  try {
-    return await mintAccessToken(data.refreshToken);
-  } catch {
-    await clearAuthSession();
-    throw new ApiError(401, 'Unauthorized', 'Session refresh failed');
+const inflightMints = new Map<string, Promise<MintedToken>>();
+
+function mintAccessTokenOnce(refreshToken: string): Promise<MintedToken> {
+  const existing = inflightMints.get(refreshToken);
+  if (existing) {
+    return existing;
   }
+  const minted = mintAccessToken(refreshToken).finally(() => {
+    inflightMints.delete(refreshToken);
+  });
+  inflightMints.set(refreshToken, minted);
+  return minted;
+}
+
+interface CachedSessionTokens {
+  /** The refresh token this cache entry was minted from. */
+  refreshToken: string;
+  accessToken?: string;
+  accessTokenExpiresAt?: number;
+}
+
+const TOKEN_CACHE_LIMIT = 200;
+const sessionTokenCache = new Map<string, CachedSessionTokens>();
+
+function cachedAccessToken(data: {
+  sid: string;
+  refreshToken: string;
+}): string | undefined {
+  const cached = sessionTokenCache.get(data.sid);
+  if (!cached || cached.refreshToken !== data.refreshToken) {
+    return undefined;
+  }
+  if (
+    typeof cached.accessToken !== 'string' ||
+    typeof cached.accessTokenExpiresAt !== 'number' ||
+    Date.now() >= cached.accessTokenExpiresAt
+  ) {
+    return undefined;
+  }
+  return cached.accessToken;
+}
+
+function rememberMintedTokens(
+  sid: string,
+  data: { refreshToken: string },
+  minted: MintedToken,
+): void {
+  if (sessionTokenCache.size >= TOKEN_CACHE_LIMIT) {
+    const oldest = sessionTokenCache.keys().next().value;
+    if (oldest !== undefined) {
+      sessionTokenCache.delete(oldest);
+    }
+  }
+  sessionTokenCache.set(sid, {
+    refreshToken: minted.refreshToken ?? data.refreshToken,
+    accessToken: minted.accessToken,
+    accessTokenExpiresAt: minted.accessTokenExpiresAt,
+  });
+}
+
+/**
+ * Resolves the access token for a session snapshot: cache first, refresh
+ * grant only when needed. Returns the mint result so callers can rotate the
+ * sealed cookie exactly when the identity provider rotated the token.
+ */
+async function resolveAccessToken(
+  data: Readonly<{ sid: string; refreshToken: string }>,
+): Promise<{
+  minted: MintedToken;
+  /** True when an existing cache entry satisfied the call. */
+  fromCache: boolean;
+}> {
+  const cachedAccessTokenValue = cachedAccessToken(data);
+  if (cachedAccessTokenValue !== undefined) {
+    return {
+      minted: { accessToken: cachedAccessTokenValue },
+      fromCache: true,
+    };
+  }
+  const minted = await mintAccessTokenOnce(data.refreshToken);
+  rememberMintedTokens(data.sid, data, minted);
+  return { minted, fromCache: false };
+}
+
+/**
+ * Attaches session auth to a raw API request init for server-side callers
+ * that bypass the BFF proxy (for example generated-SDK calls made from route
+ * loaders). Anonymous visitors pass through untouched; authenticated requests
+ * get a fresh bearer token plus the session-derived hospital header.
+ */
+export async function attachSessionAuth(
+  init: RequestInit | undefined,
+): Promise<RequestInit> {
+  const session = await getAuthSession();
+  const data = session ? readAuthSessionData(session) : null;
+  if (!session || !data) {
+    return init ?? {};
+  }
+
+  const { minted, fromCache } = await resolveAccessToken(data);
+  if (!fromCache && minted.refreshToken !== undefined) {
+    const { refreshToken } = minted;
+    await rotateAuthSession({
+      refreshToken,
+      hospitalCode: data.hospitalCode,
+      expiresAt: data.expiresAt,
+    });
+    // Keep the caller's manager aligned with the sealed cookie.
+    session.data.refreshToken = refreshToken;
+  }
+
+  const headers = new Headers(init?.headers);
+  headers.set('Authorization', `Bearer ${minted.accessToken}`);
+  if (data.hospitalCode) {
+    headers.set(HOSPITAL_HEADER_NAME, data.hospitalCode);
+  }
+  headers.set('Accept', JSON_API_MEDIA);
+  return { ...init, headers };
 }
 
 async function attemptWithToken(
@@ -178,17 +301,29 @@ async function attemptWithToken(
     throw new ApiError(401, 'Unauthorized', 'Session data is incomplete');
   }
 
-  const minted = await mintOrClear(data);
+  const { minted } = await resolveAccessToken(data).catch(
+    async (): Promise<{
+      minted: MintedToken;
+      fromCache: boolean;
+    }> => {
+      await clearAuthSession();
+      throw new ApiError(401, 'Unauthorized', 'Session refresh failed');
+    },
+  );
 
-  const refreshToken = minted.refreshToken ?? data.refreshToken;
-  await rotateAuthSession({
-    refreshToken,
-    hospitalCode: data.hospitalCode,
-    expiresAt: data.expiresAt,
-  });
-  // Keep the caller's manager aligned with the sealed cookie. A later
-  // Operation in this request may need the rotated token.
-  session.data.refreshToken = refreshToken;
+  // Re-seal the cookie only when the identity provider rotated the refresh
+  // Token; cache hits keep the current seal untouched.
+  const { refreshToken: rotatedToken } = minted;
+  if (rotatedToken !== undefined && rotatedToken !== data.refreshToken) {
+    await rotateAuthSession({
+      refreshToken: rotatedToken,
+      hospitalCode: data.hospitalCode,
+      expiresAt: data.expiresAt,
+    });
+    // Keep the caller's manager aligned with the sealed cookie. A later
+    // Operation in this request may need the rotated token.
+    session.data.refreshToken = rotatedToken;
+  }
 
   const headers = new Headers(init?.headers);
   headers.set('Authorization', `Bearer ${minted.accessToken}`);
