@@ -26,6 +26,7 @@ export const CAPABILITY_CODES = [
   'workspace.write',
   'capabilities.read',
   'capabilities.write',
+  'users.read',
 ] as const;
 
 export type CapabilityCode = (typeof CAPABILITY_CODES)[number];
@@ -53,7 +54,8 @@ export type CapabilitySubject =
   | 'Pipeline'
   | 'ClinicalTask'
   | 'Workspace'
-  | 'CapabilityAssignment';
+  | 'CapabilityAssignment'
+  | 'User';
 
 export type AppAbility = MongoAbility<[CapabilityAction, CapabilitySubject]>;
 
@@ -91,6 +93,7 @@ export const CAPABILITY_RULE_MAP: Readonly<
   'workspace.write': { action: 'write', subject: 'Workspace' },
   'capabilities.read': { action: 'read', subject: 'CapabilityAssignment' },
   'capabilities.write': { action: 'write', subject: 'CapabilityAssignment' },
+  'users.read': { action: 'read', subject: 'User' },
 };
 
 export function buildCapabilityAbility(
@@ -149,6 +152,10 @@ export const ROUTE_CAPABILITY_REQUIREMENTS: Readonly<
   '/$locale/admin/clinical-areas': [{ action: 'read', subject: 'Catalog' }],
   '/$locale/admin/disciplines': [{ action: 'read', subject: 'Catalog' }],
   '/$locale/admin/documents': [{ action: 'read', subject: 'Catalog' }],
+  // Admin user directory (CYN-108). Index route ids carry a trailing slash;
+  // Detail route ids do not — matching how TanStack emits them.
+  '/$locale/admin/users/': [{ action: 'read', subject: 'User' }],
+  '/$locale/admin/users/$userId': [{ action: 'read', subject: 'User' }],
 };
 
 /**
