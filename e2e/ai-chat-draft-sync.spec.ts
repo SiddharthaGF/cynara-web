@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 import { createFormViaApi, mockAiChatStream } from './fixtures/ai-chat-mock.ts';
@@ -11,6 +11,7 @@ import {
   APPLIED_LABELS,
   ASSISTANT_MESSAGE,
 } from './fixtures/form-schemas.ts';
+import { test } from './fixtures/test';
 
 async function openDesigner(page: Page, formCode: string): Promise<void> {
   await page.goto(`/en/forms/${formCode}/designer/`, {

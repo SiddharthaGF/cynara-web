@@ -1,8 +1,6 @@
 import type { APIRequestContext } from '@playwright/test';
 
-const JSON_API_MEDIA = 'application/vnd.api+json';
-const ACTOR = 'designer-user';
-const HOSPITAL = process.env.VITE_HOSPITAL_CODE ?? 'default';
+import { apiHeaders, apiOrigin } from '../lib/auth';
 
 /** ABO/Rh blood type accepted by cynara-api, in clinical notation. */
 export type PatientBloodType =
@@ -44,11 +42,11 @@ export async function createPatientViaApi(
     nationalId?: string | null;
   } = {},
 ): Promise<CreatedPatient> {
-  const apiOrigin = process.env.VITE_API_ORIGIN?.replace(/\/$/u, '') || baseURL;
+  const origin = apiOrigin(baseURL);
   const mrn = input.mrn ?? uniqueMrn();
   const givenName = input.givenName ?? 'Ada';
   const familyName = input.familyName ?? 'Lovelace';
-  const response = await request.post(`${apiOrigin}/api/patients`, {
+  const response = await request.post(`${origin}/api/patients`, {
     data: {
       mrn,
       givenName,
@@ -58,12 +56,7 @@ export async function createPatientViaApi(
       bloodType: input.bloodType ?? 'o+',
       nationalId: input.nationalId ?? null,
     },
-    headers: {
-      'Accept': JSON_API_MEDIA,
-      'Content-Type': JSON_API_MEDIA,
-      'X-Actor-Id': ACTOR,
-      'X-Hospital-Code': HOSPITAL,
-    },
+    headers: await apiHeaders(),
   });
 
   if (!response.ok()) {

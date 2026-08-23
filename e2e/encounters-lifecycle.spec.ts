@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 
 import {
   FULL_CAPABILITIES,
@@ -10,6 +10,7 @@ import {
   seedEncounterTaxonomy,
 } from './fixtures/encounters.ts';
 import { createPatientViaApi, uniqueMrn } from './fixtures/patients.ts';
+import { test } from './fixtures/test';
 
 test.describe('encounter views and lifecycle (CYN-52)', () => {
   test.beforeEach(async ({ page }) => {

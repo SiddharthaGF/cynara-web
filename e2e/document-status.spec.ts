@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 
 import {
   FULL_CAPABILITIES,
@@ -19,6 +19,7 @@ import {
   seedDocumentScenario,
   statusBadge,
 } from './fixtures/documentScenario.ts';
+import { test } from './fixtures/test';
 
 test.describe('clinical document status (CYN-58)', () => {
   test.beforeEach(async ({ page }) => {

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 
 import {
   FULL_CAPABILITIES,
@@ -14,6 +14,7 @@ import {
   openDocumentPage,
   seedDocumentScenario,
 } from './fixtures/documentScenario.ts';
+import { test } from './fixtures/test';
 
 const READ_ONLY_CLINICAL_CAPABILITIES = [
   'patients.read',

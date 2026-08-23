@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import {
@@ -6,6 +6,7 @@ import {
   grantCapabilities,
 } from './fixtures/capabilities.ts';
 import { createPatientViaApi, uniqueMrn } from './fixtures/patients.ts';
+import { test } from './fixtures/test';
 
 async function openPatientList(page: Page): Promise<void> {
   await page.goto('/en/patients/', { waitUntil: 'domcontentloaded' });

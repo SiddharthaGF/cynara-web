@@ -49,3 +49,5 @@ worker-configuration.d.ts
 
 # Codegraph
 .codegraph/
+# Playwright authenticated session state
+/playwright/.auth/

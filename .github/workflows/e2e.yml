@@ -115,7 +115,7 @@ jobs:
       - name: Point dev-server SSR at the local API
         working-directory: cynara-web
         run: |
-          printf 'VITE_API_ORIGIN=http://127.0.0.1:5000\nVITE_HOSPITAL_CODE=default\n' > .dev.vars
+          printf 'VITE_API_ORIGIN=http://127.0.0.1:5000\nVITE_HOSPITAL_CODE=default\nIDENTITY_ORIGIN=http://127.0.0.1:5000\nAPP_ORIGIN=http://127.0.0.1:5173\nAUTH_SESSION_SECRET=e2e-dev-session-secret-0123456789abcdef\nAUTH_CLIENT_ID=cynara-web\nAUTH_CLIENT_SECRET=cynara-web-secret\n' > .dev.vars
           test -s .dev.vars
 
       - name: Run E2E tests
@@ -123,6 +123,10 @@ jobs:
         env:
           VITE_API_ORIGIN: http://127.0.0.1:5000
           VITE_HOSPITAL_CODE: default
+          IDENTITY_ORIGIN: http://127.0.0.1:5000
+          APP_ORIGIN: http://127.0.0.1:5173
+          AUTH_CLIENT_ID: cynara-web
+          AUTH_CLIENT_SECRET: cynara-web-secret
           CI: 'true'
         run: pnpm test:e2e
 

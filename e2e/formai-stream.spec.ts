@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import {
@@ -11,6 +11,7 @@ import {
   grantCapabilities,
 } from './fixtures/capabilities.ts';
 import { ASSISTANT_MESSAGE } from './fixtures/form-schemas.ts';
+import { test } from './fixtures/test';
 
 async function openDesigner(page: Page, formCode: string): Promise<void> {
   await page.goto(`/en/forms/${formCode}/designer/`, {

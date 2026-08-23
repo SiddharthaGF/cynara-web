@@ -1,23 +1,9 @@
 import type { APIRequestContext } from '@playwright/test';
 
+import { apiHeaders, apiOrigin } from '../lib/auth';
 import type { DocumentCatalogRefs } from './documents.ts';
 
-const JSON_API_MEDIA = 'application/vnd.api+json';
-const ACTOR = 'designer-user';
-const HOSPITAL = process.env.VITE_HOSPITAL_CODE ?? 'default';
-
-export function apiOrigin(baseURL: string): string {
-  return process.env.VITE_API_ORIGIN?.replace(/\/$/u, '') || baseURL;
-}
-
-export function headers(): Record<string, string> {
-  return {
-    'Accept': JSON_API_MEDIA,
-    'Content-Type': JSON_API_MEDIA,
-    'X-Actor-Id': ACTOR,
-    'X-Hospital-Code': HOSPITAL,
-  };
-}
+export { apiOrigin };
 
 export interface CreatedClinicalDocument {
   id: string;
@@ -38,7 +24,7 @@ export async function startClinicalDocumentViaApi(
       documentDefinitionId: input.documentDefinitionId,
       encounterId: input.encounterId,
     },
-    headers: headers(),
+    headers: await apiHeaders(),
   });
   if (!response.ok()) {
     throw new Error(
@@ -71,7 +57,7 @@ export async function updateFormResponseViaApi(
         attributes: { answersJson, rowVersion },
       },
     },
-    headers: headers(),
+    headers: await apiHeaders(),
   });
   if (!response.ok()) {
     throw new Error(
@@ -95,7 +81,7 @@ export async function completeClinicalDocumentViaApi(
     `${origin}/api/clinicalDocuments/${documentId}/complete`,
     {
       data: { rowVersion },
-      headers: headers(),
+      headers: await apiHeaders(),
     },
   );
   if (!response.ok()) {
@@ -118,7 +104,7 @@ export async function enterClinicalDocumentInErrorViaApi(
     `${origin}/api/clinicalDocuments/${documentId}/enter-in-error`,
     {
       data: { rowVersion, reason },
-      headers: headers(),
+      headers: await apiHeaders(),
     },
   );
   if (!response.ok()) {

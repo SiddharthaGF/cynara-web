@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 import type { APIRequestContext, Page } from '@playwright/test';
 
 import { createFormViaApi } from './fixtures/ai-chat-mock.ts';
@@ -6,17 +6,8 @@ import {
   FULL_CAPABILITIES,
   grantCapabilities,
 } from './fixtures/capabilities.ts';
-
-const JSON_API = 'application/vnd.api+json';
-
-function apiHeaders(): Record<string, string> {
-  return {
-    'Accept': JSON_API,
-    'Content-Type': JSON_API,
-    'X-Actor-Id': 'designer-user',
-    'X-Hospital-Code': process.env.VITE_HOSPITAL_CODE ?? 'default',
-  };
-}
+import { test } from './fixtures/test';
+import { apiHeaders, apiOrigin } from './lib/auth';
 
 interface ReviewVersion {
   id: string;
@@ -29,10 +20,10 @@ async function getFormVersionStatuses(
   baseURL: string,
   definitionId: string,
 ): Promise<string[]> {
-  const apiOrigin = process.env.VITE_API_ORIGIN?.replace(/\/$/u, '') || baseURL;
+  const origin = apiOrigin(baseURL);
   const document = await request.get(
-    `${apiOrigin}/api/formDefinitions/${definitionId}?include=versions`,
-    { headers: apiHeaders() },
+    `${origin}/api/formDefinitions/${definitionId}?include=versions`,
+    { headers: await apiHeaders() },
   );
   if (!document.ok()) {
     throw new Error(
@@ -56,10 +47,10 @@ async function submitDraftForReview(
   baseURL: string,
   definitionId: string,
 ): Promise<ReviewVersion> {
-  const apiOrigin = process.env.VITE_API_ORIGIN?.replace(/\/$/u, '') || baseURL;
+  const origin = apiOrigin(baseURL);
   const document = await request.get(
-    `${apiOrigin}/api/formDefinitions/${definitionId}?include=versions`,
-    { headers: apiHeaders() },
+    `${origin}/api/formDefinitions/${definitionId}?include=versions`,
+    { headers: await apiHeaders() },
   );
   if (!document.ok()) {
     throw new Error(
@@ -84,8 +75,8 @@ async function submitDraftForReview(
     throw new Error('submitDraftForReview: editable draft version not found');
   }
   const response = await request.post(
-    `${apiOrigin}/api/formVersions/${editable.id}/submit-review?rowVersion=${editable.attributes.rowVersion}`,
-    { headers: apiHeaders() },
+    `${origin}/api/formVersions/${editable.id}/submit-review?rowVersion=${editable.attributes.rowVersion}`,
+    { headers: await apiHeaders() },
   );
   if (!response.ok()) {
     throw new Error(
