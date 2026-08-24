@@ -16,10 +16,10 @@ import {
   type PkceTransactionData,
 } from '@/server/auth-session.ts';
 import {
-  getAppOrigin,
   getAuthClientId,
   getAuthScopes,
   getConfiguredHospitalCode,
+  resolveAppOrigin,
 } from '@/server/env.ts';
 import {
   HOSPITAL_CODE_PATTERN,
@@ -154,7 +154,8 @@ export const loginStart = createServerFn({ method: 'POST' })
     const state = crypto.randomUUID();
     const verifier = createPkceVerifier();
     const challenge = await derivePkceChallenge(verifier);
-    const redirectUri = `${getAppOrigin()}/${data.locale}/login`;
+    const appOrigin = resolveAppOrigin();
+    const redirectUri = `${appOrigin}/${data.locale}/login`;
 
     const transaction: PkceTransactionData = {
       state,
@@ -175,7 +176,7 @@ export const loginStart = createServerFn({ method: 'POST' })
       scope: getAuthScopes(),
     });
     return {
-      authorizeUrl: buildAuthorizeUrl(getAppOrigin(), params),
+      authorizeUrl: buildAuthorizeUrl(appOrigin, params),
     };
   });
 
