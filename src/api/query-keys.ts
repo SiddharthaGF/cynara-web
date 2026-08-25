@@ -6,6 +6,7 @@ import type {
   ListFacilitiesData,
   SearchPatientsData,
 } from '@/api/generated';
+import type { ListUsersParams } from '@/api/users.ts';
 
 /**
  * Centralized React Query key factories. The legacy `forms` and `components`
@@ -113,6 +114,7 @@ const JOURNEYS_ALL = ['journeys'];
 const TASKS_ALL = ['tasks'];
 const AUDIT_EVENTS_ALL = ['auditEvents'];
 const PATIENTS_ALL = ['patients'];
+const USERS_ALL = ['users'];
 const ENCOUNTERS_ALL = ['encounters'];
 const CLINICAL_DOCUMENTS_ALL = ['clinicalDocuments'];
 const CAPABILITIES_ALL = ['capabilities'];
@@ -227,6 +229,11 @@ export const queryKeys = {
     all: PATIENTS_ALL,
     list: (params: PatientListParams = {}) => key('patients', 'list', params),
     detail: (id: string) => key('patients', 'detail', id),
+  },
+  users: {
+    all: USERS_ALL,
+    list: (params: ListUsersParams = {}) => key('users', 'list', params),
+    detail: (id: string) => key('users', 'detail', id),
   },
   encounters: {
     all: ENCOUNTERS_ALL,

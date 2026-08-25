@@ -29,6 +29,10 @@
         "title": "Clinical document catalog",
         "description": "Which published forms can be started as clinical documents.",
         "action": "Manage document catalog"
+      },
+      "users": {
+        "title": "User directory",
+        "description": "Manage user accounts within your access scope."
       }
     }
   },

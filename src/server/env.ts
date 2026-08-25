@@ -6,6 +6,8 @@
  * secret, and client secret stay server-side.
  */
 
+import { getRequestUrl } from '@tanstack/react-start/server';
+
 interface EnvLike {
   IDENTITY_ORIGIN?: string;
   AUTH_SESSION_SECRET?: string;
@@ -49,7 +51,15 @@ export function getIdentityOrigin(): string {
 
 /** Sealed-session password. Must be 32+ characters. */
 export function getSessionSecret(): string {
-  return normalize(readServerEnv().AUTH_SESSION_SECRET) ?? '';
+  const secret = normalize(readServerEnv().AUTH_SESSION_SECRET);
+  if (!secret) {
+    throw new Error(
+      'Cannot seal the auth session: AUTH_SESSION_SECRET is not set. ' +
+        'Add it to .dev.vars (local dev) or set it with ' +
+        '`wrangler secret put AUTH_SESSION_SECRET` for the deployment.',
+    );
+  }
+  return secret;
 }
 
 export function getAuthClientId(): string {
@@ -69,15 +79,31 @@ export function getAuthScopes(): string {
 
 /**
  * Public origin the identity provider must redirect back to. Derived from
- * the incoming request so localhost and deployed origins both work without
- * extra configuration.
+ * the incoming request so localhost and every deployed preview origin work
+ * without extra configuration; APP_ORIGIN is only a fallback for contexts
+ * without a request (build/prerender). The backend independently validates
+ * the resulting redirect_uri against its anchored allow patterns.
  */
-export function getAppOrigin(): string {
+export function resolveAppOrigin(): string {
+  try {
+    const url = getRequestUrl({
+      xForwardedHost: true,
+      xForwardedProto: true,
+    });
+    if (
+      (url.protocol === 'https:' || url.protocol === 'http:') &&
+      url.hostname.length > 0
+    ) {
+      return url.origin;
+    }
+  } catch {
+    // No ambient request context: fall through to static configuration.
+  }
   const origin = normalize(readServerEnv().APP_ORIGIN);
   if (!origin) {
     throw new Error('APP_ORIGIN is required for the authorization callback.');
   }
-  return origin.replace(/\/$/u, '');
+  return origin;
 }
 
 /** Configuration preference only; callers must validate membership server-side. */

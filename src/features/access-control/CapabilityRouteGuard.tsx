@@ -1,4 +1,4 @@
-import { useRouterState } from '@tanstack/react-router';
+import { useMatches, useRouterState } from '@tanstack/react-router';
 import type { JSX, ReactNode } from 'react';
 import { useEffect } from 'react';
 
@@ -16,11 +16,12 @@ export function CapabilityRouteGuard({
 }: {
   children: ReactNode;
 }): JSX.Element {
-  const matches = useRouterState({ select: (state) => state.matches });
-  const currentMatch = matches.at(-1);
-  const required = currentMatch?.routeId
-    ? capabilityRequirementForRoute(currentMatch.routeId)
-    : null;
+  const matches = useMatches();
+  const routeId = matches.at(-1)?.routeId;
+  // Runtime guard: the router's inferred match type degrades inside
+  // Lint's checker, so validate before trusting the id.
+  const required =
+    typeof routeId === 'string' ? capabilityRequirementForRoute(routeId) : null;
   const capabilities = useCapabilities(
     required !== null && required.length > 0,
   );

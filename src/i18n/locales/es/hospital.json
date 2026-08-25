@@ -29,6 +29,10 @@
         "title": "Catálogo de documentos clínicos",
         "description": "Qué formularios publicados pueden iniciarse como documentos clínicos.",
         "action": "Gestionar catálogo de documentos"
+      },
+      "users": {
+        "title": "Directorio de usuarios",
+        "description": "Administra cuentas de usuario dentro de tu alcance de acceso."
       }
     }
   },

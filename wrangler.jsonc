@@ -21,15 +21,5 @@
       "enabled": false
     }
   },
-  "name": "cynara-web",
-  "env": {
-    "dev": {
-      "name": "cynara-web-dev",
-      "vars": {
-        "VITE_API_ORIGIN": "https://cynara-api.onrender.com",
-        "VITE_HOSPITAL_CODE": "default",
-        "IDENTITY_ORIGIN": "https://cynara-api.onrender.com"
-      }
-    }
-  }
+  "name": "cynara-web"
 }
