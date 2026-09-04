@@ -26,28 +26,47 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+export interface AcceptInvitationInput {
+  token: string;
+  password: string;
+}
+
+/** Pure input validation for the accept flow; the server remains authoritative. Exported for unit testing. */
+export function validateAcceptInput(value: unknown): AcceptInvitationInput {
+  if (!isRecord(value)) {
+    throw new ApiError(
+      400,
+      'Invalid accept request',
+      'Expected an object payload',
+    );
+  }
+  const { token, password } = value;
+  if (typeof token !== 'string' || token.length === 0) {
+    throw new ApiError(
+      400,
+      'Invalid accept request',
+      'Missing invitation token',
+    );
+  }
+  if (typeof password !== 'string' || password.length === 0) {
+    throw new ApiError(400, 'Invalid accept request', 'Password is required');
+  }
+  return { token, password };
+}
+
+/** Maps the backend accept envelope to the page result; uniform `accepted:false` carries no member (anti-enumeration). Exported for unit testing. */
+export function toAcceptResult(body: {
+  accepted?: boolean;
+  member?: AcceptInvitationMemberSummary | null;
+}): AcceptInvitationResult {
+  return {
+    accepted: body.accepted === true,
+    member: body.member ?? null,
+  };
+}
+
 export const acceptInvitation = createServerFn({ method: 'POST' })
-  .validator((value: unknown) => {
-    if (!isRecord(value)) {
-      throw new ApiError(
-        400,
-        'Invalid accept request',
-        'Expected an object payload',
-      );
-    }
-    const { token, password } = value;
-    if (typeof token !== 'string' || token.length === 0) {
-      throw new ApiError(
-        400,
-        'Invalid accept request',
-        'Missing invitation token',
-      );
-    }
-    if (typeof password !== 'string' || password.length === 0) {
-      throw new ApiError(400, 'Invalid accept request', 'Password is required');
-    }
-    return { token, password };
-  })
+  .validator(validateAcceptInput)
   .handler(async ({ data }): Promise<AcceptInvitationResult> => {
     const response = await fetch(
       `${getIdentityOrigin()}/api/user-invitations/${encodeURIComponent(data.token)}/accept`,
@@ -63,12 +82,5 @@ export const acceptInvitation = createServerFn({ method: 'POST' })
     if (!response.ok) {
       throw await mapApiResponseError(response);
     }
-    const body = (await response.json()) as {
-      accepted?: boolean;
-      member?: AcceptInvitationMemberSummary | null;
-    };
-    return {
-      accepted: body.accepted === true,
-      member: body.member ?? null,
-    };
+    return toAcceptResult(await response.json());
   });

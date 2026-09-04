@@ -7,7 +7,9 @@ interface AcceptSearch {
   token?: string;
 }
 
-function parseAcceptSearch(search: Record<string, unknown>): AcceptSearch {
+export function parseAcceptSearch(
+  search: Record<string, unknown>,
+): AcceptSearch {
   return {
     token: typeof search.token === 'string' ? search.token.trim() : undefined,
   };

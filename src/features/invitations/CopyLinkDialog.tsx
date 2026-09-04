@@ -14,6 +14,18 @@ import {
 } from '@/components/ui/dialog.tsx';
 import { Input } from '@/components/ui/input.tsx';
 
+/**
+ * Builds the one-time accept link. Exported for unit testing; the component
+ * is the only caller and the token never leaves dialog-local state.
+ */
+export function buildAcceptLink(
+  origin: string,
+  locale: string,
+  token: string,
+): string {
+  return `${origin}/${locale}/invitations/accept?token=${encodeURIComponent(token)}`;
+}
+
 interface CopyLinkDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -35,7 +47,7 @@ export function CopyLinkDialog({
 }: CopyLinkDialogProps): JSX.Element {
   const { t } = useTranslation('invitations');
   const [copied, setCopied] = useState(false);
-  const link = `${window.location.origin}/${locale}/invitations/accept?token=${encodeURIComponent(token)}`;
+  const link = buildAcceptLink(window.location.origin, locale, token);
 
   const handleCopy = (): void => {
     void navigator.clipboard?.writeText(link).then(() => {
