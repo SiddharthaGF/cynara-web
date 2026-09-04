@@ -22,6 +22,7 @@
     "src/lib/utils.ts",
     "src/hooks/use-mobile.ts",
     "src/api/generated/**",
-    "packages/rule-engine/dist/**"
+    "packages/rule-engine/dist/**",
+    "openspec/**"
   ]
 }

@@ -1,25 +1,23 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "compatibility_date": "2026-07-22",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
   "vars": {
     "VITE_API_ORIGIN": "https://cynara-api.onrender.com",
     "IDENTITY_ORIGIN": "https://cynara-api.onrender.com",
     "APP_ORIGIN": "https://cynara-web.livesanty.workers.dev",
-    "VITE_HOSPITAL_CODE": "default"
+    "VITE_HOSPITAL_CODE": "default",
   },
   "observability": {
     "enabled": true,
     "logs": {
       "enabled": true,
-      "invocation_logs": true
+      "invocation_logs": true,
     },
     "traces": {
-      "enabled": false
-    }
+      "enabled": false,
+    },
   },
-  "name": "cynara-web"
+  "name": "cynara-web",
 }
