@@ -3,7 +3,7 @@
     "eyebrow": "Hospital configuration",
     "title": "Administration",
     "titleAccent": "",
-    "subtitle": "Workspace, facilities, clinical areas, disciplines, and the clinical document catalog.",
+    "subtitle": "Workspace, facilities, clinical areas, disciplines, the clinical document catalog, and invitations.",
     "sections": {
       "workspace": {
         "title": "Hospital workspace",
@@ -33,6 +33,10 @@
       "users": {
         "title": "User directory",
         "description": "Manage user accounts within your access scope."
+      },
+      "invitations": {
+        "title": "Invitations",
+        "description": "Manage one-time invitation links."
       }
     }
   },

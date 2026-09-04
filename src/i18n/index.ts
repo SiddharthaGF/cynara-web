@@ -13,6 +13,7 @@ import encountersEn from './locales/en/encounters.json';
 import formsEn from './locales/en/forms.json';
 import homeEn from './locales/en/home.json';
 import hospitalEn from './locales/en/hospital.json';
+import invitationsEn from './locales/en/invitations.json';
 import journeysEn from './locales/en/journeys.json';
 import patientsEn from './locales/en/patients.json';
 import usersEn from './locales/en/users.json';
@@ -27,6 +28,7 @@ import encountersEs from './locales/es/encounters.json';
 import formsEs from './locales/es/forms.json';
 import homeEs from './locales/es/home.json';
 import hospitalEs from './locales/es/hospital.json';
+import invitationsEs from './locales/es/invitations.json';
 import journeysEs from './locales/es/journeys.json';
 import patientsEs from './locales/es/patients.json';
 import usersEs from './locales/es/users.json';
@@ -44,6 +46,7 @@ const resources = {
     encounters: encountersEn,
     home: homeEn,
     hospital: hospitalEn,
+    invitations: invitationsEn,
     journeys: journeysEn,
     patients: patientsEn,
     users: usersEn,
@@ -60,6 +63,7 @@ const resources = {
     encounters: encountersEs,
     home: homeEs,
     hospital: hospitalEs,
+    invitations: invitationsEs,
     journeys: journeysEs,
     patients: patientsEs,
     users: usersEs,
@@ -88,6 +92,7 @@ export function createI18n(
       'encounters',
       'patients',
       'users',
+      'invitations',
       'home',
       'hospital',
       'journeys',

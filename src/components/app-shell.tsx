@@ -50,7 +50,13 @@ export interface NavEntry {
   labelKey: string;
   icon: typeof LayoutDashboard;
   /** Any one of these subjects (with the read action) reveals the entry. */
-  subjects: readonly ('Catalog' | 'Patient' | 'Workflow' | 'Workspace')[];
+  subjects: readonly (
+    | 'Catalog'
+    | 'Patient'
+    | 'Workflow'
+    | 'Workspace'
+    | 'Invitation'
+  )[];
 }
 
 export interface NavGroup {
@@ -95,7 +101,7 @@ const NAV_GROUPS: readonly NavGroup[] = [
         to: '/$locale/admin',
         labelKey: 'nav.administration',
         icon: Hospital,
-        subjects: ['Catalog', 'Workspace'],
+        subjects: ['Catalog', 'Workspace', 'Invitation'],
       },
     ],
   },

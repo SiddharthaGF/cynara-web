@@ -1,0 +1,107 @@
+{
+  "title": "Invitations",
+  "subtitle": "Manage one-time invitation links within your workspace.",
+  "list": {
+    "title": "Invitation links",
+    "description": "Invitations are listed newest-first. Raw tokens never appear here.",
+    "refreshing": "Updating…"
+  },
+  "create": {
+    "button": "Create invitation",
+    "title": "Create invitation",
+    "description": "Send a one-time link that lets the invited person set up their password.",
+    "emailLabel": "Email",
+    "actorIdLabel": "Actor ID",
+    "actorIdHint": "1–128 characters, used to identify the new member.",
+    "hospitalLabel": "Hospital",
+    "hospitalPlaceholder": "No workspace selected",
+    "capabilitiesLabel": "Capabilities",
+    "capabilitiesDescription": "Capabilities the new member receives at acceptance.",
+    "profileSection": "Profile (optional)",
+    "nameLabel": "First name",
+    "surnameLabel": "Last name",
+    "phoneLabel": "Phone",
+    "languageLabel": "Language",
+    "submit": "Create and copy link",
+    "submitting": "Creating…",
+    "cancel": "Cancel",
+    "errors": {
+      "emailRequired": "Email is required.",
+      "emailInvalid": "Enter a valid email address.",
+      "actorIdRequired": "Actor ID is required.",
+      "actorIdLength": "Actor ID must be 1–128 characters.",
+      "capabilitiesRequired": "Select at least one capability."
+    }
+  },
+  "table": {
+    "email": "Email",
+    "status": "Status",
+    "issued": "Issued",
+    "expires": "Expires",
+    "actions": "Actions"
+  },
+  "status": {
+    "pending": "Pending",
+    "accepted": "Accepted",
+    "expired": "Expired",
+    "revoked": "Revoked",
+    "cancelled": "Cancelled",
+    "already-used": "Already used",
+    "unknown": "Unknown"
+  },
+  "actions": {
+    "resend": "Resend",
+    "cancel": "Cancel"
+  },
+  "cancel": {
+    "confirmTitle": "Cancel invitation",
+    "confirmBody": "The invitation link stops working immediately and the invitation is marked cancelled. You can send a new one later.",
+    "submit": "Cancel invitation",
+    "dismiss": "Keep invitation"
+  },
+  "resend": {
+    "confirmTitle": "Resend invitation",
+    "confirmBody": "A new link is generated and the previous one stops working. The 72-hour window restarts.",
+    "submit": "Resend invitation",
+    "dismiss": "Keep current link"
+  },
+  "copyLink": {
+    "title": "Copy the invitation link",
+    "description": "Share this link with the invited person. It expires 72 hours after it is issued.",
+    "tokenLabel": "Invitation link",
+    "securityNote": "The link works once. Anyone with it can set the password for this invitation.",
+    "copy": "Copy link",
+    "copied": "Copied",
+    "done": "Done"
+  },
+  "empty": {
+    "title": "No invitations yet",
+    "description": "Create an invitation to send the first link."
+  },
+  "forbidden": {
+    "title": "Access denied",
+    "description": "You do not have permission to manage invitations."
+  },
+  "error": {
+    "title": "Invitations could not be loaded",
+    "retry": "Retry"
+  },
+  "accept": {
+    "title": "Set your password",
+    "description": "Complete your invitation to start using Cynara.",
+    "passwordLabel": "Password",
+    "passwordHint": "At least 6 characters, with uppercase, lowercase, a number, and a symbol.",
+    "submit": "Create account",
+    "submitting": "Creating your account…",
+    "successTitle": "You're all set",
+    "successDescription": "Your membership is active and you can sign in now.",
+    "summaryEmail": "Email",
+    "summaryHospital": "Hospital",
+    "summaryActorId": "Actor ID",
+    "summaryCapabilities": "Capabilities",
+    "invalidTitle": "This link is not valid",
+    "invalidDescription": "The invitation link is no longer available. Request a new invitation from the administrator.",
+    "backToLogin": "Back to sign in",
+    "genericError": "The request could not be completed. Try again."
+  }
+}

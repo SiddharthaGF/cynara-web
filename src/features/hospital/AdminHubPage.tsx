@@ -6,6 +6,7 @@ import {
   Hospital,
   Layers,
   ListTree,
+  Mail,
   Users,
 } from 'lucide-react';
 import type { JSX } from 'react';
@@ -24,7 +25,8 @@ interface HubSection {
     | '/$locale/admin/clinical-areas'
     | '/$locale/admin/disciplines'
     | '/$locale/admin/documents'
-    | '/$locale/admin/users';
+    | '/$locale/admin/users'
+    | '/$locale/admin/invitations';
   icon: typeof Hospital;
   titleKey: string;
   descriptionKey: string;
@@ -67,6 +69,12 @@ const HUB_SECTIONS: readonly HubSection[] = [
     titleKey: 'hub.sections.users.title',
     descriptionKey: 'hub.sections.users.description',
   },
+  {
+    to: '/$locale/admin/invitations',
+    icon: Mail,
+    titleKey: 'hub.sections.invitations.title',
+    descriptionKey: 'hub.sections.invitations.description',
+  },
 ];
 
 export function AdminHubPage(): JSX.Element {
@@ -77,6 +85,7 @@ export function AdminHubPage(): JSX.Element {
   const canReadWorkspace = can('read', 'Workspace');
   const canReadCatalog = can('read', 'Catalog');
   const canReadUsers = can('read', 'User');
+  const canReadInvitations = can('read', 'Invitation');
 
   const sections = HUB_SECTIONS.filter((section) => {
     if (section.to === '/$locale/admin/workspace') {
@@ -84,6 +93,9 @@ export function AdminHubPage(): JSX.Element {
     }
     if (section.to === '/$locale/admin/users') {
       return canReadUsers;
+    }
+    if (section.to === '/$locale/admin/invitations') {
+      return canReadInvitations;
     }
     return canReadCatalog;
   });

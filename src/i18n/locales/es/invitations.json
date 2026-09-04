@@ -1,0 +1,107 @@
+{
+  "title": "Invitaciones",
+  "subtitle": "Administrá los enlaces de invitación de un solo uso dentro de tu espacio de trabajo.",
+  "list": {
+    "title": "Enlaces de invitación",
+    "description": "Las invitaciones se listan de más reciente a más antigua. Los tokens nunca aparecen acá.",
+    "refreshing": "Actualizando…"
+  },
+  "create": {
+    "button": "Crear invitación",
+    "title": "Crear invitación",
+    "description": "Enviá un enlace de un solo uso para que la persona invitada configure su contraseña.",
+    "emailLabel": "Correo electrónico",
+    "actorIdLabel": "ID de actor",
+    "actorIdHint": "De 1 a 128 caracteres, identifica a la nueva persona miembro.",
+    "hospitalLabel": "Hospital",
+    "hospitalPlaceholder": "Sin espacio de trabajo seleccionado",
+    "capabilitiesLabel": "Capacidades",
+    "capabilitiesDescription": "Capacidades que recibirá la persona invitada al aceptar.",
+    "profileSection": "Perfil (opcional)",
+    "nameLabel": "Nombre",
+    "surnameLabel": "Apellido",
+    "phoneLabel": "Teléfono",
+    "languageLabel": "Idioma",
+    "submit": "Crear y copiar enlace",
+    "submitting": "Creando…",
+    "cancel": "Cancelar",
+    "errors": {
+      "emailRequired": "El correo electrónico es obligatorio.",
+      "emailInvalid": "Ingresá un correo electrónico válido.",
+      "actorIdRequired": "El ID de actor es obligatorio.",
+      "actorIdLength": "El ID de actor debe tener entre 1 y 128 caracteres.",
+      "capabilitiesRequired": "Elegí al menos una capacidad."
+    }
+  },
+  "table": {
+    "email": "Correo electrónico",
+    "status": "Estado",
+    "issued": "Emitida",
+    "expires": "Vence",
+    "actions": "Acciones"
+  },
+  "status": {
+    "pending": "Pendiente",
+    "accepted": "Aceptada",
+    "expired": "Expirada",
+    "revoked": "Revocada",
+    "cancelled": "Cancelada",
+    "already-used": "Ya utilizada",
+    "unknown": "Desconocida"
+  },
+  "actions": {
+    "resend": "Reenviar",
+    "cancel": "Cancelar"
+  },
+  "cancel": {
+    "confirmTitle": "Cancelar invitación",
+    "confirmBody": "El enlace de invitación deja de funcionar de inmediato y la invitación queda marcada como cancelada. Podés enviar una nueva más adelante.",
+    "submit": "Cancelar invitación",
+    "dismiss": "Mantener invitación"
+  },
+  "resend": {
+    "confirmTitle": "Reenviar invitación",
+    "confirmBody": "Se genera un enlace nuevo y el anterior deja de funcionar. La ventana de 72 horas se reinicia.",
+    "submit": "Reenviar invitación",
+    "dismiss": "Mantener el enlace actual"
+  },
+  "copyLink": {
+    "title": "Copiá el enlace de invitación",
+    "description": "Compartí este enlace con la persona invitada. Vence 72 horas después de emitirse.",
+    "tokenLabel": "Enlace de invitación",
+    "securityNote": "El enlace funciona una sola vez. Cualquiera que lo tenga puede configurar la contraseña de esta invitación.",
+    "copy": "Copiar enlace",
+    "copied": "Copiado",
+    "done": "Listo"
+  },
+  "empty": {
+    "title": "Todavía no hay invitaciones",
+    "description": "Creá una invitación para enviar el primer enlace."
+  },
+  "forbidden": {
+    "title": "Acceso denegado",
+    "description": "No tenés permiso para administrar invitaciones."
+  },
+  "error": {
+    "title": "No se pudieron cargar las invitaciones",
+    "retry": "Reintentar"
+  },
+  "accept": {
+    "title": "Definí tu contraseña",
+    "description": "Completá tu invitación para empezar a usar Cynara.",
+    "passwordLabel": "Contraseña",
+    "passwordHint": "Al menos 6 caracteres, con mayúsculas, minúsculas, un número y un símbolo.",
+    "submit": "Crear cuenta",
+    "submitting": "Creando tu cuenta…",
+    "successTitle": "Todo listo",
+    "successDescription": "Tu membresía está activa. Ya podés iniciar sesión.",
+    "summaryEmail": "Correo electrónico",
+    "summaryHospital": "Hospital",
+    "summaryActorId": "ID de actor",
+    "summaryCapabilities": "Capacidades",
+    "invalidTitle": "Este enlace no es válido",
+    "invalidDescription": "El enlace de invitación ya no está disponible. Solicitá una invitación nueva al administrador.",
+    "backToLogin": "Volver a iniciar sesión",
+    "genericError": "No se pudo completar la solicitud. Intentá de nuevo."
+  }
+}
