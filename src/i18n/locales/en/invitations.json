@@ -91,6 +91,7 @@
     "description": "Complete your invitation to start using Cynara.",
     "passwordLabel": "Password",
     "passwordHint": "At least 6 characters, with uppercase, lowercase, a number, and a symbol.",
+    "passwordRequired": "Enter a password to continue.",
     "submit": "Create account",
     "submitting": "Creating your account…",
     "successTitle": "You're all set",
