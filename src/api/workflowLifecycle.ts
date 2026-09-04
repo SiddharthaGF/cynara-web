@@ -1,6 +1,5 @@
 // react-doctor-disable-file deslop/unused-file
-// Public API surface for workflow lifecycle transitions. Kept as exports
-// Even though no UI consumes them yet; consumers import them from here.
+// Lifecycle transition exports; no UI consumes them yet.
 import { contractHeaders } from '@/api/client-runtime.ts';
 import {
   publishWorkflowVersion as sdkPublishWorkflowVersion,

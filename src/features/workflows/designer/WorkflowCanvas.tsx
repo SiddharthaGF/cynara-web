@@ -228,9 +228,7 @@ function WorkflowCanvasInner({
     contextMenu !== null &&
     (contextMenu.kind !== 'node' || contextMenuNodeType !== null);
 
-  // Fresh drafts arrive with only the Start and End nodes. Guide the first
-  // Composition step on the canvas itself, like the form designer's empty
-  // State: a visible prompt with real buttons instead of a hidden gesture.
+  // Fresh drafts (only Start/End) get a visible first-step prompt on the canvas.
   const showGuidance =
     !readOnly &&
     graph.nodes.filter((node) => node.type !== 'start' && node.type !== 'end')
@@ -244,9 +242,8 @@ function WorkflowCanvasInner({
     }
   };
 
-  // Touch devices have no right-click, so a held press opens the same context
-  // Menu. This hook only records which surface was held; it also swallows the
-  // Click that follows the lift so the press does not select a node behind it.
+  // Held press mimics right-click on touch; the hook swallows the lift click so
+  // The press does not select a node behind the menu.
   const longPress = useLongPress({
     shouldIgnore: (target) =>
       target instanceof Element &&

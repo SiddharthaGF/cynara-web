@@ -122,9 +122,7 @@ export function AppShell({
   variant = 'catalog',
   className,
 }: AppShellProps): JSX.Element {
-  // The catalog benefits from a visible sidebar; the designer route hides the
-  // Rail by collapsing the sidebar to an icon strip to give the canvas more
-  // Breathing room. Users can expand it from the trigger.
+  // Catalog keeps a visible sidebar; the designer collapses it to an icon strip for canvas room.
   const defaultOpen = variant === 'catalog';
   const { sidebarOpen } = useRouteContext({ from: '/$locale' });
 

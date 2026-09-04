@@ -103,12 +103,7 @@ export function addNode(
   return { graph: { ...graph, nodes, edges }, node };
 }
 
-/**
- * Edge created by `addNode`. For a decision source that already has an
- * unconditional (default) branch, the new branch is conditional with an empty
- * comparison the user completes in the inspector, so the graph never ends up
- * with more than one default branch.
- */
+/** Edge created by `addNode`: a decision that already has a default branch gets a conditional one (empty comparison the user completes), so the graph never ends up with more than one default. */
 function connectionEdge(
   graph: WorkflowGraph,
   source: WorkflowNode,
@@ -151,9 +146,8 @@ export function changeNodeType(
     return graph;
   }
   const next: WorkflowNode = { ...node, type };
-  // Transition conditions only make sense on decision outputs. Strip them
-  // When the source stops being a decision, keeping the graph free of
-  // Orphaned conditions.
+  // Conditions only make sense on decision outputs; strip them when the source
+  // Stops being a decision, so the graph keeps no orphaned conditions.
   const edges =
     type === 'decision'
       ? graph.edges

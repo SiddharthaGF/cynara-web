@@ -85,16 +85,11 @@ export function workflowEdgeLabel(
 }
 
 /**
- * Maps the persisted domain graph to the React Flow view model.
- *
- * The domain model stays the single source of truth: every structural change
- * goes through the domain operations and is projected back here. Node positions
- * are visual-only state owned by the session (`positions`); they win over the
- * computed layout so dragged layouts survive re-projection. Positions are
- * stored in the browser (never in the workflow schema) and restored here on
- * mount. Nodes without a saved position fall back to a dagre layout with
- * default sizes; `useWorkflowFlow` re-runs the layout with measured sizes once
- * React Flow has measured every node.
+ * Maps the persisted domain graph to the React Flow view model. The domain
+ * model is the single source of truth; positions are session-only visual state
+ * that wins over the computed layout and lives in the browser, never the
+ * schema. Nodes without a saved position fall back to a dagre layout re-run
+ * with measured sizes once React Flow has rendered them.
  */
 export function domainGraphToFlow(
   graph: WorkflowGraph,
@@ -146,14 +141,12 @@ export function domainGraphToFlow(
       id: key,
       source: edge.from,
       target: edge.to,
-      // Decisions expose one source handle per branch; the handle id mirrors
-      // The branch target so edges stay anchored while branches change.
+      // One source handle per branch; the id mirrors the target so edges stay anchored.
       sourceHandle: isDecisionSource ? edge.to : null,
       type: 'workflow',
       selected: options.selectedEdgeKey === key,
       deletable: !options.readOnly,
-      // Bind the arrowhead to the stroke token so it tracks the edge theme
-      // (and the hover override in index.css) instead of a fixed gray.
+      // Bind the arrowhead to the stroke token so it tracks the edge theme, not a fixed gray.
       markerEnd: {
         type: MarkerType.ArrowClosed,
         width: 16,

@@ -131,8 +131,8 @@ export function nodeIdFromName(
   if (!slug) {
     return null;
   }
-  // NODE_ID_PATTERN requires a leading lowercase letter. Names that begin
-  // With a digit or punctuation get the node type as a readable prefix.
+  // Prefix with the type slug when the name starts with a digit or punctuation
+  // (NODE_ID_PATTERN requires a leading lowercase letter).
   if (!/^[a-z]/.test(slug)) {
     slug = `${TYPE_SLUGS[node.type]}-${slug}`;
   }

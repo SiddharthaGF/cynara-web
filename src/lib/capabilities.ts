@@ -133,8 +133,7 @@ export const ROUTE_CAPABILITY_REQUIREMENTS: Readonly<
   '/$locale/forms/$code/designer/$draftId': [
     { action: 'write', subject: 'Catalog' },
   ],
-  // Workflow screens (catalog + designer) are built in CYN-71; the guards are
-  // Registered now so the routes are capability-aware from the first commit.
+  // Workflow guards registered ahead of the CYN-71 screens so routes are capability-aware from the first commit.
   '/$locale/workflows/': [{ action: 'read', subject: 'Workflow' }],
   '/$locale/workflows/$code/designer/': [
     { action: 'write', subject: 'Workflow' },
@@ -152,8 +151,7 @@ export const ROUTE_CAPABILITY_REQUIREMENTS: Readonly<
   '/$locale/admin/clinical-areas': [{ action: 'read', subject: 'Catalog' }],
   '/$locale/admin/disciplines': [{ action: 'read', subject: 'Catalog' }],
   '/$locale/admin/documents': [{ action: 'read', subject: 'Catalog' }],
-  // Admin user directory (CYN-108). Index route ids carry a trailing slash;
-  // Detail route ids do not — matching how TanStack emits them.
+  // Index route ids carry a trailing slash; detail ids do not (TanStack emission).
   '/$locale/admin/users/': [{ action: 'read', subject: 'User' }],
   '/$locale/admin/users/$userId': [{ action: 'read', subject: 'User' }],
 };

@@ -21,8 +21,7 @@ import {
 import type { ClinicalField, TimePreset } from '@/features/forms/types.ts';
 import { cn } from '@/lib/utils.ts';
 
-// Formatters for the Spanish day-picker labels. Built once at module scope
-// Because constructing an Intl formatter is comparatively expensive.
+// Spanish day-picker formatters, built once at module scope (Intl construction is expensive).
 const esMonthYearFormatter = new Intl.DateTimeFormat('es', {
   month: 'long',
   year: 'numeric',
@@ -57,8 +56,7 @@ export function DatePickerInput({
   const [pendingDate, setPendingDate] = useState<Date | undefined>();
   const [pendingTime, setPendingTime] = useState('');
   const locale = i18n.language.startsWith('es') ? es : enUS;
-  // Calendar ARIA labels follow the active language instead of the default
-  // English strings shipped by react-day-picker.
+  // ARIA labels follow the active language, not react-day-picker's default English.
   const labels = useMemo(
     () => localizedCalendarLabels(i18n.language, t),
     [i18n.language, t],

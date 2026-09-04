@@ -42,9 +42,7 @@ export interface QueuedMessage {
 
 interface RunFormAiChatStreamOptions {
   abortRef: MutableRefObject<AbortController | null>;
-  /** Set by the previous stream's stop/abort path so we can suppress the
-   *  "stopped" banner when a newer stream replaces an old one. Cleared on
-   *  every new stream call so only the latest intent matters. */
+  /** Set on stop/abort so a newer stream can suppress the "stopped" banner; cleared on each new stream. */
   clearStoppedFlag: () => void;
   drainQueue: () => Promise<void>;
   errorGeneric: string;
@@ -67,8 +65,7 @@ interface RunFormAiChatStreamOptions {
   clearQueuedTurns: () => void;
 }
 
-/** Convenience re-export so callers can import the attempt types from the
- *  Single chat-stream entry point. */
+/** Re-export of attempt types for callers importing from this entry point. */
 export type {
   AttemptResult,
   AttemptTelemetry,
@@ -96,8 +93,7 @@ export async function runFormAiChatStream({
   setStopped,
   setTurns,
 }: RunFormAiChatStreamOptions): Promise<void> {
-  // Cancel any in-flight turn (replaced by this one). That abort is silent —
-  // Only user Stop and per-attempt timeouts are surfaced below.
+  // Cancel the in-flight turn silently; only user Stop and per-attempt timeouts surface.
   abortRef.current?.abort();
   setPendingPayload(payload);
   setError(null);
@@ -153,12 +149,7 @@ export async function runFormAiChatStream({
     setTurns,
   });
 
-  /**
-   * Auto-retry once on transient parse failures, empty schema payloads, or
-   * Client safety timeouts. User Stop and non-recoverable errors are not
-   * Retried. Each attempt owns its own AbortController so a timed-out signal
-   * Does not block the retry.
-   */
+  // Auto-retry once on transient failures; each attempt owns its AbortController.
   const attemptResult = await runAttempt(1);
   let errorMessage: string | null = null;
   let wasAborted = false;
@@ -187,10 +178,7 @@ export async function runFormAiChatStream({
   }
 
   if (errorMessage === null && !wasAborted) {
-    // Attempt succeeded but the stream drained without `done`. Treat as a
-    // Success path so the UI clears the spinner. The existing event loop
-    // Already handled the `done` event earlier, so this branch is mostly
-    // Defensive.
+    // Drained without `done`: treat as success so the UI clears the spinner (defensive).
     finalizeSuccess();
     return;
   }
@@ -206,8 +194,7 @@ export async function runFormAiChatStream({
   if (wasAborted) {
     settleAssistantStreaming(setTurns, assistantId);
     setError(null);
-    // Only surface the "generation stopped" banner when the user
-    // Explicitly hit Stop. Replaced streams should not leave a stale card.
+    // Banner only on explicit Stop; replaced streams must not leave a stale card.
     setStopped(isUserStopped());
     // Keep queue for after stop settles — still drain next.
   } else if (errorMessage !== null) {
@@ -274,13 +261,8 @@ function applyDoneEvent({
     before.clinicalSchemaJson !== clinicalSchemaJson ||
     before.uiSchemaJson !== normalizedUiSchemaJson ||
     before.rulesSchemaJson !== normalizedRulesSchemaJson;
-  // Defensive: `streamFormDraftAi` may synthesize a `done` when the
-  // Upstream SSE closes early (no `done`, no `error`). That
-  // Synthetic payload carries empty schema strings; matching it
-  // Against the live draft would falsely report `draftChanged: true`
-  // And then crash inside `parseDraft(JSON.parse(''))`. Treat any
-  // Empty schema as "nothing usable arrived" so the outer retry
-  // Layer can take over.
+  // `streamFormDraftAi` may synthesize a `done` on early SSE close carrying
+  // Empty schema strings; treat as "nothing usable" so the retry layer takes over.
   const resultEmpty =
     clinicalSchemaJson.length === 0 &&
     (uiSchemaJson ?? '').length === 0 &&
@@ -297,10 +279,7 @@ function applyDoneEvent({
     draftApplied: draftChanged,
     appliedSummary: draftChanged ? summary.trim() || undefined : undefined,
   }));
-  // Re-apply `streaming: false` on the next frame in case React
-  // Batched a competing `setTurns` (from a queued drain, etc.) after
-  // This patch. This guarantees the spinner stops even when concurrent
-  // Rendering reorders state updates around the `done` handler.
+  // Re-assert `streaming: false` next frame in case React batched a competing setTurns.
   requestAnimationFrame(() => {
     patchAssistant(setTurns, assistantId, (turn) =>
       turn.streaming
@@ -314,9 +293,7 @@ function applyDoneEvent({
       uiSchemaJson,
       rulesSchemaJson,
     });
-    // Sync UI/rules (incl. layout order) before apply so preview matches the
-    // Designer canvas immediately, and so queued follow-ups serialize the
-    // Applied draft rather than a stale modelRef from before React re-renders.
+    // Sync UI/rules before apply so preview matches and queued turns serialize the applied draft.
     const next: FormDraftModel = {
       clinical: parsed.clinical,
       ui: syncUiSchema(parsed.clinical, parsed.ui),

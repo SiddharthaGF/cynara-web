@@ -137,9 +137,7 @@ export function logApiError(
     ...detail,
     original: error instanceof Error ? undefined : error,
   };
-  // Browser-native reporting avoids console.* (forbidden by lint) while still
-  // Surfacing failures to DevTools / error reporters. The guard keeps the
-  // Isomorphic path safe on the server, where `reportError` does not exist.
+  // `reportError` avoids console.* (lint-forbidden) and is guarded for the server, where it does not exist.
   if (typeof reportError === 'function') {
     reportError(reported);
   }

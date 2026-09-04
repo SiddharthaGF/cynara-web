@@ -1,19 +1,8 @@
 /**
- * Local-only telemetry for AI chat streams.
- *
- * Captures the data points that explain why large prompts used to time out
- * (TTFB, total wall-clock, the farthest stream phase reached, the safety-net
- * fallback outcome from the server, total events seen, and how many
- * characters the user actually submitted). We deliberately do not include
- * any sensitive payload content — only sizes and outcomes — so this can be
- * safely shipped to a beacon endpoint for monitoring.
- *
- * Two sinks:
- *  - In dev: emits a browser performance mark so engineers can correlate UI
- *    behaviour with network timings without leaving devtools.
- *  - Anywhere `import.meta.env.VITE_AI_METRICS_URL` is configured: fires a
- *    `navigator.sendBeacon` POST with the JSON payload. sendBeacon is
- *    fire-and-forget and survives page unload.
+ * Local-only telemetry for AI chat streams: TTFB, wall-clock, farthest stream
+ * phase, server fallback outcome, event count, and prompt size — never payload
+ * content, so it is safe for a beacon endpoint. Dev emits a performance mark;
+ * with `VITE_AI_METRICS_URL` set, `navigator.sendBeacon` fires (survives unload).
  */
 export interface StreamMetricsPayload {
   ttfb_ms: number;
@@ -40,8 +29,7 @@ export function recordStreamMetrics(payload: StreamMetricsPayload): void {
       detail: payload,
     });
   }
-  // Always attempt sendBeacon when available; keepalive: true gives the
-  // Browser an even larger budget if the tab is closing.
+  // Prefer sendBeacon — it survives page unload.
   const metricsUrl = resolveMetricsUrl();
   if (metricsUrl === null) {
     return;
@@ -58,8 +46,7 @@ export function recordStreamMetrics(payload: StreamMetricsPayload): void {
       return;
     }
   }
-  // Fallback to fetch with keepalive; only as a last resort because fetch
-  // Does not survive page unload.
+  // Fetch keepalive is the fallback — it does not survive page unload.
   if (typeof fetch === 'function') {
     try {
       void fetch(metricsUrl, {
@@ -76,8 +63,7 @@ export function recordStreamMetrics(payload: StreamMetricsPayload): void {
 
 function resolveMetricsUrl(): string | null {
   try {
-    // `import.meta.env` is replaced at build time by Vite. We deliberately
-    // Resolve this lazily so calling the helper at SSR time still works.
+    // Resolve lazily (Vite replaces `import.meta.env` at build time) so SSR calls still work.
     const candidate = (import.meta.env as Record<string, unknown>)
       .VITE_AI_METRICS_URL;
     if (typeof candidate === 'string' && candidate.length > 0) {

@@ -55,8 +55,6 @@ export function WorkflowNodeFormSettings({
                 return;
               }
               const form = formOptions.find((option) => option.code === code);
-              // Picking a form pins the latest published version so the
-              // Task is ready to publish without an extra selection.
               const latestVersion = form?.publishedVersions.at(-1)?.version;
               onChangeNode({
                 formCode: code,

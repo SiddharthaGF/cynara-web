@@ -34,13 +34,6 @@ import {
 import { useUserList } from '@/features/users/useUsersDirectory.ts';
 import { getRawHospitalCode } from '@/lib/api-origin.ts';
 
-/**
- * Directory workspace: submit-driven search form, URL-persisted filters,
- * resolved-scope presentation, and the full states matrix. For
- * hospital-scoped callers the hospital filter is hidden while any
- * URL-supplied hospital code still passes through verbatim; copy stays
- * scope-neutral and never promises narrowing.
- */
 function resolveSessionHospitalContext(
   override: string | null | undefined,
 ): string | undefined {
@@ -86,9 +79,7 @@ export function UserDirectoryWorkspace({
       void navigate({
         to: route,
         params: { locale },
-        // Filters replace, page resets to 1, pageSize persists; any
-        // Hospital code present passes through verbatim so the server
-        // Re-pins results — no client-side clearing or defaulting.
+        // Filters replace, page resets to 1, pageSize persists; hospital code passes through verbatim.
         search: nextSearchAfterSubmit(search, values),
       });
     },
@@ -140,8 +131,7 @@ export function UserDirectoryWorkspace({
   });
 
   const hasError = !isForbidden && error !== null;
-  // Validation failures clear prior rows entirely. Other failures over
-  // Cached data keep rows visible but visibly stale.
+  // 400 clears prior rows; other failures over cached data keep them visibly stale.
   const staleRows =
     hasError && !(queryError instanceof ApiError && queryError.status === 400);
   const showRows = (!hasError || staleRows) && !isForbidden && items.length > 0;

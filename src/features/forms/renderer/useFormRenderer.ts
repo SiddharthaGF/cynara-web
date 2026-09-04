@@ -67,9 +67,8 @@ export function useFormRenderer({
     [model, values],
   );
 
-  // Errors are computed on every value change so action handlers can check
-  // `hasValidationErrors` synchronously right after `triggerValidation()`.
-  // Display stays gated on `showValidation`.
+  // Errors recompute per value change so handlers can check synchronously after
+  // `triggerValidation()`; display stays gated on `showValidation`.
   const fieldErrors = useMemo(
     () =>
       collectFieldErrors(model, values, evaluation, (issue) =>

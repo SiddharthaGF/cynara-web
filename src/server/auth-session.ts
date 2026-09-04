@@ -8,14 +8,11 @@ import {
 import { getSessionSecret } from '@/server/env.ts';
 
 /**
- * Sealed, stateless session. The refresh token and selected hospital context
- * live inside an httpOnly, SameSite=Lax cookie sealed with
- * AUTH_SESSION_SECRET (aes-256-cbc + sha256 HMAC). No workerd memory is used:
- * every request unseals the cookie, and every rotation re-seals it.
- *
- * A short-lived, separately named transaction session carries the PKCE
- * verifier + state between `login(start)` and `login(callback)`; using the
- * same seal machinery makes the verifier tamper-evident.
+ * Sealed, stateless session: refresh token + hospital context live in an
+ * httpOnly, SameSite=Lax cookie sealed with AUTH_SESSION_SECRET (aes-256-cbc +
+ * sha256 HMAC); no workerd memory is used. A short-lived, separately named
+ * transaction session carries the PKCE verifier + state between
+ * `login(start)` and `login(callback)`.
  */
 
 export interface AuthSessionData {
@@ -29,8 +26,7 @@ export interface AuthSessionData {
   expiresAt: number;
 }
 
-// SessionManager/SessionConfig are not re-exported from the installed
-// @tanstack/react-start/server, so derive their shapes from createServerSession.
+// Not re-exported from @tanstack/react-start/server; derive shapes from createServerSession.
 export type AuthSessionConfig = Parameters<typeof createServerSession>[0];
 export type AuthSessionManager = Awaited<
   ReturnType<typeof createServerSession<AuthSessionData>>
@@ -64,8 +60,7 @@ export function getSessionConfig(): AuthSessionConfig {
     name: AUTH_SESSION_NAME,
     password: getSessionSecret(),
     maxAge: AUTH_SESSION_MAX_AGE_SECONDS,
-    // Keep the session exclusively in the sealed cookie, not the
-    // X-cynara-auth-session response header.
+    // Keep the session only in the sealed cookie, not the X-cynara-auth-session header.
     sessionHeader: false,
     cookie: buildCookieOptions(),
   };
@@ -93,8 +88,7 @@ export async function getAuthSession(): Promise<
   if (!hasAuthSessionCookie()) {
     return undefined;
   }
-  // Session unsealing silently replaces tampered or expired cookies.
-  // A fresh anonymous session results; Missing data means signed-out.
+  // Unsealing silently replaces tampered/expired cookies; missing data means signed out.
   return createServerSession<AuthSessionData>(getSessionConfig());
 }
 

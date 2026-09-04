@@ -73,12 +73,10 @@ export function WorkflowFlowNode({
   const isTerminal = node.type === 'end';
   // Start and task nodes allow a single outgoing transition; only decisions branch repeatedly.
   const canAddStep = node.type === 'decision' || outgoing.length === 0;
-  // Hover-driven open state. Selection keeps the card open; an active drag
-  // Closes it so the floating pill does not get left behind while dragging.
+  // Selection keeps the card open; an active drag closes it so the pill is not left behind.
   const [isActionCardOpen, setIsActionCardOpen] = useState(false);
   const actionCardOpen = !dragging && (selected || isActionCardOpen);
-  // Selected cards become editable in place (name input) and grow a visible
-  // Action row, mirroring the form designer's selected-card expansion.
+  // Selected cards become editable in place and grow a visible action row.
   const editing = selected && !readOnly && !dragging;
   const nodeCard = (
     <BaseNode
@@ -234,10 +232,8 @@ export function WorkflowFlowNode({
 }
 
 /**
- * Visible action row shown on the selected node: add the next step/branch and
- * connect a transition to another node. This is the graph equivalent of the
- * form designer's insert gaps — construction stays on the surface instead of
- * hiding behind right-click or hover.
+ * Action row on the selected node: add the next step/branch and connect a
+ * transition — construction stays on the surface, not behind right-click.
  */
 function NodeActionFooter({
   node,

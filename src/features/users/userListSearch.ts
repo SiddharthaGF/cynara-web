@@ -40,9 +40,7 @@ export function validateUserListSearch(
 ): UserListSearch {
   return {
     q: optionalString(search.q),
-    // Preserved verbatim when present: an unknown code must reach the
-    // Server untouched so it resolves to an empty scoped page (no
-    // Client-side fallback to an unfiltered listing).
+    // Passed verbatim: an unknown code must reach the server so it resolves to an empty scoped page.
     hospitalCode: optionalString(search.hospitalCode),
     page: positiveInt(search.page, 1),
     pageSize: positiveInt(search.pageSize, DEFAULT_USER_PAGE_SIZE),

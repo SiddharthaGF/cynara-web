@@ -48,9 +48,7 @@ export const Route = createFileRoute('/$locale')({
       const auth = await getAuthStatus();
       if (!auth.authenticated) {
         const returnTo = `${location.pathname}${location.searchStr}`;
-        // The login flow already falls back to the locale root after sign-in.
-        // A redirectTo that equals it would only clutter the URL.
-        // Deep paths still keep it so sign-in returns to the page.
+        // Drop redirectTo equal to the locale root (login falls back to it anyway); deep paths keep it.
         // oxlint-disable-next-line typescript/only-throw-error -- TanStack Router redirect
         throw redirect({
           to: '/$locale/login',

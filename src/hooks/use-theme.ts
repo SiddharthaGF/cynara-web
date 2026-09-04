@@ -16,9 +16,8 @@ export function useTheme(): {
   setPreference: (preference: ThemePreference) => void;
   toggleTheme: () => void;
 } {
-  // SSR-safe defaults must match the server render. Reading localStorage or
-  // MatchMedia in useState causes a hydration mismatch (e.g. ThemeToggle
-  // Aria-label). `themeInitScript` already applied the real class before paint.
+  // SSR-safe defaults match the server render; localStorage/matchMedia in useState
+  // Would cause a hydration mismatch. `themeInitScript` applied the real class pre-paint.
   const [preference, setPreferenceState] = useState<ThemePreference>('system');
   const [theme, setTheme] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
@@ -30,10 +29,8 @@ export function useTheme(): {
     setMounted(true);
   }, []);
 
-  // Re-resolve the concrete theme when the user picks a different preference,
-  // And keep it in sync with the OS color scheme while the preference is
-  // `'system'`. Skip until mounted so we don't overwrite the init script's
-  // Class with the SSR default.
+  // Re-resolve on preference change and follow the OS scheme while `system`;
+  // Skip until mounted so the init script's class is not overwritten.
   useEffect(() => {
     if (!mounted) {
       return undefined;
@@ -65,9 +62,7 @@ export function useTheme(): {
 
   const setPreference = useCallback((next: ThemePreference) => {
     if (next === 'system') {
-      // Persist a marker so we know the user opted into system mode and the
-      // First paint keeps following the OS preference instead of pinning to
-      // Whatever `resolveTheme` returned at boot.
+      // Persist a marker so the first paint keeps following the OS preference, not the boot-time resolution.
       localStorage.setItem(THEME_STORAGE_KEY, 'system');
     } else {
       localStorage.setItem(THEME_STORAGE_KEY, next);

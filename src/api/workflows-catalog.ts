@@ -255,9 +255,7 @@ export async function listWorkflows(): Promise<WorkflowSummary[]> {
   return collection.data.map((definition) => mapSummary(definition, versions));
 }
 
-// Public API client for listing a definition's version history. Kept as a
-// Facade export; the workflow catalog currently surfaces published versions
-// From the summary payload instead.
+// Facade export; the catalog surfaces published versions from the summary payload.
 // react-doctor-disable-next-line deslop/unused-export
 export async function listWorkflowVersions(
   definitionId: string,
@@ -287,8 +285,7 @@ export async function createWorkflow(input: {
   name: string;
   initialWorkflowSchemaJson?: string | null;
 }): Promise<WorkflowSummary> {
-  // CYN-55: generated `data.type` is the document discriminator, but the API
-  // Expects the resource type on the wire; the narrow cast bridges the mismatch.
+  // CYN-55: the API expects the resource type on the wire; the cast bridges the mismatch.
   const { data } = await sdkPostWorkflowDefinition({
     headers: contractHeaders(),
     body: {

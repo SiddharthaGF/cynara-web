@@ -12,20 +12,16 @@ import {
 } from '@/server/auth-session.ts';
 
 /**
- * Global Start configuration. Mounted by
- * `createStartHandler` (see src/server.ts); `startInstance` is also imported
- * by the generated route tree so server-function context types pick up the
- * middleware below.
- *
- * - CSRF: rejects cross-site server-function requests (Sec-Fetch-Site /
- *   Origin / Referer validation). Page navigations are exempt so the
- *   identity provider redirect back to /$locale/login works.
+ * Global Start configuration (mounted by `createStartHandler`; see
+ * src/server.ts). `startInstance` is also imported by the generated route tree
+ * so server-function context types pick up the middleware:
+ * - CSRF: rejects cross-site server-function requests (Sec-Fetch-Site / Origin
+ *   / Referer); page navigations stay exempt so the IdP redirect works.
  * - Session: threads the sealed auth cookie into server-function context.
  */
 
 const csrfMiddleware = createCsrfMiddleware({
-  // Protect the same-origin RPC endpoints. Page navigations stay exempt:
-  // Identity-provider redirects are idempotent GET loads, not RPC calls.
+  // Protect RPC endpoints only; IdP redirects are idempotent GET navigations, not RPC calls.
   filter: (ctx) => ctx.handlerType === 'serverFn',
 });
 
@@ -58,12 +54,8 @@ export const startInstance = createStart(() => ({
 }));
 
 /**
- * Function middleware for protected server functions. Rejects the call with
- * ApiError 401 when there is no active session holding a refresh token.
- * Attach with `.middleware([requireAuthMiddleware])` before `.handler()`.
- *
- * Built from startInstance.createMiddleware so its context picks up the
- * request middleware threading from Register.config.
+ * Function middleware for protected server functions: rejects with ApiError
+ * 401 when there is no active session holding a refresh token.
  */
 export const requireAuthMiddleware = startInstance
   .createMiddleware({

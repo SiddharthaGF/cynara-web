@@ -1,12 +1,8 @@
 /**
- * Neutral injection point for server-only request authentication.
- *
- * `cynaraFetch` (src/api/client-runtime.ts) runs in both environments, but
- * attaching the sealed session's bearer token is a server-side concern; a
- * static import of `@/server/api-proxy` from there would drag server modules
- * into the client bundle. The server entry registers the real implementation
- * at boot (see src/server.ts); on the client nothing registers, so requests
- * pass through untouched and reach the same-origin BFF instead.
+ * Neutral injection point for server-only request auth: `cynaraFetch` runs in
+ * both environments, but attaching the sealed session's bearer is server-side;
+ * a static import from there would drag server modules into the client bundle.
+ * The server entry registers the implementation at boot; clients pass through.
  */
 type AttachSessionAuth = (
   init: RequestInit | undefined,

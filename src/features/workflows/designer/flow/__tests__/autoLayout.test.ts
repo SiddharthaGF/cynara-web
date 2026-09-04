@@ -237,9 +237,7 @@ describe('computeDagreLayout', () => {
       new Map(),
     );
 
-    // A deeper `c` branch must not pull `a`/`b` down to its own depth; all
-    // Three direct children stay on the row right below the decision so their
-    // Transitions never stretch across the whole graph.
+    // A deeper branch must not pull its siblings down; all children stay on the row below the decision.
     const decisionY = requirePosition(positions, 'decision').y;
     const a = requirePosition(positions, 'a');
     const b = requirePosition(positions, 'b');

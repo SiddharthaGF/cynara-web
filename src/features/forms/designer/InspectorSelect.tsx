@@ -14,18 +14,11 @@ type TriggerProps = React.ComponentProps<typeof SelectPrimitive.Trigger>;
 type ItemProps = React.ComponentProps<typeof SelectPrimitive.Item>;
 
 /**
- * Selects used inside the field inspector / form preview suffer from overly
- * long option labels (e.g. rule-pair `label — code`). The shared `Select`
- * primitive pins `ItemText` to `whitespace-nowrap`, which makes the popup
- * content overflow past its trigger width and reflows the whole column.
- *
- * `InspectorSelect` keeps the same API but:
- * - Removes the `whitespace-nowrap` constraint on `ItemText` so item content
- *   can wrap, while still keeping `min-w-(--anchor-width)` to anchor the
- *   popup to the trigger.
- * - Caps the popup width so it never exceeds 80vw, even with very long codes.
- * - Drops `alignItemWithTrigger` to `false` so wrapping items push the popup
- *   outward naturally instead of forcing it down by character.
+ * `Select` pins `ItemText` to `whitespace-nowrap`, so long inspector labels
+ * overflow the trigger width and reflow the column. This variant lets item
+ * content wrap, keeps the popup anchored to the trigger
+ * (`min-w-(--anchor-width)`), caps the popup at 80vw, and drops
+ * `alignItemWithTrigger` so wrapping items push the popup outward naturally.
  */
 const InspectorSelect = Select;
 

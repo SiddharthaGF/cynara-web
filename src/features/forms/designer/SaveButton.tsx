@@ -42,10 +42,8 @@ export function SaveButton({
       variant={variant}
       disabled={disabled || isBusy}
       onClick={onClick}
-      // Reuse the visible label as the tooltip copy on mobile, where only
-      // The icon is rendered. Desktop still displays the label inline, so
-      // The tooltip overlays it — the design accepts the extra affordance
-      // Because it doubles as the SR-accessible name.
+      // Mobile renders only the icon, so the tooltip doubles as the
+      // SR-accessible name; desktop overlays the inline label.
       label={label}
       className='shrink-0 gap-1.5 px-2.5 sm:px-3'
     >

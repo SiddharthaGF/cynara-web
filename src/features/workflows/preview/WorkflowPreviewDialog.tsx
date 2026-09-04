@@ -161,8 +161,7 @@ function WorkflowPreviewBody({
 
   const hasBlockingIssues = blockingIssues(validationIssues).length > 0;
 
-  // Latest evaluation per decision branch across the recorded walk.
-  // The rules tab uses it to show how each guard evaluated.
+  // Latest per-branch evaluation across the recorded walk, for the rules tab.
   const evaluations = useMemo(() => {
     const map = new Map<string, WorkflowBranchEvaluation>();
     for (const step of control.simulation.steps) {

@@ -96,9 +96,8 @@ export function expressionToEditable(
   expression: WorkflowExpression,
 ): EditableCondition {
   if ('ref' in expression && expression.ref) {
-    // A bare boolean-valued ref reads as a boolean. The editor cannot express
-    // That succinctly, so model it as an explicit comparison to keep the AST
-    // Round-trippable.
+    // A bare boolean ref reads as boolean; model it as an explicit comparison to
+    // Keep the AST round-trippable.
     return {
       id: nextConditionId(),
       kind: 'comparison',
@@ -205,8 +204,7 @@ export function editableToExpression(
       if (args.length === 0) {
         return undefined;
       }
-      // The contract requires and/or groups to hold at least two operands.
-      // Unwrap single-operand groups so serialized output stays valid.
+      // Unwrap single-operand groups: the contract requires and/or to hold ≥ 2 operands.
       if (args.length === 1) {
         const [single] = args;
         return single === undefined ? undefined : single;

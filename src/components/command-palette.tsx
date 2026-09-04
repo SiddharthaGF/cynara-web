@@ -48,8 +48,7 @@ export function CommandPalette({
   const { can } = useCapabilities();
   const [query, setQuery] = useState('');
 
-  // Latest onOpenChange, read from the keydown handler without re-subscribing
-  // The effect every time the parent re-creates the callback.
+  // Latest onOpenChange for the keydown handler, without re-subscribing the effect each render.
   const onOpenChangeEvent = useEffectEvent((nextOpen: boolean): void => {
     onOpenChange(nextOpen);
   });

@@ -35,9 +35,7 @@ vi.mock(import('@tanstack/react-router'), () => ({
 async function clientWithDetailFailure(
   cachedUser?: typeof detailFixture,
 ): Promise<QueryClient> {
-  // Disabling retryOnMount keeps the failed load frozen, mirroring the
-  // Settled state the page actually receives; static rendering can never
-  // Resolve an optimistic would-refetch, so it must not be offered one.
+  // Keep the failed load frozen (retryOnMount off), mirroring the settled state the page receives.
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false, retryOnMount: false },

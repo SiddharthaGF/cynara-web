@@ -13,10 +13,7 @@ export function createQueryClient(): QueryClient {
     },
   });
 
-  // Changed assignments take effect without stale local assumptions: when a
-  // Protected request fails with 401/403, invalidate the capability cache.
-  // Navigation, route guards, and action controls then re-evaluate. The
-  // Capabilities query itself is excluded to avoid self-invalidation loops.
+  // Invalidate capabilities on 401/403 so guards re-evaluate; the capabilities query itself is excluded to avoid loops.
   queryClient.getQueryCache().subscribe((event) => {
     if (event.type !== 'updated') {
       return;

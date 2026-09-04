@@ -84,14 +84,9 @@ function blocked(
 
 /**
  * Walks the graph from its entry point to an end node, evaluating decision
- * guards against the provided test values and recording task assignments.
- *
- * Decision semantics mirror the contract: conditional branches are evaluated
- * in edge order and the first true one is taken; when none passes, the single
- * unconditional (default) branch is taken. A decision without a passing
- * branch, a non-end node without an exit, a missing entry point, or a
- * repeated edge (cycle) blocks the run. The result is pure — the graph and
- * values are never mutated.
+ * guards and recording task assignments. Conditional branches are evaluated in
+ * edge order (first true wins, else the default); a missing start/exit/branch
+ * or a repeated edge blocks the run. Pure — never mutates the graph or values.
  */
 export function simulateWorkflow(
   graph: WorkflowGraph,
@@ -297,8 +292,7 @@ function branchEvaluation(
     label: row.edge.label?.trim() ?? null,
     isDefault: !row.isConditional,
     result,
-    // Conditional branches are always considered.
-    // A default branch only when it is the one the walk fell back to.
+    // Conditional branches are always considered; a default only when taken.
     evaluated: row.isConditional || taken,
     taken,
     reason,

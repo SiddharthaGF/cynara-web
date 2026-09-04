@@ -11,9 +11,7 @@ export function BaseNode({
       className={cn(
         'bg-card text-card-foreground relative rounded-md border',
         'hover:ring-1',
-        // React Flow renders nodes inside `.react-flow__node` wrappers. When a
-        // Node is selected, the wrapper gets the `selected` class, which this
-        // Component styles below.
+        // React Flow's `.react-flow__node` wrapper carries the `selected` class, styled below.
         'in-[.selected]:border-muted-foreground',
         'in-[.selected]:shadow-lg',
         className,
@@ -37,8 +35,7 @@ export function BaseNodeHeader({
       {...props}
       className={cn(
         'mx-0 my-0 -mb-1 flex flex-row items-center justify-between gap-2 px-3 py-2',
-        // Remove or modify these classes if you modify the padding in the
-        // `<BaseNode />` component.
+        // Keep in sync with `<BaseNode />` padding.
         className,
       )}
     />

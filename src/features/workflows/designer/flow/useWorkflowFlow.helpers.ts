@@ -80,10 +80,7 @@ export type StableFlowCallbacks = Pick<
   | 'onConnectNodes'
 >;
 
-/**
- * Builds callbacks that stay referentially stable across renders and always
- * dispatch through the latest forwarded callbacks in `getCallbacks`.
- */
+/** Callbacks with stable identity that always dispatch through the latest ref. */
 export function stableCallbacksFor(
   getCallbacks: () => FlowCallbacks,
 ): StableFlowCallbacks {
@@ -102,11 +99,7 @@ export type NodeChangeAction =
   | { kind: 'position'; id: string; position: { x: number; y: number } }
   | { kind: 'remove'; id: string };
 
-/**
- * Splits node changes into the state changes React Flow must apply and the
- * per-change side effects (live position tracking, removals). Order is kept so
- * a remove that follows a position still wins in the positions map.
- */
+/** Splits changes into React Flow state updates and side effects; order is kept so a later remove wins in the positions map. */
 export function planNodeChangeActions(
   changes: NodeChange<WorkflowFlowNode>[],
 ): {
@@ -117,12 +110,9 @@ export function planNodeChangeActions(
   const actions: NodeChangeAction[] = [];
   for (const change of changes) {
     if (change.type === 'position' && change.position) {
-      // Track the live position for persistence. Every pointermove flows
-      // Through the controlled `nodes` prop so the store adopts the node
-      // Once per frame. Pushing straight into the store instead re-enters
-      // `onNodesChange` with a `replace` change: React Flow diffs the queue
-      // Output by reference, and `applyNodeChanges` always rebuilds the
-      // Dragged node object.
+      // Track live positions here; a store write would re-enter `onNodesChange`
+      // With a `replace` change that React Flow diffs by reference, rebuilding
+      // The dragged node object every frame.
       actions.push({
         kind: 'position',
         id: change.id,

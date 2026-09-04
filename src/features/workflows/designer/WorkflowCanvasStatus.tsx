@@ -23,12 +23,9 @@ interface WorkflowCanvasStatusProps {
 }
 
 /**
- * Single floating status pill for the workflow canvas. It combines graph
- * validation issues and the last save failure into one button so the overlay
- * never shows stacked pills: red when errors exist, amber when only warnings
- * remain. When the server rejects the draft for a rule the client already
- * reports (same issue code in the raw error), the raw payload is omitted so
- * the problem is surfaced exactly once, translated.
+ * Single floating status pill combining graph validation issues and the last
+ * save failure: red on errors, amber on warnings only. A raw server error that
+ * repeats a listed issue code is omitted so each problem surfaces exactly once.
  */
 export function WorkflowCanvasStatus({
   issues,
@@ -40,9 +37,8 @@ export function WorkflowCanvasStatus({
   const [open, setOpen] = useState(false);
 
   const hasSaveError = saveState === 'error' && saveError !== null;
-  // The server rejects drafts against the same rule set the client reports.
-  // A raw error mentioning a listed issue code duplicates that issue.
-  // It is therefore neither shown verbatim nor counted as an extra error.
+  // A raw error repeating a listed issue code duplicates it; show it neither
+  // Verbatim nor as an extra count.
   const saveErrorCovered =
     hasSaveError && coversAnyIssueCode(saveError, issues);
   const errors = issues.filter((issue) => issue.severity === 'error');

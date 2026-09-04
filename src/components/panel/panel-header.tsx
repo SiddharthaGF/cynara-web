@@ -65,9 +65,7 @@ export function PanelHeader({
         className={cn(
           'flex min-w-0 items-start gap-2',
           isMobile ? 'px-4 py-2.5' : 'px-4 py-3',
-          // Reserve space for an absolutely-positioned close X (overlay slot)
-          // So action buttons never end up underneath it. The X is ~28px with
-          // ~10px of inset on the right; `pr-9` (36px) keeps a safe gap.
+          // `pr-9` reserves the right gutter for the absolute close X so actions never sit under it.
           overlay && 'pr-9',
         )}
       >
@@ -83,9 +81,7 @@ export function PanelHeader({
         <div
           className={cn(
             'flex min-w-0 flex-1 flex-col gap-0.5',
-            // On mobile the actions slot flows into a sub-row, so the title
-            // Column gets the full width. On desktop actions live beside the
-            // Title so we cap the column width to leave room for them.
+            // Only desktop caps the title column (actions sit beside the title there).
             !isMobile && 'min-w-0',
           )}
         >
@@ -109,8 +105,7 @@ export function PanelHeader({
       </div>
 
       {actions && isMobile ? (
-        // `pr-9` keeps the actions clear of any `overlay` (the close X lives
-        // At top-right).
+        // `pr-9` keeps the actions clear of an overlay close X.
         <div className='flex items-center justify-end gap-1 px-4 pr-9 pb-2'>
           <div className='flex items-center gap-1'>{actions}</div>
         </div>

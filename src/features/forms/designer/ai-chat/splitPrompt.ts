@@ -1,30 +1,19 @@
 /**
- * Splits long user prompts into paragraph-level blocks so we can queue them
- * as consecutive assistant turns instead of sending one massive prompt that
- * blows past the provider's TTFB budget.
- *
- * Mirrors the W2 layer from the formai-stream-hardening plan: keep each
- * block self-contained, prefix it with "Continúa. Sección X/N:" so the
- * model knows the request is split, and keep the existing conversation
- * history intact so context is preserved across the queued turns.
+ * Splits long prompts into paragraph blocks queued as consecutive assistant
+ * turns, so one massive prompt never blows past the provider's TTFB budget.
+ * Each block stays self-contained and later blocks carry a "Continúa.
+ * Sección X/N:" marker; the existing conversation history is preserved.
  */
 
 /** Default prompt size after which we start splitting. */
 export const LARGE_PROMPT_THRESHOLD = 1500;
 
 /**
- * Split a prompt into one or more self-contained blocks. The first block is
- * returned with the user's original content (unchanged), so the assistant
- * still sees a "fresh" request rather than a continuation of itself. Each
- * subsequent block is prefixed with a continuation marker describing its
- * position in the queue.
+ * Splits a prompt into self-contained blocks; the first keeps the user's
+ * original content unchanged, later ones get a continuation marker.
+ * Conservative: paragraphs are preserved verbatim, never rephrased.
  *
- * The splitter is intentionally conservative: it preserves every paragraph
- * exactly as written; we never rephrase or trim the user's words.
- *
- * @param content user-submitted prompt text.
- * @returns an array with one element if the prompt is short, or N elements
- *          (`> 1`) when auto-split fires.
+ * @returns one element when short, N (>1) when auto-split fires.
  */
 export function splitPromptIntoBlocks(content: string): string[] {
   const trimmed = content.trim();
@@ -35,9 +24,7 @@ export function splitPromptIntoBlocks(content: string): string[] {
     .split(/\n\s*\n/)
     .map((paragraph) => paragraph.trim())
     .filter((paragraph) => paragraph.length > 0);
-  // Fall back to the raw content if the splitter finds no paragraph breaks —
-  // Split on a hard character cap instead of leaving a single oversized
-  // Paragraph untouched.
+  // No paragraph breaks: chunk on a hard character cap instead of one oversized block.
   const blocks =
     paragraphs.length > 1
       ? paragraphs
@@ -46,10 +33,8 @@ export function splitPromptIntoBlocks(content: string): string[] {
     return [trimmed];
   }
   const total = blocks.length;
-  // The first block is left as-is so the AI sees the user's opening request
-  // Verbatim. Continuation blocks include a small header so the model
-  // Understands it should pick up where the previous turn left off rather
-  // Than start a new conversation.
+  // First block verbatim; continuation blocks carry the marker so the model
+  // Picks up where the previous turn left off.
   return blocks.map((block, index) => {
     if (index === 0) {
       return block;

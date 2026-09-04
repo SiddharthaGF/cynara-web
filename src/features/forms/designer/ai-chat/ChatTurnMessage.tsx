@@ -91,8 +91,7 @@ export const ChatTurnMessage = memo(
     const showBody = turn.content.length > 0 || turn.streaming;
     const showApplied =
       turn.draftApplied === true && !turn.streaming && !turn.failed;
-    // Plain text keeps `pre-wrap` so newlines render as written; markdown owns
-    // Its own block spacing once the turn settles.
+    // Plain text keeps `pre-wrap` so newlines render as written; markdown handles block spacing once settled.
     const preserveNewlines = isUser || turn.streaming;
     let authorIcon = (
       <SparklesIcon

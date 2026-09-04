@@ -13,9 +13,7 @@ export interface WorkflowCanvasPosition {
 }
 
 const STORAGE_PREFIX = 'cynara.workflow.layout';
-// Bumped whenever the layout algorithm or coordinate space changes, so stale
-// Envelopes (e.g. layouts produced by the old column stacking or the crossed
-// Branch ordering) are dropped.
+// Bumped when the layout algorithm or coordinate space changes so stale envelopes are dropped.
 const STORAGE_VERSION = 3;
 
 interface PersistedLayoutEnvelope {

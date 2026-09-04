@@ -18,10 +18,8 @@ export function useAiChatStreamLifecycle({
   abortRef,
   clearStorage,
 }: UseAiChatStreamLifecycleOptions): void {
-  // Defensive backstop only: after the stream settles (`isBusy` false), clear
-  // Any assistant turn that still shows `streaming` with content. Must not run
-  // During an active request — that used to wipe the "Generating schema
-  // Changes…" status as soon as the assistant text arrived.
+  // Defensive backstop: settle stuck streaming turns only when not busy; running
+  // During an active request used to wipe the "Generating schema changes…" status.
   useEffect(() => {
     if (isBusy) {
       return undefined;

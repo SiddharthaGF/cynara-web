@@ -68,8 +68,7 @@ export function useAiChatStreamCommand({
   errorGeneric,
   errorTimeout,
 }: UseAiChatStreamCommandOptions): UseAiChatStreamCommand {
-  // Latest-ref dance so the imperative handlers always see the current
-  // Props without re-creating the `runStream` closure on every render.
+  // Refs keep the imperative handlers on current props without re-creating `runStream` each render.
   const buildPayloadRef = useRef(buildPayloadForUserTurn);
   useEffect(() => {
     buildPayloadRef.current = buildPayloadForUserTurn;

@@ -24,10 +24,8 @@ export function WorkflowSettingsInspector({
 }: WorkflowSettingsInspectorProps): JSX.Element {
   const { t } = useTranslation('workflows');
 
-  // Input rows carry no id of their own, so each row gets a stable id on the
-  // First render and the list is reconciled in the add/remove handlers. This
-  // Keeps editing a value from remounting the input (focus loss) and keeps
-  // Keys stable even when a middle row is removed.
+  // Rows have no ids, so stable client ids avoid remounting the input on value
+  // Edits (focus loss) and stay stable when a middle row is removed.
   const [rowIds, setRowIds] = useState<number[]>(() =>
     inputs.map((_, index) => index),
   );

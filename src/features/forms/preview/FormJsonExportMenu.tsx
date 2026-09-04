@@ -49,11 +49,7 @@ export function FormJsonExportMenu({
     URL.revokeObjectURL(url);
   }
 
-  // The export trigger is icon-only on mobile, so we wrap it in a Tooltip
-  // For discoverability while still letting the dropdown open on click.
-  // `TooltipTrigger render={<DropdownMenuTrigger/>}` nests cleanly because
-  // The dropdown trigger accepts a `render` prop itself, allowing it to
-  // Project onto the underlying Button.
+  // Icon-only on mobile: Tooltip adds discoverability; the dropdown trigger nests via its own `render` prop.
   return (
     <Tooltip>
       <DropdownMenu>

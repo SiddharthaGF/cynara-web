@@ -127,8 +127,7 @@ export function useWorkflowDraft(
       setRowVersion(saved.rowVersion);
       rowVersionRef.current = saved.rowVersion;
       setIsReadOnly(saved.status !== 'draft');
-      // Edits landing while a save is in flight keep the draft dirty.
-      // The next autosave cycle then persists them instead of dropping them.
+      // Edits made during a save stay dirty so the next autosave persists them.
       setIsDirty(graphRef.current !== savedGraphRef.current);
       setSaveState('saved');
       setSaveError(null);
@@ -151,9 +150,8 @@ export function useWorkflowDraft(
   }, []);
 
   /**
-   * Runs one save attempt and, for autosave, retries up to
-   * `MAX_SAVE_ATTEMPTS` times with a short backoff. The whole attempt/retry
-   * window stays in the single `saving` state so the error banner only
+   * Runs one save attempt, retrying up to `MAX_SAVE_ATTEMPTS` times on
+   * autosave; the whole window stays in `saving` so the error banner only
    * appears once the final attempt has failed.
    */
   const runSaveCycle = useCallback(
@@ -165,8 +163,7 @@ export function useWorkflowDraft(
       const { current } = graphRef;
       const issues = validateWorkflowGraph(current);
       if (blockingIssues(issues).length > 0) {
-        // The validation indicator already surfaces the graph problems.
-        // A separate save-error message would just duplicate it.
+        // The validation indicator already surfaces these; a save-error message would duplicate it.
         setSaveState('error');
         setSaveError(null);
         return false;
@@ -272,9 +269,7 @@ export function useWorkflowDraft(
   }, [isReadOnly, history.future.length]);
 
   useEffect(() => {
-    // Autosave only arms from an idle or saved state.
-    // Errors and in-flight retries never re-arm the timer.
-    // This prevents an endless save loop that flickers the error banner.
+    // Only arm from idle/saved; re-arming on error would loop and flicker the banner.
     if (
       !isDirty ||
       isReadOnly ||
@@ -317,10 +312,8 @@ export function useWorkflowDraft(
         : 'Failed to load draft.';
   }
 
-  // Ensure a draft that has not been authored yet still renders a valid
-  // Starting graph (e.g. a definition created without initial JSON). The
-  // Fallback is memoized so an empty graph keeps a stable identity; allocating
-  // A fresh object every render would re-project the flow on each pass.
+  // Empty drafts get a stable memoized fallback graph; allocating per render
+  // Would re-project the flow on every pass.
   const emptyDraftFallback = useMemo(createDefaultWorkflowGraph, []);
   const resolvedGraph = graph.nodes.length === 0 ? emptyDraftFallback : graph;
 

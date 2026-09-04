@@ -71,16 +71,12 @@ function parseLoginSearch(search: Record<string, unknown>): LoginSearch {
 export const Route = createFileRoute('/$locale/login')({
   validateSearch: parseLoginSearch,
   beforeLoad: ({ location, params }) => {
-    // The identity provider hands off with OAuth snake_case query params.
-    // Normalize once to the canonical camelCase search.
-    // Keep a single parameter form so the handoff values are not duplicated.
+    // Normalize the IdP's snake_case handoff to canonical camelCase search once.
     const raw = new URLSearchParams(location.searchStr);
     if (raw.has('client_id') || raw.has('request_uri')) {
-      // ValidateSearch already produced the camelCase search.
-      // The cast only restores the type the router does not infer.
+      // ValidateSearch already produced camelCase; the cast restores the inferred type.
       const search = location.search as LoginSearch;
-      // Serialize only the schema keys.
-      // The raw OAuth snake_case extras are dropped instead of re-appended.
+      // Serialize only schema keys; raw OAuth snake_case extras are dropped.
       // oxlint-disable-next-line typescript/only-throw-error -- TanStack Router redirect
       throw redirect({
         to: '/$locale/login',
@@ -111,9 +107,8 @@ function LoginPage(): JSX.Element {
   const callbackRan = useRef(false);
 
   /*
-   * The start form relies on React's onSubmit handler. Until hydration
-   * attaches it, a native GET submit would drop the search params and reload
-   * the page, so keep the submit button disabled until the handler is live.
+   * Until hydration attaches the onSubmit handler, a native GET submit would
+   * drop the search params and reload, so keep submit disabled until live.
    */
   useEffect(() => {
     setIsHydrated(true);
@@ -124,8 +119,7 @@ function LoginPage(): JSX.Element {
   const isAuthorizationHandoff =
     isSafeOpaque(search.clientId, 256) && isSafeOpaque(search.requestUri, 2048);
 
-  // Handles the identity-provider redirect back: exchange code + state once.
-  // The successful exchange navigates to the originally requested path.
+  // Exchange the IdP callback code + state once; success navigates onward.
   useEffect(() => {
     let cancelled = false;
     if (

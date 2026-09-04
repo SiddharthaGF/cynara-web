@@ -14,11 +14,9 @@ const TYPE_RANK: Record<SimulationInputType, number> = {
 };
 
 /**
- * Infers a display type per workflow input from the conditions that reference
- * it: a numeric literal in a comparison upgrades the input to `number`, a
- * boolean literal to `boolean`; anything else stays `text`. Inputs with no
- * condition default to `text`. The result only pre-selects the control in the
- * test-data editor — the evaluator never depends on it.
+ * Infers a display type per input from its conditions: a numeric literal
+ * upgrades to `number`, a boolean literal to `boolean`, else `text`. Only
+ * pre-selects the editor control — the evaluator never depends on it.
  */
 export function inferInputType(
   graph: WorkflowGraph,

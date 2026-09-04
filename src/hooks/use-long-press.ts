@@ -30,14 +30,10 @@ export interface UseLongPressHandlers {
 }
 
 /**
- * Detects a touch or pen press held still for ~500ms (long press) so touch
- * devices get an equivalent of the right-click context menu. The gesture is
- * cancelled by moving past a small threshold, by releasing early, or by a
- * pointercancel. Mouse presses are ignored on purpose: right-click already
- * covers the desktop path.
- *
- * All state lives in refs so a held press never triggers a re-render, and the
- * underlying pan/drag/connect gestures are left untouched.
+ * Detects a touch/pen press held ~500ms (long press) as the touch equivalent
+ * of right-click. Cancelled by movement past a threshold, early release, or
+ * pointercancel; mouse presses are ignored (right-click covers desktop).
+ * State lives in refs so a held press never triggers a re-render.
  */
 export function useLongPress({
   onLongPress,
@@ -72,10 +68,8 @@ export function useLongPress({
 
   useEffect(() => cancel, [cancel]);
 
-  // The browser fires a click when the held finger is lifted. Swallow that one
-  // Click so the released press does not select a node (which would slide the
-  // Inspector over the just-opened menu on mobile). The suppression is disarmed
-  // By the next pointerdown, so subsequent menu taps work normally.
+  // The browser fires a click on lift; swallow it so the press does not select
+  // A node behind the just-opened menu. Disarmed by the next pointerdown.
   const disarmSuppressedClick = useCallback((): void => {
     suppressClickRef.current = false;
     if (disarmTimerRef.current !== null) {

@@ -17,8 +17,7 @@ vi.mock(import('@tanstack/react-router'), () => ({
   useParams: () => ({ locale: 'en' }) as never,
 }));
 
-// The unit under test is the hub's own section gating; sidebar and
-// Navigation chrome stay out of scope, so the shell renders as a passthrough.
+// Only section gating is under test; the shell renders as a passthrough.
 vi.mock(import('@/components/app-shell.tsx'), () => ({
   AppShell: ({ children }: { children?: unknown }) =>
     createElement('div', {}, children as never),

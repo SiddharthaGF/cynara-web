@@ -278,8 +278,7 @@ async function ensureSelectedHospitalForSession(
   }
 
   const memberships = await loadHospitalMemberships(session);
-  // Membership loading can refresh the access token and synchronize the
-  // Caller's session manager. Never persist the pre-load refresh token.
+  // Membership loading may rotate the token; never persist the pre-load refresh token.
   const latest = readAuthSessionData(session);
   if (!latest) {
     throw new ApiError(401, 'Unauthorized', 'Invalid session');

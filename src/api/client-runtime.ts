@@ -12,11 +12,8 @@ import { attachSessionAuth } from '@/api/server-auth-hook';
 import { getApiOrigin } from '@/lib/api-origin.ts';
 
 /**
- * JSON:API endpoints model their free-form query string as a single object
- * parameter (`query: { include, sort, filter, page... }`). hey-api's default
- * serializer would emit `query[include]=...`; flatten that map into plain
- * `key=value` pairs so the wire format matches `?include=...&sort=...`.
- * Non-JSON:API query params are passed through verbatim.
+ * Flattens the JSON:API `query` map into plain `?include=...&sort=...` pairs
+ * (hey-api's default would emit `query[include]=...`); other params pass through.
  */
 /**
  * Serializes a single query value. JSON:API query params are primitives
@@ -90,11 +87,8 @@ const cynaraFetch: typeof fetch = async (input, init) => {
     url: request.url,
   };
   try {
-    // The contract declares the JSON:API extension media type for request
-    // Bodies (`application/vnd.api+json; ext=openapi`). The API only matches
-    // The plain `application/vnd.api+json` media type alongside the plain
-    // Accept header. Normalize the wire content type to the base media type.
-    // This matches the legacy hand-written client.
+    // Normalize the extension media type to plain `application/vnd.api+json`; the
+    // API only matches the base type (matches the legacy hand-written client).
     const headers = new Headers(request.headers);
     const contentType = headers.get('Content-Type');
     if (contentType?.toLowerCase().startsWith('application/vnd.api+json;')) {
@@ -102,10 +96,7 @@ const cynaraFetch: typeof fetch = async (input, init) => {
     }
     let normalized = new Request(request, { headers });
     if (typeof window === 'undefined') {
-      // Server-side SDK calls (route loaders) bypass the BFF proxy and hit
-      // The API origin directly, so they must carry the session's bearer
-      // Token themselves. Browser calls go through the same-origin proxy,
-      // Which injects auth server-side.
+      // Server-side calls bypass the BFF proxy, so they must carry the bearer token themselves.
       const authedInit = await attachSessionAuth({
         method: request.method,
         headers,

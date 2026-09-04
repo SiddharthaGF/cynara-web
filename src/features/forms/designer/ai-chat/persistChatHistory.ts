@@ -70,8 +70,7 @@ function isChatTurn(value: unknown): value is ChatTurn {
 }
 
 function sanitizeTurnsForPersist(turns: readonly ChatTurn[]): ChatTurn[] {
-  // Drop in-flight or stale-failure turns so we never resurrect a half-finished
-  // Stream or an orphaned error bubble after a reload.
+  // Drop in-flight/failed turns so a reload never resurrects a half-finished stream or error bubble.
   const stable = turns.filter(
     (turn) => !turn.streaming && !turn.queued && !turn.failed,
   );

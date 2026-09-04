@@ -36,10 +36,8 @@ export interface ShortcutKeyHandlerDraft {
   readonly undo: () => void;
 }
 
-// Editor shortcuts: Ctrl/Cmd+S saves, Ctrl/Cmd+Z undoes, Ctrl/Cmd+Shift+Z
-// And Ctrl/Cmd+Y redo. Undo/redo apply to the whole graph even when the
-// Focus is in an inspector input (typing bursts are coalesced into one
-// History step), but yield to native behavior while an overlay is open.
+// Ctrl/Cmd+S/Z/Y shortcuts; undo/redo act on the whole graph even in inspector
+// Inputs (typing bursts coalesce into one history step), but yield to overlays.
 export function createShortcutKeyHandler(
   draft: ShortcutKeyHandlerDraft,
 ): (event: KeyboardEvent) => void {

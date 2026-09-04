@@ -1,5 +1,4 @@
-// Public workflow API surface; implementations live in sibling modules.
-// Catalog and mutations are split so each file stays within the line budget.
+// Public workflow API surface; implementations live in sibling modules to stay within line budgets.
 export {
   createWorkflow,
   getWorkflowVersion,

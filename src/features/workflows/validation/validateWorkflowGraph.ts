@@ -46,7 +46,6 @@ export function validateWorkflowGraph(
     );
   }
 
-  // Node structure: id, type, uniqueness.
   const idCounts = new Map<string, number>();
   for (const node of graph.nodes) {
     const index = nodeIndexById.get(node.id) ?? 0;
@@ -111,7 +110,6 @@ export function validateWorkflowGraph(
     }
   }
 
-  // Duplicate ids.
   for (const node of graph.nodes) {
     const count = idCounts.get(node.id) ?? 0;
     const index = nodeIndexById.get(node.id) ?? 0;
@@ -128,7 +126,6 @@ export function validateWorkflowGraph(
     }
   }
 
-  // Edge endpoints + duplicate edges.
   const edgeKeySeen = new Set<string>();
   for (const [index, edge] of graph.edges.entries()) {
     const key = `${edge.from}\u0000${edge.to}`;
@@ -156,7 +153,6 @@ export function validateWorkflowGraph(
     }
   }
 
-  // Input codes.
   for (const input of graph.inputs ?? []) {
     if (!DATA_CODE_PATTERN.test(input)) {
       issues.push(
@@ -170,7 +166,6 @@ export function validateWorkflowGraph(
     }
   }
 
-  // Entry / exit structure.
   const startNodes = graph.nodes.filter((node) => node.type === 'start');
   const endNodes = graph.nodes.filter((node) => node.type === 'end');
   const startId = startNodes[0]?.id ?? null;
@@ -207,7 +202,6 @@ export function validateWorkflowGraph(
     );
   }
 
-  // Per-node edge arity.
   const outgoingByNode = new Map<string, WorkflowEdge[]>();
   const incomingByNode = new Map<string, WorkflowEdge[]>();
   for (const node of graph.nodes) {
@@ -323,7 +317,6 @@ export function validateWorkflowGraph(
     }
   }
 
-  // Connectivity from the start node.
   if (startId) {
     const reachable = new Set<string>();
     const stack = [startId];
@@ -351,7 +344,6 @@ export function validateWorkflowGraph(
     }
   }
 
-  // Acyclicity.
   const cycle = findCycleEdge(graph);
   if (cycle) {
     issues.push(

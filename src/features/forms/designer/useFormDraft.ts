@@ -84,9 +84,8 @@ export function useFormDraft(
     rowVersionRef.current = rowVersion;
   }, [model, rowVersion]);
 
-  // Adopt the server draft only when we are not mid-edit.
-  // Otherwise, a setQueryData race can wipe an AI apply or show a loading flash.
-  // Prefer render-time adjustment over an effect that copies props into state.
+  // Adopt server drafts only when not mid-edit: a setQueryData race could wipe
+  // An AI apply or flash a loading state.
   if (
     !isDirty &&
     draftQuery.data !== undefined &&
@@ -111,8 +110,7 @@ export function useFormDraft(
     },
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.forms.draft(formCode), saved);
-      // Keep the local editor model instead of re-parsing it after the canvas
-      // Paints the applied schemas.
+      // Keep the local model instead of re-parsing what the canvas just painted.
       setAppliedDraft(saved);
       setRowVersion(saved.rowVersion);
       rowVersionRef.current = saved.rowVersion;

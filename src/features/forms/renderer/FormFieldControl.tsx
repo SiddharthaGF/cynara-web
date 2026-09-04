@@ -45,9 +45,7 @@ export function FormFieldControl({
   const { t } = useTranslation('designer');
   const visible = context.evaluation.visibility[field.id] ?? true;
   const isConditional = !visible;
-  // When the preview asks to surface every authored field, render the field
-  // Even when its visibility rule currently hides it. The field is rendered
-  // Muted with a "conditional" badge so authors can still see and tweak it.
+  // Surface-all mode renders rule-hidden fields muted with a "conditional" badge so authors can still tweak them.
   if (!visible && !context.showConditionalFields) {
     return null;
   }

@@ -48,9 +48,7 @@ export function useWorkflowSimulation(
   >({});
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
-  // Reconcile the control types with the graph's inputs.
-  // New inputs inherit the inferred type and user overrides survive edits.
-  // Codes that are no longer inputs are dropped.
+  // New inputs inherit the inferred type; existing user overrides survive.
   useEffect(() => {
     setInputTypes((current) => {
       const next: Record<string, SimulationInputType> = {};
@@ -69,8 +67,7 @@ export function useWorkflowSimulation(
     });
   }, [inputCodes, inferredTypes]);
 
-  // Drop test values for inputs that no longer exist.
-  // A reset then reflects the current shape of the workflow.
+  // Drop values for inputs that no longer exist so reset reflects the current shape.
   useEffect(() => {
     setValues((current) => {
       const active = new Set(inputCodes);
@@ -92,7 +89,6 @@ export function useWorkflowSimulation(
   const lastIndex = Math.max(stepCount - 1, 0);
 
   // Clamp the stepper when a re-run shortens the trace.
-  // Example: the walk now blocks earlier than before.
   useEffect(() => {
     setCurrentStepIndex((index) => Math.min(index, lastIndex));
   }, [lastIndex]);

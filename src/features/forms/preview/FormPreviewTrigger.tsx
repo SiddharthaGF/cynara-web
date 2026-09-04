@@ -15,9 +15,7 @@ export function FormPreviewTrigger({
   disabled,
 }: FormPreviewTriggerProps): JSX.Element {
   const { t } = useTranslation('designer');
-  // The button shows the icon-only flavour on mobile, where the tooltip
-  // Doubles as the label. Desktop keeps the inline label and renders the
-  // Tooltip on top of it as an extra affordance.
+  // Mobile is icon-only (tooltip doubles as the label); desktop overlays the inline label.
   return (
     <Tooltip>
       <Button

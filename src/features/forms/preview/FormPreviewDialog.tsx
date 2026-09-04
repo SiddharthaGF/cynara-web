@@ -77,11 +77,8 @@ export function FormPreviewDialog({
   }
 
   if (isMobile) {
-    // Subtract the soft-keyboard height from the bottom padding so the
-    // Content (preview body) stays above the keyboard. The sheet itself
-    // Stretches to the visual viewport; max-height uses an un-mixed `calc`
-    // To avoid the browser serialising it as `0px + ...` and producing
-    // Unexpected sizing on some engines.
+    // Keep the preview above the soft keyboard; the un-mixed `calc` avoids engines
+    // Serialising `0px + …` into unexpected sizing.
     return (
       <Sheet
         open={open}

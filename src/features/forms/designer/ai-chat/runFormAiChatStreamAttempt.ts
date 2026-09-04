@@ -14,9 +14,7 @@ import type { PendingChatPayload } from './runFormAiChatStream.ts';
 import { recordStreamMetrics } from './streamTelemetry.ts';
 import { AI_STREAM_TIMEOUT_MS } from './transientAiRetry.ts';
 
-/** Per-attempt telemetry captured by the run-attempt helper. We never await
- *  the recorder; `recordStreamMetrics` swallows transport errors so the UI
- *  stays responsive even if the beacon endpoint is offline. */
+/** Per-attempt telemetry; never awaited — the recorder swallows transport errors. */
 export interface AttemptTelemetry {
   ttfbMs: number;
   totalMs: number;
@@ -87,8 +85,7 @@ export function runStreamAttempt({
     const controller = new AbortController();
     abortRef.current = controller;
     let timedOut = false;
-    // Cap each attempt so a hung provider cannot leave the composer busy
-    // Forever. Timeouts are retryable; user Stop is not.
+    // Cap each attempt so a hung provider can't leave the composer busy; timeouts are retryable, Stop is not.
     const streamTimeout = setTimeout(() => {
       if (abortRef.current === controller) {
         timedOut = true;
@@ -224,8 +221,7 @@ export function runStreamAttempt({
       if (telemetryOnExit !== null) {
         emit(telemetryOnExit);
       }
-      // Touch the unused setters so they remain in the closure signature;
-      // Done for the parent layer invariants.
+      // Keep the unused setters in the closure signature (parent invariants).
       void setError;
       void setStopped;
       void setPendingPayload;

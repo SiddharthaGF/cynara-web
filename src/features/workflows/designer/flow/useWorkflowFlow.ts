@@ -82,13 +82,10 @@ export interface UseWorkflowFlowOptions {
 }
 
 /**
- * Bridges the persisted domain graph and the React Flow view model.
- *
- * The domain graph remains the source of truth for persisted data; this hook
- * only holds the visual state React Flow owns: node positions and the
- * selection-driven `selected` flags. Positions are stored in the browser (not
- * in the workflow schema, which the backend validates strictly) and restored on
- * mount, so dragged layouts survive reloads and re-projections.
+ * Bridges the domain graph (source of truth) and the React Flow view model,
+ * holding only visual state: node positions and selection flags. Positions are
+ * persisted in the browser — never in the workflow schema (backend validates
+ * it strictly) — so layouts survive reloads and re-projections.
  */
 export function useWorkflowFlow(
   options: UseWorkflowFlowOptions,
@@ -112,18 +109,16 @@ export function useWorkflowFlow(
     onRemoveEdge,
   } = options;
 
-  // Restore the layout stored for this draft from the browser (never from the
-  // Workflow schema, which the backend validates strictly). Falls back to an
-  // Empty map so the first projection computes the dagre auto layout.
+  // Positions come from the browser store, never the Workflow schema: the
+  // Backend validates it strictly, and an empty map makes the first projection
+  // Auto-layout.
   const initialPositions = useMemo(
     () => loadInitialPositions(positionsKey),
     [positionsKey],
   );
   const positionsRef = useRef(initialPositions);
 
-  // React Flow only reports the real node dimensions after it renders them,
-  // And dagre needs those sizes, so the layout pass is gated on the measured
-  // State exposed by `useNodesInitialized` (see the effect below).
+  // Dagre needs real node sizes, which React Flow only reports after render.
   const nodesInitialized = useNodesInitialized();
   const { getNodes } = useReactFlow<WorkflowFlowNode, WorkflowFlowEdge>();
 
@@ -132,9 +127,7 @@ export function useWorkflowFlow(
     [getNodes],
   );
 
-  // Callbacks are forwarded through refs so the projection stays stable
-  // Across parent re-renders (e.g. autosave state changes) without
-  // Clobbering a live drag.
+  // Refs keep callbacks stable across re-renders so a live drag is never clobbered.
   const callbacksRef = useRef<FlowCallbacks>({
     onSelectNode,
     onSelectEdge,
@@ -188,9 +181,7 @@ export function useWorkflowFlow(
     [positionsKey],
   );
 
-  // Places nodes without a saved position once React Flow has measured them,
-  // Using their real sizes so the initial auto layout never stacks. Dragged
-  // Positions stay untouched; new nodes get a spot on the next render.
+  // Only nodes without a saved position are auto-placed, once sizes are measured.
   useEffect(() => {
     if (!nodesInitialized) {
       return;
@@ -210,10 +201,7 @@ export function useWorkflowFlow(
     }
   }, [graph, nodesInitialized, positionsKey]);
 
-  // Re-arranges the whole flow whenever a node is added, so new steps and
-  // Branches land in a clean dagre layout. The initial projection (before this
-  // Hook has mounted) is skipped so restored positions are not clobbered on
-  // Load; only later node additions trigger an arrange.
+  // Re-layout only when a node is added after mount, so restored positions survive load.
   const hasMountedRef = useRef(false);
   const previousNodeCountRef = useRef(graph.nodes.length);
   useEffect(() => {
@@ -227,9 +215,7 @@ export function useWorkflowFlow(
     autoLayout(graph);
   }, [graph, readOnly, autoLayout]);
 
-  // A committed rename re-ids a node. The persisted layout was migrated by the
-  // Commit handler (old id → new id), so re-read the store to keep the node on
-  // The canvas at its saved spot instead of falling back to the auto layout.
+  // A rename migrates layout ids, so re-read the store to keep the node at its saved spot.
   const previousNodeIdsRef = useRef<string | null>(null);
   useEffect(() => {
     const previousIds = previousNodeIdsRef.current;
@@ -280,10 +266,7 @@ export function useWorkflowFlow(
     projected.edges,
   );
 
-  // Re-project whenever the domain model or selection changes. Live drag
-  // Positions are tracked in `positionsRef` (see `handleNodesChange`) so a
-  // Re-projection mid-drag cannot reset them; drag stop persists the final
-  // Position to the browser store.
+  // Live drag positions live in positionsRef so a mid-drag re-projection can't reset them.
   useEffect(() => {
     setFlowNodes(projected.nodes);
     setFlowEdges(projected.edges);
@@ -349,8 +332,7 @@ export function useWorkflowFlow(
     ): void => {
       const position = { x: node.position.x, y: node.position.y };
       settleNodePosition(positionsKey, node, positionsRef.current);
-      // The controlled `nodes` prop skipped every per-pixel position change, so
-      // Bring the dragged node up to date (and clear the live drag flag) here.
+      // Controlled nodes skipped per-pixel changes; sync the final position and drag flag here.
       setFlowNodes((nodes) =>
         nodes.map((item) =>
           item.id === node.id ? { ...item, position, dragging: false } : item,

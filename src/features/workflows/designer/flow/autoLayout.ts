@@ -8,25 +8,17 @@ export interface FlowNodeSize {
   height: number;
 }
 
-/**
- * Fallback size used while a node has not been measured yet. Keeps the first
- * paint close to the final dagre layout so nodes never appear stacked in a
- * corner before React Flow reports their real dimensions.
- */
+/** Fallback size before measurement, so the first paint never stacks nodes in a corner. */
 export const DEFAULT_FLOW_NODE_SIZE: FlowNodeSize = {
   width: 232,
   height: 104,
 };
 
 /**
- * Forward longest-path ranking: every node's rank is its longest distance from
- * a source, so the direct children of a decision all land on the same row right
- * below it. Dagre's built-in rankers minimize total edge length instead, which
- * sinks short branches down next to the deepest one and draws their transitions
- * across the whole graph (crossing behind nodes).
- *
- * Runs on dagre's internal rank graph, where edge `minlen` is already doubled
- * and every node is linked from the virtual `_root` nesting node.
+ * Forward longest-path ranking: each node's rank is its longest distance from
+ * a source, so a decision's branches share one row. Dagre's built-in rankers
+ * minimize total edge length, which sinks short branches and crosses edges.
+ * Runs on dagre's internal rank graph, where edge `minlen` is already doubled.
  */
 function forwardLongestPath(g: Graph<GraphLabel, NodeLabel, EdgeLabel>): void {
   const visited = new Set<string>();
@@ -58,20 +50,14 @@ const LAYOUT_OPTIONS = {
   ranksep: 84,
   marginx: 28,
   marginy: 40,
-  /**
-   * Skip dagre's crossing-minimization heuristic and keep the initial DFS
-   * order, so a decision's branches land left-to-right in the order their
-   * edges appear (the order they were created) instead of being reordered
-   * into crossed pairs.
-   */
+  /** Keep the initial DFS order so a decision's branches land in creation order instead of crossed pairs. */
   disableOptimalOrderHeuristic: true,
 } as const;
 
 /**
- * Ranked top-to-bottom layout for the whole graph using dagre, the layout
- * library React Flow recommends for tree-like flows. Positions use React
- * Flow's top-left anchor convention. Edges that reference unknown nodes are
- * skipped so a partially invalid workflow still lays out without crashing.
+ * Ranked top-to-bottom layout for the whole graph (React Flow's top-left
+ * anchor convention). Edges referencing unknown nodes are skipped so a
+ * partially invalid workflow still lays out without crashing.
  */
 export function computeDagreLayout(
   graph: WorkflowGraph,
@@ -80,9 +66,8 @@ export function computeDagreLayout(
   const dagreGraph = new graphlib.Graph<GraphLabel, NodeLabel, EdgeLabel>();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph(LAYOUT_OPTIONS);
-  // Dagre dispatches a function `ranker` at runtime but its published types
-  // Only list the built-in string rankers, so it is threaded through the graph
-  // Label's index signature.
+  // Dagre dispatches `ranker` at runtime but its types only list string rankers,
+  // So thread the function through the graph label's index signature.
   (dagreGraph.graph() as Record<string, unknown>).ranker = forwardLongestPath;
 
   const knownNodes = new Set<string>();

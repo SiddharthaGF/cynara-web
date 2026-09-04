@@ -33,8 +33,7 @@ export function useCapabilities(enabled = true): {
     queryKey: queryKeys.capabilities.current(),
     queryFn: getEffectiveCapabilities,
     enabled,
-    // Authorization state must never go stale: always refetch on mount and
-    // On window focus so changed assignments take effect immediately.
+    // Authorization must never go stale: refetch on mount and window focus.
     staleTime: 0,
   });
 

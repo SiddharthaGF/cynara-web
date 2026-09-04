@@ -65,9 +65,8 @@ export function ChatComposer({
   /** Last known caret position, kept for render-time mention detection. */
   const caretRef = useRef<number | null>(null);
   /**
-   * DiceUI stores `trigger` in useState and does not sync prop changes, so we
-   * remount when switching @ ↔ #. Guard + restore so remount does not wipe text
-   * (inputValue is not written to the DOM).
+   * DiceUI stores `trigger` in useState without syncing props, so we remount on
+   * @ ↔ # switch; guard + restore keeps text (inputValue is not written to DOM).
    */
   const triggerRemountRef = useRef<{
     text: string;
@@ -103,9 +102,8 @@ export function ChatComposer({
     [mentionableTypes],
   );
 
-  // Autofocus on open (mount) and restore text/caret after remount (clear / trigger switch).
-  // On mobile (<768px) skip the autofocus — opening the chat must not pop the
-  // Soft keyboard. The user can tap the composer to focus it explicitly.
+  // Autofocus on mount; restore text/caret after remount. On mobile, skip focus
+  // So opening the chat does not pop the soft keyboard — the user can tap to focus.
   useLayoutEffect(() => {
     const input = inputRef.current;
     if (!input) {
@@ -209,10 +207,8 @@ export function ChatComposer({
       : t('ai.mention.composerHint');
   }
 
-  // While the menu is open with no typed query, cap how many items are
-  // Registered/rendered: DiceUI re-renders every item on each arrow key, so an
-  // Unbounded field list stalls navigation. Once the user types a query, render
-  // The full list so any matching field stays reachable through the filter.
+  // Cap items while no query is typed: DiceUI re-renders every item per arrow
+  // Key, so an unbounded list stalls navigation. A typed query renders the full list.
   const mentionState = useMemo(
     () =>
       caretRef.current === null
@@ -287,8 +283,7 @@ export function ChatComposer({
               setMentionedValues([]);
               setMentionOpen(false);
             }
-            // DiceUI writes the new value to the DOM before invoking this, so
-            // The caret is already final here — capture it synchronously so the
+            // Caret is final here (DiceUI wrote the DOM first); capture it so
             // Render-time query detection never lags a keystroke behind.
             const el = document.activeElement;
             if (

@@ -81,15 +81,12 @@ export interface StreamFormDraftAiByCodeOptions {
 }
 
 /**
- * Non-streaming chat completion over the SDK. The contract omits `requestBody`
- * for `POST /api/ai/forms/{formDefinitionId}/chat` (CYN-55), so the generated
- * SDK types the body as `never`; the payload below matches what the streaming
- * endpoint accepts, and the narrow cast bridges the typing. The chat endpoint
- * is non-resource RPC (application/json), so it overrides the JSON:API default
- * content type the transport configures for JSON:API mutations.
+ * Non-streaming chat over the SDK. The contract omits `requestBody` for the
+ * chat endpoint (CYN-55), so the SDK types the body as `never`; the payload
+ * matches the streaming endpoint and the narrow cast bridges the typing. It
+ * is non-resource RPC (application/json), overriding the JSON:API content type.
  */
-// Public API client for the non-streaming AI chat endpoint. Kept as a facade
-// Export even though the current UI drives chat through the SSE stream.
+// Facade export; the UI currently drives chat through the SSE stream.
 // react-doctor-disable-next-line deslop/unused-export
 export async function postFormAiChat(
   formDefinitionId: string,

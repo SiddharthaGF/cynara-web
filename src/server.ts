@@ -3,9 +3,7 @@ import handler, { createServerEntry } from '@tanstack/react-start/server-entry';
 import { registerAttachSessionAuth } from '@/api/server-auth-hook';
 import { attachSessionAuth } from '@/server/api-proxy';
 
-// Server-side generated-SDK calls (route loaders) authenticate with the
-// Sealed session; see src/api/server-auth-hook.ts for why the wiring is
-// Inverted instead of a direct import.
+// Server SDK calls authenticate via the sealed session; see server-auth-hook.ts for the inverted wiring.
 registerAttachSessionAuth(attachSessionAuth);
 
 export default createServerEntry({

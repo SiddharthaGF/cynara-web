@@ -102,11 +102,6 @@ export function useWorkflowDesignerLayout(
     };
   }, [selectedNodeId, selectedEdgeKey]);
 
-  // Editor shortcuts (see `createShortcutKeyHandler`): Ctrl/Cmd+S saves,
-  // Ctrl/Cmd+Z undoes, Ctrl/Cmd+Shift+Z and Ctrl/Cmd+Y redo. Undo/redo apply
-  // To the whole graph even when the focus is in an inspector input (typing
-  // Bursts are coalesced into one history step), but yield to native behavior
-  // While an overlay is open.
   useEffect(() => {
     const handleKeyDown = createShortcutKeyHandler({
       isReadOnly: draft.isReadOnly,
@@ -224,8 +219,7 @@ export function useWorkflowDesignerLayout(
     draft.setGraph((current) => renameNode(current, nodeId, nextId));
     // The renamed node keeps its persisted canvas position.
     migrateWorkflowPositions(`${code}:${initialDraft.id}`, nodeId, nextId);
-    // Selection survives the id change: keep the node (and any selected edge
-    // Touching it) pointed at the renamed id.
+    // Selection survives the id change; point it at the renamed id.
     if (selectedNodeId === nodeId) {
       selectNode(nextId);
     }

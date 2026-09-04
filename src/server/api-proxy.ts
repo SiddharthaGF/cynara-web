@@ -18,13 +18,11 @@ import {
 } from '@/server/env.ts';
 
 /**
- * BFF API proxy. Each call mints a fresh access
- * token with the refresh-token grant, rotates the sealed session cookie with
- * the new refresh token, injects Bearer + session-derived X-Hospital-Code,
- * and maps non-2xx responses to the app's ApiError contract. One 401 is
- * retried with a fresh mint; a second 401 or a refresh failure clears the
- * session. No workerd memory is used — the refresh token lives only in the
- * sealed cookie.
+ * BFF API proxy: mints a fresh access token per call via the refresh grant,
+ * rotates the sealed session cookie, injects Bearer + session-derived
+ * X-Hospital-Code, and maps non-2xx to ApiError. One 401 retries with a fresh
+ * mint; a second 401 or refresh failure clears the session. The refresh token
+ * lives only in the sealed cookie.
  */
 
 export interface MintedToken {
@@ -159,16 +157,10 @@ export function createReplayableRequestInitFactory(
 }
 
 /**
- * Concurrent proxied calls (parallel loaders, guard + query fan-out) unseal
- * the same cookie and would otherwise redeem the same refresh token twice;
- * the second redemption fails because OpenIddict revokes redeemed tokens on
- * rotation. Two layers keep that surface near zero:
- *
- * 1. Single-flight per refresh-token value: concurrent callers share one
- *    in-flight grant instead of racing duplicates.
- * 2. A per-session access-token cache (keyed by the app session id, never
- *    written back into the sealed cookie): repeated proxied calls reuse a
- *    still-valid access token, so redemptions happen only when it expires.
+ * Concurrent proxied calls would redeem the same refresh token twice
+ * (OpenIddict revokes redeemed tokens). Two layers: single-flight per refresh
+ * token, plus a per-session access-token cache (never written to the cookie)
+ * so redemptions happen only when the token expires.
  */
 const inflightMints = new Map<string, Promise<MintedToken>>();
 
@@ -311,8 +303,7 @@ async function attemptWithToken(
     },
   );
 
-  // Re-seal the cookie only when the identity provider rotated the refresh
-  // Token; cache hits keep the current seal untouched.
+  // Re-seal only when the IdP rotated the refresh token; cache hits leave the seal untouched.
   const { refreshToken: rotatedToken } = minted;
   if (rotatedToken !== undefined && rotatedToken !== data.refreshToken) {
     await rotateAuthSession({
@@ -320,8 +311,7 @@ async function attemptWithToken(
       hospitalCode: data.hospitalCode,
       expiresAt: data.expiresAt,
     });
-    // Keep the caller's manager aligned with the sealed cookie. A later
-    // Operation in this request may need the rotated token.
+    // Keep the caller's manager aligned with the sealed cookie for later operations.
     session.data.refreshToken = rotatedToken;
   }
 
@@ -360,8 +350,7 @@ export async function callApiWithAuth(
     throw await mapApiResponseError(first);
   }
 
-  // Exactly one retry with a freshly minted token.
-  // A second 401 means the session is invalid: Clear it and throw 401.
+  // One retry with a fresh mint; a second 401 means the session is invalid.
   if (!options.initFactory && !isRequestInitReplayable(options.init)) {
     await clearAuthSession();
     throw new ApiError(401, 'Unauthorized', 'Session expired or invalid');
