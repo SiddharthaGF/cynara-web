@@ -98,6 +98,23 @@ describe('acceptance error handling', () => {
     // The 429 message is specific; it must NOT equal the generic invalid-link copy.
     expect(message).not.toBe(invitationsT(i18n)('accept.invalidDescription'));
   });
+
+  it('maps a serialized 429 (server-fn boundary drops the prototype) to the rate-limit message', () => {
+    const i18n = makeI18n('en');
+    // The server function transports thrown errors as JSON (plain record).
+    const serialized: unknown = {
+      name: 'ApiError',
+      message: 'Rate limited',
+      status: 429,
+      title: 'Too Many Requests',
+      errors: [],
+      problem: null,
+    };
+    expect(serialized).not.toBeInstanceOf(ApiError);
+    expect(describeApiError(serialized, i18n.t)).toBe(
+      i18n.t('api:errors.rateLimited'),
+    );
+  });
 });
 
 /** Acc Req 5 — Localized acceptance copy (es) with no missing keys. */
