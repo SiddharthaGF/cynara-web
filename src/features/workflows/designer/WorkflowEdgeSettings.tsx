@@ -5,14 +5,6 @@ import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog.tsx';
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import type {
@@ -22,6 +14,7 @@ import type {
 } from '@/features/workflows/types.ts';
 
 import { ConditionEditor } from './ConditionEditor.tsx';
+import { DeleteConfirmDialog } from './DeleteConfirmDialog.tsx';
 
 interface WorkflowEdgeSettingsProps {
   edge: WorkflowEdge;
@@ -151,38 +144,18 @@ export function WorkflowEdgeSettings({
         </section>
       )}
 
-      <Dialog
+      <DeleteConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('canvas.deleteEdgeTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('canvas.deleteEdgeDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant='ghost'
-              onClick={() => {
-                setConfirmOpen(false);
-              }}
-            >
-              {t('versionHistory.close')}
-            </Button>
-            <Button
-              variant='destructive'
-              onClick={() => {
-                setConfirmOpen(false);
-                onRemove();
-              }}
-            >
-              {t('canvas.deleteTransition')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={t('canvas.deleteEdgeTitle')}
+        description={t('canvas.deleteEdgeDescription')}
+        cancelLabel={t('versionHistory.close')}
+        confirmLabel={t('canvas.deleteTransition')}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          onRemove();
+        }}
+      />
     </div>
   );
 }
