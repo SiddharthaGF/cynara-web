@@ -1,4 +1,9 @@
-import { Link, createFileRoute, useParams } from '@tanstack/react-router';
+import {
+  Link,
+  createFileRoute,
+  redirect,
+  useParams,
+} from '@tanstack/react-router';
 import { KeyRound, LoaderCircle } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -37,6 +42,20 @@ function isSafeOpaque(value: unknown, maxLength: number): value is string {
   return true;
 }
 
+/** First safe candidate wins; the identity provider sends OAuth snake_case. */
+function readSafeOpaque(
+  search: Record<string, unknown>,
+  keys: readonly string[],
+  maxLength: number,
+): string | undefined {
+  for (const key of keys) {
+    if (isSafeOpaque(search[key], maxLength)) {
+      return search[key];
+    }
+  }
+  return undefined;
+}
+
 function parseLoginSearch(search: Record<string, unknown>): LoginSearch {
   return {
     redirectTo:
@@ -44,17 +63,40 @@ function parseLoginSearch(search: Record<string, unknown>): LoginSearch {
     code: typeof search.code === 'string' ? search.code : undefined,
     state: typeof search.state === 'string' ? search.state : undefined,
     error: typeof search.error === 'string' ? search.error : undefined,
-    clientId: isSafeOpaque(search.client_id, 256)
-      ? search.client_id
-      : undefined,
-    requestUri: isSafeOpaque(search.request_uri, 2048)
-      ? search.request_uri
-      : undefined,
+    clientId: readSafeOpaque(search, ['clientId', 'client_id'], 256),
+    requestUri: readSafeOpaque(search, ['requestUri', 'request_uri'], 2048),
   };
 }
 
 export const Route = createFileRoute('/$locale/login')({
   validateSearch: parseLoginSearch,
+  beforeLoad: ({ location, params }) => {
+    // The identity provider hands off with OAuth snake_case query params.
+    // Normalize once to the canonical camelCase search.
+    // Keep a single parameter form so the handoff values are not duplicated.
+    const raw = new URLSearchParams(location.searchStr);
+    if (raw.has('client_id') || raw.has('request_uri')) {
+      // ValidateSearch already produced the camelCase search.
+      // The cast only restores the type the router does not infer.
+      const search = location.search as LoginSearch;
+      // Serialize only the schema keys.
+      // The raw OAuth snake_case extras are dropped instead of re-appended.
+      // oxlint-disable-next-line typescript/only-throw-error -- TanStack Router redirect
+      throw redirect({
+        to: '/$locale/login',
+        params: { locale: params.locale },
+        search: {
+          redirectTo: search.redirectTo,
+          code: search.code,
+          state: search.state,
+          error: search.error,
+          clientId: search.clientId,
+          requestUri: search.requestUri,
+        },
+        replace: true,
+      });
+    }
+  },
   component: LoginPage,
 });
 
@@ -65,7 +107,17 @@ function LoginPage(): JSX.Element {
   const search = Route.useSearch();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const callbackRan = useRef(false);
+
+  /*
+   * The start form relies on React's onSubmit handler. Until hydration
+   * attaches it, a native GET submit would drop the search params and reload
+   * the page, so keep the submit button disabled until the handler is live.
+   */
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const { code, state } = search;
   const isCallback = typeof code === 'string' && typeof state === 'string';
@@ -212,7 +264,7 @@ function LoginPage(): JSX.Element {
         </p>
         <Button
           type='submit'
-          disabled={isSubmitting}
+          disabled={isSubmitting || !isHydrated}
           className='mt-1 w-full justify-center'
         >
           {isSubmitting ? (

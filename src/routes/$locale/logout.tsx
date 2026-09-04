@@ -81,7 +81,7 @@ function LogoutPage(): JSX.Element {
                   nativeButton={false}
                   render={
                     <Link
-                      to='/$locale/forms'
+                      to='/$locale'
                       params={{ locale }}
                     />
                   }
