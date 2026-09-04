@@ -115,6 +115,7 @@ const TASKS_ALL = ['tasks'];
 const AUDIT_EVENTS_ALL = ['auditEvents'];
 const PATIENTS_ALL = ['patients'];
 const USERS_ALL = ['users'];
+const INVITATIONS_ALL = ['invitations'];
 const ENCOUNTERS_ALL = ['encounters'];
 const CLINICAL_DOCUMENTS_ALL = ['clinicalDocuments'];
 const CAPABILITIES_ALL = ['capabilities'];
@@ -234,6 +235,10 @@ export const queryKeys = {
     all: USERS_ALL,
     list: (params: ListUsersParams = {}) => key('users', 'list', params),
     detail: (id: string) => key('users', 'detail', id),
+  },
+  invitations: {
+    all: INVITATIONS_ALL,
+    list: () => key('invitations', 'list'),
   },
   encounters: {
     all: ENCOUNTERS_ALL,
