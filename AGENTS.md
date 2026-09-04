@@ -64,6 +64,12 @@ the owning feature directory instead of growing global utilities.
 - Treat autosave, concurrency handling, AI streaming, and draft mutations as
   asynchronous workflows: handle cancellation, stale responses, errors, and
   cleanup explicitly.
+- Keep comments lean and contract-relevant. Code should read clearly without
+  narrative comments: do not add `//` comments that restate what the code does.
+  Comments inside function bodies are reserved for non-obvious why-nots
+  (async/concurrency gotchas, defensive cases, invariants); anything longer
+  belongs in a concise JSDoc block on the function. Condense overlong JSDoc
+  blocks to contract-relevant facts.
 - Do not overwrite or revert unrelated work already present in the working tree.
 
 ## Performance Work
