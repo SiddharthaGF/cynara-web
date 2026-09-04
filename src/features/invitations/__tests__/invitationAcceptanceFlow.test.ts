@@ -7,7 +7,7 @@ import {
   makeI18n,
   missingKeys,
 } from '@/features/invitations/__tests__/invitationsTestHarness.tsx';
-import { parseAcceptSearch } from '@/routes/$locale/invitations/accept.tsx';
+import { parseAcceptSearch } from '@/features/invitations/accept-search.ts';
 import { mapApiResponseError } from '@/server/api-proxy.ts';
 import {
   toAcceptResult,

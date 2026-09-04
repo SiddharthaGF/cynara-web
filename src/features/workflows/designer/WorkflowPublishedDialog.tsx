@@ -1,17 +1,7 @@
-import { ArrowLeft, Plus } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/components/ui/button.tsx';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog.tsx';
-import { Spinner } from '@/components/ui/spinner.tsx';
+import { PublishedSuccessDialog } from '@/components/published-success-dialog.tsx';
 
 interface WorkflowPublishedDialogProps {
   open: boolean;
@@ -33,48 +23,18 @@ export function WorkflowPublishedDialog({
   const { t } = useTranslation('workflows');
 
   return (
-    <Dialog
+    <PublishedSuccessDialog
       open={open}
       onOpenChange={onOpenChange}
-    >
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>{t('publish.publishedTitle')}</DialogTitle>
-          <DialogDescription>
-            {t('publish.publishedBody', {
-              version: version ?? '',
-            })}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            type='button'
-            variant='outline'
-            disabled={continuePending}
-            onClick={onContinue}
-          >
-            {continuePending ? (
-              <Spinner data-icon='inline-start' />
-            ) : (
-              <Plus
-                className='size-3.5'
-                aria-hidden='true'
-              />
-            )}
-            {t('publish.continueEditing')}
-          </Button>
-          <Button
-            type='button'
-            onClick={onBack}
-          >
-            <ArrowLeft
-              className='size-3.5'
-              aria-hidden='true'
-            />
-            {t('publish.backToWorkflows')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      title={t('publish.publishedTitle')}
+      description={t('publish.publishedBody', {
+        version: version ?? '',
+      })}
+      continueLabel={t('publish.continueEditing')}
+      backLabel={t('publish.backToWorkflows')}
+      continuePending={continuePending}
+      onContinue={onContinue}
+      onBack={onBack}
+    />
   );
 }

@@ -143,7 +143,6 @@ function LoginPage(): JSX.Element {
           if (cancelled) {
             return;
           }
-          console.error('Login callback failed', callbackError);
           setError(
             callbackError instanceof Error
               ? callbackError.message
@@ -170,7 +169,6 @@ function LoginPage(): JSX.Element {
       // Full-page navigation to the identity provider; it redirects back to this route with ?code&state.
       window.location.assign(result.authorizeUrl);
     } catch (startError) {
-      console.error('Login start failed', startError);
       setError(
         startError instanceof Error ? startError.message : 'Sign-in failed',
       );

@@ -1,7 +1,7 @@
 import { Link, useParams } from '@tanstack/react-router';
 import { ArrowLeft, LoaderCircle } from 'lucide-react';
 import type { FormEvent, JSX } from 'react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { describeApiError } from '@/api/error-message.ts';
@@ -44,6 +44,10 @@ export function AcceptInvitationPage({
   const [pending, setPending] = useState(false);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  // Pending guard serializes submits below.
+  // In-flight request proves ownership before clearing pending.
+  // Stale responses never release a newer request's busy state.
+  const requestRef = useRef(0);
 
   const backLink = (
     <Link
@@ -128,6 +132,8 @@ export function AcceptInvitationPage({
       return;
     }
     setPending(true);
+    const requestId = requestRef.current + 1;
+    requestRef.current = requestId;
     try {
       const result = await acceptInvitation({
         data: { token, password },
@@ -142,7 +148,9 @@ export function AcceptInvitationPage({
       setOutcome('error');
       setServerError(describeApiError(err, t));
     } finally {
-      setPending(false);
+      if (requestRef.current === requestId) {
+        setPending(false);
+      }
     }
   }
 

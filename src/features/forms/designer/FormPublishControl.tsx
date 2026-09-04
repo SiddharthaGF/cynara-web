@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from '@tanstack/react-router';
-import { Rocket, Undo2 } from 'lucide-react';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,8 +11,7 @@ import {
   withdrawFormReview,
 } from '@/api/forms.ts';
 import { queryKeys } from '@/api/query-keys.ts';
-import { Badge } from '@/components/ui/badge.tsx';
-import { Button } from '@/components/ui/button.tsx';
+import { PublishControlBar } from '@/components/publish-control-bar.tsx';
 import type { FormVersion } from '@/features/forms/types.ts';
 
 import { PublishConfirmDialog } from './PublishConfirmDialog.tsx';
@@ -138,57 +136,27 @@ export function FormPublishControl({
 
   return (
     <>
-      <div className='flex shrink-0 items-center gap-2'>
-        <Badge
-          variant={isReview ? 'secondary' : 'outline'}
-          className='hidden gap-1.5 font-normal sm:inline-flex'
-          title={
-            versionLabel
-              ? `${t('inspector.version')} ${versionLabel}`
-              : undefined
-          }
-        >
-          <span
-            className='size-1.5 rounded-full bg-current opacity-70'
-            aria-hidden='true'
-          />
-          {isReview ? t('publish.statusReview') : t('publish.statusDraft')}
-        </Badge>
-
-        {isReview ? (
-          <Button
-            variant='outline'
-            size='sm'
-            disabled={isPending}
-            onClick={() => {
-              setWithdrawError(null);
-              setActiveDialog('withdraw');
-            }}
-            aria-label={t('publish.backToDraft')}
-          >
-            <Undo2
-              className='size-3.5'
-              aria-hidden='true'
-            />
-            <span className='hidden md:inline'>{t('publish.backToDraft')}</span>
-          </Button>
-        ) : null}
-
-        <Button
-          size='sm'
-          disabled={isPending}
-          onClick={() => {
-            setPublishError(null);
-            setActiveDialog('publish');
-          }}
-        >
-          <Rocket
-            className='size-3.5'
-            aria-hidden='true'
-          />
-          {t('publish.publish')}
-        </Button>
-      </div>
+      <PublishControlBar
+        isReview={isReview}
+        isPending={isPending}
+        versionTitle={
+          versionLabel
+            ? `${t('inspector.version')} ${versionLabel}`
+            : undefined
+        }
+        statusReviewLabel={t('publish.statusReview')}
+        statusDraftLabel={t('publish.statusDraft')}
+        backToDraftLabel={t('publish.backToDraft')}
+        publishLabel={t('publish.publish')}
+        onWithdraw={() => {
+          setWithdrawError(null);
+          setActiveDialog('withdraw');
+        }}
+        onPublish={() => {
+          setPublishError(null);
+          setActiveDialog('publish');
+        }}
+      />
 
       <PublishConfirmDialog
         open={activeDialog === 'publish'}

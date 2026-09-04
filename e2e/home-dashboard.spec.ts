@@ -106,7 +106,7 @@ test.describe('home dashboard and sidebar groups (UX phase 2)', () => {
       sidebar.getByRole('link', { name: 'Administration' }),
     ).toBeVisible();
     // Group labels render through the collapsible trigger in the current
-    // shell markup.
+    // Shell markup.
     const groupLabels = sidebar.locator('[data-slot="collapsible-trigger"]');
     await expect(groupLabels.filter({ hasText: 'Care' })).toBeVisible();
     await expect(

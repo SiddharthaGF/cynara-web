@@ -29,7 +29,7 @@ export async function performUiLogin(page: Page): Promise<void> {
     } catch {
       const current = new URL(page.url());
       // A premature native submit lands on the plain login page again;
-      // anything else is a real failure.
+      // Anything else is a real failure.
       if (current.pathname !== '/en/login' || current.search !== '') {
         throw new Error(`unexpected login redirect: ${page.url()}`);
       }

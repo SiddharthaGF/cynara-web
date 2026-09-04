@@ -137,7 +137,7 @@ export function UserDirectoryWorkspace({
   const showRows = (!hasError || staleRows) && !isForbidden && items.length > 0;
   const showEmpty = !hasError && !isLoading && !isForbidden && totalCount === 0;
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
     handleSearchSubmit(formValues);
   };

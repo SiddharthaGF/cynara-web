@@ -8,7 +8,7 @@ import {
   renderStatic,
   sixStatusFixtures,
 } from '@/features/invitations/__tests__/invitationsTestHarness.tsx';
-import { buildAcceptLink } from '@/features/invitations/CopyLinkDialog.tsx';
+import { buildAcceptLink } from '@/features/invitations/accept-link.ts';
 import {
   INITIAL_INVITATION_VALUES,
   validateInvitationCreate,

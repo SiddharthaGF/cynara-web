@@ -2,18 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import type { JSX } from 'react';
 
 import { AcceptInvitationPage } from '@/features/invitations/AcceptInvitationPage.tsx';
-
-interface AcceptSearch {
-  token?: string;
-}
-
-export function parseAcceptSearch(
-  search: Record<string, unknown>,
-): AcceptSearch {
-  return {
-    token: typeof search.token === 'string' ? search.token.trim() : undefined,
-  };
-}
+import { parseAcceptSearch } from '@/features/invitations/accept-search.ts';
 
 export const Route = createFileRoute('/$locale/invitations/accept')({
   validateSearch: parseAcceptSearch,

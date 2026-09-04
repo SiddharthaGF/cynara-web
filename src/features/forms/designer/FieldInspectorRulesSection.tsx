@@ -100,50 +100,16 @@ export function FieldInspectorRulesSection({
         <Field>
           <FieldLabel>{t('inspector.calculate')}</FieldLabel>
           <form.Field name='calculateRef'>
-            {(fieldApi) => {
-              const noneLabel = t('inspector.noCalculation');
-              const items = [
-                { label: noneLabel, value: null },
-                ...otherFields.map((option) => ({
-                  label: fieldOptionSelectLabel(option),
-                  value: option.code,
-                })),
-              ];
-
-              return (
-                <InspectorSelect
-                  items={items}
-                  value={toSelectValue(fieldApi.state.value)}
-                  onValueChange={(value) => {
-                    fieldApi.handleChange(fromSelectValue(value));
-                  }}
-                >
-                  <InspectorSelectTrigger className='w-full'>
-                    {renderSelectedFieldOption(
-                      toSelectValue(fieldApi.state.value),
-                      otherFields,
-                      noneLabel,
-                    )}
-                  </InspectorSelectTrigger>
-                  <InspectorSelectContent>
-                    <InspectorSelectItem value={null}>
-                      {noneLabel}
-                    </InspectorSelectItem>
-                    {otherFields.map((option) => (
-                      <InspectorSelectItem
-                        key={option.code}
-                        value={option.code}
-                      >
-                        <RuleFieldOptionLabel
-                          option={option}
-                          variant='stacked'
-                        />
-                      </InspectorSelectItem>
-                    ))}
-                  </InspectorSelectContent>
-                </InspectorSelect>
-              );
-            }}
+            {(fieldApi) => (
+              <FieldOptionSelect
+                value={fieldApi.state.value}
+                onValueChange={(value) => {
+                  fieldApi.handleChange(fromSelectValue(value));
+                }}
+                fieldOptions={otherFields}
+                noneLabel={t('inspector.noCalculation')}
+              />
+            )}
           </form.Field>
           <FieldDescription className='text-xs'>
             {t('inspector.calculateHelp')}
@@ -174,49 +140,16 @@ function RulePairFields({
         <div className='grid gap-2'>
           {fieldOptions.length > 0 ? (
             <form.Field name={refFieldName}>
-              {(fieldApi) => {
-                const items = [
-                  { label: noneLabel, value: null },
-                  ...fieldOptions.map((option) => ({
-                    label: fieldOptionSelectLabel(option),
-                    value: option.code,
-                  })),
-                ];
-
-                return (
-                  <InspectorSelect
-                    items={items}
-                    value={toSelectValue(fieldApi.state.value)}
-                    onValueChange={(value) => {
-                      fieldApi.handleChange(fromSelectValue(value));
-                    }}
-                  >
-                    <InspectorSelectTrigger className='w-full'>
-                      {renderSelectedFieldOption(
-                        toSelectValue(fieldApi.state.value),
-                        fieldOptions,
-                        noneLabel,
-                      )}
-                    </InspectorSelectTrigger>
-                    <InspectorSelectContent>
-                      <InspectorSelectItem value={null}>
-                        {noneLabel}
-                      </InspectorSelectItem>
-                      {fieldOptions.map((option) => (
-                        <InspectorSelectItem
-                          key={option.code}
-                          value={option.code}
-                        >
-                          <RuleFieldOptionLabel
-                            option={option}
-                            variant='stacked'
-                          />
-                        </InspectorSelectItem>
-                      ))}
-                    </InspectorSelectContent>
-                  </InspectorSelect>
-                );
-              }}
+              {(fieldApi) => (
+                <FieldOptionSelect
+                  value={fieldApi.state.value}
+                  onValueChange={(value) => {
+                    fieldApi.handleChange(fromSelectValue(value));
+                  }}
+                  fieldOptions={fieldOptions}
+                  noneLabel={noneLabel}
+                />
+              )}
             </form.Field>
           ) : (
             <form.Field name={refFieldName}>
@@ -250,6 +183,52 @@ function RulePairFields({
         </div>
       )}
     </form.Subscribe>
+  );
+}
+
+function FieldOptionSelect({
+  value,
+  onValueChange,
+  fieldOptions,
+  noneLabel,
+}: {
+  value: string;
+  onValueChange: (value: string | null | undefined) => void;
+  fieldOptions: RuleFieldOption[];
+  noneLabel: string;
+}): JSX.Element {
+  const items = [
+    { label: noneLabel, value: null },
+    ...fieldOptions.map((option) => ({
+      label: fieldOptionSelectLabel(option),
+      value: option.code,
+    })),
+  ];
+
+  return (
+    <InspectorSelect
+      items={items}
+      value={toSelectValue(value)}
+      onValueChange={onValueChange}
+    >
+      <InspectorSelectTrigger className='w-full'>
+        {renderSelectedFieldOption(toSelectValue(value), fieldOptions, noneLabel)}
+      </InspectorSelectTrigger>
+      <InspectorSelectContent>
+        <InspectorSelectItem value={null}>{noneLabel}</InspectorSelectItem>
+        {fieldOptions.map((option) => (
+          <InspectorSelectItem
+            key={option.code}
+            value={option.code}
+          >
+            <RuleFieldOptionLabel
+              option={option}
+              variant='stacked'
+            />
+          </InspectorSelectItem>
+        ))}
+      </InspectorSelectContent>
+    </InspectorSelect>
   );
 }
 

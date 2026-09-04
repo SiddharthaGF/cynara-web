@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { AlertTriangle, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, Archive, ArrowLeft, Pencil } from 'lucide-react';
 import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -16,6 +16,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
 import { Button } from '@/components/ui/button.tsx';
+import { DialogFooter } from '@/components/ui/dialog.tsx';
 import {
   Empty,
   EmptyDescription,
@@ -242,5 +243,87 @@ export function AdminBackLink({ locale }: { locale: string }): JSX.Element {
       <ArrowLeft className='size-4' />
       {t('shared.backToHub')}
     </Button>
+  );
+}
+
+/**
+ * Edit/retire action cell shared by the hospital admin tables. Callers
+ * own row identity and pass item-bound handlers.
+ */
+export function AdminRowActions({
+  onEdit,
+  onRetire,
+  isRetired,
+}: {
+  onEdit: () => void;
+  onRetire: () => void;
+  isRetired: boolean;
+}): JSX.Element {
+  const { t } = useTranslation('hospital');
+  return (
+    <TableCell className='text-right'>
+      <div className='flex items-center justify-end gap-1'>
+        <Button
+          variant='ghost'
+          size='sm'
+          onClick={onEdit}
+        >
+          <Pencil className='size-4' />
+          <span className='sr-only'>{t('shared.edit')}</span>
+        </Button>
+        <Button
+          variant='ghost'
+          size='sm'
+          disabled={isRetired}
+          onClick={onRetire}
+        >
+          <Archive className='size-4' />
+          <span className='sr-only'>{t('shared.retire')}</span>
+        </Button>
+      </div>
+    </TableCell>
+  );
+}
+
+/**
+ * Dialog footer shared by the hospital admin form dialogs: optional
+ * conflict-reload action, cancel, and the caller-owned submit slot
+ * (usually a `form.Subscribe` rendering the save button).
+ */
+export function AdminFormFooter({
+  showConflict,
+  isPending,
+  onConflictReload,
+  onCancel,
+  submit,
+}: {
+  showConflict: boolean;
+  isPending: boolean;
+  onConflictReload: () => void;
+  onCancel: () => void;
+  submit: ReactNode;
+}): JSX.Element {
+  const { t } = useTranslation('hospital');
+  return (
+    <DialogFooter className='mt-6'>
+      {showConflict ? (
+        <Button
+          type='button'
+          variant='outline'
+          onClick={onConflictReload}
+        >
+          {t('shared.conflictReload')}
+        </Button>
+      ) : null}
+      <Button
+        type='button'
+        variant='outline'
+        onClick={onCancel}
+        disabled={isPending}
+      >
+        {t('shared.cancel')}
+      </Button>
+      {submit}
+    </DialogFooter>
   );
 }

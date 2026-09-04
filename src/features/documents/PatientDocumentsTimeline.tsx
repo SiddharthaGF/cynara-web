@@ -1,16 +1,9 @@
-import { Link } from '@tanstack/react-router';
 import { FileText, Plus } from 'lucide-react';
 import type { JSX } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { ClinicalDocumentDto } from '@/api/clinical-documents.ts';
-import {
-  isInProgressClinicalDocument,
-  isTerminalClinicalDocument,
-} from '@/api/clinical-documents.ts';
 import { Alert, AlertDescription } from '@/components/ui/alert.tsx';
-import { Badge } from '@/components/ui/badge.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
   Card,
@@ -26,11 +19,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
-import {
-  clinicalDocumentStatusBadgeVariant,
-  formatClinicalDocumentDateTime,
-  formatClinicalDocumentStatus,
-} from '@/features/documents/clinicalDocumentForm.ts';
+import { ClinicalDocumentListRow } from '@/features/documents/ClinicalDocumentListRow.tsx';
 import { usePatientDocuments } from '@/features/documents/useClinicalDocumentsCatalog.ts';
 import { useDocumentDefinitions } from '@/features/hospital/useDocumentCatalogAdmin.ts';
 
@@ -119,13 +108,15 @@ export function PatientDocumentsTimeline({
         {!isLoading && documents.length > 0 ? (
           <ul className='divide-y divide-border/70 rounded-xl border border-border/70'>
             {documents.map((document) => (
-              <TimelineRow
+              <ClinicalDocumentListRow
                 key={document.id}
                 document={document}
                 definitionName={
                   definitionNames.get(document.documentDefinitionId) ?? ''
                 }
                 locale={locale}
+                patientId={document.patientId}
+                encounterId={document.encounterId}
                 language={i18n.language}
               />
             ))}
@@ -133,69 +124,5 @@ export function PatientDocumentsTimeline({
         ) : null}
       </CardContent>
     </Card>
-  );
-}
-
-function TimelineRow({
-  document,
-  definitionName,
-  locale,
-  language,
-}: {
-  document: ClinicalDocumentDto;
-  definitionName: string;
-  locale: string;
-  language: string;
-}): JSX.Element {
-  const { t } = useTranslation(['documents']);
-  const terminal = isTerminalClinicalDocument(document.status);
-  const inProgress = isInProgressClinicalDocument(document.status);
-
-  return (
-    <li
-      className={
-        terminal
-          ? 'flex flex-col gap-3 bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
-          : 'flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between'
-      }
-      data-status={document.status}
-      data-terminal={terminal ? 'true' : 'false'}
-    >
-      <div className='min-w-0 space-y-1'>
-        <div className='flex flex-wrap items-center gap-2'>
-          <span className='font-medium'>
-            {definitionName || t('list.documentName')}
-          </span>
-          <Badge variant={clinicalDocumentStatusBadgeVariant(document.status)}>
-            {formatClinicalDocumentStatus(document.status, t)}
-          </Badge>
-          {inProgress ? (
-            <span className='text-xs text-muted-foreground'>
-              {t('list.inProgressHint')}
-            </span>
-          ) : null}
-        </div>
-        <p className='text-sm text-muted-foreground'>
-          {t('list.columns.createdAt')}:{' '}
-          {formatClinicalDocumentDateTime(document.createdAt, language)}
-        </p>
-      </div>
-      <Link
-        to='/$locale/patients/$id/encounters/$encounterId/documents/$documentId'
-        params={{
-          locale,
-          id: document.patientId,
-          encounterId: document.encounterId,
-          documentId: document.id,
-        }}
-      >
-        <Button
-          variant='outline'
-          size='sm'
-        >
-          {t('list.viewDetail')}
-        </Button>
-      </Link>
-    </li>
   );
 }
