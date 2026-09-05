@@ -5,10 +5,13 @@ export type ClientOptions = {
 };
 
 /**
- * Body of the public acceptance request; password only.
+ * Body of the public acceptance request: credentials plus the member's
+ * given/family names when the invitation snapshot did not predefine them.
  */
 export type AcceptInvitationRequest = {
     password?: string | null;
+    name?: string | null;
+    surname?: string | null;
 };
 
 /**
@@ -51,6 +54,11 @@ export type AccountResetRequest = {
 
 export type ActorSummary = {
     readonly id?: string;
+};
+
+export type AddMembershipRequest = {
+    userId?: string;
+    actorId?: string;
 };
 
 /**
@@ -2053,6 +2061,21 @@ export type MemberSummary = {
     capabilities?: Array<string>;
 };
 
+/**
+ * Wire view of a membership: lifecycle metadata without the
+ * concurrency token.
+ */
+export type MembershipView = {
+    readonly id?: string;
+    userId?: string;
+    actorId?: string;
+    status?: string;
+    createdAt?: string;
+    activatedAt?: string;
+    revokedAt?: string | null;
+    updatedAt?: string;
+};
+
 export type Meta = {
     [key: string]: unknown;
 };
@@ -2268,6 +2291,10 @@ export type ProblemDetails = {
     detail?: string | null;
     instance?: string | null;
     [key: string]: unknown;
+};
+
+export type ReactivateMembershipRequest = {
+    actorId?: string;
 };
 
 export type RelationshipLinks = {
@@ -3004,6 +3031,10 @@ export type UpdateHospitalWorkspaceRequest = {
     rowVersion: number;
 };
 
+export type UpdateMembershipRequest = {
+    actorId?: string;
+};
+
 export type UpdateWorkflowDefinitionRequestDocument = {
     data: Omit<DataInUpdateWorkflowDefinitionRequest, 'type'> & {
         type: 'updateWorkflowDefinitionRequestDocument';
@@ -3441,6 +3472,20 @@ export type MemberSummaryWritable = {
     hospital?: HospitalSummaryWritable;
     actor?: unknown;
     capabilities?: Array<string>;
+};
+
+/**
+ * Wire view of a membership: lifecycle metadata without the
+ * concurrency token.
+ */
+export type MembershipViewWritable = {
+    userId?: string;
+    actorId?: string;
+    status?: string;
+    createdAt?: string;
+    activatedAt?: string;
+    revokedAt?: string | null;
+    updatedAt?: string;
 };
 
 /**
@@ -11645,6 +11690,211 @@ export type GetMyHospitalsResponses = {
 
 export type GetMyHospitalsResponse = GetMyHospitalsResponses[keyof GetMyHospitalsResponses];
 
+export type ListMembershipsData = {
+    body?: never;
+    headers: {
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/memberships';
+};
+
+export type ListMembershipsErrors = {
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+};
+
+export type ListMembershipsError = ListMembershipsErrors[keyof ListMembershipsErrors];
+
+export type ListMembershipsResponses = {
+    /**
+     * OK
+     */
+    200: Array<MembershipView>;
+};
+
+export type ListMembershipsResponse = ListMembershipsResponses[keyof ListMembershipsResponses];
+
+export type AddMembershipData = {
+    body: AddMembershipRequest;
+    headers: {
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/memberships';
+};
+
+export type AddMembershipErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type AddMembershipError = AddMembershipErrors[keyof AddMembershipErrors];
+
+export type AddMembershipResponses = {
+    /**
+     * Created
+     */
+    201: MembershipView;
+};
+
+export type AddMembershipResponse = AddMembershipResponses[keyof AddMembershipResponses];
+
+export type ReactivateMembershipData = {
+    body: ReactivateMembershipRequest;
+    headers: {
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/memberships/{id}/reactivate';
+};
+
+export type ReactivateMembershipErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type ReactivateMembershipError = ReactivateMembershipErrors[keyof ReactivateMembershipErrors];
+
+export type ReactivateMembershipResponses = {
+    /**
+     * OK
+     */
+    200: MembershipView;
+};
+
+export type ReactivateMembershipResponse = ReactivateMembershipResponses[keyof ReactivateMembershipResponses];
+
+export type RevokeMembershipData = {
+    body?: never;
+    headers: {
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/memberships/{id}/revoke';
+};
+
+export type RevokeMembershipErrors = {
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type RevokeMembershipError = RevokeMembershipErrors[keyof RevokeMembershipErrors];
+
+export type RevokeMembershipResponses = {
+    /**
+     * OK
+     */
+    200: MembershipView;
+};
+
+export type RevokeMembershipResponse = RevokeMembershipResponses[keyof RevokeMembershipResponses];
+
+export type UpdateMembershipData = {
+    body: UpdateMembershipRequest;
+    headers: {
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/memberships/{id}/update';
+};
+
+export type UpdateMembershipErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type UpdateMembershipError = UpdateMembershipErrors[keyof UpdateMembershipErrors];
+
+export type UpdateMembershipResponses = {
+    /**
+     * OK
+     */
+    200: MembershipView;
+};
+
+export type UpdateMembershipResponse = UpdateMembershipResponses[keyof UpdateMembershipResponses];
+
 export type SearchPatientsData = {
     body?: never;
     headers: {
@@ -12530,7 +12780,8 @@ export type CreateInvitationResponse = CreateInvitationResponses[keyof CreateInv
 
 export type AcceptInvitationData = {
     /**
-     * Body of the public acceptance request; password only.
+     * Body of the public acceptance request: credentials plus the member's
+     * given/family names when the invitation snapshot did not predefine them.
      */
     body: AcceptInvitationRequest;
     path: {
