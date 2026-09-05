@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
 import type { TFunction } from 'i18next';
-import { ArrowLeft, Check, LoaderCircle, X } from 'lucide-react';
+import { ArrowLeft, LoaderCircle } from 'lucide-react';
 import type { FormEvent, JSX } from 'react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +18,9 @@ import {
   acceptInvitation,
   type AcceptInvitationMemberSummary,
 } from '@/server/invitation-acceptance.ts';
+import { AcceptInvitationSuccess } from '@/features/invitations/AcceptInvitationSuccess.tsx';
+import { passwordIssueKey } from '@/features/invitations/acceptInvitationPassword.ts';
+import { PasswordRulesList } from '@/features/invitations/PasswordRulesList.tsx';
 
 type AcceptOutcome = 'form' | 'success' | 'invalid' | 'error';
 
@@ -26,59 +29,6 @@ interface AcceptInvitationPageProps {
   token: string;
 }
 
-const PASSWORD_MIN_LENGTH = 6;
-const UPPERCASE_PATTERN = /[A-Z]/;
-const LOWERCASE_PATTERN = /[a-z]/;
-const NUMBER_PATTERN = /[0-9]/;
-// Anything other than letters, digits, or whitespace counts as a symbol.
-const SYMBOL_PATTERN = /[^A-Za-z0-9\s]/;
-
-/**
- * Validate the password against the rules announced in the hint. Returns the
- * first failing rule's key so the user sees one actionable message at a time
- * (in input order) instead of a wall of errors.
- */
-function passwordIssueKey(value: string): string | null {
-  if (value.length === 0) {
-    return 'accept.passwordRequired';
-  }
-  if (value.length < PASSWORD_MIN_LENGTH) {
-    return 'accept.passwordTooShort';
-  }
-  if (!UPPERCASE_PATTERN.test(value)) {
-    return 'accept.passwordMissingUppercase';
-  }
-  if (!LOWERCASE_PATTERN.test(value)) {
-    return 'accept.passwordMissingLowercase';
-  }
-  if (!NUMBER_PATTERN.test(value)) {
-    return 'accept.passwordMissingNumber';
-  }
-  if (!SYMBOL_PATTERN.test(value)) {
-    return 'accept.passwordMissingSymbol';
-  }
-  return null;
-}
-
-interface PasswordRule {
-  key: string;
-  test: (value: string) => boolean;
-}
-
-/**
- * Ordered rule list rendered under the password input. Order matches the
- * `passwordIssueKey` checks and the `accept.passwordRules.*` locale keys.
- */
-const PASSWORD_RULES: readonly PasswordRule[] = [
-  {
-    key: 'length',
-    test: (value) => value.length >= PASSWORD_MIN_LENGTH,
-  },
-  { key: 'uppercase', test: (value) => UPPERCASE_PATTERN.test(value) },
-  { key: 'lowercase', test: (value) => LOWERCASE_PATTERN.test(value) },
-  { key: 'number', test: (value) => NUMBER_PATTERN.test(value) },
-  { key: 'symbol', test: (value) => SYMBOL_PATTERN.test(value) },
-];
 /**
  * Detects the backend's names-required 400 so the form can reveal the
  * name fields. Matches on the stable message fragment alone: the
@@ -182,44 +132,11 @@ export function AcceptInvitationPage({
 
   if (outcome === 'success' && member !== null) {
     return (
-      <AuthScreen
+      <AcceptInvitationSuccess
+        member={member}
         locale={locale}
-        title={t('accept.successTitle')}
-        description={t('accept.successDescription')}
         footer={backLink}
-        cintaClassName='kardex-cinta kardex-cinta-success'
-      >
-        <dl className='grid gap-2 text-sm'>
-          <div className='flex justify-between gap-4'>
-            <dt className='text-muted-foreground'>
-              {t('accept.summaryEmail')}
-            </dt>
-            <dd className='text-right font-medium'>{member.user.email}</dd>
-          </div>
-          <div className='flex justify-between gap-4'>
-            <dt className='text-muted-foreground'>
-              {t('accept.summaryHospital')}
-            </dt>
-            <dd className='text-right font-medium'>{member.hospital.name}</dd>
-          </div>
-          <div className='flex justify-between gap-4'>
-            <dt className='text-muted-foreground'>
-              {t('accept.summaryActorId')}
-            </dt>
-            <dd className='kardex-folio text-right font-mono text-xs'>
-              {member.actor.id}
-            </dd>
-          </div>
-          <div className='flex justify-between gap-4'>
-            <dt className='text-muted-foreground'>
-              {t('accept.summaryCapabilities')}
-            </dt>
-            <dd className='text-right font-medium'>
-              {member.capabilities.join(', ')}
-            </dd>
-          </div>
-        </dl>
-      </AuthScreen>
+      />
     );
   }
 
@@ -333,45 +250,7 @@ export function AcceptInvitationPage({
           >
             {t('accept.passwordHint')}
           </p>
-          <ul
-            aria-label={t('accept.passwordHint')}
-            className='flex flex-col gap-1 pt-1 text-xs'
-          >
-            {PASSWORD_RULES.map((rule) => {
-              const passed = rule.test(password);
-              return (
-                <li
-                  key={rule.key}
-                  className={
-                    passed
-                      ? 'flex items-center gap-1.5 text-muted-foreground'
-                      : 'flex items-center gap-1.5 text-destructive'
-                  }
-                >
-                  {passed ? (
-                    <Check
-                      aria-hidden='true'
-                      className='size-3.5 text-sage'
-                    />
-                  ) : (
-                    <X
-                      aria-hidden='true'
-                      className='size-3.5 text-destructive'
-                    />
-                  )}
-                  <span
-                    className={
-                      passed
-                        ? 'text-muted-foreground line-through decoration-muted-foreground/40'
-                        : ''
-                    }
-                  >
-                    {t(`accept.passwordRules.${rule.key}`)}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+          <PasswordRulesList password={password} />
           <FieldError errors={[{ message: fieldError ?? undefined }]} />
         </Field>
         {showNames ? (

@@ -73,34 +73,15 @@ export function InvitationListWorkspace(): JSX.Element {
 
   return (
     <Card className='kardex border-border/70 shadow-sm'>
-      <CardHeader className='flex flex-row items-start justify-between gap-4'>
-        <div>
-          <p className='mb-2 text-[10px] font-semibold tracking-[0.08em] text-muted-foreground uppercase'>
-            {t('list.eyebrow')}
-          </p>
-          <CardTitle className='flex items-center gap-2 font-sans text-[0.9375rem] font-semibold tracking-[-0.01em] text-foreground'>
-            <UserPlus className='size-4 text-muted-foreground' />
-            {t('list.title')}
-          </CardTitle>
-          <CardDescription>{t('list.description')}</CardDescription>
-          {!isLoading && items.length > 0 ? (
-            <p className='kardex-folio mt-2 font-mono text-xs text-muted-foreground'>
-              {t('list.pendingFolio', { count: pendingCount })}
-            </p>
-          ) : null}
-        </div>
-        {canWrite ? (
-          <Button
-            type='button'
-            onClick={() => {
-              setCreateOpen(true);
-            }}
-          >
-            <Plus data-icon='inline-start' />
-            {t('create.button')}
-          </Button>
-        ) : null}
-      </CardHeader>
+      <InvitationListHeader
+        pendingCount={pendingCount}
+        itemCount={items.length}
+        isLoading={isLoading}
+        canWrite={canWrite}
+        onCreate={() => {
+          setCreateOpen(true);
+        }}
+      />
       <CardContent>
         {error === null ? null : (
           <Alert
@@ -219,5 +200,53 @@ export function InvitationListWorkspace(): JSX.Element {
         onSettled={() => setResendTarget(null)}
       />
     </Card>
+  );
+}
+
+/**
+ * Workspace card header: title block, pending folio, and the guarded create
+ * action. Branches here are presentation-only over already-resolved flags.
+ */
+function InvitationListHeader({
+  pendingCount,
+  itemCount,
+  isLoading,
+  canWrite,
+  onCreate,
+}: {
+  pendingCount: number;
+  itemCount: number;
+  isLoading: boolean;
+  canWrite: boolean;
+  onCreate: () => void;
+}): JSX.Element {
+  const { t } = useTranslation(['invitations', 'api']);
+  return (
+    <CardHeader className='flex flex-row items-start justify-between gap-4'>
+      <div>
+        <p className='mb-2 text-[10px] font-semibold tracking-[0.08em] text-muted-foreground uppercase'>
+          {t('list.eyebrow')}
+        </p>
+        <CardTitle className='flex items-center gap-2 font-sans text-[0.9375rem] font-semibold tracking-[-0.01em] text-foreground'>
+          <UserPlus className='size-4 text-muted-foreground' />
+          {t('list.title')}
+        </CardTitle>
+        <CardDescription>{t('list.description')}</CardDescription>
+        {!isLoading && itemCount > 0 ? (
+          <p className='kardex-folio mt-2 font-mono text-xs text-muted-foreground'>
+            {t('list.pendingFolio', { count: pendingCount })}
+          </p>
+        ) : null}
+      </div>
+      {canWrite ? (
+        <Button
+          type='button'
+          onClick={onCreate}
+        >
+          <Plus data-icon='inline-start' />
+          {t('create.button')}
+        </Button>
+      ) : null}
+    </CardHeader>
   );
 }

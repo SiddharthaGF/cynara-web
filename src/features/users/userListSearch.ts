@@ -1,3 +1,4 @@
+import { ApiError } from '@/api/client.ts';
 import type { ListUsersParams } from '@/api/users.ts';
 
 export const DEFAULT_USER_PAGE_SIZE = 20;
@@ -89,4 +90,47 @@ export function nextSearchAfterSubmit(
     page: 1,
     pageSize: prev.pageSize,
   };
+}
+
+/** Rendered branch of the directory results area. */
+export type UserDirectoryResultsStatus = 'loading' | 'rows' | 'empty' | 'idle';
+
+export interface UserDirectoryResultsState {
+  status: UserDirectoryResultsStatus;
+  staleRows: boolean;
+}
+
+/**
+ * Collapses the directory states matrix into one status plus the stale
+ * flag: a 400 clears prior rows while other failures over cached data keep
+ * them visibly stale, and the scope guard always wins over row counts.
+ * Matches the previous per-branch render order exactly.
+ */
+export function resolveUserDirectoryResultsState({
+  isLoading,
+  hasError,
+  queryError,
+  isForbidden,
+  itemCount,
+  totalCount,
+}: {
+  isLoading: boolean;
+  hasError: boolean;
+  queryError: Error | null;
+  isForbidden: boolean;
+  itemCount: number;
+  totalCount: number;
+}): UserDirectoryResultsState {
+  const staleRows =
+    hasError && !(queryError instanceof ApiError && queryError.status === 400);
+  if (isLoading) {
+    return { status: 'loading', staleRows };
+  }
+  if ((!hasError || staleRows) && !isForbidden && itemCount > 0) {
+    return { status: 'rows', staleRows };
+  }
+  if (!hasError && !isForbidden && totalCount === 0) {
+    return { status: 'empty', staleRows };
+  }
+  return { status: 'idle', staleRows };
 }

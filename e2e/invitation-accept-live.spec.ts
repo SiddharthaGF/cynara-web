@@ -60,7 +60,7 @@ test.describe('live invitation lifecycle (admin create -> accept -> list)', () =
     ).toBeVisible({ timeout: 30_000 });
     // Let SSR hydration attach the form handler so the submit goes through
     // React (which preventDefaults + calls the server fn) instead of a
-    // native GET submit that drops the token from the URL.
+    // Native GET submit that drops the token from the URL.
     await page.waitForTimeout(2_000);
     await page.getByRole('textbox', { name: 'Contraseña' }).fill('E2e!Test99');
     await page.getByRole('button', { name: 'Crear cuenta' }).click();
@@ -116,7 +116,7 @@ test.describe('live invitation lifecycle (admin create -> accept -> list)', () =
     await page.getByRole('button', { name: 'Listo' }).click();
 
     // Accept with password only: the backend asks for names, the form
-    // reveals the fields with localized guidance.
+    // Reveals the fields with localized guidance.
     await page.goto(`/es/invitations/accept?token=${token}`, {
       waitUntil: 'domcontentloaded',
     });
