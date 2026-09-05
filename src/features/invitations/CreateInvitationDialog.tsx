@@ -1,5 +1,5 @@
 import { useForm } from '@tanstack/react-form';
-import type { JSX } from 'react';
+import type { FormEvent, JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -154,6 +154,11 @@ export function CreateInvitationDialog({
     setStep(2);
   };
 
+  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    void form.handleSubmit();
+  };
+
   const personLabel =
     person.name.length > 0 || person.surname.length > 0
       ? `${`${person.name} ${person.surname}`.trim()} · ${person.email}`
@@ -169,10 +174,7 @@ export function CreateInvitationDialog({
       >
         <form
           id='create-invitation-form'
-          onSubmit={(event) => {
-            event.preventDefault();
-            void form.handleSubmit();
-          }}
+          onSubmit={handleSubmit}
         >
           <DialogContent className='kardex flex h-[85vh] max-h-[85vh] flex-col gap-4 overflow-hidden sm:max-w-xl'>
             <DialogHeader>

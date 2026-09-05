@@ -6,7 +6,7 @@ import {
   Stethoscope,
 } from 'lucide-react';
 import type { JSX } from 'react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/badge.tsx';
@@ -72,6 +72,10 @@ export function CreateInvitationAccessStep({
   const [showAdminDetails, setShowAdminDetails] = useState(false);
 
   const matched = matchPreset(capabilities);
+  const selectedCapabilities = useMemo(
+    () => new Set(capabilities),
+    [capabilities],
+  );
   const activePreset: AccessPresetId = customizing
     ? 'custom'
     : (matched ?? 'custom');
@@ -176,24 +180,15 @@ export function CreateInvitationAccessStep({
       {activePreset === 'custom' ? (
         <Field>
           <div className='flex flex-col gap-2'>
-            {PERMISSION_GROUPS.map((group) => {
-              const selected = group.scopes.filter((scope) =>
-                capabilities.includes(scope),
-              );
-              const state: GroupState = getGroupState(
-                group.scopes,
-                capabilities,
-              );
-              return (
-                <PermissionGroup
-                  key={group.key}
-                  groupKey={group.key}
-                  state={state}
-                  selectedScopes={selected}
-                  onToggle={handleToggle}
-                />
-              );
-            })}
+            {PERMISSION_GROUPS.map((group) => (
+              <PermissionGroup
+                key={group.key}
+                groupKey={group.key}
+                state={getGroupState(group.scopes, selectedCapabilities)}
+                selectedCapabilities={selectedCapabilities}
+                onToggle={handleToggle}
+              />
+            ))}
           </div>
           <FieldError errors={[{ message: capabilitiesError }]} />
         </Field>
@@ -244,11 +239,9 @@ type GroupState = 'all' | 'some' | 'none';
 
 function getGroupState(
   groupScopes: readonly CapabilityCode[],
-  selected: readonly CapabilityCode[],
+  selected: ReadonlySet<CapabilityCode>,
 ): GroupState {
-  const matched = groupScopes.filter((scope) =>
-    selected.includes(scope),
-  ).length;
+  const matched = groupScopes.filter((scope) => selected.has(scope)).length;
   if (matched === 0) {
     return 'none';
   }
@@ -375,12 +368,12 @@ function AdminSummary({
 function PermissionGroup({
   groupKey,
   state,
-  selectedScopes,
+  selectedCapabilities,
   onToggle,
 }: {
   groupKey: string;
   state: GroupState;
-  selectedScopes: readonly CapabilityCode[];
+  selectedCapabilities: ReadonlySet<CapabilityCode>;
   onToggle: (scope: CapabilityCode, checked: boolean) => void;
 }): JSX.Element {
   const { t } = useTranslation('invitations');
@@ -411,7 +404,7 @@ function PermissionGroup({
             className='flex cursor-pointer items-center gap-2 rounded-lg px-1 py-1 text-sm transition-colors hover:bg-muted/50'
           >
             <Checkbox
-              checked={selectedScopes.includes(scope)}
+              checked={selectedCapabilities.has(scope)}
               onCheckedChange={(checked) => {
                 onToggle(scope, checked);
               }}
