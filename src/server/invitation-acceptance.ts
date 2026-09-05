@@ -29,6 +29,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export interface AcceptInvitationInput {
   token: string;
   password: string;
+  name?: string;
+  surname?: string;
 }
 
 /** Pure input validation for the accept flow; the server remains authoritative. Exported for unit testing. */
@@ -40,7 +42,7 @@ export function validateAcceptInput(value: unknown): AcceptInvitationInput {
       'Expected an object payload',
     );
   }
-  const { token, password } = value;
+  const { token, password, name, surname } = value;
   if (typeof token !== 'string' || token.length === 0) {
     throw new ApiError(
       400,
@@ -51,7 +53,20 @@ export function validateAcceptInput(value: unknown): AcceptInvitationInput {
   if (typeof password !== 'string' || password.length === 0) {
     throw new ApiError(400, 'Invalid accept request', 'Password is required');
   }
-  return { token, password };
+  if (name !== undefined && typeof name !== 'string') {
+    throw new ApiError(400, 'Invalid accept request', 'Invalid name');
+  }
+  if (surname !== undefined && typeof surname !== 'string') {
+    throw new ApiError(400, 'Invalid accept request', 'Invalid surname');
+  }
+  const input: AcceptInvitationInput = { token, password };
+  if (name !== undefined) {
+    input.name = name;
+  }
+  if (surname !== undefined) {
+    input.surname = surname;
+  }
+  return input;
 }
 
 /** Maps the backend accept envelope to the page result; uniform `accepted:false` carries no member (anti-enumeration). Exported for unit testing. */
@@ -76,7 +91,11 @@ export const acceptInvitation = createServerFn({ method: 'POST' })
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify({ password: data.password }),
+        body: JSON.stringify({
+          password: data.password,
+          name: data.name,
+          surname: data.surname,
+        }),
       },
     );
     if (!response.ok) {

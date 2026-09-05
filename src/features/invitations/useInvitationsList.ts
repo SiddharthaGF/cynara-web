@@ -24,6 +24,10 @@ export function useInvitationsList(): {
   const query = useQuery({
     queryKey: queryKeys.invitations.list(),
     queryFn: listInvitations,
+    // Status can flip in another tab (someone accepts the link) or right
+    // After the admin creates a new one. Keep the cache short so the next
+    // Focus/mount refetches and the row reflects reality.
+    staleTime: 0,
   });
 
   const error = useMemo((): string | null => {

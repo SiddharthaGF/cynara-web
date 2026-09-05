@@ -6,7 +6,10 @@ import type { InvitationDto } from '@/api/invitations.ts';
 import { Button } from '@/components/ui/button.tsx';
 import { TableCell, TableRow } from '@/components/ui/table.tsx';
 import { formatAdminDate } from '@/features/hospital/format-date.ts';
-import { isRenewableStatus } from '@/features/invitations/invitationStatus.ts';
+import {
+  cintaClassForStatus,
+  isRenewableStatus,
+} from '@/features/invitations/invitationStatus.ts';
 import { InvitationStatusBadge } from '@/features/invitations/InvitationStatusBadge.tsx';
 
 interface InvitationViewProps {
@@ -34,7 +37,13 @@ export function InvitationView({
 
   return (
     <TableRow>
-      <TableCell className='font-medium'>{invitation.email}</TableCell>
+      <TableCell className='relative pl-9 font-medium'>
+        <span
+          aria-hidden='true'
+          className={cintaClassForStatus(invitation.status)}
+        />
+        {invitation.email}
+      </TableCell>
       <TableCell>
         <InvitationStatusBadge status={invitation.status} />
       </TableCell>

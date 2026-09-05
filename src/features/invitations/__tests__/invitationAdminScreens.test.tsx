@@ -55,7 +55,7 @@ describe('invitation status matrix', () => {
       pending: 'default',
       accepted: 'secondary',
       revoked: 'destructive',
-      cancelled: 'ghost',
+      cancelled: 'destructive',
     });
     expect(isInvitationStatus('already-used')).toBeTruthy();
     expect(isInvitationStatus('mystery')).toBeFalsy();

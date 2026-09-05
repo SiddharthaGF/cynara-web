@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { InvitationDto } from '@/api/invitations.ts';
+import { ListEmptyState } from '@/components/list-empty-state.tsx';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -57,6 +58,8 @@ export function InvitationListWorkspace(): JSX.Element {
   const { workspace } = useRouteContext({ from: '/$locale' });
   const hospitalName = workspace?.name ?? workspace?.code ?? null;
 
+  const pendingCount = items.filter((item) => item.status === 'pending').length;
+
   if (isForbidden) {
     return (
       <Empty className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
@@ -69,14 +72,22 @@ export function InvitationListWorkspace(): JSX.Element {
   }
 
   return (
-    <Card className='border-border/70 shadow-sm'>
+    <Card className='kardex border-border/70 shadow-sm'>
       <CardHeader className='flex flex-row items-start justify-between gap-4'>
         <div>
-          <CardTitle className='flex items-center gap-2 font-heading text-lg'>
+          <p className='mb-2 text-[10px] font-semibold tracking-[0.08em] text-muted-foreground uppercase'>
+            {t('list.eyebrow')}
+          </p>
+          <CardTitle className='flex items-center gap-2 font-sans text-[0.9375rem] font-semibold tracking-[-0.01em] text-foreground'>
             <UserPlus className='size-4 text-muted-foreground' />
             {t('list.title')}
           </CardTitle>
           <CardDescription>{t('list.description')}</CardDescription>
+          {!isLoading && items.length > 0 ? (
+            <p className='kardex-folio mt-2 font-mono text-xs text-muted-foreground'>
+              {t('list.pendingFolio', { count: pendingCount })}
+            </p>
+          ) : null}
         </div>
         {canWrite ? (
           <Button
@@ -160,12 +171,25 @@ export function InvitationListWorkspace(): JSX.Element {
         ) : null}
 
         {!isLoading && !error && items.length === 0 ? (
-          <Empty className='min-h-40 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
-            <EmptyHeader>
-              <EmptyTitle className='text-lg'>{t('empty.title')}</EmptyTitle>
-              <EmptyDescription>{t('empty.description')}</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <ListEmptyState
+            title={t('empty.title')}
+            description={t('empty.description')}
+            helpText={t('empty.help')}
+            action={
+              canWrite ? (
+                <Button
+                  type='button'
+                  size='sm'
+                  onClick={() => {
+                    setCreateOpen(true);
+                  }}
+                >
+                  <Plus data-icon='inline-start' />
+                  {t('empty.action')}
+                </Button>
+              ) : undefined
+            }
+          />
         ) : null}
       </CardContent>
 

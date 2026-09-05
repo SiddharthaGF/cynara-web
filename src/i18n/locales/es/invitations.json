@@ -2,35 +2,102 @@
   "title": "Invitaciones",
   "subtitle": "Administrá los enlaces de invitación de un solo uso dentro de tu espacio de trabajo.",
   "list": {
+    "eyebrow": "Pase de accesos",
     "title": "Enlaces de invitación",
     "description": "Las invitaciones se listan de más reciente a más antigua. Los tokens nunca aparecen acá.",
+    "pendingFolio_one": "{{count}} pendiente de firma",
+    "pendingFolio_other": "{{count}} pendientes de firma",
     "refreshing": "Actualizando…"
   },
   "create": {
     "button": "Crear invitación",
     "title": "Crear invitación",
-    "description": "Enviá un enlace de un solo uso para que la persona invitada configure su contraseña.",
+    "description": "Invita a una persona para que pueda acceder a este espacio de trabajo.",
+    "stepOf": "Paso {{current}} de {{total}}",
+    "step2Title": "Configurar acceso",
+    "step2Subtitle": "Define qué puede consultar y modificar esta persona.",
     "emailLabel": "Correo electrónico",
     "actorIdLabel": "ID de actor",
-    "actorIdHint": "De 1 a 128 caracteres, identifica a la nueva persona miembro.",
-    "hospitalLabel": "Hospital",
+    "actorIdAutoPlaceholder": "Se generará: {{value}}",
+    "actorIdTaken": "Este ID de actor ya existe. Elegí uno distinto.",
     "hospitalPlaceholder": "Sin espacio de trabajo seleccionado",
+    "workspaceSection": "Espacio de trabajo",
+    "accessLevel": "Nivel de acceso",
+    "presets": {
+      "doctor": {
+        "title": "Médico",
+        "description": "Puede consultar y actualizar información clínica de pacientes."
+      },
+      "admin": {
+        "title": "Administrador",
+        "description": "Acceso completo al espacio de trabajo."
+      },
+      "custom": {
+        "title": "Personalizado",
+        "description": "Configura manualmente los accesos de esta persona."
+      }
+    },
+    "includedTitle": "Acceso incluido",
+    "fullAccessTitle": "Acceso completo",
+    "fullAccessDescription": "Esta persona tendrá acceso a todas las funciones disponibles en este espacio de trabajo.",
+    "viewPermissions": "Ver permisos incluidos",
+    "hidePermissions": "Ocultar permisos",
+    "states": {
+      "all": "Todos",
+      "some": "Algunos",
+      "none": "Sin acceso"
+    },
+    "groups": {
+      "patients": "Pacientes",
+      "encounters": "Atenciones",
+      "clinicalDocuments": "Documentos clínicos",
+      "forms": "Formularios",
+      "audit": "Auditoría",
+      "catalog": "Catálogo",
+      "workflows": "Flujos de trabajo",
+      "pipelines": "Pipelines",
+      "tasks": "Tareas",
+      "workspace": "Espacio de trabajo",
+      "capabilities": "Capacidades",
+      "users": "Usuarios",
+      "invitations": "Invitaciones"
+    },
+    "viewLabel": "Ver",
+    "editLabel": "Editar",
+    "selectedCount": "{{count}} de {{total}} permisos seleccionados",
+    "switchToCustom": "Cambiar a Personalizado",
+    "summaryTitle": "Resumen de la invitación",
+    "summaryPerson": "Persona",
+    "summaryWorkspace": "Espacio de trabajo",
+    "summaryAccess": "Acceso",
+    "summaryEdit": "Editar",
     "capabilitiesLabel": "Capacidades",
     "capabilitiesDescription": "Capacidades que recibirá la persona invitada al aceptar.",
-    "profileSection": "Perfil (opcional)",
+    "profileSection": "Información de la persona",
     "nameLabel": "Nombre",
     "surnameLabel": "Apellido",
     "phoneLabel": "Teléfono",
     "languageLabel": "Idioma",
-    "submit": "Crear y copiar enlace",
+    "languagePlaceholder": "Elegí un idioma",
+    "languageEn": "Inglés",
+    "languageEs": "Español",
+    "submit": "Crear invitación",
     "submitting": "Creando…",
     "cancel": "Cancelar",
+    "continue": "Continuar",
+    "back": "Volver",
+    "success": {
+      "title": "Invitación creada",
+      "description": "Comparte este enlace con la persona invitada.",
+      "note": "El enlace puede utilizarse una sola vez para configurar la contraseña."
+    },
     "errors": {
       "emailRequired": "El correo electrónico es obligatorio.",
       "emailInvalid": "Ingresá un correo electrónico válido.",
       "actorIdRequired": "El ID de actor es obligatorio.",
       "actorIdLength": "El ID de actor debe tener entre 1 y 128 caracteres.",
-      "capabilitiesRequired": "Elegí al menos una capacidad."
+      "capabilitiesRequired": "Elegí al menos una capacidad.",
+      "accessRequired": "Elegí un nivel de acceso para continuar."
     }
   },
   "table": {
@@ -76,7 +143,9 @@
   },
   "empty": {
     "title": "Todavía no hay invitaciones",
-    "description": "Creá una invitación para enviar el primer enlace."
+    "description": "Creá una invitación para enviar el primer enlace.",
+    "action": "Crear invitación",
+    "help": "El enlace es de un solo uso y vence 72 horas después de su emisión."
   },
   "forbidden": {
     "title": "Acceso denegado",
@@ -90,8 +159,24 @@
     "title": "Definí tu contraseña",
     "description": "Completá tu invitación para empezar a usar Cynara.",
     "passwordLabel": "Contraseña",
-    "passwordHint": "Al menos 6 caracteres, con mayúsculas, minúsculas, un número y un símbolo.",
+    "passwordHint": "Tu contraseña debe cumplir estas condiciones:",
+    "nameLabel": "Nombre",
+    "surnameLabel": "Apellido",
+    "namesRequired": "Ingresá tu nombre y apellido para continuar.",
+    "namesDescription": "Tu invitación no incluye tu nombre. Completalo para crear tu cuenta.",
     "passwordRequired": "Ingresá una contraseña para continuar.",
+    "passwordRules": {
+      "length": "Al menos 6 caracteres",
+      "uppercase": "Una letra mayúscula (A–Z)",
+      "lowercase": "Una letra minúscula (a–z)",
+      "number": "Un número (0–9)",
+      "symbol": "Un símbolo (por ejemplo !, @, #)"
+    },
+    "passwordTooShort": "La contraseña debe tener al menos 6 caracteres.",
+    "passwordMissingUppercase": "Agregá al menos una letra mayúscula (A–Z).",
+    "passwordMissingLowercase": "Agregá al menos una letra minúscula (a–z).",
+    "passwordMissingNumber": "Agregá al menos un número (0–9).",
+    "passwordMissingSymbol": "Agregá al menos un símbolo (por ejemplo !, @, #).",
     "submit": "Crear cuenta",
     "submitting": "Creando tu cuenta…",
     "successTitle": "Todo listo",

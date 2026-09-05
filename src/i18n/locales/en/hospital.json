@@ -36,7 +36,8 @@
       },
       "invitations": {
         "title": "Invitations",
-        "description": "Manage one-time invitation links."
+        "description": "Manage one-time invitation links.",
+        "action": "Manage invitation links"
       }
     }
   },

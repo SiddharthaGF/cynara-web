@@ -36,7 +36,8 @@
       },
       "invitations": {
         "title": "Invitaciones",
-        "description": "Administrá los enlaces de invitación de un solo uso."
+        "description": "Administrá los enlaces de invitación de un solo uso.",
+        "action": "Gestionar enlaces de invitación"
       }
     }
   },

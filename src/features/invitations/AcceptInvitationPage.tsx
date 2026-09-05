@@ -1,10 +1,14 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from '@tanstack/react-router';
-import { ArrowLeft, LoaderCircle } from 'lucide-react';
+import type { TFunction } from 'i18next';
+import { ArrowLeft, Check, LoaderCircle, X } from 'lucide-react';
 import type { FormEvent, JSX } from 'react';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ApiError } from '@/api/client.ts';
 import { describeApiError } from '@/api/error-message.ts';
+import { queryKeys } from '@/api/query-keys.ts';
 import { AuthScreen } from '@/components/auth-screen.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field.tsx';
@@ -22,32 +26,127 @@ interface AcceptInvitationPageProps {
   token: string;
 }
 
+const PASSWORD_MIN_LENGTH = 6;
+const UPPERCASE_PATTERN = /[A-Z]/;
+const LOWERCASE_PATTERN = /[a-z]/;
+const NUMBER_PATTERN = /[0-9]/;
+// Anything other than letters, digits, or whitespace counts as a symbol.
+const SYMBOL_PATTERN = /[^A-Za-z0-9\s]/;
+
 /**
- * Public password-only acceptance. A missing token and every `accepted:false`
+ * Validate the password against the rules announced in the hint. Returns the
+ * first failing rule's key so the user sees one actionable message at a time
+ * (in input order) instead of a wall of errors.
+ */
+function passwordIssueKey(value: string): string | null {
+  if (value.length === 0) {
+    return 'accept.passwordRequired';
+  }
+  if (value.length < PASSWORD_MIN_LENGTH) {
+    return 'accept.passwordTooShort';
+  }
+  if (!UPPERCASE_PATTERN.test(value)) {
+    return 'accept.passwordMissingUppercase';
+  }
+  if (!LOWERCASE_PATTERN.test(value)) {
+    return 'accept.passwordMissingLowercase';
+  }
+  if (!NUMBER_PATTERN.test(value)) {
+    return 'accept.passwordMissingNumber';
+  }
+  if (!SYMBOL_PATTERN.test(value)) {
+    return 'accept.passwordMissingSymbol';
+  }
+  return null;
+}
+
+interface PasswordRule {
+  key: string;
+  test: (value: string) => boolean;
+}
+
+/**
+ * Ordered rule list rendered under the password input. Order matches the
+ * `passwordIssueKey` checks and the `accept.passwordRules.*` locale keys.
+ */
+const PASSWORD_RULES: readonly PasswordRule[] = [
+  {
+    key: 'length',
+    test: (value) => value.length >= PASSWORD_MIN_LENGTH,
+  },
+  { key: 'uppercase', test: (value) => UPPERCASE_PATTERN.test(value) },
+  { key: 'lowercase', test: (value) => LOWERCASE_PATTERN.test(value) },
+  { key: 'number', test: (value) => NUMBER_PATTERN.test(value) },
+  { key: 'symbol', test: (value) => SYMBOL_PATTERN.test(value) },
+];
+/**
+ * Detects the backend's names-required 400 so the form can reveal the
+ * name fields. Matches on the stable message fragment alone: the
+ * server-fn transport serializes thrown errors as `{ message }` records
+ * and drops the numeric status, so a status check would never match live.
+ */
+function isNamesRequiredError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+  const record = error as { message?: unknown };
+  const message = typeof record.message === 'string' ? record.message : '';
+  return message.toLowerCase().includes('given name and family name');
+}
+
+/**
+ * Translate an `ApiError` for the acceptance flow. Mirrors the generic
+ * `describeApiError` mapping but surfaces the backend's `message`/`detail`
+ * for 400/422 responses so the user sees the real reason instead of a
+ * canned "Algo salió mal" string.
+ */
+function describeAcceptError(error: unknown, translate: TFunction): string {
+  if (
+    error instanceof ApiError &&
+    (error.status === 400 || error.status === 422)
+  ) {
+    const detail = error.message.trim();
+    if (detail.length > 0) {
+      return detail;
+    }
+    return translate('api:errors.validation');
+  }
+  return describeApiError(error, translate);
+}
+
+/**
+ * Public invitation acceptance. A missing token and every `accepted:false`
  * response render ONE generic invalid-link state (anti-enumeration); only a
- * 400/429-style error keeps the form open with the message surfaced.
+ * 400/429-style error keeps the form open with the message surfaced. When
+ * the invitation carries no member names, the backend answers 400 asking
+ * for them and the form reveals the name fields instead of failing.
  */
 export function AcceptInvitationPage({
   token,
 }: AcceptInvitationPageProps): JSX.Element {
   const { t } = useTranslation(['invitations', 'auth', 'api']);
+  const queryClient = useQueryClient();
   const { locale: rawLocale } = useParams({ from: '/$locale' });
   const locale = isAppLocale(rawLocale) ? rawLocale : 'en';
 
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [surname, setSurname] = useState('');
+  const [showNames, setShowNames] = useState(false);
+  const [namesError, setNamesError] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<AcceptOutcome>(
     token.length === 0 ? 'invalid' : 'form',
   );
   const [member, setMember] = useState<AcceptInvitationMemberSummary | null>(
     null,
   );
-  const [pending, setPending] = useState(false);
+  const [activeRequest, setActiveRequest] = useState<number | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
-  // Pending guard serializes submits below.
-  // In-flight request proves ownership before clearing pending.
-  // Stale responses never release a newer request's busy state.
+  // The pending guard serializes submits, and the busy state is keyed by
+  // Request id so only the owning request can release it.
   const requestRef = useRef(0);
+  const pending = activeRequest !== null;
 
   const backLink = (
     <Link
@@ -66,6 +165,7 @@ export function AcceptInvitationPage({
       title={t('accept.invalidTitle')}
       description={t('accept.invalidDescription')}
       footer={backLink}
+      cintaClassName='kardex-cinta kardex-cinta-muted'
     >
       <p
         role='status'
@@ -87,6 +187,7 @@ export function AcceptInvitationPage({
         title={t('accept.successTitle')}
         description={t('accept.successDescription')}
         footer={backLink}
+        cintaClassName='kardex-cinta kardex-cinta-success'
       >
         <dl className='grid gap-2 text-sm'>
           <div className='flex justify-between gap-4'>
@@ -105,7 +206,9 @@ export function AcceptInvitationPage({
             <dt className='text-muted-foreground'>
               {t('accept.summaryActorId')}
             </dt>
-            <dd className='text-right font-mono text-xs'>{member.actor.id}</dd>
+            <dd className='kardex-folio text-right font-mono text-xs'>
+              {member.actor.id}
+            </dd>
           </div>
           <div className='flex justify-between gap-4'>
             <dt className='text-muted-foreground'>
@@ -126,31 +229,58 @@ export function AcceptInvitationPage({
       return;
     }
     setFieldError(null);
+    setNamesError(null);
     setServerError(null);
-    if (password.length === 0) {
-      setFieldError(t('accept.passwordRequired'));
+    const issue = passwordIssueKey(password);
+    if (issue !== null) {
+      setFieldError(t(issue));
       return;
     }
-    setPending(true);
+    // Names are only required once the backend confirms the invitation
+    // Carries none; from then on the form collects them like the password.
+    if (
+      showNames &&
+      (name.trim().length === 0 || surname.trim().length === 0)
+    ) {
+      setNamesError(t('accept.namesRequired'));
+      return;
+    }
     const requestId = requestRef.current + 1;
     requestRef.current = requestId;
+    setActiveRequest(requestId);
     try {
       const result = await acceptInvitation({
-        data: { token, password },
+        data: {
+          token,
+          password,
+          ...(showNames ? { name: name.trim(), surname: surname.trim() } : {}),
+        },
       });
       if (result.accepted) {
         setMember(result.member);
         setOutcome('success');
+        // Tell any admin workspace open in this browser session that the
+        // Listing changed; no-ops if there is no admin cache yet.
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.invitations.all,
+        });
       } else {
         setOutcome('invalid');
       }
     } catch (err) {
-      setOutcome('error');
-      setServerError(describeApiError(err, t));
-    } finally {
-      if (requestRef.current === requestId) {
-        setPending(false);
+      // The backend asks for names with a stable message fragment; reveal
+      // The fields with localized guidance instead of the raw message.
+      if (isNamesRequiredError(err)) {
+        setShowNames(true);
+        setNamesError(t('accept.namesDescription'));
+        return;
       }
+      setOutcome('error');
+      setServerError(describeAcceptError(err, t));
+    } finally {
+      // Ownership-aware clear in the state update: a stale response keeps
+      // A newer request's busy state instead of releasing it.
+      setActiveRequest((current) => (current === requestId ? null : current));
     }
   }
 
@@ -160,6 +290,11 @@ export function AcceptInvitationPage({
       title={t('accept.title')}
       description={t('accept.description')}
       footer={backLink}
+      cintaClassName={
+        outcome === 'error'
+          ? 'kardex-cinta kardex-cinta-review'
+          : 'kardex-cinta'
+      }
     >
       {outcome === 'error' && serverError !== null ? (
         <p
@@ -172,25 +307,114 @@ export function AcceptInvitationPage({
       <form
         onSubmit={(event) => void submit(event)}
         className='flex flex-col gap-4'
+        noValidate
       >
-        <Field>
+        <Field data-invalid={fieldError !== null}>
           <FieldLabel htmlFor='accept-password'>
             {t('accept.passwordLabel')}
           </FieldLabel>
           <Input
             id='accept-password'
             type='password'
+            autoComplete='new-password'
             value={password}
-            minLength={6}
-            required
             aria-invalid={fieldError !== null}
-            onChange={(event) => setPassword(event.target.value)}
+            aria-describedby='accept-password-rules'
+            onChange={(event) => {
+              setPassword(event.target.value);
+              if (fieldError !== null) {
+                setFieldError(null);
+              }
+            }}
           />
-          <p className='text-xs text-muted-foreground'>
+          <p
+            id='accept-password-rules'
+            className='text-xs text-muted-foreground'
+          >
             {t('accept.passwordHint')}
           </p>
+          <ul
+            aria-label={t('accept.passwordHint')}
+            className='flex flex-col gap-1 pt-1 text-xs'
+          >
+            {PASSWORD_RULES.map((rule) => {
+              const passed = rule.test(password);
+              return (
+                <li
+                  key={rule.key}
+                  className={
+                    passed
+                      ? 'flex items-center gap-1.5 text-muted-foreground'
+                      : 'flex items-center gap-1.5 text-destructive'
+                  }
+                >
+                  {passed ? (
+                    <Check
+                      aria-hidden='true'
+                      className='size-3.5 text-sage'
+                    />
+                  ) : (
+                    <X
+                      aria-hidden='true'
+                      className='size-3.5 text-destructive'
+                    />
+                  )}
+                  <span
+                    className={
+                      passed
+                        ? 'text-muted-foreground line-through decoration-muted-foreground/40'
+                        : ''
+                    }
+                  >
+                    {t(`accept.passwordRules.${rule.key}`)}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
           <FieldError errors={[{ message: fieldError ?? undefined }]} />
         </Field>
+        {showNames ? (
+          <div className='grid gap-4 sm:grid-cols-2'>
+            <Field data-invalid={namesError !== null}>
+              <FieldLabel htmlFor='accept-name'>
+                {t('accept.nameLabel')}
+              </FieldLabel>
+              <Input
+                id='accept-name'
+                autoComplete='given-name'
+                value={name}
+                aria-invalid={namesError !== null}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  if (namesError !== null) {
+                    setNamesError(null);
+                  }
+                }}
+              />
+            </Field>
+            <Field data-invalid={namesError !== null}>
+              <FieldLabel htmlFor='accept-surname'>
+                {t('accept.surnameLabel')}
+              </FieldLabel>
+              <Input
+                id='accept-surname'
+                autoComplete='family-name'
+                value={surname}
+                aria-invalid={namesError !== null}
+                onChange={(event) => {
+                  setSurname(event.target.value);
+                  if (namesError !== null) {
+                    setNamesError(null);
+                  }
+                }}
+              />
+            </Field>
+          </div>
+        ) : null}
+        {showNames && namesError !== null ? (
+          <FieldError errors={[{ message: namesError }]} />
+        ) : null}
         <Button
           type='submit'
           disabled={pending}

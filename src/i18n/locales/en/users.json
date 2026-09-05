@@ -19,7 +19,9 @@
   },
   "empty": {
     "title": "No users found",
-    "description": "Try a different search term or adjust the filters."
+    "description": "Try a different search term or adjust the filters.",
+    "action": "Manage invitations",
+    "help": "New members join through an invitation link."
   },
   "forbidden": {
     "title": "Access denied",

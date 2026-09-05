@@ -1,4 +1,4 @@
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
+import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { Loader2, RefreshCw, Search } from 'lucide-react';
 import type { JSX, FormEvent } from 'react';
 import { useCallback, useMemo, useState } from 'react';
@@ -32,6 +32,7 @@ import {
   type UserDirectoryFormValues,
 } from '@/features/users/userListSearch.ts';
 import { useUserList } from '@/features/users/useUsersDirectory.ts';
+import { useCapabilities } from '@/hooks/use-capabilities.ts';
 import { getRawHospitalCode } from '@/lib/api-origin.ts';
 
 function resolveSessionHospitalContext(
@@ -67,6 +68,7 @@ export function UserDirectoryWorkspace({
 }: UserDirectoryWorkspaceProps): JSX.Element {
   const { t } = useTranslation('users');
   const { locale } = useParams({ from: '/$locale' });
+  const { can } = useCapabilities();
   // The route validates the search, so it arrives already normalized.
   const search = useSearch({ from: '/$locale/admin/users/' });
   const navigate = useNavigate();
@@ -181,7 +183,26 @@ export function UserDirectoryWorkspace({
           <EmptyHeader>
             <EmptyTitle className='text-lg'>{t('empty.title')}</EmptyTitle>
             <EmptyDescription>{t('empty.description')}</EmptyDescription>
+            <EmptyDescription>{t('empty.help')}</EmptyDescription>
           </EmptyHeader>
+          {can('write', 'Invitation') ? (
+            <div className='mt-2'>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                nativeButton={false}
+                render={
+                  <Link
+                    to='/$locale/admin/invitations'
+                    params={{ locale }}
+                  />
+                }
+              >
+                {t('empty.action')}
+              </Button>
+            </div>
+          ) : null}
         </Empty>
       );
     }

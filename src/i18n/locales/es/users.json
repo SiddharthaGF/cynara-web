@@ -19,7 +19,9 @@
   },
   "empty": {
     "title": "No se encontraron usuarios",
-    "description": "Prueba con otro término de búsqueda o ajusta los filtros."
+    "description": "Prueba con otro término de búsqueda o ajusta los filtros.",
+    "action": "Gestionar invitaciones",
+    "help": "Las personas nuevas se unen mediante un enlace de invitación."
   },
   "forbidden": {
     "title": "Acceso denegado",

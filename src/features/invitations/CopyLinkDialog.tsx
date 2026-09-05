@@ -2,6 +2,7 @@ import { Check, Copy } from 'lucide-react';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -21,6 +22,10 @@ interface CopyLinkDialogProps {
   /** Raw invitation token, held only in dialog-local state (R5). */
   token: string;
   locale: string;
+  /** Optional copy overrides; defaults keep the shared copy-link wording. */
+  title?: string;
+  description?: string;
+  note?: string;
 }
 
 /**
@@ -33,6 +38,9 @@ export function CopyLinkDialog({
   onOpenChange,
   token,
   locale,
+  title,
+  description,
+  note,
 }: CopyLinkDialogProps): JSX.Element {
   const { t } = useTranslation('invitations');
   const [copied, setCopied] = useState(false);
@@ -48,6 +56,7 @@ export function CopyLinkDialog({
   const handleCopy = (): void => {
     void navigator.clipboard?.writeText(link).then(() => {
       setCopied(true);
+      toast.success(t('copyLink.copied'));
     });
   };
 
@@ -58,8 +67,10 @@ export function CopyLinkDialog({
     >
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle>{t('copyLink.title')}</DialogTitle>
-          <DialogDescription>{t('copyLink.description')}</DialogDescription>
+          <DialogTitle>{title ?? t('copyLink.title')}</DialogTitle>
+          <DialogDescription>
+            {description ?? t('copyLink.description')}
+          </DialogDescription>
         </DialogHeader>
         <div className='grid gap-2'>
           <Input
@@ -67,9 +78,10 @@ export function CopyLinkDialog({
             value={link}
             aria-label={t('copyLink.tokenLabel')}
             onFocus={(event) => event.currentTarget.select()}
+            className='kardex-folio font-mono text-xs'
           />
           <p className='text-xs text-muted-foreground'>
-            {t('copyLink.securityNote')}
+            {note ?? t('copyLink.securityNote')}
           </p>
         </div>
         <DialogFooter className='mt-2'>

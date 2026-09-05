@@ -29,6 +29,25 @@ export function isRenewableStatus(status: string): boolean {
   return status === 'pending' || status === 'expired';
 }
 
+/**
+ * Kardex edge mark per invitation status. Pending waits for a signature,
+ * accepted is filed, terminal rows stay muted. Estado es marca, no tinte.
+ */
+export function cintaClassForStatus(status: string): string {
+  switch (status) {
+    case 'pending':
+    case 'expired': {
+      return 'kardex-cinta kardex-cinta-review';
+    }
+    case 'accepted': {
+      return 'kardex-cinta kardex-cinta-success';
+    }
+    default: {
+      return 'kardex-cinta kardex-cinta-muted';
+    }
+  }
+}
+
 export function badgeVariantForStatus(
   status: string,
 ): 'default' | 'secondary' | 'outline' | 'destructive' | 'ghost' {
@@ -49,7 +68,7 @@ export function badgeVariantForStatus(
       return 'destructive';
     }
     case 'cancelled': {
-      return 'ghost';
+      return 'destructive';
     }
     default: {
       return 'secondary';

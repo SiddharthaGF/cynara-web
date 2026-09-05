@@ -19,6 +19,11 @@ interface AuthScreenProps {
   description?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
+  /**
+   * Optional kardex edge mark (e.g. invitation acceptance outcome).
+   * Omit to render the card without a cinta.
+   */
+  cintaClassName?: string;
 }
 
 export function AuthScreen({
@@ -27,6 +32,7 @@ export function AuthScreen({
   description,
   children,
   footer,
+  cintaClassName,
 }: AuthScreenProps): JSX.Element {
   const { t } = useTranslation('auth');
 
@@ -42,6 +48,12 @@ export function AuthScreen({
           <CynaraMark showWordmark />
         </Link>
         <Card className='border border-border bg-background shadow-sm'>
+          {cintaClassName === undefined ? null : (
+            <span
+              aria-hidden='true'
+              className={cintaClassName}
+            />
+          )}
           <CardHeader className='gap-2 text-center'>
             <CardTitle>
               <h1 className='font-display text-xl font-semibold'>{title}</h1>
