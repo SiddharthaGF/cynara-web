@@ -16,6 +16,8 @@ export const FULL_CAPABILITIES = [
   'workspace.write',
   'capabilities.read',
   'capabilities.write',
+  'user-invitations.read',
+  'user-invitations.write',
 ];
 
 const CAPABILITIES_URL = '**/api/me/capabilities';

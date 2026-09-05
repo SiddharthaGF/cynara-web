@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { PatientDto } from '@/api/patients.ts';
 import { Button } from '@/components/ui/button.tsx';
+import { CatalogTableHeader } from '@/components/catalog-table-header.tsx';
 import {
   Empty,
   EmptyDescription,
@@ -20,8 +21,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from '@/components/ui/table.tsx';
 import {
@@ -210,18 +209,16 @@ export function PatientResultsTable({
   return (
     <div className='overflow-hidden rounded-lg border border-border/60'>
       <Table className='min-w-[40rem]'>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t('search.columns.mrn')}</TableHead>
-            <TableHead>{t('search.columns.name')}</TableHead>
-            <TableHead>{t('search.columns.birthDate')}</TableHead>
-            <TableHead>{t('detail.fields.sex')}</TableHead>
-            <TableHead>{t('search.columns.status')}</TableHead>
-            <TableHead className='text-right'>
-              <span className='sr-only'>{t('search.columns.actions')}</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
+        <CatalogTableHeader
+          columns={[
+            { id: 'mrn', label: t('search.columns.mrn') },
+            { id: 'name', label: t('search.columns.name') },
+            { id: 'birthDate', label: t('search.columns.birthDate') },
+            { id: 'sex', label: t('detail.fields.sex') },
+            { id: 'status', label: t('search.columns.status') },
+          ]}
+          actionsLabel={t('search.columns.actions')}
+        />
         <TableBody>
           {patients.map((patient) => (
             <TableRow

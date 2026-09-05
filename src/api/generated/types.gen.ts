@@ -5,6 +5,28 @@ export type ClientOptions = {
 };
 
 /**
+ * Body of the public acceptance request; password only.
+ */
+export type AcceptInvitationRequest = {
+    password?: string | null;
+};
+
+/**
+ * Uniform wire envelope for every acceptance outcome. Token-state failures
+ * serialize to the byte-identical `{"accepted":false}` body; success
+ * adds the member summary. The member payload is omitted when
+ * Cynara.Application.Modules.Invitations.AcceptInvitationResponse.Accepted is false so the failure body is
+ * constant by construction and never leaks token or hash material.
+ */
+export type AcceptInvitationResponse = {
+    accepted?: boolean;
+    /**
+     * Success payload: user, hospital, actor, granted capabilities.
+     */
+    member?: MemberSummary | null;
+};
+
+/**
  * Body of a password-recovery request.
  */
 export type AccountRecoveryRequest = {
@@ -25,6 +47,10 @@ export type AccountResetRequest = {
     account?: string | null;
     token?: string | null;
     newPassword?: string | null;
+};
+
+export type ActorSummary = {
+    readonly id?: string;
 };
 
 /**
@@ -963,6 +989,24 @@ export type CreateFormVersionRequestDocument = {
     meta?: Meta;
 };
 
+export type CreateInvitationRequest = {
+    email?: string;
+    profileSnapshot?: string | null;
+};
+
+/**
+ * Creation or resend outcome. The raw token appears exactly once, here,
+ * and is never persisted, logged, or audited.
+ */
+export type CreateInvitationResult = {
+    /**
+     * Wire view of an invitation: lifecycle metadata only — never link token
+     * or hash material.
+     */
+    invitation?: InvitationView;
+    token?: string;
+};
+
 export type CreateWorkflowDefinitionRequestDocument = {
     data: Omit<DataInCreateWorkflowDefinitionRequest, 'type'> & {
         type: 'createWorkflowDefinitionRequestDocument';
@@ -1852,6 +1896,12 @@ export type HospitalMembershipDto = {
     name?: string;
 };
 
+export type HospitalSummary = {
+    readonly id?: string;
+    code?: string;
+    name?: string;
+};
+
 /**
  * Resolved tenant workspace returned by GET /api/workspace. Bound to the X-Hospital-Code header from the request context; clients cannot select a different tenant.
  */
@@ -1893,6 +1943,21 @@ export type HospitalWorkspaceDto = {
 export type IdentifierInRequest = {
     type: ResourceType;
     meta?: Meta;
+};
+
+/**
+ * Wire view of an invitation: lifecycle metadata only — never link token
+ * or hash material.
+ */
+export type InvitationView = {
+    readonly id?: string;
+    email?: string;
+    hospitalId?: string;
+    status?: string;
+    linkVersion?: number;
+    createdAt?: string;
+    issuedAt?: string;
+    expiresAt?: string;
 };
 
 /**
@@ -1975,6 +2040,16 @@ export type JsonApiErrorSource = {
  */
 export type MeCapabilitiesResponse = {
     actorId?: string | null;
+    capabilities?: Array<string>;
+};
+
+/**
+ * Success payload: user, hospital, actor, granted capabilities.
+ */
+export type MemberSummary = {
+    user?: UserSummary;
+    hospital?: HospitalSummary;
+    actor?: ActorSummary;
     capabilities?: Array<string>;
 };
 
@@ -3000,6 +3075,11 @@ export type UserDirectoryMembershipDto = {
     createdAt?: string;
 };
 
+export type UserSummary = {
+    readonly id?: string;
+    email?: string;
+};
+
 export type WorkflowDefinitionCollectionResponseDocument = {
     links: ResourceCollectionTopLevelLinks;
     data: Array<DataInWorkflowDefinitionResponse>;
@@ -3102,6 +3182,21 @@ export type WorkflowVersionResourceType = 'workflowVersions';
 export type WorkflowVersionStatus = 'draft' | 'review' | 'published' | 'retired';
 
 /**
+ * Uniform wire envelope for every acceptance outcome. Token-state failures
+ * serialize to the byte-identical `{"accepted":false}` body; success
+ * adds the member summary. The member payload is omitted when
+ * Cynara.Application.Modules.Invitations.AcceptInvitationResponse.Accepted is false so the failure body is
+ * constant by construction and never leaks token or hash material.
+ */
+export type AcceptInvitationResponseWritable = {
+    accepted?: boolean;
+    /**
+     * Success payload: user, hospital, actor, granted capabilities.
+     */
+    member?: MemberSummaryWritable | null;
+};
+
+/**
  * One persisted capability assignment for the resolved hospital workspace.
  */
 export type CapabilityAssignmentDtoWritable = {
@@ -3171,6 +3266,19 @@ export type ClinicalDocumentDtoWritable = {
  */
 export type ClinicalDocumentListResponseWritable = {
     documents?: Array<ClinicalDocumentDtoWritable>;
+};
+
+/**
+ * Creation or resend outcome. The raw token appears exactly once, here,
+ * and is never persisted, logged, or audited.
+ */
+export type CreateInvitationResultWritable = {
+    /**
+     * Wire view of an invitation: lifecycle metadata only — never link token
+     * or hash material.
+     */
+    invitation?: InvitationViewWritable;
+    token?: string;
 };
 
 /**
@@ -3245,6 +3353,11 @@ export type FacilityListResponseWritable = {
     facilities?: Array<FacilityDtoWritable>;
 };
 
+export type HospitalSummaryWritable = {
+    code?: string;
+    name?: string;
+};
+
 /**
  * Resolved tenant workspace returned by GET /api/workspace. Bound to the X-Hospital-Code header from the request context; clients cannot select a different tenant.
  */
@@ -3280,6 +3393,20 @@ export type HospitalWorkspaceDtoWritable = {
 };
 
 /**
+ * Wire view of an invitation: lifecycle metadata only — never link token
+ * or hash material.
+ */
+export type InvitationViewWritable = {
+    email?: string;
+    hospitalId?: string;
+    status?: string;
+    linkVersion?: number;
+    createdAt?: string;
+    issuedAt?: string;
+    expiresAt?: string;
+};
+
+/**
  * One patient journey: a pipeline bound to a patient or encounter record,
  * rendered from the exact published workflow version at start time with the
  * immutable progression history.
@@ -3304,6 +3431,16 @@ export type JourneyDtoWritable = {
      */
     graph?: WorkflowGraphDtoWritable;
     history?: Array<PipelineHistoryDtoWritable>;
+};
+
+/**
+ * Success payload: user, hospital, actor, granted capabilities.
+ */
+export type MemberSummaryWritable = {
+    user?: UserSummaryWritable;
+    hospital?: HospitalSummaryWritable;
+    actor?: unknown;
+    capabilities?: Array<string>;
 };
 
 /**
@@ -3464,6 +3601,10 @@ export type UserDirectoryListResponseWritable = {
     page?: number;
     pageSize?: number;
     totalCount?: number;
+};
+
+export type UserSummaryWritable = {
+    email?: string;
 };
 
 /**
@@ -12320,6 +12461,196 @@ export type PostConnectTokenResponses = {
      */
     200: unknown;
 };
+
+export type ListInvitationsData = {
+    body?: never;
+    headers: {
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/user-invitations';
+};
+
+export type ListInvitationsErrors = {
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+};
+
+export type ListInvitationsError = ListInvitationsErrors[keyof ListInvitationsErrors];
+
+export type ListInvitationsResponses = {
+    /**
+     * OK
+     */
+    200: Array<InvitationView>;
+};
+
+export type ListInvitationsResponse = ListInvitationsResponses[keyof ListInvitationsResponses];
+
+export type CreateInvitationData = {
+    body: CreateInvitationRequest;
+    headers: {
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/user-invitations';
+};
+
+export type CreateInvitationErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+};
+
+export type CreateInvitationError = CreateInvitationErrors[keyof CreateInvitationErrors];
+
+export type CreateInvitationResponses = {
+    /**
+     * Created
+     */
+    201: CreateInvitationResult;
+};
+
+export type CreateInvitationResponse = CreateInvitationResponses[keyof CreateInvitationResponses];
+
+export type AcceptInvitationData = {
+    /**
+     * Body of the public acceptance request; password only.
+     */
+    body: AcceptInvitationRequest;
+    path: {
+        token: string;
+    };
+    query?: never;
+    url: '/api/user-invitations/{token}/accept';
+};
+
+export type AcceptInvitationErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Too Many Requests
+     */
+    429: unknown;
+};
+
+export type AcceptInvitationError = AcceptInvitationErrors[keyof AcceptInvitationErrors];
+
+export type AcceptInvitationResponses = {
+    /**
+     * OK
+     */
+    200: AcceptInvitationResponse;
+};
+
+export type AcceptInvitationResponse2 = AcceptInvitationResponses[keyof AcceptInvitationResponses];
+
+export type CancelInvitationData = {
+    body?: never;
+    headers: {
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/user-invitations/{id}/cancel';
+};
+
+export type CancelInvitationErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type CancelInvitationError = CancelInvitationErrors[keyof CancelInvitationErrors];
+
+export type CancelInvitationResponses = {
+    /**
+     * OK
+     */
+    200: InvitationView;
+};
+
+export type CancelInvitationResponse = CancelInvitationResponses[keyof CancelInvitationResponses];
+
+export type ResendInvitationData = {
+    body?: never;
+    headers: {
+        /**
+         * Required hospital workspace code. Selects the tenant scope for the request. Unknown, missing, or inactive codes are rejected before any workflow runs. The tenant context is resolved by the host middleware; clients cannot override it through request bodies or relationship data. Examples: 'default', 'hospital-norte', 'hospital-sur'.
+         */
+        'X-Hospital-Code': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/user-invitations/{id}/resend';
+};
+
+export type ResendInvitationErrors = {
+    /**
+     * Bad Request
+     */
+    400: JsonApiErrorDocument;
+    /**
+     * Forbidden
+     */
+    403: JsonApiErrorDocument;
+    /**
+     * Not Found
+     */
+    404: JsonApiErrorDocument;
+    /**
+     * Conflict
+     */
+    409: JsonApiErrorDocument;
+};
+
+export type ResendInvitationError = ResendInvitationErrors[keyof ResendInvitationErrors];
+
+export type ResendInvitationResponses = {
+    /**
+     * OK
+     */
+    200: CreateInvitationResult;
+};
+
+export type ResendInvitationResponse = ResendInvitationResponses[keyof ResendInvitationResponses];
 
 export type ListUsersData = {
     body?: never;

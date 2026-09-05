@@ -1,0 +1,194 @@
+{
+  "title": "Invitations",
+  "subtitle": "Manage one-time invitation links within your workspace.",
+  "list": {
+    "eyebrow": "Access handoff",
+    "title": "Invitation links",
+    "description": "Invitations are listed newest-first. Raw tokens never appear here.",
+    "pendingFolio_one": "{{count}} awaiting signature",
+    "pendingFolio_other": "{{count}} awaiting signature",
+    "refreshing": "Updating…"
+  },
+  "create": {
+    "button": "Create invitation",
+    "title": "Create invitation",
+    "description": "Invite a person so they can access this workspace.",
+    "stepOf": "Step {{current}} of {{total}}",
+    "step2Title": "Configure access",
+    "step2Subtitle": "Define what this person can view and change.",
+    "emailLabel": "Email",
+    "actorIdLabel": "Actor ID",
+    "actorIdAutoPlaceholder": "Will be generated: {{value}}",
+    "actorIdTaken": "This actor ID already exists. Choose a different one.",
+    "hospitalLabel": "Hospital",
+    "hospitalPlaceholder": "No workspace selected",
+    "workspaceSection": "Workspace",
+    "accessLevel": "Access level",
+    "presets": {
+      "doctor": {
+        "title": "Doctor",
+        "description": "Can view and update clinical information about patients."
+      },
+      "admin": {
+        "title": "Administrator",
+        "description": "Full access to the workspace."
+      },
+      "custom": {
+        "title": "Custom",
+        "description": "Configure this person's access manually."
+      }
+    },
+    "includedTitle": "Included access",
+    "fullAccessTitle": "Full access",
+    "fullAccessDescription": "This person will have access to every feature available in this workspace.",
+    "viewPermissions": "View included permissions",
+    "hidePermissions": "Hide permissions",
+    "states": {
+      "all": "All",
+      "some": "Some",
+      "none": "No access"
+    },
+    "groups": {
+      "patients": "Patients",
+      "encounters": "Encounters",
+      "clinicalDocuments": "Clinical documents",
+      "forms": "Forms",
+      "audit": "Audit",
+      "catalog": "Catalog",
+      "workflows": "Workflows",
+      "pipelines": "Pipelines",
+      "tasks": "Tasks",
+      "workspace": "Workspace",
+      "capabilities": "Capabilities",
+      "users": "Users",
+      "invitations": "Invitations"
+    },
+    "viewLabel": "View",
+    "editLabel": "Edit",
+    "selectedCount": "{{count}} of {{total}} permissions selected",
+    "switchToCustom": "Switch to Custom",
+    "summaryTitle": "Invitation summary",
+    "summaryPerson": "Person",
+    "summaryWorkspace": "Workspace",
+    "summaryAccess": "Access",
+    "summaryEdit": "Edit",
+    "capabilitiesLabel": "Capabilities",
+    "capabilitiesDescription": "Capabilities the new member receives at acceptance.",
+    "profileSection": "Person information",
+    "nameLabel": "First name",
+    "surnameLabel": "Last name",
+    "phoneLabel": "Phone",
+    "languageLabel": "Language",
+    "languagePlaceholder": "Choose a language",
+    "languageEn": "English",
+    "languageEs": "Spanish",
+    "submit": "Create invitation",
+    "submitting": "Creating…",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "back": "Back",
+    "success": {
+      "title": "Invitation created",
+      "description": "Share this link with the invited person.",
+      "note": "The link can be used only once to set the password."
+    },
+    "errors": {
+      "emailRequired": "Email is required.",
+      "emailInvalid": "Enter a valid email address.",
+      "actorIdRequired": "Actor ID is required.",
+      "actorIdLength": "Actor ID must be 1–128 characters.",
+      "capabilitiesRequired": "Select at least one capability.",
+      "accessRequired": "Choose an access level to continue."
+    }
+  },
+  "table": {
+    "email": "Email",
+    "status": "Status",
+    "issued": "Issued",
+    "expires": "Expires",
+    "actions": "Actions"
+  },
+  "status": {
+    "pending": "Pending",
+    "accepted": "Accepted",
+    "expired": "Expired",
+    "revoked": "Revoked",
+    "cancelled": "Cancelled",
+    "already-used": "Already used",
+    "unknown": "Unknown"
+  },
+  "actions": {
+    "resend": "Resend",
+    "cancel": "Cancel"
+  },
+  "cancel": {
+    "confirmTitle": "Cancel invitation",
+    "confirmBody": "The invitation link stops working immediately and the invitation is marked cancelled. You can send a new one later.",
+    "submit": "Cancel invitation",
+    "dismiss": "Keep invitation"
+  },
+  "resend": {
+    "confirmTitle": "Resend invitation",
+    "confirmBody": "A new link is generated and the previous one stops working. The 72-hour window restarts.",
+    "submit": "Resend invitation",
+    "dismiss": "Keep current link"
+  },
+  "copyLink": {
+    "title": "Copy the invitation link",
+    "description": "Share this link with the invited person. It expires 72 hours after it is issued.",
+    "tokenLabel": "Invitation link",
+    "securityNote": "The link works once. Anyone with it can set the password for this invitation.",
+    "copy": "Copy link",
+    "copied": "Copied",
+    "done": "Done"
+  },
+  "empty": {
+    "title": "No invitations yet",
+    "description": "Create an invitation to send the first link.",
+    "action": "Create invitation",
+    "help": "The link works once and expires 72 hours after it is issued."
+  },
+  "forbidden": {
+    "title": "Access denied",
+    "description": "You do not have permission to manage invitations."
+  },
+  "error": {
+    "title": "Invitations could not be loaded",
+    "retry": "Retry"
+  },
+  "accept": {
+    "title": "Set your password",
+    "description": "Complete your invitation to start using Cynara.",
+    "passwordLabel": "Password",
+    "passwordHint": "Your password must meet these requirements:",
+    "nameLabel": "First name",
+    "surnameLabel": "Last name",
+    "namesRequired": "Enter your first and last name to continue.",
+    "namesDescription": "Your invitation does not include your name. Complete it to create your account.",
+    "passwordRequired": "Enter a password to continue.",
+    "passwordRules": {
+      "length": "At least 6 characters",
+      "uppercase": "One uppercase letter (A–Z)",
+      "lowercase": "One lowercase letter (a–z)",
+      "number": "One number (0–9)",
+      "symbol": "One symbol (for example !, @, #)"
+    },
+    "passwordTooShort": "Password must be at least 6 characters.",
+    "passwordMissingUppercase": "Add at least one uppercase letter (A–Z).",
+    "passwordMissingLowercase": "Add at least one lowercase letter (a–z).",
+    "passwordMissingNumber": "Add at least one number (0–9).",
+    "passwordMissingSymbol": "Add at least one symbol (for example !, @, #).",
+    "submit": "Create account",
+    "submitting": "Creating your account…",
+    "successTitle": "You're all set",
+    "successDescription": "Your membership is active and you can sign in now.",
+    "summaryEmail": "Email",
+    "summaryHospital": "Hospital",
+    "summaryActorId": "Actor ID",
+    "summaryCapabilities": "Capabilities",
+    "invalidTitle": "This link is not valid",
+    "invalidDescription": "The invitation link is no longer available. Request a new invitation from the administrator.",
+    "backToLogin": "Back to sign in",
+    "genericError": "The request could not be completed. Try again."
+  }
+}

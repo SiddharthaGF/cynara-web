@@ -3,7 +3,7 @@
     "eyebrow": "Configuración del hospital",
     "title": "Administración",
     "titleAccent": "",
-    "subtitle": "Espacio de trabajo, instalaciones, áreas clínicas, disciplinas y el catálogo de documentos clínicos.",
+    "subtitle": "Espacio de trabajo, instalaciones, áreas clínicas, disciplinas, el catálogo de documentos clínicos e invitaciones.",
     "sections": {
       "workspace": {
         "title": "Espacio de trabajo del hospital",
@@ -33,6 +33,11 @@
       "users": {
         "title": "Directorio de usuarios",
         "description": "Administra cuentas de usuario dentro de tu alcance de acceso."
+      },
+      "invitations": {
+        "title": "Invitaciones",
+        "description": "Administrá los enlaces de invitación de un solo uso.",
+        "action": "Gestionar enlaces de invitación"
       }
     }
   },

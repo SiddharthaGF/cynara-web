@@ -85,7 +85,7 @@ export function isSafeRedirectPath(value: string): boolean {
 
 /** Auth-flow pages that the route guard must not bounce to login. */
 export function isAuthRoutePath(pathname: string): boolean {
-  return /^\/(?:en|es)\/(?:login|logout|recovery|reset)(?:\/|$)/u.test(
+  return /^\/(?:en|es)\/(?:login|logout|recovery|reset|invitations\/accept)(?:\/|$)/u.test(
     pathname,
   );
 }

@@ -27,6 +27,8 @@ export const CAPABILITY_CODES = [
   'capabilities.read',
   'capabilities.write',
   'users.read',
+  'user-invitations.read',
+  'user-invitations.write',
 ] as const;
 
 export type CapabilityCode = (typeof CAPABILITY_CODES)[number];
@@ -55,7 +57,8 @@ export type CapabilitySubject =
   | 'ClinicalTask'
   | 'Workspace'
   | 'CapabilityAssignment'
-  | 'User';
+  | 'User'
+  | 'Invitation';
 
 export type AppAbility = MongoAbility<[CapabilityAction, CapabilitySubject]>;
 
@@ -94,6 +97,8 @@ export const CAPABILITY_RULE_MAP: Readonly<
   'capabilities.read': { action: 'read', subject: 'CapabilityAssignment' },
   'capabilities.write': { action: 'write', subject: 'CapabilityAssignment' },
   'users.read': { action: 'read', subject: 'User' },
+  'user-invitations.read': { action: 'read', subject: 'Invitation' },
+  'user-invitations.write': { action: 'write', subject: 'Invitation' },
 };
 
 export function buildCapabilityAbility(
@@ -142,9 +147,10 @@ export const ROUTE_CAPABILITY_REQUIREMENTS: Readonly<
     { action: 'write', subject: 'Workflow' },
   ],
   '/$locale/admin/': [
-    // The admin hub mixes workspace and catalog sections, so either read capability grants access; each section enforces its own write capability.
+    // The admin hub mixes workspace, catalog, and invitation sections, so any of their read capabilities grants access; each section enforces its own write capability.
     { action: 'read', subject: 'Workspace' },
     { action: 'read', subject: 'Catalog' },
+    { action: 'read', subject: 'Invitation' },
   ],
   '/$locale/admin/workspace': [{ action: 'read', subject: 'Workspace' }],
   '/$locale/admin/facilities': [{ action: 'read', subject: 'Catalog' }],
@@ -154,6 +160,7 @@ export const ROUTE_CAPABILITY_REQUIREMENTS: Readonly<
   // Index route ids carry a trailing slash; detail ids do not (TanStack emission).
   '/$locale/admin/users/': [{ action: 'read', subject: 'User' }],
   '/$locale/admin/users/$userId': [{ action: 'read', subject: 'User' }],
+  '/$locale/admin/invitations/': [{ action: 'read', subject: 'Invitation' }],
 };
 
 /**

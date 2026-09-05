@@ -4,7 +4,6 @@ import type { JSX, FormEvent } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { ApiError } from '@/api/client.ts';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -22,16 +21,16 @@ import {
 } from '@/components/ui/empty.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Label } from '@/components/ui/label.tsx';
-import { Skeleton } from '@/components/ui/skeleton.tsx';
-import { UserDirectoryPagination } from '@/features/users/UserDirectoryPagination.tsx';
-import { UserDirectoryResults } from '@/features/users/UserDirectoryResults.tsx';
+import { UserDirectoryResultsSection } from '@/features/users/UserDirectoryResultsSection.tsx';
 import {
   DEFAULT_USER_PAGE_SIZE,
   nextSearchAfterSubmit,
+  resolveUserDirectoryResultsState,
   userListParamsFromSearch,
   type UserDirectoryFormValues,
 } from '@/features/users/userListSearch.ts';
 import { useUserList } from '@/features/users/useUsersDirectory.ts';
+import { useCapabilities } from '@/hooks/use-capabilities.ts';
 import { getRawHospitalCode } from '@/lib/api-origin.ts';
 
 function resolveSessionHospitalContext(
@@ -67,6 +66,7 @@ export function UserDirectoryWorkspace({
 }: UserDirectoryWorkspaceProps): JSX.Element {
   const { t } = useTranslation('users');
   const { locale } = useParams({ from: '/$locale' });
+  const { can } = useCapabilities();
   // The route validates the search, so it arrives already normalized.
   const search = useSearch({ from: '/$locale/admin/users/' });
   const navigate = useNavigate();
@@ -131,65 +131,21 @@ export function UserDirectoryWorkspace({
   });
 
   const hasError = !isForbidden && error !== null;
-  // 400 clears prior rows; other failures over cached data keep them visibly stale.
-  const staleRows =
-    hasError && !(queryError instanceof ApiError && queryError.status === 400);
-  const showRows = (!hasError || staleRows) && !isForbidden && items.length > 0;
-  const showEmpty = !hasError && !isLoading && !isForbidden && totalCount === 0;
+  const { status: resultsStatus, staleRows } =
+    resolveUserDirectoryResultsState({
+      isLoading,
+      hasError,
+      queryError,
+      isForbidden,
+      itemCount: items.length,
+      totalCount,
+    });
+  const canInvite = can('write', 'Invitation');
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
     handleSearchSubmit(formValues);
   };
-
-  const refreshingLine = isFetching ? (
-    <p className='mb-2 flex items-center gap-1.5 text-sm text-muted-foreground'>
-      <Loader2 className='size-3.5 animate-spin' />
-      {t('stale.refreshing')}
-    </p>
-  ) : null;
-
-  const renderResults = (): JSX.Element | null => {
-    if (isLoading) {
-      return (
-        <div
-          className='grid gap-3'
-          aria-busy='true'
-        >
-          <Skeleton className='h-9 w-full' />
-          <Skeleton className='h-9 w-full' />
-          <Skeleton className='h-9 w-full' />
-          <Skeleton className='h-9 w-full' />
-        </div>
-      );
-    }
-    if (showRows) {
-      return (
-        <>
-          {refreshingLine}
-          <UserDirectoryResults
-            items={items}
-            locale={locale}
-            stale={staleRows}
-          />
-        </>
-      );
-    }
-    if (showEmpty) {
-      return (
-        <Empty className='min-h-48 rounded-xl border border-dashed border-border/70 bg-muted/20 px-6 py-10'>
-          <EmptyHeader>
-            <EmptyTitle className='text-lg'>{t('empty.title')}</EmptyTitle>
-            <EmptyDescription>{t('empty.description')}</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      );
-    }
-    // Error without prior rows: the alert above is the whole story.
-    return null;
-  };
-
-  const resultsSection = renderResults();
 
   if (isForbidden) {
     return (
@@ -302,15 +258,18 @@ export function UserDirectoryWorkspace({
         ) : null}
 
         <div className='mt-6'>
-          {resultsSection}
-          {isLoading ? null : (
-            <UserDirectoryPagination
-              page={page}
-              pageSize={pageSize}
-              totalCount={totalCount}
-              onPageChange={handlePageChange}
-            />
-          )}
+          <UserDirectoryResultsSection
+            status={resultsStatus}
+            isFetching={isFetching}
+            staleRows={staleRows}
+            items={items}
+            locale={locale}
+            canInvite={canInvite}
+            page={page}
+            pageSize={pageSize}
+            totalCount={totalCount}
+            onPageChange={handlePageChange}
+          />
         </div>
       </CardContent>
     </Card>

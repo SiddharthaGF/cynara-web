@@ -8,7 +8,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog.tsx';
@@ -20,6 +19,7 @@ import {
 } from '@/components/ui/field.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Spinner } from '@/components/ui/spinner.tsx';
+import { AdminFormFooter } from '@/features/hospital/admin-ui.tsx';
 import { DocumentIdentityFields } from '@/features/hospital/document-form-identity-fields.tsx';
 import {
   useDocumentForm,
@@ -201,36 +201,27 @@ export function DocumentFormDialog({
             />
           </FieldGroup>
 
-          <DialogFooter className='mt-6'>
-            {showConflict ? (
-              <Button
-                type='button'
-                variant='outline'
-                onClick={onConflictReload}
-              >
-                {t('shared.conflictReload')}
-              </Button>
-            ) : null}
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-            >
-              {t('shared.cancel')}
-            </Button>
-            <form.Subscribe selector={(state) => state.canSubmit}>
-              {(canSubmit) => (
-                <Button
-                  type='submit'
-                  disabled={isPending || !canSubmit}
-                >
-                  {isPending ? <Spinner data-icon='inline-start' /> : null}
-                  {isPending ? t('shared.saving') : t('shared.save')}
-                </Button>
-              )}
-            </form.Subscribe>
-          </DialogFooter>
+          <AdminFormFooter
+            showConflict={showConflict}
+            isPending={isPending}
+            onConflictReload={onConflictReload}
+            onCancel={() => {
+              onOpenChange(false);
+            }}
+            submit={
+              <form.Subscribe selector={(state) => state.canSubmit}>
+                {(canSubmit) => (
+                  <Button
+                    type='submit'
+                    disabled={isPending || !canSubmit}
+                  >
+                    {isPending ? <Spinner data-icon='inline-start' /> : null}
+                    {isPending ? t('shared.saving') : t('shared.save')}
+                  </Button>
+                )}
+              </form.Subscribe>
+            }
+          />
         </form>
       </DialogContent>
     </Dialog>

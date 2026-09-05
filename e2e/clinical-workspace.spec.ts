@@ -119,7 +119,7 @@ test.describe('clinical workspace (CYN-58)', () => {
     const patientId = new URL(page.url()).pathname.split('/')[3];
 
     // The chart opens as a clinical record with breadcrumbs and tabs. Both
-    // the site header and the chart render breadcrumbs; scope to the chart's.
+    // The site header and the chart render breadcrumbs; scope to the chart's.
     const chartBreadcrumb = page
       .locator('[data-slot=breadcrumb]')
       .filter({ hasText: 'Florence Nightingale' });

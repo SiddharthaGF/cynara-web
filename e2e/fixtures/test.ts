@@ -25,7 +25,7 @@ test.beforeEach(async ({ page }) => {
     const cookies = await page.context().cookies();
     const session = cookies.find((cookie) => cookie.name === 'cynara-auth');
     // Persist immediately so the next test starts warm when possible. A
-    // cleared or failed session leaves a short deletion stub; never save it.
+    // Cleared or failed session leaves a short deletion stub; never save it.
     if (session && session.value.length > 64) {
       await page.context().storageState({ path: AUTH_STATE_PATH });
     }

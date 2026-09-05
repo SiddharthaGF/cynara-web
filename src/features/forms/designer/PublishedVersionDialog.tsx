@@ -1,17 +1,7 @@
-import { ArrowLeft, Plus } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '@/components/ui/button.tsx';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog.tsx';
-import { Spinner } from '@/components/ui/spinner.tsx';
+import { PublishedSuccessDialog } from '@/components/published-success-dialog.tsx';
 import type { FormVersion } from '@/features/forms/types.ts';
 
 interface PublishedVersionDialogProps {
@@ -35,7 +25,7 @@ export function PublishedVersionDialog({
   const { t } = useTranslation('designer');
 
   return (
-    <Dialog
+    <PublishedSuccessDialog
       open={version !== null}
       onOpenChange={(open) => {
         // Published versions have no editable draft, so the dialog only dismisses into an explicit next step.
@@ -43,45 +33,15 @@ export function PublishedVersionDialog({
           onClose();
         }
       }}
-    >
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>{t('publish.publishedTitle')}</DialogTitle>
-          <DialogDescription>
-            {t('publish.publishedBody', {
-              version: version?.version ?? '',
-            })}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            type='button'
-            variant='outline'
-            disabled={isPending}
-            onClick={onContinueEditing}
-          >
-            {isPending ? (
-              <Spinner data-icon='inline-start' />
-            ) : (
-              <Plus
-                className='size-3.5'
-                aria-hidden='true'
-              />
-            )}
-            {t('publish.continueEditing')}
-          </Button>
-          <Button
-            type='button'
-            onClick={onClose}
-          >
-            <ArrowLeft
-              className='size-3.5'
-              aria-hidden='true'
-            />
-            {t('publish.backToForms')}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      title={t('publish.publishedTitle')}
+      description={t('publish.publishedBody', {
+        version: version?.version ?? '',
+      })}
+      continueLabel={t('publish.continueEditing')}
+      backLabel={t('publish.backToForms')}
+      continuePending={isPending}
+      onContinue={onContinueEditing}
+      onBack={onClose}
+    />
   );
 }

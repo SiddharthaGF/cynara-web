@@ -16,20 +16,22 @@ export async function performUiLogin(page: Page): Promise<void> {
   await page.waitForLoadState('networkidle');
 
   let reachedHandoff = false;
+  const hasHandoffParams = (url: URL): boolean =>
+    (url.searchParams.has('client_id') || url.searchParams.has('clientId')) &&
+    (url.searchParams.has('request_uri') || url.searchParams.has('requestUri'));
   for (let attempt = 0; attempt < 3 && !reachedHandoff; attempt += 1) {
     await page.locator('button[type="submit"]').click();
     try {
-      await page.waitForURL(
-        (url) =>
-          url.searchParams.has('client_id') &&
-          url.searchParams.has('request_uri'),
-        { timeout: 12_000 },
-      );
+      await page.waitForURL(hasHandoffParams, { timeout: 12_000 });
       reachedHandoff = true;
     } catch {
       const current = new URL(page.url());
+      if (hasHandoffParams(current)) {
+        reachedHandoff = true;
+        break;
+      }
       // A premature native submit lands on the plain login page again;
-      // anything else is a real failure.
+      // Anything else is a real failure.
       if (current.pathname !== '/en/login' || current.search !== '') {
         throw new Error(`unexpected login redirect: ${page.url()}`);
       }

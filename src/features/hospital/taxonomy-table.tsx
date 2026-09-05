@@ -1,4 +1,3 @@
-import { Archive, Pencil } from 'lucide-react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -12,6 +11,7 @@ import {
 } from '@/components/ui/table.tsx';
 import {
   AdminEmptyState,
+  AdminRowActions,
   AdminTableSkeleton,
   StatusBadge,
 } from '@/features/hospital/admin-ui.tsx';
@@ -112,27 +112,11 @@ export function TaxonomyTable({
                 {formatAdminDate(item.updatedAt, locale)}
               </TableCell>
               {canWrite ? (
-                <TableCell className='text-right'>
-                  <div className='flex items-center justify-end gap-1'>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      onClick={() => onEdit(item)}
-                    >
-                      <Pencil className='size-4' />
-                      <span className='sr-only'>{t('shared.edit')}</span>
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      size='sm'
-                      disabled={isRetired}
-                      onClick={() => onRetire(item)}
-                    >
-                      <Archive className='size-4' />
-                      <span className='sr-only'>{t('shared.retire')}</span>
-                    </Button>
-                  </div>
-                </TableCell>
+                <AdminRowActions
+                  onEdit={() => onEdit(item)}
+                  onRetire={() => onRetire(item)}
+                  isRetired={isRetired}
+                />
               ) : null}
             </TableRow>
           );

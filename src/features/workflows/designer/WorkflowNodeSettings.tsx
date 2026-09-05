@@ -4,20 +4,13 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button.tsx';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog.tsx';
 import type {
   WorkflowNode,
   WorkflowNodeType,
 } from '@/features/workflows/types.ts';
 
 import { usePublishedFormOptions } from './usePublishedFormOptions.ts';
+import { DeleteConfirmDialog } from './DeleteConfirmDialog.tsx';
 import { WorkflowNodeAssignmentSettings } from './WorkflowNodeAssignmentSettings.tsx';
 import { WorkflowNodeFormSettings } from './WorkflowNodeFormSettings.tsx';
 import { WorkflowNodeGeneralSettings } from './WorkflowNodeGeneralSettings.tsx';
@@ -90,38 +83,18 @@ export function WorkflowNodeSettings({
         </section>
       )}
 
-      <Dialog
+      <DeleteConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('canvas.deleteNodeTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('canvas.deleteNodeDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant='ghost'
-              onClick={() => {
-                setConfirmOpen(false);
-              }}
-            >
-              {t('versionHistory.close')}
-            </Button>
-            <Button
-              variant='destructive'
-              onClick={() => {
-                setConfirmOpen(false);
-                onRemoveNode();
-              }}
-            >
-              {t('canvas.deleteNode')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title={t('canvas.deleteNodeTitle')}
+        description={t('canvas.deleteNodeDescription')}
+        cancelLabel={t('versionHistory.close')}
+        confirmLabel={t('canvas.deleteNode')}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          onRemoveNode();
+        }}
+      />
     </div>
   );
 }
